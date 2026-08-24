@@ -2,6 +2,7 @@ import { convertResponsesStreamToJson } from "../../transformer/streamToJsonConv
 import { createErrorResult } from "../../utils/error.js";
 import { HTTP_STATUS } from "../../config/runtimeConfig.js";
 import { FORMATS } from "../../translator/formats.js";
+import { fromOpenAIFinish } from "../../translator/concerns/finishReason.js";
 import { PROVIDERS } from "../../config/providers.js";
 import { buildRequestDetail, extractRequestConfig, saveUsageStats, formatDoneLine } from "./requestDetail.js";
 import { ROLE, RESPONSES_ITEM } from "../../translator/schema/index.js";
@@ -33,6 +34,66 @@ function pickAssistantMessageForChatCompletion(output) {
   }
   const last = messages[messages.length - 1];
   return { msgItem: last, textContent: textFromResponsesMessageItem(last) };
+}
+
+function openAICompletionToClaudeMessage(responseBody) {
+  const choice = responseBody?.choices?.[0];
+  if (!choice) return responseBody;
+  const message = choice.message || {};
+  const content = [];
+  if (message.reasoning_content || message.reasoning) {
+    content.push({ type: "thinking", thinking: message.reasoning_content || message.reasoning });
+  }
+  if (typeof message.content === "string" && message.content.length > 0) {
+    content.push({ type: "text", text: message.content });
+  }
+  for (const toolCall of message.tool_calls || []) {
+    const fn = toolCall.function || {};
+    let input = {};
+    try { input = typeof fn.arguments === "string" ? JSON.parse(fn.arguments) : (fn.arguments || {}); } catch { /* preserve an empty valid input */ }
+    content.push({ type: "tool_use", id: toolCall.id || `toolu_${Date.now()}_${content.length}`, name: fn.name || "", input });
+  }
+  if (content.length === 0) content.push({ type: "text", text: "" });
+  const usage = responseBody.usage || {};
+  return {
+    id: String(responseBody.id || `msg_${Date.now()}`).replace(/^chatcmpl-/, ""),
+    type: "message",
+    role: "assistant",
+    model: responseBody.model || "unknown",
+    content,
+    stop_reason: fromOpenAIFinish(choice.finish_reason, FORMATS.CLAUDE),
+    stop_sequence: null,
+    usage: { input_tokens: usage.prompt_tokens || usage.input_tokens || 0, output_tokens: usage.completion_tokens || usage.output_tokens || 0 },
+  };
+}
+
+function responsesJsonToClaudeMessage(response) {
+  const output = Array.isArray(response?.output) ? response.output : [];
+  const content = [];
+  for (const item of output) {
+    if (item?.type === "reasoning") {
+      const text = item.summary?.find((part) => typeof part?.text === "string")?.text;
+      if (text) content.push({ type: "thinking", thinking: text });
+    } else if (item?.type === "message") {
+      const text = textFromResponsesMessageItem(item);
+      if (text) content.push({ type: "text", text });
+    } else if (item?.type === "function_call" || item?.type === "custom_tool_call") {
+      let input = {};
+      try { input = item.arguments ? JSON.parse(item.arguments) : (item.input || {}); } catch { /* preserve an empty valid input */ }
+      content.push({ type: "tool_use", id: item.call_id || item.id || `toolu_${Date.now()}_${content.length}`, name: item.name || "", input });
+    }
+  }
+  if (content.length === 0) content.push({ type: "text", text: "" });
+  return {
+    id: String(response.id || `msg_${Date.now()}`).replace(/^resp_/, ""),
+    type: "message",
+    role: "assistant",
+    model: response.model || "unknown",
+    content,
+    stop_reason: content.some((item) => item.type === "tool_use") ? "tool_use" : "end_turn",
+    stop_sequence: null,
+    usage: { input_tokens: response.usage?.input_tokens || 0, output_tokens: response.usage?.output_tokens || 0 },
+  };
 }
 
 /**
@@ -228,6 +289,10 @@ export async function handleForcedSSEToJson({ providerResponse, sourceFormat, ta
         return { success: true, response: new Response(JSON.stringify(jsonResponse), { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }) };
       }
 
+      if (sourceFormat === FORMATS.CLAUDE) {
+        return { success: true, response: new Response(JSON.stringify(responsesJsonToClaudeMessage(jsonResponse)), { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }) };
+      }
+
       // Build client-format response.
       // input_tokens EXCLUDES cached tokens on cache-capable upstreams, so summing
       // only input+output under-reports prompt_tokens — measured: 2012 reported
@@ -349,6 +414,8 @@ export async function handleForcedSSEToJson({ providerResponse, sourceFormat, ta
     // already imports parseSSEToOpenAIResponse from this module.
     const finalBody = sourceFormat === FORMATS.OPENAI_RESPONSES
       ? chatCompletionToResponses(parsed, customToolNames)
+      : sourceFormat === FORMATS.CLAUDE
+        ? openAICompletionToClaudeMessage(parsed)
       : parsed;
 
     return { success: true, response: new Response(JSON.stringify(finalBody), { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }) };
