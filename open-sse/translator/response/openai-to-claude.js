@@ -215,13 +215,19 @@ export function openaiToClaudeResponse(chunk, state) {
         if (toolInfo) {
           // Buffer args instead of streaming — sanitize at finish to fix bad params
           if (!state.toolArgBuffers) state.toolArgBuffers = new Map();
-          state.toolArgBuffers.set(idx, (state.toolArgBuffers.get(idx) || "") + tc.function.arguments);
+          const prev = state.toolArgBuffers.get(idx) || "";
+          const inc = tc.function.arguments;
+          // Some providers stream cumulative args: every chunk restates the full
+          // string so far. Appending would duplicate the JSON and break tool parsing.
+          // Replace when the new chunk already carries the buffer as its prefix.
+          state.toolArgBuffers.set(idx, prev && inc.startsWith(prev) ? inc : prev + inc);
         }
       }
     }
   }
 
-  // Finish
+  // Finish. Guarded: some providers repeat finish_reason on a trailing usage
+  // chunk — re-running this block would emit the buffered args a second time.
   if (choice.finish_reason) {
     if (state.claudeTerminalEmitted) return results.length > 0 ? results : null;
     state.claudeTerminalEmitted = true;

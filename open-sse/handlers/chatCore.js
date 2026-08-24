@@ -29,6 +29,7 @@ import { getCapabilitiesForModel } from "../providers/capabilities.js";
 import { stripUnsupportedModalities } from "../translator/concerns/modality.js";
 import { prefetchRemoteImages } from "../translator/concerns/prefetch.js";
 import { defaultClaudeToolType } from "../translator/concerns/toolCall.js";
+import { clientRequestedStreaming } from "./chatCore/streamMode.js";
 import { resolveSessionId } from "../utils/sessionManager.js";
 
 /**
@@ -111,12 +112,12 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     }
   }
 
-  const clientRequestedStreaming = body.stream === true || sourceFormat === FORMATS.ANTIGRAVITY || sourceFormat === FORMATS.GEMINI || sourceFormat === FORMATS.GEMINI_CLI;
+  const clientWantsStream = clientRequestedStreaming(body, sourceFormat);
   const providerRequiresStreaming = PROVIDERS[provider]?.forceStream === true;
   // OpenAI Chat Completions defines an omitted `stream` field as false.
   // Providers that only expose SSE still stream upstream and are aggregated
   // back to JSON below when the client did not explicitly request streaming.
-  let stream = providerRequiresStreaming || clientRequestedStreaming;
+  let stream = providerRequiresStreaming || clientWantsStream;
 
   // Image generation models require non-streaming (Google v1internal:generateContent)
   const modelType = getModelType(alias, model);
