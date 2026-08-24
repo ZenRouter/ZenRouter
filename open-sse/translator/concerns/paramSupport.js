@@ -21,6 +21,9 @@ const STRIP_RULES = [
   // "integer above maximum value, expected <= 32768". Pin an explicit endpoint cap;
   // min() with the model ceiling still applies if a variant's own limit is lower.
   { provider: "volcengine-ark", match: /kimi/i, maxOutputCap: 32768, clampToModelMaxOutput: true },
+  // OpenCode zen /v1/responses endpoint (e.g. muse models) returns HTTP 400
+  // when max_tokens is supplied — it derives the cap from reasoning_effort.
+  { provider: "opencode", match: /muse/i, drop: ["max_tokens", "max_completion_tokens", "max_output_tokens"] },
 ];
 
 // Test a rule's match (regex or predicate) against the model id.
