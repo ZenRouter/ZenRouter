@@ -40,10 +40,39 @@ function buildTransformStream({ provider, sourceFormat, targetFormat, userAgent,
   return createPassthroughStreamWithLogger(provider, reqLogger, model, connectionId, body, onStreamComplete, apiKey);
 }
 
+function withAbortRecording(streamController, record) {
+  let recorded = false;
+  const fire = (reason) => {
+    if (recorded) return;
+    recorded = true;
+    try {
+      record(reason);
+    } catch (error) {
+      console.error("[Stream] Failed to record aborted stream:", error?.message || error);
+    }
+  };
+
+  return {
+    ...streamController,
+    handleComplete: () => {
+      recorded = true;
+      streamController.handleComplete();
+    },
+    handleDisconnect: (reason) => {
+      fire(reason || "client_closed");
+      streamController.handleDisconnect(reason);
+    },
+    handleError: (error) => {
+      fire(error?.name === "AbortError" ? "aborted" : (error?.message || "error"));
+      streamController.handleError(error);
+    },
+  };
+}
+
 /**
  * Handle streaming response — pipe provider SSE through transform stream to client.
  */
-export async function handleStreamingResponse({ providerResponse, provider, model, sourceFormat, targetFormat, userAgent, body, stream, translatedBody, finalBody, requestStartTime, connectionId, apiKey, clientRawRequest, onRequestSuccess, reqLogger, toolNameMap, customToolNames, streamController, onStreamComplete, streamDetailId, pxpipe, reqTag, log }) {
+export async function handleStreamingResponse({ providerResponse, provider, model, sourceFormat, targetFormat, userAgent, body, stream, translatedBody, finalBody, requestStartTime, connectionId, apiKey, clientRawRequest, onRequestSuccess, reqLogger, toolNameMap, customToolNames, streamController, onStreamComplete, onStreamAborted, streamDetailId, pxpipe, reqTag, log }) {
   if (onRequestSuccess) {
     Promise.resolve()
       .then(onRequestSuccess)
@@ -85,7 +114,10 @@ export async function handleStreamingResponse({ providerResponse, provider, mode
   const isResponsesPassthrough = sourceFormat === FORMATS.OPENAI_RESPONSES && targetFormat === FORMATS.OPENAI_RESPONSES;
   const onAbortTerminal = isResponsesPassthrough ? buildAbortedResponsesTerminalBytes : null;
   const stallTimeoutMs = PROVIDERS[provider]?.stallTimeoutMs || STREAM_STALL_TIMEOUT_MS;
-  const transformedBody = pipeWithDisconnect(providerResponse, transformStream, streamController, onAbortTerminal, stallTimeoutMs);
+  const recordingController = onStreamAborted
+    ? withAbortRecording(streamController, (reason) => onStreamAborted(transformStream.getStreamSnapshot?.() || null, reason))
+    : streamController;
+  const transformedBody = pipeWithDisconnect(providerResponse, transformStream, recordingController, onAbortTerminal, stallTimeoutMs);
 
   saveRequestDetail(buildRequestDetail({
     provider, model, connectionId,
@@ -140,5 +172,36 @@ export function buildOnStreamComplete({ provider, model, connectionId, apiKey, r
     if (log?.line) log.line(reqTag, "📊", formatDoneLine({ usage, latency }));
   };
 
-  return { onStreamComplete, streamDetailId };
+  const onStreamAborted = (snapshot, reason) => {
+    const latency = {
+      ttft: snapshot?.ttftAt ? snapshot.ttftAt - requestStartTime : Date.now() - requestStartTime,
+      total: Date.now() - requestStartTime
+    };
+    const usage = snapshot?.usage || null;
+    const safeContent = snapshot?.content || "[No content before disconnect]";
+
+    saveRequestDetail(buildRequestDetail({
+      provider, model, connectionId,
+      latency,
+      tokens: usage || { prompt_tokens: 0, completion_tokens: 0 },
+      request: extractRequestConfig(body, stream),
+      providerRequest: finalBody || translatedBody || null,
+      providerResponse: safeContent,
+      response: {
+        content: safeContent,
+        thinking: snapshot?.thinking || null,
+        type: "streaming",
+        finish_reason: `aborted: ${reason}`
+      },
+      pxpipe,
+      status: "aborted"
+    }, { id: streamDetailId })).catch(err => {
+      console.error("[RequestDetail] Failed to update aborted stream:", err.message);
+    });
+
+    saveUsageStats({ provider, model, tokens: usage, connectionId, apiKey, endpoint: clientRawRequest?.endpoint, label: "STREAM USAGE (aborted)", silent: true });
+    if (log?.line) log.line(reqTag, "📊", formatDoneLine({ usage, latency }));
+  };
+
+  return { onStreamComplete, onStreamAborted, streamDetailId };
 }

@@ -303,6 +303,39 @@ export async function buildModelsList(kindFilter, options = {}) {
     if (combo.kind === "webSearch" || combo.kind === "webFetch") {
       entry.kind = combo.kind;
     }
+    // Aggregate token limits for LLM combos so compatible clients can size
+    // context correctly instead of falling back to their own model catalog.
+    // The pool bottleneck is the smallest context window; output uses the
+    // largest member limit because fallback members may support more output.
+    if (!combo.kind || combo.kind === LLM_KIND) {
+      let minContext = Infinity;
+      let maxOutput = -Infinity;
+      let hasContext = false;
+      let hasMaxOutput = false;
+
+      for (const rawModel of combo.models || []) {
+        if (typeof rawModel !== "string") continue;
+        const trimmed = rawModel.trim();
+        if (!trimmed) continue;
+        const slashIndex = trimmed.indexOf("/");
+        const provider = slashIndex >= 0 ? trimmed.slice(0, slashIndex) : "";
+        const modelId = slashIndex >= 0 ? trimmed.slice(slashIndex + 1) : trimmed;
+        if (!modelId) continue;
+
+        const caps = getCapabilitiesForModel(provider, modelId);
+        if (Number.isFinite(caps?.contextWindow)) {
+          minContext = Math.min(minContext, caps.contextWindow);
+          hasContext = true;
+        }
+        if (Number.isFinite(caps?.maxOutput)) {
+          maxOutput = Math.max(maxOutput, caps.maxOutput);
+          hasMaxOutput = true;
+        }
+      }
+
+      if (hasContext) entry.context_length = minContext;
+      if (hasMaxOutput) entry.max_completion_tokens = maxOutput;
+    }
     models.push(entry);
   }
 

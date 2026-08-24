@@ -111,7 +111,10 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
 
   const clientRequestedStreaming = body.stream === true || sourceFormat === FORMATS.ANTIGRAVITY || sourceFormat === FORMATS.GEMINI || sourceFormat === FORMATS.GEMINI_CLI;
   const providerRequiresStreaming = PROVIDERS[provider]?.forceStream === true;
-  let stream = providerRequiresStreaming ? true : (body.stream !== false);
+  // OpenAI Chat Completions defines an omitted `stream` field as false.
+  // Providers that only expose SSE still stream upstream and are aggregated
+  // back to JSON below when the client did not explicitly request streaming.
+  let stream = providerRequiresStreaming || clientRequestedStreaming;
 
   // Image generation models require non-streaming (Google v1internal:generateContent)
   const modelType = getModelType(alias, model);
@@ -448,16 +451,17 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     if (result) { streamController.handleComplete(); return result; }
   }
 
-  // True non-streaming response
-  if (!stream) {
+  // Non-streaming response. Stream-only providers normally arrive here only
+  // after the SSE-to-JSON handler determined that their upstream returned JSON.
+  if (!stream || (!clientRequestedStreaming && providerRequiresStreaming)) {
     const result = await handleNonStreamingResponse({ ...sharedCtx, providerResponse, sourceFormat, targetFormat: providerResponseFormat, reqLogger, toolNameMap, customToolNames, trackDone, appendLog });
     streamController.handleComplete();
     return result;
   }
 
   // Streaming response
-  const { onStreamComplete, streamDetailId } = buildOnStreamComplete({ ...sharedCtx });
-  return handleStreamingResponse({ ...sharedCtx, providerResponse, sourceFormat, targetFormat: providerResponseFormat, userAgent, reqLogger, toolNameMap, customToolNames, streamController, onStreamComplete, streamDetailId });
+  const { onStreamComplete, onStreamAborted, streamDetailId } = buildOnStreamComplete({ ...sharedCtx });
+  return handleStreamingResponse({ ...sharedCtx, providerResponse, sourceFormat, targetFormat: providerResponseFormat, userAgent, reqLogger, toolNameMap, customToolNames, streamController, onStreamComplete, onStreamAborted, streamDetailId });
 }
 
 export function isTokenExpiringSoon(expiresAt, bufferMs = 5 * 60 * 1000) {

@@ -76,7 +76,23 @@ export function createSSEStream(options = {}) {
   let openAIResponsesDoneSent = false;
   let streamDoneSent = false;  // track duplicate [DONE] across transform + flush
 
-  return new TransformStream({
+  // Snapshot partial output even when cancellation prevents TransformStream.flush.
+  const getStreamSnapshot = () => {
+    const seenUsage = mode === STREAM_MODE.PASSTHROUGH ? usage : state?.usage;
+    const resolvedUsage = hasValidUsage(seenUsage)
+      ? seenUsage
+      : (totalContentLength > 0
+          ? estimateUsage(body, totalContentLength, mode === STREAM_MODE.PASSTHROUGH ? FORMATS.OPENAI : sourceFormat)
+          : null);
+    return {
+      content: accumulatedContent,
+      thinking: accumulatedThinking,
+      usage: resolvedUsage,
+      ttftAt,
+    };
+  };
+
+  const sseStream = new TransformStream({
     transform(chunk, controller) {
       if (!ttftAt) ttftAt = Date.now();
       const text = decoder.decode(chunk, { stream: true });
@@ -465,6 +481,9 @@ export function createSSEStream(options = {}) {
       }
     }
   });
+
+  sseStream.getStreamSnapshot = getStreamSnapshot;
+  return sseStream;
 }
 
 export function createSSETransformStreamWithLogger(targetFormat, sourceFormat, provider = null, reqLogger = null, toolNameMap = null, model = null, connectionId = null, body = null, onStreamComplete = null, apiKey = null, customToolNames = null) {

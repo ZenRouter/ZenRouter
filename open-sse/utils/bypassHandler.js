@@ -73,7 +73,13 @@ export function handleBypassRequest(body, model, userAgent = "", ccFilterNaming 
   if (!shouldBypass) return null;
 
   const sourceFormat = detectFormat(body);
-  const stream = body.stream !== false;
+  // Match OpenAI semantics: an omitted `stream` field means non-streaming.
+  // Native Gemini-family request formats are inherently streaming when they
+  // reach this compatibility path.
+  const stream = body.stream === true
+    || sourceFormat === FORMATS.ANTIGRAVITY
+    || sourceFormat === FORMATS.GEMINI
+    || sourceFormat === FORMATS.GEMINI_CLI;
 
   // For naming bypass, generate title from user message
   if (namingBypass) {
