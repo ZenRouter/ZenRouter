@@ -1,23 +1,34 @@
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
-import fs from "node:fs";
-import path from "node:path";
-import crypto from "node:crypto";
-import { DATA_DIR } from "@/lib/dataDir";
 import { getSettings } from "@/lib/localDb";
 
 const DEFAULT_PASSWORD = "123456";
 
-function loadJwtSecret() {
-  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
-  const file = path.join(DATA_DIR, "jwt-secret");
-  try {
-    return fs.readFileSync(file, "utf8").trim();
-  } catch {}
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  const generated = crypto.randomBytes(32).toString("hex");
-  fs.writeFileSync(file, generated, { mode: 0o600 });
-  return generated;
+/**
+ * The dashboard's auth-token signing key. Must come from the operator via env.
+ *
+ * Older versions auto-generated a random 32-byte secret on first boot and persisted
+ * it under DATA_DIR/jwt-secret. That looks harmless but causes real outages:
+ *
+ *   - every fresh container restart invalidates every admin session;
+ *   - the secret cannot be rotated without rewriting that file, which a routine
+ *     config redeploy overwrites back to the old value;
+ *   - a leaked secret (backup, dev box, CI cache) stays the active signer until
+ *     somebody notices.
+ *
+ * `.env.example` already ships `JWT_SECRET=change-me-to-a-long-random-secret`,
+ * so we just refuse to start until the operator has set one. We trim whitespace
+ * to keep a quoted value like `"  secret\n"` from being treated as 32 chars of
+ * whitespace; the minimum-length check catches every accidental placeholder.
+ */
+export function loadJwtSecret(rawSecret = process.env.JWT_SECRET) {
+  const secret = typeof rawSecret === "string" ? rawSecret.trim() : "";
+  if (!secret || secret.length < 32) {
+    throw new Error(
+      "JWT_SECRET environment variable is required. Set a strong random secret (min 32 chars) in your .env file."
+    );
+  }
+  return secret;
 }
 
 const SECRET = new TextEncoder().encode(loadJwtSecret());
