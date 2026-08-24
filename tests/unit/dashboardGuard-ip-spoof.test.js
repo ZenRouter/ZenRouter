@@ -1,5 +1,15 @@
-import { describe, expect, it } from "vitest";
-import { isLocalRequest } from "@/dashboardGuard.js";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { isLocalRequest } from "../../src/dashboardGuard.js";
+
+beforeAll(() => {
+  // Peer-token must match what custom-server.js stamps at boot.
+  process.env.NINEROUTER_PEER_TOKEN = "fingerprint";
+});
+
+afterEach(() => {
+  // Tests must not leak state — never delete the env var here, vitest workers
+  // are reused across files and we want all sibling tests to see the same token.
+});
 
 describe("isLocalRequest — IP spoofing defense (#3496)", () => {
   it("rejects dev-mode Host spoofing when peer headers are absent", () => {
