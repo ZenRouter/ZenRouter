@@ -1,5 +1,31 @@
 import { ERROR_TYPES, DEFAULT_ERROR_MESSAGES } from "../config/errorConfig.js";
 
+export const MAX_UPSTREAM_ERROR_BYTES = 8192;
+
+async function readBoundedErrorBody(response, maxBytes = MAX_UPSTREAM_ERROR_BYTES) {
+  const reader = response.body?.getReader?.();
+  if (!reader) return "";
+
+  const decoder = new TextDecoder();
+  let body = "";
+  let bytesRead = 0;
+  try {
+    while (bytesRead < maxBytes) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const remaining = maxBytes - bytesRead;
+      const chunk = value.byteLength > remaining ? value.subarray(0, remaining) : value;
+      body += decoder.decode(chunk, { stream: true });
+      bytesRead += chunk.byteLength;
+      if (value.byteLength > remaining) break;
+    }
+    body += decoder.decode();
+    return body;
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+}
+
 /**
  * Build OpenAI-compatible error response body
  * @param {number} statusCode - HTTP status code
@@ -58,7 +84,7 @@ export async function writeStreamError(writer, statusCode, message) {
 export async function parseUpstreamError(response, executor = null) {
   let bodyText = "";
   try {
-    bodyText = await response.text();
+    bodyText = await readBoundedErrorBody(response);
   } catch {
     bodyText = "";
   }
@@ -82,7 +108,7 @@ export async function parseUpstreamError(response, executor = null) {
     message = bodyText;
   }
 
-  const messageStr = typeof message === "string" ? message : JSON.stringify(message);
+  const messageStr = (typeof message === "string" ? message : JSON.stringify(message)).slice(0, MAX_UPSTREAM_ERROR_BYTES);
   const finalMessage = messageStr || DEFAULT_ERROR_MESSAGES[response.status] || `Upstream error: ${response.status}`;
 
   return { statusCode: response.status, message: finalMessage };
