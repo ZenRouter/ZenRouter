@@ -1,3 +1,5 @@
+import { assertValidAwsRegion } from "@/lib/oauth/constants/oauth";
+
 const MICROSOFT_TOKEN_ENDPOINT_HOSTS = new Set([
   "login.microsoftonline.com",
   "login.microsoft.com",
@@ -98,7 +100,8 @@ export function normalizeKiroExternalIdpAuth(rawAuth) {
   const clientId = normalizeString(input.client_id || input.clientId);
   const tokenEndpoint = validateMicrosoftTokenEndpoint(input.token_endpoint || input.tokenEndpoint);
   const profileArn = normalizeString(input.profile_arn || input.profileArn);
-  const region = normalizeString(input.region) || DEFAULT_REGION;
+  const rawRegion = normalizeString(input.region) || DEFAULT_REGION;
+  const region = assertValidAwsRegion(rawRegion);
   const scope = normalizeScope(input.scopes || input.scope);
 
   if (!accessToken) throw new Error("access_token is required");
