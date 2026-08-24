@@ -18,11 +18,16 @@ export async function probeUrlAlive(url) {
   }
 }
 
-export async function waitForHealth(url, cancelToken = { cancelled: false }) {
+export async function waitForHealth(urls, cancelToken = { cancelled: false }) {
+  const candidates = (Array.isArray(urls) ? urls : [urls]).filter(Boolean);
+  if (candidates.length === 0) throw new Error("Health check requires at least one URL");
+
   const start = Date.now();
   while (Date.now() - start < HEALTH_CHECK.timeoutMs) {
     if (cancelToken.cancelled) throw new Error("cancelled");
-    if (await probeUrlAlive(url)) return true;
+    for (const url of candidates) {
+      if (await probeUrlAlive(url)) return url;
+    }
     await new Promise((r) => setTimeout(r, HEALTH_CHECK.intervalMs));
   }
   throw new Error(`Health check timeout after ${HEALTH_CHECK.timeoutMs}ms`);
