@@ -223,6 +223,9 @@ export function openaiToClaudeResponse(chunk, state) {
 
   // Finish
   if (choice.finish_reason) {
+    if (state.claudeTerminalEmitted) return results.length > 0 ? results : null;
+    state.claudeTerminalEmitted = true;
+
     stopThinkingBlock(state, results);
     stopTextBlock(state, results);
 
@@ -242,6 +245,7 @@ export function openaiToClaudeResponse(chunk, state) {
         index: toolInfo.blockIndex
       });
     }
+    state.toolArgBuffers?.clear();
 
     // Mark finish for later usage injection in stream.js
     state.finishReason = choice.finish_reason;
