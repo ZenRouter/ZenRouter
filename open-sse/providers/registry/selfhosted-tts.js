@@ -33,6 +33,11 @@ export default {
     { id: "kokoro", name: "Kokoro (self-hosted)", params: ["voice", "response_format", "speed"], kind: "tts" },
   ],
   serviceKinds: ["tts"],
+  connectionBaseUrl: {
+    label: "Base URL",
+    placeholder: "http://tts-host:8880",
+    hint: "Server root; /v1/audio/speech is appended. Leave empty to use http://localhost:8880.",
+  },
   ttsConfig: {
     // Overridden per connection by providerSpecificData.baseUrl; this default
     // only makes the provider usable on a same-host deployment.

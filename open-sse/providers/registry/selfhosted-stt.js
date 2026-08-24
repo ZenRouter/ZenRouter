@@ -37,6 +37,11 @@ export default {
     { id: "whisper-1", name: "Whisper (self-hosted)", params: ["language", "response_format", "temperature", "prompt"], kind: "stt" },
   ],
   serviceKinds: ["stt"],
+  connectionBaseUrl: {
+    label: "Base URL",
+    placeholder: "http://stt-host:8080/v1/audio/transcriptions",
+    hint: "Full transcriptions URL. Leave empty to use the localhost default.",
+  },
   sttConfig: {
     // Overridden per connection by providerSpecificData.baseUrl; this default
     // only makes the provider usable out of the box on a same-host deployment.

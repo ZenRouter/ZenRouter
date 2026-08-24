@@ -5,6 +5,7 @@ export const QUOTA_CACHE_KEY = "quotaCacheData";
 export const REFRESH_INTERVAL_MS = 60000;
 // Claude usage/quota endpoint rate-limits; poll it less often than other providers
 export const CLAUDE_REFRESH_INTERVAL_MS = 600000;
+export const COUNTDOWN_INTERVAL_MS = 1000;
 export const DEPLETED_QUOTA_THRESHOLD = 5;
 export const AUTO_REFRESH_STORAGE_KEY = "quotaAutoRefresh";
 export const CONNECTIONS_PAGE_SIZE = 20;
@@ -20,6 +21,56 @@ export const QUOTA_SORT_OPTIONS = [
   { value: "remaining-asc", label: "% quota: low to high" },
   { value: "remaining-desc", label: "% quota: high to low" },
 ];
+
+export function createQuotaAutoRefresh({
+  onRefresh,
+  onTick,
+  refreshIntervalMs = REFRESH_INTERVAL_MS,
+  tickIntervalMs = COUNTDOWN_INTERVAL_MS,
+  doc = typeof document === "undefined" ? null : document,
+} = {}) {
+  let refreshId = null;
+  let tickId = null;
+  let subscribed = false;
+
+  const clearTimers = () => {
+    if (refreshId !== null) clearInterval(refreshId);
+    if (tickId !== null) clearInterval(tickId);
+    refreshId = null;
+    tickId = null;
+  };
+
+  const startTimers = () => {
+    clearTimers();
+    refreshId = setInterval(() => onRefresh?.(), refreshIntervalMs);
+    tickId = setInterval(() => onTick?.(), tickIntervalMs);
+  };
+
+  const handleVisibilityChange = () => {
+    if (doc?.hidden) clearTimers();
+    else startTimers();
+  };
+
+  return {
+    start() {
+      if (!doc?.hidden) startTimers();
+      if (!subscribed) {
+        doc?.addEventListener?.("visibilitychange", handleVisibilityChange);
+        subscribed = true;
+      }
+    },
+    stop() {
+      clearTimers();
+      if (subscribed) {
+        doc?.removeEventListener?.("visibilitychange", handleVisibilityChange);
+        subscribed = false;
+      }
+    },
+    isRunning() {
+      return refreshId !== null;
+    },
+  };
+}
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
 export function getConnectionLabel(connection) {
