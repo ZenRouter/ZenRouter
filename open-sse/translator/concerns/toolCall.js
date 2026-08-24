@@ -151,3 +151,18 @@ export function fixMissingToolResponses(body) {
   return body;
 }
 
+/**
+ * Claude tool schema requires `type` to be explicitly set.
+ * Strict gateways (e.g. MiniMax) reject payloads omitting it with HTTP 400.
+ * Defaults missing `type` to "custom".
+ */
+export function defaultClaudeToolType(tools) {
+  if (!Array.isArray(tools)) return tools;
+  return tools.map((tool) => {
+    if (tool && typeof tool === "object" && !tool.type) {
+      return { type: "custom", ...tool };
+    }
+    return tool;
+  });
+}
+
