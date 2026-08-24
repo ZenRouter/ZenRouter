@@ -34,6 +34,14 @@ function sanitizeGeminiFunctionName(name) {
   return sanitized.substring(0, 64);
 }
 
+export function sanitizeAntigravitySystemPrompt(text) {
+  if (typeof text !== "string") return text;
+  return text.replace(
+    "You are Hermes Agent, an intelligent AI assistant created by Nous Research.",
+    "You are Hermes Agent. You are an intelligent AI assistant created by Nous Research."
+  );
+}
+
 function normalizeGeminiContents(contents) {
   const out = [];
   for (const c of contents || []) {
@@ -102,7 +110,7 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
       if (role === ROLE.SYSTEM && body.messages.length > 1) {
         result.systemInstruction = {
           role: GEMINI_ROLE.USER,
-          parts: [{ text: typeof content === "string" ? content : extractTextContent(content) }]
+          parts: [{ text: sanitizeAntigravitySystemPrompt(typeof content === "string" ? content : extractTextContent(content)) }]
         };
       } else if (role === ROLE.USER || (role === ROLE.SYSTEM && body.messages.length === 1)) {
         const parts = convertOpenAIContentToParts(content);

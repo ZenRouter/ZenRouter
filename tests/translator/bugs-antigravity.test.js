@@ -4,13 +4,19 @@ import "./registerAll.js";
 import { translateRequest, translateResponse, initState } from "../../open-sse/translator/index.js";
 import { FORMATS } from "../../open-sse/translator/formats.js";
 import { AntigravityExecutor } from "../../open-sse/executors/antigravity.js";
-import { openaiToAntigravityRequest } from "../../open-sse/translator/request/openai-to-gemini.js";
+import { openaiToAntigravityRequest, sanitizeAntigravitySystemPrompt } from "../../open-sse/translator/request/openai-to-gemini.js";
 import { ANTIGRAVITY_DEFAULT_SYSTEM } from "../../open-sse/config/appConstants.js";
 
 const AG2O = (req) =>
   translateRequest(FORMATS.ANTIGRAVITY, FORMATS.OPENAI, "m", { request: req }, true, null, null);
 
 describe("Antigravity → OpenAI", () => {
+  it("rewrites the Hermes identity prompt that Antigravity rejects", () => {
+    const input = "Before. You are Hermes Agent, an intelligent AI assistant created by Nous Research. After.";
+    expect(sanitizeAntigravitySystemPrompt(input)).toBe(
+      "Before. You are Hermes Agent. You are an intelligent AI assistant created by Nous Research. After."
+    );
+  });
   // antigravity-to-openai.js — content with BOTH functionResponse and functionCall/text
   // previously returned toolResults early → dropped tool calls / text (fixed in #2225)
   it("functionResponse + functionCall in same content keeps both", () => {
