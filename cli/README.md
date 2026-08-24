@@ -88,6 +88,18 @@ That's it! Start coding with FREE AI models.
 
 **Dashboard**: `http://localhost:20128/dashboard`
 
+### Memory limit
+
+The server process uses a 6 GB V8 heap cap by default. On a memory-limited host,
+set a lower cap or let Node size it from the available memory:
+
+```bash
+NINEROUTER_MAX_OLD_SPACE_SIZE=384 9router
+NINEROUTER_MAX_OLD_SPACE_SIZE=0 9router
+```
+
+An existing `NODE_OPTIONS=--max-old-space-size=...` value is respected.
+
 ---
 
 ## 🛠️ Supported CLI Tools
