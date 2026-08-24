@@ -23,15 +23,24 @@ const SPECIALIZED = new Set([
   "xiaomi-tokenplan", "mimo-free",
 ]);
 
-// Sanitize header: khử token + field thời gian động (kimi X-Msh-Device-Id) để snapshot ổn định.
+// Sanitize credentials and machine/release-dependent headers so snapshots are portable.
 function sanitize(headers) {
   const out = {};
   for (const [k, v] of Object.entries(headers)) {
-    out[k] = typeof v === "string"
+    const normalized = typeof v === "string"
       ? v.replace(/Bearer .+/, "Bearer <TOK>")
           .replace(/sk-test-APIKEY|tok-test-ACCESS/g, "<CRED>")
           .replace(/kimi-\d{10,}/g, "kimi-<TS>")
       : v;
+    if (k === "X-PLATFORM") out[k] = "<PLATFORM>";
+    else if (k === "X-PLATFORM-VERSION") out[k] = "<NODE_VERSION>";
+    else if (k === "X-Msh-Device-Name") out[k] = "<HOSTNAME>";
+    else if (["X-CLIENT-VERSION", "X-CORE-VERSION", "X-Msh-Version"].includes(k)
+      && typeof normalized === "string") out[k] = normalized.replace(/\d+\.\d+\.\d+(?:[-+][\w.-]+)?/g, "<VERSION>");
+    else if (k === "User-Agent" && typeof normalized === "string" && /^9Router\//i.test(normalized)) {
+      out[k] = normalized.replace(/\d+\.\d+\.\d+(?:[-+][\w.-]+)?/g, "<VERSION>");
+    }
+    else out[k] = normalized;
   }
   return out;
 }

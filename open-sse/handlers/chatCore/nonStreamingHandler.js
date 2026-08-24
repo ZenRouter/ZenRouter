@@ -142,6 +142,12 @@ function openAICompletionToResponses(responseBody, customToolNames = null) {
  * Translate non-streaming response body from provider format → OpenAI format.
  */
 export function translateNonStreamingResponse(responseBody, targetFormat, sourceFormat, customToolNames = null) {
+  // Some OpenAI-compatible gateways report a Claude target format while still
+  // returning Chat Completions JSON. The client endpoint remains authoritative:
+  // `/v1/messages` must never leak `choices` back to a Claude client.
+  if (sourceFormat === FORMATS.CLAUDE && Array.isArray(responseBody?.choices)) {
+    return openAICompletionToClaudeMessage(responseBody);
+  }
   if (targetFormat === sourceFormat) return responseBody;
   // Provider responded in OpenAI Chat Completions shape but the client speaks
   // Responses API — convert so tool_calls/text surface as Responses `output`.

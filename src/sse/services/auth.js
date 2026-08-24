@@ -17,6 +17,27 @@ function githubMonthlyResetMs(status, errorText, provider) {
   return Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1);
 }
 
+export function describeProviderError(errorText) {
+  const clamp = (value) => String(value).replace(/\s+/g, " ").trim().slice(0, 100);
+  if (typeof errorText === "string") return errorText.slice(0, 100);
+  if (!errorText || typeof errorText !== "object") return "Provider error";
+
+  const code = typeof errorText.code === "string" ? errorText.code
+    : typeof errorText.cause?.code === "string" ? errorText.cause.code
+      : null;
+  if (errorText instanceof Error) {
+    const message = errorText.message ? clamp(errorText.message) : errorText.name || "Provider error";
+    return code && !message.includes(code) ? clamp(`${message} (${code})`) : message;
+  }
+
+  for (const candidate of [errorText.error?.message, errorText.message, typeof errorText.error === "string" ? errorText.error : null, errorText.detail, errorText.reason]) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return code && !candidate.includes(code) ? clamp(`${candidate} (${code})`) : clamp(candidate);
+    }
+  }
+  return code ? clamp(`Provider error (${code})`) : "Provider error";
+}
+
 /**
  * Get provider credentials from localDb
  * Filters out unavailable accounts and returns the selected account based on strategy
@@ -240,7 +261,7 @@ export async function markAccountUnavailable(connectionId, status, errorText, pr
   }
   if (!shouldFallback) return { shouldFallback: false, cooldownMs: 0 };
 
-  const reason = typeof errorText === "string" ? errorText.slice(0, 100) : "Provider error";
+  const reason = describeProviderError(errorText);
   const lockUpdate = buildModelLockUpdate(githubResetAtMs ? null : model, cooldownMs);
 
   await updateProviderConnection(connectionId, {

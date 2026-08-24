@@ -15,6 +15,59 @@ const HARD_CAPS = new Set(["vision", "pdf", "audioInput", "videoInput"]);
 const TOOL_CALL_PREFIX = "[Called tools: ";
 const TOOL_RESULT_PREFIX = "[Tool result: ";
 
+function hasMeaningfulSseData(text) {
+  for (const line of String(text || "").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("data:") || trimmed.slice(5).trim() === "[DONE]") continue;
+    const payload = trimmed.slice(5).trim();
+    try {
+      const value = JSON.parse(payload);
+      if (value?.error) return true;
+      if (value?.choices?.some((choice) => choice?.delta?.content || choice?.delta?.tool_calls || choice?.text)) return true;
+      if (value?.type === "content_block_delta" || value?.type === "content_block_start") return true;
+      if (value?.response?.candidates?.some((candidate) => candidate?.content?.parts?.length)) return true;
+      if (value?.type?.includes?.("output_text") || value?.type?.includes?.("function_call")) return true;
+    } catch {
+      // A non-JSON data frame is still client-visible content.
+      if (payload) return true;
+    }
+  }
+  return false;
+}
+
+async function rejectFastEmptyStream(response, timeoutMs = 150) {
+  const contentType = response.headers?.get?.("content-type") || "";
+  if (!response.body || !contentType.includes("text/event-stream")) return response;
+
+  const [probe, client] = response.body.tee();
+  const probeResult = (async () => {
+    const reader = probe.getReader();
+    const decoder = new TextDecoder();
+    let text = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) return { empty: !hasMeaningfulSseData(text) };
+      text += decoder.decode(value, { stream: true });
+      if (hasMeaningfulSseData(text)) return { empty: false };
+    }
+  })();
+  const timed = await Promise.race([
+    probeResult,
+    new Promise((resolve) => setTimeout(() => resolve({ timedOut: true }), timeoutMs)),
+  ]);
+  if (timed.timedOut) {
+    await probe.cancel().catch(() => {});
+    return new Response(client, { status: response.status, statusText: response.statusText, headers: response.headers });
+  }
+  if (timed.empty) {
+    return new Response(JSON.stringify({ error: { message: "Upstream returned an empty stream", code: "empty_stream" } }), {
+      status: 503,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
+  }
+  return new Response(client, { status: response.status, statusText: response.statusText, headers: response.headers });
+}
+
 // Flatten tool turns into prose so panel models keep the context but can't loop
 // on tools: drop the request's tools, turn tool/function results into assistant
 // text, and inline assistant tool_calls names instead of the structured field.
@@ -302,7 +355,8 @@ export async function handleComboChat({ body, models, handleSingleModel, log, co
     log.info("COMBO", `Trying model ${i + 1}/${rotatedModels.length}: ${modelStr}`);
 
     try {
-      const result = await handleSingleModel(body, modelStr);
+      const rawResult = await handleSingleModel(body, modelStr);
+      const result = rawResult?.ok ? await rejectFastEmptyStream(rawResult) : rawResult;
       
       // Success (2xx) - return response
       if (result.ok) {

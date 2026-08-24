@@ -149,6 +149,22 @@ function shouldBypassMitmDns(url) {
   } catch { return false; }
 }
 
+export function isLoopbackTarget(targetUrl) {
+  let hostname;
+  try { hostname = new URL(targetUrl).hostname.toLowerCase(); } catch { return false; }
+  const host = hostname.startsWith("[") && hostname.endsWith("]") ? hostname.slice(1, -1) : hostname;
+
+  if (host === "localhost" || host.endsWith(".localhost")) return true;
+  if (host === "::1" || host === "0:0:0:0:0:0:0:1") return true;
+
+  const hexMapped = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i.exec(host);
+  if (hexMapped) return ((parseInt(hexMapped[1], 16) >> 8) & 0xff) === 127;
+
+  const dottedMapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(host);
+  const ipv4 = dottedMapped ? dottedMapped[1] : host;
+  return /^127(?:\.\d{1,3}){3}$/.test(ipv4);
+}
+
 function shouldBypassByNoProxy(targetUrl, noProxyValue) {
   const noProxy = normalizeString(noProxyValue);
   if (!noProxy) return false;
@@ -168,6 +184,7 @@ function shouldBypassByNoProxy(targetUrl, noProxyValue) {
  * Get proxy URL from environment
  */
 function getEnvProxyUrl(targetUrl) {
+  if (isLoopbackTarget(targetUrl)) return null;
   const noProxy = process.env.NO_PROXY || process.env.no_proxy;
   if (shouldBypassByNoProxy(targetUrl, noProxy)) return null;
 
@@ -203,6 +220,7 @@ function normalizeProxyUrl(proxyUrl) {
 function resolveConnectionProxyUrl(targetUrl, proxyOptions) {
   const enabled = proxyOptions?.enabled === true || proxyOptions?.connectionProxyEnabled === true;
   if (!enabled) return null;
+  if (isLoopbackTarget(targetUrl)) return null;
 
   const proxyUrlRaw = normalizeString(proxyOptions?.url ?? proxyOptions?.connectionProxyUrl);
   if (!proxyUrlRaw) return null;

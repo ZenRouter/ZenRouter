@@ -42,15 +42,56 @@ export class CommandCodeExecutor extends BaseExecutor {
   async execute(opts) {
     const result = await super.execute(opts);
     if (!result?.response?.ok || !result.response.body) return result;
-    result.response = wrapNdjsonAsOpenAISse(result.response, opts.model);
+    const peek = await peekFirstCommandCodeFrame(result.response);
+    if (peek.isError) {
+      await peek.reader.cancel().catch(() => {});
+      return {
+        ...result,
+        response: new Response(JSON.stringify({
+          error: { message: peek.message, code: peek.status || "commandcode_error", type: "server_error" }
+        }), {
+          status: peek.status || 503,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        }),
+      };
+    }
+    result.response = wrapNdjsonAsOpenAISse(peek.consumed, peek.reader, opts.model);
     return result;
   }
 }
 
-function wrapNdjsonAsOpenAISse(originalResponse, model) {
+const CONTENT_TYPES = new Set(["text-delta", "reasoning-delta", "tool-input-start", "tool-input-delta", "tool-call", "finish-step", "finish"]);
+
+async function peekFirstCommandCodeFrame(response) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let consumed = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) return { isError: false, consumed, reader };
+    consumed += decoder.decode(value, { stream: true });
+    let newline;
+    while ((newline = consumed.indexOf("\n")) !== -1) {
+      const line = consumed.slice(0, newline).replace(/\r$/, "").trim();
+      if (!line) { consumed = consumed.slice(newline + 1); continue; }
+      let event;
+      try { event = JSON.parse(line.startsWith("data:") ? line.slice(5).trim() : line); } catch { consumed = consumed.slice(newline + 1); continue; }
+      if (CONTENT_TYPES.has(event?.type)) return { isError: false, consumed, reader };
+      const error = event?.type === "error" ? (event.error || event) : event;
+      const status = Number(error?.statusCode) || 0;
+      if (event?.type === "error" && (status >= 400 || error?.type === "server_error" || error?.isRetryable === true)) {
+        return { isError: true, status: status >= 400 ? status : 503, message: error.message || `CommandCode upstream error (${status || "unknown"})`, consumed, reader };
+      }
+      consumed = consumed.slice(newline + 1);
+    }
+  }
+}
+
+function wrapNdjsonAsOpenAISse(seedBuffer, reader, model) {
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();
-  let buffer = "";
+  let buffer = seedBuffer || "";
   const state = { model };
 
   const emitChunks = (chunks, controller) => {
@@ -62,33 +103,40 @@ function wrapNdjsonAsOpenAISse(originalResponse, model) {
     }
   };
 
-  const transform = new TransformStream({
-    transform(chunk, controller) {
-      buffer += decoder.decode(chunk, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-        // Translate AI SDK v5 NDJSON line to one or more OpenAI chunks
-        emitChunks(commandCodeToOpenAIResponse(trimmed, state), controller);
+  const processLine = (line, controller) => {
+    const trimmed = line.trim();
+    if (trimmed) emitChunks(commandCodeToOpenAIResponse(trimmed, state), controller);
+  };
+  return new Response(new ReadableStream({
+    async start(controller) {
+      try {
+        let newline;
+        while ((newline = buffer.indexOf("\n")) !== -1) {
+          processLine(buffer.slice(0, newline), controller);
+          buffer = buffer.slice(newline + 1);
+        }
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            buffer += decoder.decode();
+            if (buffer.trim()) processLine(buffer, controller);
+            break;
+          }
+          buffer += decoder.decode(value, { stream: true });
+          while ((newline = buffer.indexOf("\n")) !== -1) {
+            processLine(buffer.slice(0, newline), controller);
+            buffer = buffer.slice(newline + 1);
+          }
+        }
+      } finally {
+        controller.enqueue(encoder.encode(SSE_DONE));
+        try { controller.close(); } catch { /* already closed */ }
       }
     },
-    flush(controller) {
-      const trimmed = buffer.trim();
-      if (trimmed) {
-        emitChunks(commandCodeToOpenAIResponse(trimmed, state), controller);
-      }
-      controller.enqueue(encoder.encode(SSE_DONE));
-    },
-  });
-
-  const newBody = originalResponse.body.pipeThrough(transform);
-  return new Response(newBody, {
-    status: originalResponse.status,
-    statusText: originalResponse.statusText,
-    headers: originalResponse.headers,
-  });
+    cancel() { return reader.cancel().catch(() => {}); },
+  }), { status: 200, statusText: "OK", headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } });
 }
 
 export default CommandCodeExecutor;
+
+export const __test__ = { peekFirstCommandCodeFrame, wrapNdjsonAsOpenAISse };
