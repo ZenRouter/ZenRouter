@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 import { getAdapter } from "../driver.js";
 import { parseJson, stringifyJson } from "../helpers/jsonCol.js";
 import { getMeta, setMeta } from "../helpers/metaStore.js";
+import { hardenEmitter } from "@/lib/schedulerLifecycle.js";
 
 function maskApiKey(key) {
   if (!key || typeof key !== "string") return null;
@@ -19,7 +20,11 @@ if (!global._pendingRequests) global._pendingRequests = { byModel: {}, byAccount
 if (!global._lastErrorProvider) global._lastErrorProvider = { provider: "", ts: 0 };
 if (!global._statsEmitter) {
   global._statsEmitter = new EventEmitter();
-  global._statsEmitter.setMaxListeners(50);
+  // Harden with a throttled warning: the previous cap-only setup silently grew
+  // to the cap during long uptime, with no signal until node began emitting
+  // MaxListenersExceededWarning on every emit. A listener count >= 40 on a
+  // dashboard-only emitter is always a leak.
+  hardenEmitter(global._statsEmitter, { name: "statsEmitter", cap: 50, warnAt: 40 });
 }
 if (!global._pendingTimers) global._pendingTimers = {};
 if (!global._recentRing) global._recentRing = { items: [], initialized: false };

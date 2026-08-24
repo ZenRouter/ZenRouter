@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import { CONSOLE_LOG_CONFIG } from "@/shared/constants/config.js";
+import { hardenEmitter } from "@/lib/schedulerLifecycle.js";
 
 const consoleLevels = ["log", "info", "warn", "error", "debug"];
 
@@ -10,7 +11,7 @@ if (!global._consoleLogBufferState) {
     originals: {},
     emitter: new EventEmitter(),
   };
-  global._consoleLogBufferState.emitter.setMaxListeners(50);
+  hardenEmitter(global._consoleLogBufferState.emitter, { name: "consoleLogEmitter", cap: 50, warnAt: 40 });
 }
 
 const state = global._consoleLogBufferState;
@@ -18,7 +19,7 @@ const state = global._consoleLogBufferState;
 // Ensure emitter exists (handles hot reload with stale global)
 if (!state.emitter) {
   state.emitter = new EventEmitter();
-  state.emitter.setMaxListeners(50);
+  hardenEmitter(state.emitter, { name: "consoleLogEmitter", cap: 50, warnAt: 40 });
 }
 
 if (!state.pendingLines) state.pendingLines = [];
