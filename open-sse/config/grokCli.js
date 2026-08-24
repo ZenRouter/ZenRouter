@@ -6,5 +6,5 @@ export const GROK_CLI_USER_AGENT = `grok-shell/${GROK_CLI_VERSION} (linux; x86_6
 
 export function supportsGrokCliReasoningEffort(model) {
   // ponytail: unknown models omit effort until live metadata reaches dispatch.
-  return /^grok-4\.5(?:$|-)/.test(String(model || ""));
+  return /^grok-4\.(?:5|6)(?:$|-)/.test(String(model || ""));
 }

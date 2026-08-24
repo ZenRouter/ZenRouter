@@ -324,6 +324,8 @@ describe("GrokCliExecutor", () => {
 
   it("omits reasoning effort for models that reject it", () => {
     expect(supportsGrokCliReasoningEffort("grok-4.5")).toBe(true);
+    expect(supportsGrokCliReasoningEffort("grok-4.6")).toBe(true);
+    expect(supportsGrokCliReasoningEffort("grok-4.6-xhigh")).toBe(true);
     expect(supportsGrokCliReasoningEffort("grok-build")).toBe(false);
     expect(supportsGrokCliReasoningEffort("grok-composer-2.5-fast")).toBe(false);
 
@@ -336,6 +338,13 @@ describe("GrokCliExecutor", () => {
       expect(out.reasoning).toEqual({ summary: "concise" });
       expect(out.include).toContain("reasoning.encrypted_content");
     }
+
+    const grok46 = executor.transformRequest("grok-4.6", {
+      model: "grok-4.6",
+      input: "hi",
+      reasoning_effort: "xhigh",
+    }, true, { connectionId: "effort-grok-4.6" });
+    expect(grok46.reasoning).toEqual({ effort: "xhigh", summary: "concise" });
   });
 
   it("drops stale tool_choice and normalizes converted custom choices", () => {
