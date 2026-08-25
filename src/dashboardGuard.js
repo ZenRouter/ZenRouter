@@ -71,7 +71,7 @@ const PROTECTED_API_PATHS = [
 const LOCAL_ONLY_PATHS = [
   "/api/cli-tools/cowork-settings",
   "/api/cli-tools/antigravity-mitm",
-  "/api/mcp/",
+  "/api/mcp",
   "/api/tunnel/tailscale-install",
   "/api/tunnel/tailscale-enable",
   "/api/tunnel/tailscale-disable",
@@ -85,6 +85,20 @@ const LOCAL_ONLY_PATHS = [
   "/api/headroom/stop",
   "/api/headroom/proxy",
 ];
+
+function isLocalOnlyRoute(pathname) {
+  return LOCAL_ONLY_PATHS.some((p) => {
+    const base = p.replace(/\/+$/, "");
+    return pathname === base || pathname.startsWith(`${base}/`);
+  });
+}
+
+function isAlwaysProtected(pathname) {
+  return ALWAYS_PROTECTED.some((p) => {
+    const base = p.replace(/\/+$/, "");
+    return pathname === base || pathname.startsWith(`${base}/`);
+  });
+}
 
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
@@ -195,20 +209,22 @@ export const __test__ = {
   extractApiKey,
   canAccessPublicLlmApi,
   canAccessLocalOnlyRoute,
+  isLocalOnlyRoute,
+  isAlwaysProtected,
 };
 
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   // Local-only gate for spawn-capable / host-secret routes.
-  if (LOCAL_ONLY_PATHS.some((p) => pathname.startsWith(p))) {
+  if (isLocalOnlyRoute(pathname)) {
     if (!(await canAccessLocalOnlyRoute(request))) {
       return NextResponse.json({ error: "Local only: CLI token required" }, { status: 403 });
     }
   }
 
   // Always protected - require valid JWT or local CLI token (machineId-based)
-  if (ALWAYS_PROTECTED.some((p) => pathname.startsWith(p))) {
+  if (isAlwaysProtected(pathname)) {
     if (await hasValidCliToken(request) || await hasValidToken(request))
       return NextResponse.next();
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

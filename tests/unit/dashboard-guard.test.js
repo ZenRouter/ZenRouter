@@ -269,6 +269,13 @@ describe("dashboard guard local-only access", () => {
 });
 
 describe("dashboard guard helpers", () => {
+  it("matches local-only routes canonically regardless of trailing slash", () => {
+    expect(__test__.isLocalOnlyRoute("/api/mcp")).toBe(true);
+    expect(__test__.isLocalOnlyRoute("/api/mcp/")).toBe(true);
+    expect(__test__.isLocalOnlyRoute("/api/mcp/servers")).toBe(true);
+    expect(__test__.isLocalOnlyRoute("/api/mcp-other")).toBe(false);
+  });
+
   it("extracts bearer API keys before x-api-key", () => {
     const apiRequest = request("/v1/chat/completions", {
       authorization: "Bearer bearer-key",
