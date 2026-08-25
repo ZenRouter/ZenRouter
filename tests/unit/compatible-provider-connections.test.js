@@ -19,6 +19,12 @@ async function setupTestContext(nodeData) {
       },
     },
   }));
+  // The providers API sits behind dashboard auth since the loopback-trust
+  // hardening — grant it explicitly instead of relying on cookie plumbing.
+  vi.doMock("@/dashboardGuard", () => ({
+    hasValidCliToken: vi.fn(async () => true),
+    isAuthenticated: vi.fn(async () => true),
+  }));
 
   const { POST } = await import("@/app/api/providers/route.js");
   const {

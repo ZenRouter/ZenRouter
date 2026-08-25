@@ -162,7 +162,9 @@ async function canAccessLocalOnlyRoute(request) {
 }
 
 export async function hasValidToken(request) {
-  const token = request.cookies.get("auth_token")?.value;
+  // Fail-closed: a request without a cookie jar (non-NextRequest adapter) is
+  // unauthenticated, not a crash.
+  const token = request?.cookies?.get?.("auth_token")?.value;
   return await verifyDashboardAuthToken(token);
 }
 
