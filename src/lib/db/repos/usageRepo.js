@@ -538,31 +538,55 @@ export async function getUsageStats(period = "all") {
       }
     }
 
-    // Overlay precise lastUsed timestamps from history
-    const overlayCutoff = maxDays ? Date.now() - maxDays * 86400000 : 0;
-    const histRows = db.all(
-      `SELECT timestamp, provider, model, connectionId, apiKey, endpoint FROM usageHistory WHERE timestamp >= ?`,
-      [new Date(overlayCutoff).toISOString()]
+    // Overlay precise lastUsed timestamps from history via efficient SQL aggregation
+    const overlayCutoffIso = new Date(maxDays ? Date.now() - maxDays * 86400000 : 0).toISOString();
+
+    const maxModelRows = db.all(
+      `SELECT model, provider, MAX(timestamp) AS lastUsed FROM usageHistory WHERE timestamp >= ? GROUP BY model, provider`,
+      [overlayCutoffIso]
     );
-    for (const e of histRows) {
-      const ts = e.timestamp;
-      const modelKey = e.provider ? `${e.model} (${e.provider})` : e.model;
-      if (stats.byModel[modelKey] && new Date(ts) > new Date(stats.byModel[modelKey].lastUsed)) stats.byModel[modelKey].lastUsed = ts;
-
-      if (e.connectionId) {
-        const accountName = connectionMap[e.connectionId] || `Account ${e.connectionId.slice(0, 8)}...`;
-        const accountKey = `${e.model} (${e.provider} - ${accountName})`;
-        if (stats.byAccount[accountKey] && new Date(ts) > new Date(stats.byAccount[accountKey].lastUsed)) stats.byAccount[accountKey].lastUsed = ts;
+    for (const r of maxModelRows) {
+      const modelKey = r.provider ? `${r.model} (${r.provider})` : r.model;
+      if (stats.byModel[modelKey] && new Date(r.lastUsed) > new Date(stats.byModel[modelKey].lastUsed)) {
+        stats.byModel[modelKey].lastUsed = r.lastUsed;
       }
+    }
 
-      const apiKeyKey = (e.apiKey && typeof e.apiKey === "string")
-        ? `${e.apiKey}|${e.model}|${e.provider || "unknown"}`
+    const maxAccountRows = db.all(
+      `SELECT connectionId, model, provider, MAX(timestamp) AS lastUsed FROM usageHistory WHERE connectionId IS NOT NULL AND timestamp >= ? GROUP BY connectionId, model, provider`,
+      [overlayCutoffIso]
+    );
+    for (const r of maxAccountRows) {
+      const accountName = connectionMap[r.connectionId] || `Account ${r.connectionId.slice(0, 8)}...`;
+      const accountKey = `${r.model} (${r.provider} - ${accountName})`;
+      if (stats.byAccount[accountKey] && new Date(r.lastUsed) > new Date(stats.byAccount[accountKey].lastUsed)) {
+        stats.byAccount[accountKey].lastUsed = r.lastUsed;
+      }
+    }
+
+    const maxApiKeyRows = db.all(
+      `SELECT apiKey, model, provider, MAX(timestamp) AS lastUsed FROM usageHistory WHERE timestamp >= ? GROUP BY apiKey, model, provider`,
+      [overlayCutoffIso]
+    );
+    for (const r of maxApiKeyRows) {
+      const apiKeyKey = (r.apiKey && typeof r.apiKey === "string")
+        ? `${r.apiKey}|${r.model}|${r.provider || "unknown"}`
         : "local-no-key";
-      if (stats.byApiKey[apiKeyKey] && new Date(ts) > new Date(stats.byApiKey[apiKeyKey].lastUsed)) stats.byApiKey[apiKeyKey].lastUsed = ts;
+      if (stats.byApiKey[apiKeyKey] && new Date(r.lastUsed) > new Date(stats.byApiKey[apiKeyKey].lastUsed)) {
+        stats.byApiKey[apiKeyKey].lastUsed = r.lastUsed;
+      }
+    }
 
-      const endpoint = e.endpoint || "Unknown";
-      const endpointKey = `${endpoint}|${e.model}|${e.provider || "unknown"}`;
-      if (stats.byEndpoint[endpointKey] && new Date(ts) > new Date(stats.byEndpoint[endpointKey].lastUsed)) stats.byEndpoint[endpointKey].lastUsed = ts;
+    const maxEndpointRows = db.all(
+      `SELECT endpoint, model, provider, MAX(timestamp) AS lastUsed FROM usageHistory WHERE timestamp >= ? GROUP BY endpoint, model, provider`,
+      [overlayCutoffIso]
+    );
+    for (const r of maxEndpointRows) {
+      const endpoint = r.endpoint || "Unknown";
+      const endpointKey = `${endpoint}|${r.model}|${r.provider || "unknown"}`;
+      if (stats.byEndpoint[endpointKey] && new Date(r.lastUsed) > new Date(stats.byEndpoint[endpointKey].lastUsed)) {
+        stats.byEndpoint[endpointKey].lastUsed = r.lastUsed;
+      }
     }
   } else {
     // 24h / today: live history
