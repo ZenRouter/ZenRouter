@@ -1,6 +1,9 @@
 # v0.5.56 (2026-08-25)
 
 ## Fixed
+- **getUsageStats performance & memory leak fix**: replaced full table scan in `getUsageStats('all')` with optimized SQL `MAX(timestamp)` aggregation grouped by entity (`src/lib/db/repos/usageRepo.js`). Prevents loading hundreds of thousands of historical rows into Node.js memory on dashboard usage stats refresh.
+- **dashboardGuard path matching hardening**: enforced canonical path matching (`isLocalOnlyRoute` and `isAlwaysProtected`) in `src/dashboardGuard.js` to prevent trailing-slash route bypasses on `LOCAL_ONLY_PATHS` (such as `/api/mcp`).
+- **Dashboard UI React hooks**: fixed function hoisting and useEffect dependency/setState warnings in `PricingModal.js`, `RequestLogger.js`, and `useModelCaps.js`.
 ## Fixed
 - **Declarative TOML filter engine (P3)**: port of upstream src/filters/*.toml
   system — a minimal TOML-subset parser plus an applier supporting
