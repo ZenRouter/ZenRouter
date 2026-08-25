@@ -35,6 +35,9 @@ function sanitize(headers) {
     if (k === "X-PLATFORM") out[k] = "<PLATFORM>";
     else if (k === "X-PLATFORM-VERSION") out[k] = "<NODE_VERSION>";
     else if (k === "X-Msh-Device-Name") out[k] = "<HOSTNAME>";
+    // Host OS/arch fingerprints vary per machine — normalize for portable snapshots.
+    else if (k === "X-Stainless-Arch") out[k] = "<ARCH>";
+    else if (k === "X-Stainless-Os") out[k] = "<OS>";
     else if (["X-CLIENT-VERSION", "X-CORE-VERSION", "X-Msh-Version"].includes(k)
       && typeof normalized === "string") out[k] = normalized.replace(/\d+\.\d+\.\d+(?:[-+][\w.-]+)?/g, "<VERSION>");
     else if (k === "User-Agent" && typeof normalized === "string" && /^9Router\//i.test(normalized)) {

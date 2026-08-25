@@ -1,4 +1,13 @@
 import { platform, arch } from "os";
+import {
+  CLAUDE_CODE_VERSION,
+  CLAUDE_CLI_USER_AGENT,
+  CLAUDE_BETA_FLAGS_BASE,
+  CLAUDE_BETA_FLAGS_HEAVY_AGENT,
+  CLAUDE_STAINLESS,
+  ANTIGRAVITY_IDE_VERSION,
+  ANTIGRAVITY_IDE_USER_AGENT,
+} from "../config/clientVersions.js";
 
 // === OS/Arch helpers (Stainless fingerprint) ===
 export function mapStainlessOs() {
@@ -29,36 +38,31 @@ export const CLAUDE_API_HEADERS = {
   "Anthropic-Beta": "claude-code-20250219,interleaved-thinking-2025-05-14"
 };
 
-// Full Claude CLI fingerprint — required by providers that gate on client identity (e.g. agentrouter)
+// Full Claude CLI fingerprint — required by providers that gate on client identity (e.g. agentrouter).
+// Versions and beta flags are sourced from open-sse/config/clientVersions.js so a single bump
+// propagates everywhere; OS/Arch come from runtime so 9router passes host detection.
 export const CLAUDE_CLI_SPOOF_HEADERS = {
   "Anthropic-Version": ANTHROPIC_API_VERSION,
-  "Anthropic-Beta": "claude-code-20250219,oauth-2025-04-20,interleaved-thinking-2025-05-14,context-management-2025-06-27,prompt-caching-scope-2026-01-05,advanced-tool-use-2025-11-20,effort-2025-11-24,structured-outputs-2025-12-15,fast-mode-2026-02-01,redact-thinking-2026-02-12,token-efficient-tools-2026-03-28",
+  "Anthropic-Beta": [
+    ...CLAUDE_BETA_FLAGS_BASE,
+    ...CLAUDE_BETA_FLAGS_HEAVY_AGENT,
+  ].join(","),
   "Anthropic-Dangerous-Direct-Browser-Access": "true",
-  "User-Agent": "claude-cli/2.1.92 (external, sdk-cli)",
+  "User-Agent": CLAUDE_CLI_USER_AGENT,
   "X-App": "cli",
-  "X-Stainless-Helper-Method": "stream",
-  "X-Stainless-Retry-Count": "0",
-  "X-Stainless-Runtime-Version": "v24.14.0",
-  "X-Stainless-Package-Version": "0.80.0",
-  "X-Stainless-Runtime": "node",
+  "X-Stainless-Helper-Method": CLAUDE_STAINLESS.helperMethod,
+  "X-Stainless-Retry-Count": CLAUDE_STAINLESS.retryCount,
+  "X-Stainless-Runtime-Version": CLAUDE_STAINLESS.runtimeVersion,
+  "X-Stainless-Package-Version": CLAUDE_STAINLESS.packageVersion,
+  "X-Stainless-Runtime": CLAUDE_STAINLESS.runtime,
   "X-Stainless-Lang": "js",
   "X-Stainless-Arch": mapStainlessArch(),
   "X-Stainless-Os": mapStainlessOs(),
-  "X-Stainless-Timeout": "600"
+  "X-Stainless-Timeout": CLAUDE_STAINLESS.timeout
 };
 
-const ANTHROPIC_BETA_BASE = [
-  "claude-code-20250219",
-  "oauth-2025-04-20",
-  "interleaved-thinking-2025-05-14",
-  "context-management-2025-06-27",
-  "prompt-caching-scope-2026-01-05",
-  "structured-outputs-2025-12-15",
-  "fast-mode-2026-02-01",
-  "redact-thinking-2026-02-12",
-  "token-efficient-tools-2026-03-28",
-];
-const ANTHROPIC_BETA_HEAVY_AGENT = ["advanced-tool-use-2025-11-20", "effort-2025-11-24"];
+const ANTHROPIC_BETA_BASE = [...CLAUDE_BETA_FLAGS_BASE];
+const ANTHROPIC_BETA_HEAVY_AGENT = [...CLAUDE_BETA_FLAGS_HEAVY_AGENT];
 
 // Heavy-agent beta flags are gated to opus/sonnet — cheaper models don't need them.
 export function selectAnthropicBeta(model = "") {
@@ -67,6 +71,9 @@ export function selectAnthropicBeta(model = "") {
   return flags.join(",");
 }
 
+// Re-export the Claude version for tests/inspectors that import from shared.
+export const CLAUDE_CODE_VERSION_REEXPORT = CLAUDE_CODE_VERSION;
+
 // Shared baseUrls
 export const KIMI_CODING_BASE_URL = "https://api.kimi.com/coding/v1/messages";
 
@@ -74,12 +81,12 @@ export const KIMI_CODING_BASE_URL = "https://api.kimi.com/coding/v1/messages";
 export const OPENAI_COMPAT_BASE = "https://api.openai.com/v1";
 export const ANTHROPIC_COMPAT_BASE = "https://api.anthropic.com/v1";
 
-// Official Antigravity IDE Desktop 2.1.1 fingerprint captured from macOS arm64.
-// Keep this static even when 9router runs on Linux: the provider profile is
-// intentionally matching the IDE client, not the server host.
-export const ANTIGRAVITY_IDE_VERSION = "2.1.1";
+// Official Antigravity IDE Desktop fingerprint. Version + UA are
+// single-sourced from open-sse/config/clientVersions.js; the platform
+// token is computed at import time so the spoof matches the IDE client,
+// not the 9router host OS.
+export { ANTIGRAVITY_IDE_VERSION, ANTIGRAVITY_IDE_USER_AGENT };
 export const ANTIGRAVITY_IDE_BASE_URL = "https://daily-cloudcode-pa.googleapis.com";
-export const ANTIGRAVITY_IDE_USER_AGENT = `antigravity/ide/${ANTIGRAVITY_IDE_VERSION} darwin/arm64`;
 
 // Antigravity OAuth client credentials (public CLI client — duplicated in usage.js + src/lib/oauth)
 export const ANTIGRAVITY_OAUTH_CLIENT = {
