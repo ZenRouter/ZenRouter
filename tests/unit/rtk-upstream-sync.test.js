@@ -200,3 +200,62 @@ describe("autodetect routing (upstream order)", () => {
     }
   });
 });
+
+describe("json filter (port of json_cmd.rs)", () => {
+  it("compacts nested objects with sorted keys and value truncation", async () => {
+    const { jsonFilter } = await import("../../open-sse/rtk/filters/jsonCompact.js");
+    const big = "x".repeat(200);
+    const out = jsonFilter(JSON.stringify({ zeta: 1, alpha: big, list: [1, 2, 3, 4, 5, 6, 7] }));
+    expect(out).toContain('alpha: "xxx');
+    expect(out).toContain('..."');
+    expect(out).toContain("[1, ... +6 more]");
+    const keyOrder = out.indexOf("alpha") < out.indexOf("zeta");
+    expect(keyOrder).toBe(true); // keys sorted
+  });
+
+  it("returns null for non-JSON input", async () => {
+    const { jsonFilter } = await import("../../open-sse/rtk/filters/jsonCompact.js");
+    expect(jsonFilter("this is not json")).toBeNull();
+  });
+});
+
+describe("env filter (post-hoc env_cmd port + redaction)", () => {
+  it("redacts secret-looking values, truncates long ones, caps listing", async () => {
+    const { envFilter } = await import("../../open-sse/rtk/filters/env.js");
+    const lines = [
+      "API_KEY=super-secret-value-1234567890",
+      "DATABASE_URL=postgres://u:p@host/db",
+      `LONG_VAR=${"v".repeat(300)}`,
+      "HOME=/home/me",
+    ];
+    for (let i = 0; i < 25; i++) lines.push(`VAR_${i}=x`);
+    const out = envFilter(lines.join("\n"));
+    expect(out).toContain("29 env vars:");
+    expect(out).toContain("API_KEY=<redacted:29 chars>");
+    expect(out).not.toContain("super-secret-value");
+    expect(out).toContain(`LONG_VAR=${"v".repeat(50)}... (300 chars)`);
+    expect(out).toContain("+9 more vars");
+  });
+
+  it("returns null when a line is not KEY=VALUE", async () => {
+    const { envFilter } = await import("../../open-sse/rtk/filters/env.js");
+    expect(envFilter(["A=1", "B=2", "C=3", "D=4", "not an assignment"].join("\n"))).toBeNull();
+  });
+});
+
+describe("autodetect routes json/env before generic fallbacks", () => {
+  it("large JSON blob → json filter", async () => {
+    const { autoDetectFilter } = await import("../../open-sse/rtk/autodetect.js");
+    const { jsonFilter } = await import("../../open-sse/rtk/filters/jsonCompact.js");
+    const blob = JSON.stringify({ data: Array.from({ length: 50 }, (_, i) => ({ i, pad: "y".repeat(20) })) });
+    expect(blob.length).toBeGreaterThan(500);
+    expect(autoDetectFilter(blob)).toBe(jsonFilter);
+  });
+
+  it("env dump → env filter", async () => {
+    const { autoDetectFilter } = await import("../../open-sse/rtk/autodetect.js");
+    const { envFilter } = await import("../../open-sse/rtk/filters/env.js");
+    const dump = Array.from({ length: 10 }, (_, i) => `SOME_VAR_${i}=${"value".repeat(10)}${i}`).join("\n");
+    expect(autoDetectFilter(dump)).toBe(envFilter);
+  });
+});
