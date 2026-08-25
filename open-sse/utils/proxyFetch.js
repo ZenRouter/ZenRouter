@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { MEMORY_CONFIG } from "../config/runtimeConfig.js";
+import { MEMORY_CONFIG, FETCH_CONNECT_TIMEOUT_MS } from "../config/runtimeConfig.js";
 import { dbg } from "./debugLog.js";
 
 const originalFetch = globalThis.fetch;
@@ -262,6 +262,42 @@ async function createBypassRequest(parsedUrl, realIP, options) {
 
   return new Promise((resolve, reject) => {
     const socket = new net.Socket();
+    // Bounded connect/idle timeout — a hung socket would otherwise pin the
+    // request promise indefinitely (the surrounding fetch path doesn't impose
+    // a default deadline).
+    socket.setTimeout(FETCH_CONNECT_TIMEOUT_MS);
+
+    // Honor caller abort: destroy the socket so the in-flight TLS handshake
+    // and any pending body write are torn down instead of leaking.
+    let abortHandler = null;
+    const onAbort = () => {
+      try { socket.destroy(new Error("aborted")); } catch { /* socket already closed */ }
+    };
+    if (options.signal) {
+      if (options.signal.aborted) {
+        socket.destroy();
+        reject(new Error("aborted"));
+        return;
+      }
+      abortHandler = onAbort;
+      options.signal.addEventListener("abort", abortHandler, { once: true });
+    }
+
+    const cleanup = () => {
+      socket.removeListener("error", onSocketError);
+      socket.removeListener("timeout", onSocketTimeout);
+      if (abortHandler && options.signal) {
+        options.signal.removeEventListener("abort", abortHandler);
+      }
+    };
+
+    const onSocketError = (err) => { cleanup(); reject(err); };
+    const onSocketTimeout = () => {
+      cleanup();
+      socket.destroy(new Error("Bypass request socket timed out"));
+    };
+    socket.on("error", onSocketError);
+    socket.on("timeout", onSocketTimeout);
 
     socket.connect(HTTPS_PORT, realIP, () => {
       const reqOptions = {
@@ -281,33 +317,79 @@ async function createBypassRequest(parsedUrl, realIP, options) {
         },
       };
 
+      let settled = false;
       const req = https.request(reqOptions, (res) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        // Normalize Node's lowercased header record into a real Headers
+        // instance. A bare Map looks similar but breaks downstream consumers
+        // that hand `response.headers` to `new Response(...)` (Map isn't a
+        // valid HeadersInit) or that call case-insensitive `.get()`.
+        const headers = new Headers();
+        for (const [k, v] of Object.entries(res.headers)) {
+          if (Array.isArray(v)) v.forEach((x) => headers.append(k, String(x)));
+          else if (v != null) headers.set(k, String(v));
+        }
+        // Drain the response body once into a Buffer so the various body
+        // accessors all agree on the same bytes and we don't race the
+        // underlying Readable. Whoever consumes first wins; subsequent
+        // accessors replay the cached buffer.
+        let bodyPromise = null;
+        const readAll = () => {
+          if (!bodyPromise) {
+            bodyPromise = (async () => {
+              const chunks = [];
+              for await (const chunk of res) chunks.push(chunk);
+              return Buffer.concat(chunks);
+            })();
+          }
+          return bodyPromise;
+        };
+        const bodyStream = Readable.toWeb(res);
         const response = {
           ok: res.statusCode >= HTTP_SUCCESS_MIN && res.statusCode < HTTP_SUCCESS_MAX,
           status: res.statusCode,
           statusText: res.statusMessage,
-          headers: new Map(Object.entries(res.headers)),
-          body: Readable.toWeb(res),
-          text: async () => {
-            const chunks = [];
-            for await (const chunk of res) chunks.push(chunk);
-            return Buffer.concat(chunks).toString();
+          headers,
+          body: bodyStream,
+          text: async () => (await readAll()).toString(),
+          json: async () => JSON.parse(await (await readAll()).toString()),
+          arrayBuffer: async () => {
+            const buf = await readAll();
+            // Hand back a tight ArrayBuffer covering exactly the response
+            // bytes — Buffer#buffer is a wider pool view, .slice() copies
+            // the used region into a standalone ArrayBuffer.
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
           },
-          json: async () => JSON.parse(await response.text()),
         };
         resolve(response);
       });
 
-      req.on("error", reject);
+      req.on("error", (err) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(err);
+      });
       if (options.body) {
-        req.write(typeof options.body === "string" ? options.body : JSON.stringify(options.body));
+        if (typeof options.body === "string" || Buffer.isBuffer(options.body)) {
+          req.write(options.body);
+        } else {
+          req.write(JSON.stringify(options.body));
+        }
       }
       req.end();
     });
-
-    socket.on("error", reject);
   });
 }
+
+/**
+ * Internal export so unit tests can drive the bypass path against a local
+ * HTTPS server without spinning up the full global fetch monkey-patch.
+ * Not part of the supported public API.
+ */
+export const __testing = { createBypassRequest };
 
 export async function proxyAwareFetch(url, options = {}, proxyOptions = null) {
   const targetUrl = typeof url === "string" ? url : url.toString();
