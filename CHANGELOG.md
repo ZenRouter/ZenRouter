@@ -2,6 +2,18 @@
 
 ## Fixed
 ## Fixed
+- **proxyFetch MITM bypass hardening**: direct-IP attempts now honor the URL
+  port (was hardcoded 443) and set Host to url.host; TLS wraps the
+  pre-connected socket via createConnection/tls.connect (options.socket is not
+  supported by modern Node) with an explicit rejectUnauthorized opt-out hook
+  for fixtures. Failed bypass attempts per host now enter a 5-minute negative
+  cooldown (DISABLE_MITM_BYPASS=1 disables entirely) so VPN/proxy networks no
+  longer pay a refused connect on every call.
+- **Tests**: proxy-fetch-bypass-headers suite fixed (syntax error + https
+  server ran without a certificate, so it had never actually executed);
+  node:test-based suites (saml, kimchi ×2) converted to vitest and their
+  stale assertions updated (kimchi dual-auth freeTier category).
+## Fixed
 - **Token Saver engine synced with upstream rtk v0.45.x** (rtk-ai/rtk): new
   autodetect chain + compressors for cargo test, pytest, go test -json, mypy
   and vitest outputs (failures-only, compact summaries, caps mirrored from

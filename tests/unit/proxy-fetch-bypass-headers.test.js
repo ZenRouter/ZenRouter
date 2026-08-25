@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import https from "node:https";
-import { generateKeyPairSync, createPrivateKey } from "node:crypto";
 
 /**
  * Bug: the MITM DNS bypass branch in `createBypassRequest` returned response
@@ -17,23 +16,64 @@ import { generateKeyPairSync, createPrivateKey } from "node:crypto";
 
 const HOST = "127.0.0.1";
 
-function buildSelfSignedCert() {
-  // Minimal self-signed cert generated at test time. We don't ship the cert
-  // material in the repo to keep this test deterministic across CI images.
-  const { publicKey, privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
-  const privPem = privateKey.export({ type: "pkcs8", format: "pem" });
-  // We don't actually need a real cert for the test — Node accepts any cert
-  // when NODE_TLS_REJECT_UNAUTHORIZED=0. But we still need *something* in the
-  // server context, so return the keypair and let https.createServer build
-  // a default cert via snakeoil fallback.
-  return { publicKey, privateKey: createPrivateKey(privPem) };
-}
+// Throwaway self-signed cert (CN=9router-test-localhost) generated for this
+// fixture only. Accepted solely because the suite sets
+// NODE_TLS_REJECT_UNAUTHORIZED=0; never use these files anywhere else.
+const TEST_TLS_KEY = `-----BEGIN PRIVATE KEY-----
+MIIEugIBADANBgkqhkiG9w0BAQEFAASCBKQwggSgAgEAAoIBAQCW0mdEKSJYE15a
+hC7wLYeCvP3M0Q2p5bQCbUeGqZfXdZTF7UrYG7K9MRWOAo0vXACWmzVD7ZRo5Y4n
+NIH76+I2Gooayz+UuDwcbPKs4mDPTzCr1PenMEzCMd4wZMMEM/7Sl5RCnwXPrk/d
++iLyHi/JT1wdEpRjac9p5YZYXjdOzVpyumiX1OhRKa8YB+R3Oe7g2NzCPWrYH6x5
+0aJL17H5T6ECDtHnId2EMNro+7+jkTXDOsR4/0dYv2Tb+vacUIR4fOPdR3XlMbQY
+VrLR7Ws+IRZx1YkFVqpQx+WGZJrkr4IqwqRb5Gj3g4jF82VbyHtr3SYk805pR5Fv
+lWG33JR5AgMBAAECgf9mbKu0ov4223LIpCXtJKE/nI3EZUvBnKO6GXf3VCc+kbwH
+cfUE85v19yew4vy9gK+NKFN9HTzySktgQf37BRXXSzytbpa6l2gfPjrxuWlnKGm2
+wQ/U87JgVIIXDDrrPhCczovFPkLimNbFADrzGxP3Db93Tg+T2ke7tXynnc1KJX2n
+8P+Jn/O5037ikx15ZoSwsXkXWrIboF46iYvGeZXZQfeO7oaNBP8mV6/sixVgrhkO
+9Z6npKn69uxR3GrfPO9++xgAy2D5ZxHHo9IyIqD4c7swfdViLGr0aqpcNV2LhiUp
+Nul9fXnvr76HWf4R3r1sILA8p6JZTSbgfm5XzZkCgYEAxgHNj917UeXAt2sf9gbb
+M6YaXl8iYfDGRbde2lu3G8fKCIrxH597PcgxGXUC/Z/Qd6SZRJUVQiJbV78bM5uQ
+CUMeZprDNKY5AUs8HXwwMAtrYvyYG/UI88TtheBhfNO8i80QxXPu0ZasGw8qScWA
+J0Zu/LmfZat60HRZ7Sa2dnMCgYEAwv6+9XIcOf4hIa22dI0q9syH56c6gwd74TeA
++yYfp3C/v9neY7AJtNmC/ofRocoqP96/ShwY9xhqwK/Fq6YSUGpy0ySyJJ5c7Kfq
+jUb4rwxVJJdy23GjdsW9AEPO8KXjMcGkl0u2AIdy6Z9FouQt3Ozk3oIIwr7io7KB
+AyhIomMCgYBj5jr5L6xtWHaP08tvTGxBtbcuD99//IN8XxTLJGTQ7k7fWoJnCwaZ
+2Cv1hRS6M2xxQKlXccQk9sKRFck6k2zrT2LCL6j3Ijo2jefJlIOXaduHOJvh1xHq
+M1wHJHrrCMTi39ZrWJ+QPO2eRVt3lt6ecinC9kAWgprXGyzXuqVqQwKBgA+dVq1Q
+9fGu5/hKcNHkfAxHVJq4SXc0ojbmuu1hoCdIYBJ839Ibxqs0v8iiF6ddCQUUUT0e
+AuHGksXbTXjxU4YdABToW1uTUt2glKe7hy59TlQfzJLGBtD8BKaAx5F9tzPEzelP
+psNkFU+f8XOZ0hJe5fTrdMgjgQKayLn3/9kBAoGAGIMkAIKy36wtY4mpFg53lWlj
+EBAY6qL6Cm+iLPCaQLLdmGgdbAKYvP5y9OwIpfiBBgVMM1UuHEi6y6HB5KwifPWn
+7OsCNXJYCOJtrmQm8ndYm9fPo+/MvAqkG5ijAHkQmqjHQwNXAOdLKicIvy6jqTza
+hW/ml3d8rgLnvp7WAYc=
+-----END PRIVATE KEY-----
+`;
+const TEST_TLS_CERT = `-----BEGIN CERTIFICATE-----
+MIIDIzCCAgugAwIBAgIUDUjm/n2V5y6WvqOHCJbMS0XLWvAwDQYJKoZIhvcNAQEL
+BQAwITEfMB0GA1UEAwwWOXJvdXRlci10ZXN0LWxvY2FsaG9zdDAeFw0yNjA4MjUx
+MTE1MjNaFw0zNjA4MjIxMTE1MjNaMCExHzAdBgNVBAMMFjlyb3V0ZXItdGVzdC1s
+b2NhbGhvc3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCW0mdEKSJY
+E15ahC7wLYeCvP3M0Q2p5bQCbUeGqZfXdZTF7UrYG7K9MRWOAo0vXACWmzVD7ZRo
+5Y4nNIH76+I2Gooayz+UuDwcbPKs4mDPTzCr1PenMEzCMd4wZMMEM/7Sl5RCnwXP
+rk/d+iLyHi/JT1wdEpRjac9p5YZYXjdOzVpyumiX1OhRKa8YB+R3Oe7g2NzCPWrY
+H6x50aJL17H5T6ECDtHnId2EMNro+7+jkTXDOsR4/0dYv2Tb+vacUIR4fOPdR3Xl
+MbQYVrLR7Ws+IRZx1YkFVqpQx+WGZJrkr4IqwqRb5Gj3g4jF82VbyHtr3SYk805p
+R5FvlWG33JR5AgMBAAGjUzBRMB0GA1UdDgQWBBSUCMODK9/VBKFUZXoZ3ZWd32Nb
+TDAfBgNVHSMEGDAWgBSUCMODK9/VBKFUZXoZ3ZWd32NbTDAPBgNVHRMBAf8EBTAD
+AQH/MA0GCSqGSIb3DQEBCwUAA4IBAQAhXqKc1IC6Pqmu7fKUG8Wx9fE+p6dudSGb
+C6Ysr/AYEgi4RwMTad3Fomm0cW3Uz5d1Cx9V4nCG0I8dHY1877t/vCciBDVojy7G
+1A8bDpmUwTlW0QqI/qBOmJpUWSix+cZbpXqrRBF/5ZQmnedQUtIt4+Ulwpa2g5Xg
+C8SZ21HmPjTRvGuxMJdTg9SgFDdk7fQhdrGUaXMCIAlkfT9VS2kiggB6WRgr27+O
+roAxR0RQMIRrem84F725HvYdEH63AYrHQ45PHpoER2hvhxjuspSOJnIgq6P3Vej8
+E7QOq7UAgY3Pgcu/QoIPP3ccbN2MG9IjIVfXoyUjlQqlYx3/YhZ/
+-----END CERTIFICATE-----
+`;
 
 function startServer(handler) {
   return new Promise((resolve) => {
     const sockets = new Set();
     // Snakeoil cert — accepted only because NODE_TLS_REJECT_UNAUTHORIZED=0.
-    const server = https.createServer(handler);
+    const server = https.createServer({ key: TEST_TLS_KEY, cert: TEST_TLS_CERT }, handler);
     server.on("connection", (sock) => {
       sockets.add(sock);
       sock.on("close", () => sockets.delete(sock));
@@ -47,7 +87,7 @@ function startServer(handler) {
             for (const s of sockets) s.destroy();
             server.close(() => res());
           }),
-      };
+      });
     });
   });
 }
@@ -98,7 +138,7 @@ describe("proxyFetch MITM bypass — response shape (#3514)", () => {
 
   it("returns a real Headers instance usable with `new Response(...)`", async () => {
     const url = new URL(`https://${HOST}:${server.port}/v1/messages`);
-    const res = await __testing.createBypassRequest(url, HOST, { method: "POST", body: "ping" });
+    const res = await __testing.createBypassRequest(url, HOST, { method: "POST", body: "ping", rejectUnauthorized: false });
 
     expect(res.headers).toBeInstanceOf(Headers);
     expect(res.headers.get("content-type")).toBe("application/json");
@@ -112,7 +152,7 @@ describe("proxyFetch MITM bypass — response shape (#3514)", () => {
 
   it("exposes arrayBuffer() for callers like the Cursor executor", async () => {
     const url = new URL(`https://${HOST}:${server.port}/v1/chat`);
-    const res = await __testing.createBypassRequest(url, HOST, { method: "POST", body: "hi" });
+    const res = await __testing.createBypassRequest(url, HOST, { method: "POST", body: "hi", rejectUnauthorized: false });
     const buf = Buffer.from(await res.arrayBuffer());
     expect(buf.length).toBeGreaterThan(0);
     expect(JSON.parse(buf.toString())).toEqual({ received: 2, ok: true });
@@ -120,14 +160,14 @@ describe("proxyFetch MITM bypass — response shape (#3514)", () => {
 
   it("text() and json() agree on the same bytes", async () => {
     const url = new URL(`https://${HOST}:${server.port}/v1/models`);
-    const res = await __testing.createBypassRequest(url, HOST, { method: "POST" });
+    const res = await __testing.createBypassRequest(url, HOST, { method: "POST", rejectUnauthorized: false });
     const text = await res.text();
     expect(JSON.parse(text)).toEqual({ received: 0, ok: true });
   });
 
   it("preserves multi-value headers (e.g. Set-Cookie)", async () => {
     const url = new URL(`https://${HOST}:${server.port}/v1/messages`);
-    const res = await __testing.createBypassRequest(url, HOST, { method: "POST" });
+    const res = await __testing.createBypassRequest(url, HOST, { method: "POST", rejectUnauthorized: false });
     const cookies = res.headers.getSetCookie?.() ?? [res.headers.get("set-cookie")];
     expect(cookies).toEqual(expect.arrayContaining(["a=1", "b=2"]));
   });

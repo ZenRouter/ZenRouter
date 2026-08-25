@@ -1,4 +1,4 @@
-import test from "node:test";
+import { it as test } from "vitest";
 import assert from "node:assert/strict";
 import {
   formatX509Certificate,

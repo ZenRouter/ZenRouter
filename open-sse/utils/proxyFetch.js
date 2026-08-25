@@ -1,4 +1,5 @@
 import { Readable } from "stream";
+import tls from "tls";
 import { MEMORY_CONFIG, FETCH_CONNECT_TIMEOUT_MS } from "../config/runtimeConfig.js";
 import { dbg } from "./debugLog.js";
 
@@ -108,6 +109,27 @@ const MITM_BYPASS_HOSTS = [
   "api2.cursor.sh",
 ];
 const GOOGLE_DNS_SERVERS = ["8.8.8.8", "8.8.4.4"];
+
+// MITM bypass negative cache: when direct-IP attempts fail (VPN/proxy networks
+// refuse them), stop retrying per host for a cooldown window so requests don't
+// pay a failed connect every time. Set DISABLE_MITM_BYPASS=1 to disable entirely.
+const MITM_BYPASS_COOLDOWN_MS = 5 * 60 * 1000;
+const MITM_BYPASS_DISABLED = process.env.DISABLE_MITM_BYPASS === "1";
+const mitmBypassCooldown = new Map(); // host → retry-after timestamp
+
+function markMitmBypassCooldown(host) {
+  mitmBypassCooldown.set(host, Date.now() + MITM_BYPASS_COOLDOWN_MS);
+}
+
+function isMitmBypassOnCooldown(targetUrl) {
+  if (MITM_BYPASS_DISABLED) return true;
+  let host;
+  try { host = new URL(targetUrl).hostname; } catch { return false; }
+  const until = mitmBypassCooldown.get(host);
+  if (!until) return false;
+  if (Date.now() >= until) { mitmBypassCooldown.delete(host); return false; }
+  return true;
+}
 const HTTPS_PORT = 443;
 const HTTP_SUCCESS_MIN = 200;
 const HTTP_SUCCESS_MAX = 300;
@@ -299,21 +321,38 @@ async function createBypassRequest(parsedUrl, realIP, options) {
     socket.on("error", onSocketError);
     socket.on("timeout", onSocketTimeout);
 
-    socket.connect(HTTPS_PORT, realIP, () => {
-      const reqOptions = {
+    // Honor an explicit port from the URL (e.g. test servers on 127.0.0.1:<random>)
+    const bypassPort = parsedUrl.port ? Number(parsedUrl.port) : HTTPS_PORT;
+    socket.connect(bypassPort, realIP, () => {
+      // Wrap the pre-connected TCP socket in TLS ourselves. Passing `socket`
+      // directly to https.request is not supported by modern Node — the
+      // documented hook is createConnection.
+      const isIpHost = net.isIP(parsedUrl.hostname) !== 0;
+      const tlsOptions = {
         socket,
+        ...(isIpHost ? {} : { servername: parsedUrl.hostname }),
+      };
+      if (options.rejectUnauthorized !== undefined) {
+        // Explicit opt-out hook for hermetic fixtures against self-signed
+        // local servers. Production calls leave this unset → full public-CA
+        // verification stays enforced.
+        tlsOptions.rejectUnauthorized = options.rejectUnauthorized;
+      }
+      const tlsSocket = tls.connect(tlsOptions);
+
+      const reqOptions = {
+        createConnection: () => tlsSocket,
         // SNI + cert hostname are validated against the hostname the caller
         // asked for, not the IP we connected to. This keeps the DNS-bypass
         // (avoiding /etc/hosts MITM) while still rejecting on-path attackers
         // that present a different cert. The MITM_BYPASS_HOSTS targets are
         // all public-CA-issued (Google / GitHub / AWS / Cursor) so default
         // verification works without any extra trust store.
-        servername: parsedUrl.hostname,
         path: parsedUrl.pathname + parsedUrl.search,
         method: options.method || "POST",
         headers: {
           ...options.headers,
-          Host: parsedUrl.hostname,
+          Host: parsedUrl.host,
         },
       };
 
@@ -411,7 +450,7 @@ export async function proxyAwareFetch(url, options = {}, proxyOptions = null) {
   const proxyUrl = connectionProxyUrl || envProxyUrl;
 
   // MITM DNS bypass: for known MITM-intercepted hosts, resolve real IP to avoid DNS spoof
-  if (shouldBypassMitmDns(targetUrl)) {
+  if (shouldBypassMitmDns(targetUrl) && !isMitmBypassOnCooldown(targetUrl)) {
     if (proxyUrl) {
       // Proxy resolves DNS externally (not affected by /etc/hosts) — use proxy directly
       try {
@@ -425,12 +464,20 @@ export async function proxyAwareFetch(url, options = {}, proxyOptions = null) {
       }
     }
     // No proxy — manually resolve real IP to bypass DNS spoof
+    const bypassHost = new URL(targetUrl).hostname;
     try {
       const parsedUrl = new URL(targetUrl);
       const realIP = await resolveRealIP(parsedUrl.hostname);
-      if (realIP) return await createBypassRequest(parsedUrl, realIP, options);
+      if (realIP) {
+        const res = await createBypassRequest(parsedUrl, realIP, options);
+        mitmBypassCooldown.delete(bypassHost); // success — re-enable immediately next time
+        return res;
+      }
+      // DNS itself failed → nothing to pin, cool down too
+      markMitmBypassCooldown(bypassHost);
     } catch (error) {
-      console.warn(`[ProxyFetch] MITM bypass failed: ${error.message}`);
+      markMitmBypassCooldown(bypassHost);
+      console.warn(`[ProxyFetch] MITM bypass failed (${error.message}) — skipping direct-IP attempts for ${Math.round(MITM_BYPASS_COOLDOWN_MS / 60000)}m on ${bypassHost}`);
     }
   }
 
