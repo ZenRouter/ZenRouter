@@ -18,11 +18,11 @@ Dashboard/gateway (run from repo root):
 ```bash
 cp .env.example .env
 npm install
-PORT=20128 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run dev   # dev (webpack, port 20127 by default via next dev)
-npm run build && PORT=20128 HOSTNAME=0.0.0.0 npm run start           # production
+PORT=20128 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run dev
+npm run build && npm run start                                        # production (node)
+npm run build && npm run start:bun                                    # production (bun runtime; bun:sqlite)
 ```
-- Bun variants: `npm run dev:bun` / `build:bun` / `start:bun`.
-- Default runtime port is **20128** (dashboard at `/dashboard`, API at `/v1`).
+- All ports are aligned to **20128** (dashboard at `/dashboard`, API at `/v1`). The standalone server reads `PORT` from `.env` and ignores CLI args — keep `.env`'s `DATA_DIR` ABSOLUTE when running the standalone/bun build (it chdirs into `.next/standalone`; a relative DATA_DIR silently creates a fresh empty DB).
 - Lint: `npx eslint .` (config `eslint.config.mjs`, extends `eslint-config-next`).
 
 CLI package (`cli/`):
@@ -40,11 +40,10 @@ npx vitest run unit/capabilities.test.js   # single file (path relative to tests
 ```
 > The committed `tests/package.json` `test` script hardcodes Unix paths (`NODE_PATH=/tmp/node_modules …`) — a shared-install workaround from upstream. On Windows (or anywhere), ignore it and use the `npx vitest` form above; `vitest.config.js` resolves the `open-sse`/`@/` aliases from the repo root regardless of where vitest lives.
 >
-> **The suite is NOT expected to be all-green on a plain checkout.** ~938 pass, ~64 fail. Judge regressions with `tests/__baseline__/verify-no-regression.mjs`, not a raw run. Expected red:
-> - 26 catalogued in `tests/__baseline__/known-fails.txt` (rtk, oauth-cursor-auto-import, translator-request-normalization, …).
-> - `unit/embeddings.cloud.test.js` imports `cloud/src/handlers/embeddings.js` — the `cloud/` worker dir is **not in this repo**, so it always fails here.
-> - `unit/xai-oauth-service.test.js` times out (5s) when the xAI endpoint-discovery fetch isn't reachable/mocked.
-> - `real/*.real.test.js` make live provider calls — need credentials, skip otherwise.
+> **The suite is expected to be all-green** (~2100 tests) as of 2026-08-25. Notes:
+> - `unit/embeddings.cloud.test.js.skip` targets the private `cloud/` worker — rename back to `.test.js` only when that checkout exists.
+> - Live-provider suites are opt-in (`RUN_LIVE_TESTS=1`) or self-skip without credentials.
+> - Judge regressions with `tests/__baseline__/verify-no-regression.mjs <vitest-json>`; count suite-level failures too (`numFailedTestSuites`), not just test counts.
 - `*.real.test.js` under `tests/translator/real/` make live provider calls — skip unless credentials are set.
 - Regression baselines: `tests/__baseline__/verify-*.mjs` compare against committed snapshots (providers, aliases, OAuth URLs). Run these after touching provider registry / alias logic.
 

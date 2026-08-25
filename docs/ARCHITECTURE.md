@@ -135,11 +135,16 @@ Main flow modules:
 
 ## 3) Persistence Layer
 
-Primary state DB:
+Primary state DB — **SQLite** under `src/lib/db/` with an adapter fallback
+chain (`driver.js`): `bun:sqlite` → `better-sqlite3` (optional native dep) →
+`node:sqlite` (Node ≥22.5) → `sql.js`. Repos live in `src/lib/db/repos/*`;
+schema/migrations in `src/lib/db/migrations/`.
 
-- `src/lib/localDb.js`
-- file: `${DATA_DIR}/db.json` (or `~/.9router/db.json` when `DATA_DIR` is unset)
-- entities: providerConnections, providerNodes, modelAliases, combos, apiKeys, settings, pricing
+- file: `${DATA_DIR}/db/data.sqlite` (or `~/.9router/db/data.sqlite`)
+- ⚠️ keep `DATA_DIR` ABSOLUTE for the standalone/bun build (it chdirs into
+  `.next/standalone`; a relative path silently creates a fresh empty DB)
+- entities: providerConnections, providerNodes, modelAliases, combos,
+  apiKeys, settings, pricing, usageHistory/usageDaily/requestDetails
 
 Usage DB:
 
@@ -444,7 +449,7 @@ flowchart LR
 
 ### Persistence
 
-- `src/lib/localDb.js`: persistent config/state
+- `src/lib/db/index.js` (+ repos): persistent config/state (`src/lib/localDb.js` is a compat shim)
 - `src/lib/usageDb.js`: usage history and rolling request logs
 
 ## Provider Executor Coverage

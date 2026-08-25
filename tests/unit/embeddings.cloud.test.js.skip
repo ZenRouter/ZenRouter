@@ -1,3 +1,8 @@
+// ⚠️ RENAMED TO .skip — this suite targets the PRIVATE cloud worker
+// (cloud/src/**), which is not part of public checkouts. Vitest picks up
+// **/*.test.js, so the .test.js suffix made the whole file fail at collection.
+// To run it locally: check out the cloud/ sources next to the repo root and
+// rename this file back to .test.js.
 /**
  * Unit tests for cloud/src/handlers/embeddings.js
  *
