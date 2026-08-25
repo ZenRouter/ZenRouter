@@ -1,4 +1,4 @@
-import { assertValidAwsRegion } from "@/lib/oauth/constants/oauth";
+import { assertValidAwsRegion } from "./constants/oauth.js";
 
 const MICROSOFT_TOKEN_ENDPOINT_HOSTS = new Set([
   "login.microsoftonline.com",

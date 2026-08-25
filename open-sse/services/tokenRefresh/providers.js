@@ -2,7 +2,6 @@ import { PROVIDERS, PROVIDER_OAUTH } from "../../config/providers.js";
 import { OAUTH_ENDPOINTS, GITHUB_COPILOT, buildKimiHeaders } from "../../config/appConstants.js";
 import { proxyAwareFetch } from "../../utils/proxyFetch.js";
 import { dedupRefresh } from "./dedup.js";
-import { buildExternalIdpRefreshParams } from "../../../src/lib/oauth/kiroExternalIdp.js";
 
 let _xaiServiceSingleton = null;
 export async function refreshXaiToken(refreshToken, log) {
@@ -287,6 +286,10 @@ export async function refreshKiroToken(refreshToken, providerSpecificData, log, 
   if (authMethod === "external_idp") {
     let refreshRequest;
     try {
+      // Lazy import: this crosses the open-sse → src boundary, and a static
+      // edge here gets externalized under vitest (native ESM can't resolve
+      // the src-side "@/"/open-sse aliases).
+      const { buildExternalIdpRefreshParams } = await import("../../../src/lib/oauth/kiroExternalIdp.js");
       refreshRequest = buildExternalIdpRefreshParams(refreshToken, providerSpecificData);
     } catch (error) {
       log?.warn?.("TOKEN_REFRESH", `Invalid Kiro external_idp refresh config: ${error.message}`);
