@@ -457,14 +457,14 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   const trackDone = () => trackPendingRequest(model, provider, connectionId, false);
 
   // Provider forced streaming but client wants JSON
-  if (!clientRequestedStreaming && providerRequiresStreaming) {
+  if (!clientWantsStream && providerRequiresStreaming) {
     const result = await handleForcedSSEToJson({ ...sharedCtx, providerResponse, sourceFormat, targetFormat: providerResponseFormat, customToolNames, trackDone, appendLog });
     if (result) { streamController.handleComplete(); return result; }
   }
 
   // Non-streaming response. Stream-only providers normally arrive here only
   // after the SSE-to-JSON handler determined that their upstream returned JSON.
-  if (!stream || (!clientRequestedStreaming && providerRequiresStreaming)) {
+  if (!stream || (!clientWantsStream && providerRequiresStreaming)) {
     const result = await handleNonStreamingResponse({ ...sharedCtx, providerResponse, sourceFormat, targetFormat: providerResponseFormat, reqLogger, toolNameMap, customToolNames, trackDone, appendLog });
     streamController.handleComplete();
     return result;
