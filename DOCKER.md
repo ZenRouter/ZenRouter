@@ -1,6 +1,6 @@
 # Docker
 
-Run 9Router in a container. Published image: [`decolua/9router`](https://hub.docker.com/r/decolua/9router) — multi-platform `linux/amd64` + `linux/arm64`.
+Run 9Router in a container. Published image: [`joyccn/9router`](https://hub.docker.com/r/joyccn/9router) — multi-platform `linux/amd64` + `linux/arm64`.
 
 ---
 
@@ -14,7 +14,7 @@ docker run -d \
   -v "$HOME/.9router:/app/data" \
   -e DATA_DIR=/app/data \
   --name 9router \
-  decolua/9router:latest
+  joyccn/9router:latest
 ```
 
 App listens on port `20128`. Open: http://localhost:20128
@@ -61,7 +61,7 @@ docker run -d \
   -e HOSTNAME=0.0.0.0 \
   -e DEBUG=true \
   --name 9router \
-  decolua/9router:latest
+  joyccn/9router:latest
 ```
 
 ## Optional Headroom sidecar
@@ -71,7 +71,7 @@ The 9Router image does not bundle Python or Headroom. To use Headroom in Docker,
 ```yaml
 services:
   9router:
-    image: decolua/9router:latest
+    image: joyccn/9router:latest
     ports:
       - "20128:20128"
     volumes:
@@ -95,7 +95,7 @@ If Headroom runs on the Docker host instead of as a sidecar, use `http://host.do
 ## Update to latest
 
 ```bash
-docker pull decolua/9router:latest
+docker pull joyccn/9router:latest
 docker rm -f 9router
 # re-run the quick start command
 ```
@@ -118,8 +118,8 @@ docker run --rm -p 20128:20128 \
 ## Publish (automatic via CI)
 
 Push a git tag `v*` → GitHub Actions builds multi-platform (amd64+arm64) and pushes to:
-- `ghcr.io/decolua/9router:v{version}` + `:latest`
-- `decolua/9router:v{version}` + `:latest`
+- `ghcr.io/joyccn/9router:v{version}` + `:latest`
+- `joyccn/9router:v{version}` + `:latest`
 
 ```bash
 # Use scripts/release.js (recommended)

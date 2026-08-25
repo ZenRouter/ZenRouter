@@ -13,7 +13,7 @@
   
   [![npm](https://img.shields.io/npm/v/9router.svg)](https://www.npmjs.com/package/9router)
   [![Downloads](https://img.shields.io/npm/dm/9router.svg)](https://www.npmjs.com/package/9router)
-  [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/decolua/9router/blob/main/LICENSE)
+  [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/joyccn/9router/blob/main/LICENSE)
   
   [🚀 Быстрый старт](#-quick-start) • [💡 Возможности](#-key-features) • [📖 Установка](#-setup-guide) • [🌐 Сайт](https://9router.com)
 </div>
@@ -948,7 +948,7 @@ Model: cc/claude-opus-4-6
 
 ```bash
 # Clone and install
-git clone https://github.com/decolua/9router.git
+git clone https://github.com/joyccn/9router.git
 cd 9router
 npm install
 npm run build
@@ -1259,8 +1259,8 @@ OPENAI_API_KEY="your-cloud-key" bash tester/security/test-cloud-openai-compatibl
 ## 📧 Поддержка
 
 - **Сайт**: [9router.com](https://9router.com)
-- **GitHub**: [github.com/decolua/9router](https://github.com/decolua/9router)
-- **Issues**: [github.com/decolua/9router/issues](https://github.com/decolua/9router/issues)
+- **GitHub**: [github.com/joyccn/9router](https://github.com/joyccn/9router)
+- **Issues**: [github.com/joyccn/9router/issues](https://github.com/joyccn/9router/issues)
 
 ---
 
@@ -1268,13 +1268,13 @@ OPENAI_API_KEY="your-cloud-key" bash tester/security/test-cloud-openai-compatibl
 
 Спасибо всем, кто помогает делать 9Router лучше!
 
-[![Contributors](https://contrib.rocks/image?repo=decolua/9router&max=100&columns=20&anon=1)](https://github.com/decolua/9router/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=joyccn/9router&max=100&columns=20&anon=1)](https://github.com/joyccn/9router/graphs/contributors)
 
 ---
 
 ## 📊 Star Chart
 
-[![Star Chart](https://starchart.cc/decolua/9router.svg?variant=adaptive)](https://starchart.cc/decolua/9router)
+[![Star Chart](https://starchart.cc/joyccn/9router.svg?variant=adaptive)](https://starchart.cc/joyccn/9router)
 
 ### Как внести вклад
 
@@ -1284,7 +1284,7 @@ OPENAI_API_KEY="your-cloud-key" bash tester/security/test-cloud-openai-compatibl
 4. Запушьте в ветку (`git push origin feature/amazing-feature`)
 5. Откройте Pull Request
 
-См. [Pull Requests](https://github.com/decolua/9router/pulls) для подробных инструкций.
+См. [Pull Requests](https://github.com/joyccn/9router/pulls) для подробных инструкций.
 
 ---
 

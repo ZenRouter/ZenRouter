@@ -9,7 +9,7 @@
 
   [![npm](https://img.shields.io/npm/v/9router.svg)](https://www.npmjs.com/package/9router)
   [![Downloads](https://img.shields.io/npm/dm/9router.svg)](https://www.npmjs.com/package/9router)
-  [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/decolua/9router/blob/main/LICENSE)
+  [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/joyccn/9router/blob/main/LICENSE)
 
   [🚀 クイックスタート](#-クイックスタート) • [💡 機能](#-主な機能) • [📖 セットアップ](#-セットアップガイド) • [🌐 ウェブサイト](https://9router.com)
 
@@ -945,7 +945,7 @@ Model: cc/claude-opus-4-6
 
 ```bash
 # クローンとインストール
-git clone https://github.com/decolua/9router.git
+git clone https://github.com/joyccn/9router.git
 cd 9router
 npm install
 npm run build
@@ -1167,8 +1167,8 @@ Authorization: Bearer your-api-key
 ## 📧 サポート
 
 - **ウェブサイト**: [9router.com](https://9router.com)
-- **GitHub**: [github.com/decolua/9router](https://github.com/decolua/9router)
-- **Issues**: [github.com/decolua/9router/issues](https://github.com/decolua/9router/issues)
+- **GitHub**: [github.com/joyccn/9router](https://github.com/joyccn/9router)
+- **Issues**: [github.com/joyccn/9router/issues](https://github.com/joyccn/9router/issues)
 
 ---
 
@@ -1176,13 +1176,13 @@ Authorization: Bearer your-api-key
 
 9Routerの改善に貢献してくださったすべてのコントリビューターに感謝します！
 
-[![Contributors](https://contrib.rocks/image?repo=decolua/9router&max=150&columns=15&anon=1&v=20260309)](https://github.com/decolua/9router/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=joyccn/9router&max=150&columns=15&anon=1&v=20260309)](https://github.com/joyccn/9router/graphs/contributors)
 
 ---
 
 ## 📊 スターチャート
 
-[![Star Chart](https://starchart.cc/decolua/9router.svg?variant=adaptive)](https://starchart.cc/decolua/9router)
+[![Star Chart](https://starchart.cc/joyccn/9router.svg?variant=adaptive)](https://starchart.cc/joyccn/9router)
 
 
 

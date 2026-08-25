@@ -3,7 +3,9 @@
 > **⚠️ DISCLAIMER & INDEPENDENT PROJECT NOTICE**
 > 
 > This repository is a **custom research, optimization, and engineering playground** maintained by **0xJoy**.
-> 
+>
+> **🙏 Credits:** This is a maintained **fork** of the original [**9Router**](https://github.com/joyccn/9router) project. All credit for the original creation goes to **decolua** ([github.com/decolua](https://github.com/decolua)) — the original author of 9Router. This fork continues, maintains, and builds upon their work.
+>
 > * **Independent Evolution:** This codebase contains heavy architectural refactors, experimental optimizations, low-level Rust-to-JS RTK ported engines, single-source client fingerprinting, memory-leak hardening, and Cloudflare edge proxy integration.
 > * **No Affiliation:** This project is an independent fork and is **NOT affiliated with, endorsed by, or associated with the original 9Router upstream project, maintainers, or official website**.
 > * **Support & Issues:** Do **NOT** report issues, bugs, or questions arising from this repository to the original upstream 9Router project or community. All experimental changes and architectural divergence live exclusively in this repository.

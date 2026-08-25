@@ -9,11 +9,11 @@
   
   [![npm](https://img.shields.io/npm/v/9router.svg)](https://www.npmjs.com/package/9router)
   [![Downloads](https://img.shields.io/npm/dm/9router.svg)](https://www.npmjs.com/package/9router)
-  [![Docker Pulls](https://img.shields.io/docker/pulls/decolua/9router.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/decolua/9router)
-  [![GHCR](https://img.shields.io/badge/GHCR-decolua%2F9router-blue?logo=github)](https://github.com/decolua/9router/pkgs/container/9router)
-  [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/decolua/9router/blob/main/LICENSE)
+  [![Docker Pulls](https://img.shields.io/docker/pulls/joyccn/9router.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/joyccn/9router)
+  [![GHCR](https://img.shields.io/badge/GHCR-joyccn%2F9router-blue?logo=github)](https://github.com/joyccn/9router/pkgs/container/9router)
+  [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/joyccn/9router/blob/main/LICENSE)
 
-<a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="decolua%2F9router | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="joyccn%2F9router | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 [🚀 Démarrage rapide](#-démarrage-rapide) • [💡 Fonctionnalités](#-fonctionnalités-clés) • [📖 Configuration](#-guide-dinstallation) • [🌐 Site web](https://9router.com)
 
@@ -213,7 +213,7 @@ URL par défaut :
 
 </div>
 
-> 🎬 **Vous avez réalisé une vidéo sur 9Router ?** Envoyez une [Pull Request](https://github.com/decolua/9router/pulls) en ajoutant votre vidéo à cette section — nous la fusionnerons !
+> 🎬 **Vous avez réalisé une vidéo sur 9Router ?** Envoyez une [Pull Request](https://github.com/joyccn/9router/pulls) en ajoutant votre vidéo à cette section — nous la fusionnerons !
 
 ---
 
@@ -1127,7 +1127,7 @@ Model : cc/claude-opus-4-7
 
 ```bash
 # Clonez et installez
-git clone https://github.com/decolua/9router.git
+git clone https://github.com/joyccn/9router.git
 cd 9router
 npm install
 npm run build
@@ -1158,8 +1158,8 @@ pm2 startup
 
 Images publiées (multi-plateformes `linux/amd64` + `linux/arm64`) :
 
-- Docker Hub : [`decolua/9router`](https://hub.docker.com/r/decolua/9router)
-- GHCR : [`ghcr.io/decolua/9router`](https://github.com/decolua/9router/pkgs/container/9router)
+- Docker Hub : [`joyccn/9router`](https://hub.docker.com/r/joyccn/9router)
+- GHCR : [`ghcr.io/joyccn/9router`](https://github.com/joyccn/9router/pkgs/container/9router)
 
 **Démarrage rapide (utilisez l'image publiée) :**
 
@@ -1169,7 +1169,7 @@ docker run -d \
   -p 20128:20128 \
   -v "$HOME/.9router:/app/data" \
   -e DATA_DIR=/app/data \
-  decolua/9router:latest
+  joyccn/9router:latest
 ```
 
 → Ouvrez http://localhost:20128
@@ -1177,7 +1177,7 @@ docker run -d \
 **Compiler depuis le code source (dev) :**
 
 ```bash
-git clone https://github.com/decolua/9router.git
+git clone https://github.com/joyccn/9router.git
 cd 9router/app
 docker build -t 9router .
 docker run -d --name 9router -p 20128:20128 \
@@ -1195,7 +1195,7 @@ docker run -d --name 9router -p 20128:20128 \
 docker logs -f 9router
 docker restart 9router
 docker stop 9router && docker rm 9router
-docker pull decolua/9router:latest   # mise à jour vers la dernière version
+docker pull joyccn/9router:latest   # mise à jour vers la dernière version
 ```
 
 **Persistance des données :** `$HOME/.9router/db/data.sqlite` sur l'hôte ↔ `/app/data/db/data.sqlite` dans le conteneur.
@@ -1397,8 +1397,8 @@ Authorization: Bearer votre-clé-api
 ## 📧 Support
 
 - **Site web** : [9router.com](https://9router.com)
-- **GitHub** : [github.com/decolua/9router](https://github.com/decolua/9router)
-- **Problèmes** : [github.com/decolua/9router/issues](https://github.com/decolua/9router/issues)
+- **GitHub** : [github.com/joyccn/9router](https://github.com/joyccn/9router)
+- **Problèmes** : [github.com/joyccn/9router/issues](https://github.com/joyccn/9router/issues)
 
 ---
 
@@ -1406,13 +1406,13 @@ Authorization: Bearer votre-clé-api
 
 Merci à tous les contributeurs qui ont contribué à améliorer 9Router !
 
-[![Contributors](https://contrib.rocks/image?repo=decolua/9router&max=150&columns=15&anon=1&v=20260309)](https://github.com/decolua/9router/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=joyccn/9router&max=150&columns=15&anon=1&v=20260309)](https://github.com/joyccn/9router/graphs/contributors)
 
 ---
 
 ## 📊 Graphique d'étoiles
 
-[![Star Chart](https://starchart.cc/decolua/9router.svg?variant=adaptive)](https://starchart.cc/decolua/9router)
+[![Star Chart](https://starchart.cc/joyccn/9router.svg?variant=adaptive)](https://starchart.cc/joyccn/9router)
 
 ## 🔀 Forks
 

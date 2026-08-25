@@ -9,7 +9,7 @@
 
   [![npm](https://img.shields.io/npm/v/9router.svg)](https://www.npmjs.com/package/9router)
   [![Downloads](https://img.shields.io/npm/dm/9router.svg)](https://www.npmjs.com/package/9router)
-  [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/decolua/9router/blob/main/LICENSE)
+  [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/joyccn/9router/blob/main/LICENSE)
 
   [🚀 Mulai Cepat](#-mulai-cepat) • [💡 Fitur](#-fitur-utama) • [📖 Setup](#-panduan-setup) • [🌐 Website](https://9router.com)
 
@@ -876,7 +876,7 @@ docker run -d \
   -v 9router-data:/app/data \
   -e PORT=20128 \
   -e BASE_URL=http://localhost:20128 \
-  ghcr.io/decolua/9router:latest
+  ghcr.io/joyccn/9router:latest
 ```
 
 Dashboard: `http://localhost:20128/dashboard`
@@ -938,14 +938,14 @@ Kontribusi sangat diterima!
 
 ## 📄 Lisensi
 
-MIT License — lihat [LICENSE](https://github.com/decolua/9router/blob/main/LICENSE) untuk detailnya.
+MIT License — lihat [LICENSE](https://github.com/joyccn/9router/blob/main/LICENSE) untuk detailnya.
 
 ---
 
 <div align="center">
 
-**Kalau 9Router membantumu, kasih ⭐ di [GitHub](https://github.com/decolua/9router)!**
+**Kalau 9Router membantumu, kasih ⭐ di [GitHub](https://github.com/joyccn/9router)!**
 
-[🌐 Website](https://9router.com) • [📦 npm](https://www.npmjs.com/package/9router) • [🐛 Laporkan Bug](https://github.com/decolua/9router/issues)
+[🌐 Website](https://9router.com) • [📦 npm](https://www.npmjs.com/package/9router) • [🐛 Laporkan Bug](https://github.com/joyccn/9router/issues)
 
 </div>
