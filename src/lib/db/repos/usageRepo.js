@@ -259,31 +259,20 @@ export async function saveRequestUsage(entry) {
     // All 3 writes (history insert, daily upsert, lifetime counter) in ONE transaction.
     // better-sqlite3 is sync → no JS yield mid-transaction → no race in same process.
     db.transaction(() => {
-      const existing = db.get(
-        `SELECT id, endpoint FROM usageHistory
-         WHERE timestamp = ?
-           AND COALESCE(provider, '') = COALESCE(?, '')
-           AND COALESCE(model, '') = COALESCE(?, '')
-           AND COALESCE(connectionId, '') = COALESCE(?, '')
-           AND COALESCE(apiKey, '') = COALESCE(?, '')
-           AND promptTokens = ?
-           AND completionTokens = ?
-         ORDER BY id DESC LIMIT 1`,
-        [
-          entry.timestamp, entry.provider || null, entry.model || null,
-          entry.connectionId || null, entry.apiKey || null,
-          promptTokens, completionTokens,
-        ]
-      );
-
-      if (existing) {
-        if (!existing.endpoint && entry.endpoint) {
-          db.run(`UPDATE usageHistory SET endpoint = ? WHERE id = ?`, [entry.endpoint, existing.id]);
+      // Dedup by OBJECT IDENTITY: re-saving the same entry object (retry /
+      // late endpoint backfill) updates the stored row instead of duplicating
+      // it. Field-equality dedup was removed — distinct requests completing in
+      // the same millisecond with identical model/tokens are legitimate rows,
+      // not duplicates, and must all persist.
+      if (entry._persistedUsageId != null) {
+        if (entry.endpoint && !entry._endpointPersisted) {
+          db.run(`UPDATE usageHistory SET endpoint = ? WHERE id = ?`, [entry.endpoint, entry._persistedUsageId]);
+          entry._endpointPersisted = true;
         }
         return;
       }
 
-      db.run(
+      const result = db.run(
         `INSERT INTO usageHistory(timestamp, provider, model, connectionId, apiKey, endpoint, promptTokens, completionTokens, cost, status, tokens, meta) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           entry.timestamp, entry.provider || null, entry.model || null,
@@ -292,6 +281,13 @@ export async function saveRequestUsage(entry) {
           stringifyJson(tokens), stringifyJson({}),
         ]
       );
+      try {
+        const rowid = Number(result?.lastInsertRowid ?? 0);
+        if (rowid > 0) {
+          entry._persistedUsageId = rowid;
+          entry._endpointPersisted = Boolean(entry.endpoint);
+        }
+      } catch { /* identity marker is best-effort */ }
 
       const dateKey = getLocalDateKey(entry.timestamp);
       const row = db.get(`SELECT data FROM usageDaily WHERE dateKey = ?`, [dateKey]);
