@@ -1,6 +1,20 @@
 # v0.5.56 (2026-08-25)
 
 ## Fixed
+## Fixed
+- **OpenCode muse (free)**: requests 400'd upstream — `max_tokens` reached the
+  zen /v1/responses endpoint (which rejects it) because STRIP_RULES were only
+  applied by Default/GitHub executors. Stripping now runs centrally in
+  BaseExecutor so every executor honors it, with wire-level regression tests.
+- **Responses transport for chat clients**: a completed Responses-API body or
+  SSE stream aggregated to an empty-content chat completion — non-streaming
+  SSE was parsed by the Chat-Completions chunk parser (drops every
+  response.output_text.delta) and Responses JSON bodies had no converter at
+  all. Non-streaming handler now routes Responses SSE through
+  convertResponsesStreamToJson and maps the JSON body via
+  openaiResponsesObjectToCompletion (content + tool_calls + usage).
+- **Versioning**: /api/version reads APP_CONFIG (single point); new
+  scripts/bump-version.mjs bumps app + CLI package.json in one command.
 - **Tests**: full suite is green again (2010 passed / 0 failed / ~61 skipped).
   Root causes fixed across source and stale fixtures:
   - **usageRepo**: `saveRequestUsage` field-equality dedup collapsed distinct

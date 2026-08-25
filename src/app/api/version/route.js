@@ -1,5 +1,5 @@
 import https from "https";
-import pkg from "../../../../package.json" with { type: "json" };
+import { APP_CONFIG } from "@/shared/constants/config.js";
 
 const NPM_PACKAGE_NAME = "9router";
 const VERSION_CACHE_TTL_MS = 3600000; // cache npm latest lookup for 1h
@@ -54,7 +54,7 @@ async function getLatestVersionCached() {
 
 export async function GET() {
   const latestVersion = await getLatestVersionCached();
-  const currentVersion = pkg.version;
+  const currentVersion = APP_CONFIG.version;
   const hasUpdate = latestVersion ? compareVersions(latestVersion, currentVersion) > 0 : false;
 
   return Response.json({ currentVersion, latestVersion, hasUpdate });
