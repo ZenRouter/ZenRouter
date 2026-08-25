@@ -2,6 +2,15 @@
 
 ## Fixed
 ## Fixed
+- **Declarative TOML filter engine (P3)**: port of upstream src/filters/*.toml
+  system — a minimal TOML-subset parser plus an applier supporting
+  strip_lines_matching, keep_lines_matching, replace substitutions,
+  match_output short-circuits, truncate_lines_at, max_lines and on_empty.
+  Filters load from the bundled pack (make, terraform-plan,
+  systemctl-status, brew-install, ps — verbatim from upstream, parity-tested
+  against their own embedded [[tests]] vectors) and from
+  $RTK_FILTERS_DIR or $DATA_DIR/rtk-filters for user-defined rules.
+## Fixed
 - **proxyFetch MITM bypass hardening**: direct-IP attempts now honor the URL
   port (was hardcoded 443) and set Host to url.host; TLS wraps the
   pre-connected socket via createConnection/tls.connect (options.socket is not

@@ -16,6 +16,7 @@ import { mypy } from "./filters/mypy.js";
 import { vitest } from "./filters/vitest.js";
 import { jsonFilter } from "./filters/jsonCompact.js";
 import { envFilter } from "./filters/env.js";
+import { loadTomlFilters, applyTomlFilter } from "./tomlEngine.js";
 import { gitDiff } from "./filters/gitDiff.js";
 import { gitStatus } from "./filters/gitStatus.js";
 import { gitLog } from "./filters/gitLog.js";
@@ -120,6 +121,18 @@ export function autoDetectFilter(text) {
     }
     const envLines = nonEmpty.filter((l) => /^[A-Za-z_][A-Za-z0-9_]*=/.test(l)).length;
     if (envLines >= 5 && envLines >= Math.ceil(nonEmpty.length / 2)) return envFilter;
+  }
+
+  // User/bundled declarative TOML filters (upstream src/filters/*.toml format):
+  // match_command is tested against the output head — the closest post-hoc
+  // signal to upstream's wrapped-command match.
+  for (const def of loadTomlFilters()) {
+    try {
+      if (new RegExp(def.match_command).test(head)) {
+        const defRef = def;
+        return (input) => applyTomlFilter(defRef, input);
+      }
+    } catch { /* bad user regex — skip this filter */ }
   }
 
   // Fallback: dedupLog for generic multi-line noise with duplicates
