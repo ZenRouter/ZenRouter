@@ -132,16 +132,19 @@ describe("backupDbLite — excludes requestDetails, keeps critical data", () => 
     const dest = backupDbLite(adapter, backupDir);
     expect(fs.existsSync(dest)).toBe(true);
 
-    // Open backup and assert requestDetails is empty, settings present
-    const Database = (await import("better-sqlite3")).default;
-    const bak = new Database(dest);
+    // Open backup and assert requestDetails is empty, settings present.
+    // node:sqlite is used instead of better-sqlite3 so verification works on
+    // machines where the optional native build is unavailable (the driver
+    // chain falls back to node:sqlite there anyway).
+    const { DatabaseSync } = await import("node:sqlite");
+    const bak = new DatabaseSync(dest);
     try {
       // requestDetails is fully excluded — table must not exist in the backup
       const rdTable = bak.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='requestDetails'").get();
       expect(rdTable).toBeUndefined();
       // Critical data preserved
       const st = bak.prepare("SELECT COUNT(*) c FROM settings").get();
-      expect(st.c).toBeGreaterThanOrEqual(1);
+      expect(Number(st.c)).toBeGreaterThanOrEqual(1);
     } finally {
       bak.close();
       fs.rmSync(backupDir, { recursive: true, force: true });
