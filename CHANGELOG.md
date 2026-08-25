@@ -1,3 +1,157 @@
+# v0.5.56 (2026-08-25)
+
+## Fixed
+- **Tests**: full suite is green again (2010 passed / 0 failed / ~61 skipped).
+  Root causes fixed across source and stale fixtures:
+  - **usageRepo**: `saveRequestUsage` field-equality dedup collapsed distinct
+    requests that completed in the same millisecond with identical model/
+    tokens into one row (100 parallel writes → 1 persisted). Dedup is now by
+    entry-object identity (`_persistedUsageId` marker): reused objects still
+    de-dupe and get endpoint backfill, distinct events always persist.
+  - **chatCore**: `!clientRequestedStreaming && providerRequiresStreaming`
+    compared the imported *function* (always truthy), so stream-only providers
+    never aggregated SSE back to JSON for JSON clients — every such response
+    came out as `text/event-stream`. Now compares `clientWantsStream`.
+  - **cursorProtobuf**: implemented the missing AgentService (agent.v1) MCP
+    tool protocol — `encodeAgentValue`/`decodeAgentValue` (google.protobuf.Value),
+    `encodeMcpToolDefinition`, `encodeMcpTools`, `decodeMcpArgs`,
+    `encodeMcpResultSuccess/Error/ToolNotFound` — plus exported
+    `isAgentCapableRequest` and `buildAgentRunFrame(messages, model, tools)`
+    from the executor (mcp_tools field emitted only when tools are declared).
+    Runtime gating is unchanged; this lands the protocol building blocks.
+  - **tokenRefresh/providers**: static open-sse → src import externalized under
+    vitest broke alias resolution; Kiro external-IdP params now lazy-imported
+    inside the refresh call (same pattern as neighboring strategies).
+  - **kiroExternalIdp**: `@/lib/...` alias → relative `.js` import so the file
+    loads under native ESM too.
+  - **cursor/auto-import route**: `require("better-sqlite3")` replaced with a
+    dynamic ESM import (testable, CJS-free); tests rewritten against the
+    multi-strategy contract (better-sqlite3 → sqlite3 CLI → manual payload)
+    incl. the linux install gate.
+  - **dashboardGuard**: missing cookie jar now fails closed (401) instead of
+    crashing on `request.cookies.get`.
+  - **combo auto-switch**: wired `web_search`/`googleSearch` tool detection to
+    the `search` capability (the "temporarily disabled" note predates the
+    capability matrix); `reorderByCapabilities` returns the caller's array by
+    identity when no model matches.
+  - **translator**: restored text-only content-array flattening ("string-safe"
+    payloads for ollama/llama.cpp-class upstreams) lost in the DRY refactor —
+    blocks carrying `cache_control` stay structured (#2069); OpenAI→Claude
+    assistant `reasoning_content` maps to a thinking block; `parseSSELine`
+    auto-detects raw NDJSON lines without a format hint.
+  - Stale fixtures updated to current contracts: kiro integrity-retry mocks
+    cover the 3-host fallback chain, Cursor models test mocks node:http2
+    (post AgentService migration), windsurf expectations moved to
+    server.codeium.com + hidden registry entry, antigravity 429 retries = 3
+    per the registry consolidation, got-scraping routing test reflects the
+    disabled TLS-fingerprint path, db-benchmark skips when lowdb is absent,
+    MiMo live repro is opt-in via RUN_LIVE_TESTS.
+
+## Changes
+- **Provider fingerprints — second verification pass (2026-08-25, later same
+  day)**: re-audited every constant in `open-sse/config/clientVersions.js`
+  against upstream sources (GitHub releases via `gh`, npm registry, VS Code
+  marketplace + bundled-extension manifests, vendor changelogs). Corrections:
+  - **GitHub Copilot** `0.64.0` → `0.63.0` — 0.64.0 only exists on vscode
+    `main` targeting 1.135; the stable `1.134.0` tag bundles copilot-chat
+    0.63.0 (`extensions/copilot/package.json`). The marketplace standalone
+    extension stalled at 0.48.1 and is no longer the distribution channel.
+  - **Antigravity IDE** `2.9.1` → `2.10.0` (released 2026-08-24); Antigravity
+    CLI comment bumped `1.1.19` → `1.1.20` (released 2026-08-25).
+  - **Gemini CLI apiClient** `google-genai-sdk/1.41.0` → `1.30.0` — gemini-cli
+    v0.56.0 pins `"@google/genai": "1.30.0"` exact in
+    `packages/core/package.json`; a mismatched sdk/node pair looks fabricated.
+  - **Kiro CLI** `2.19.0` → `2.19.1` (kiro.dev/changelog, Aug 21 patch).
+  - **Trae** `3.5.78` → `3.5.87` (trae docs changelog: 3.5.84–3.5.86 feature
+    release Aug 7, 3.5.87 hotfix Aug 10).
+  - **Kimchi** `kimchi/0.1.50` → `kimchi/1.0.3` — upstream crossed to the 1.x
+    line with v1.0.0 on Aug 21; latest v1.0.3 (Aug 24). The kimchi.dev hero
+    screenshot still shows v0.0.26 and is a stale marketing asset.
+  - **Claude Code**: npm distribution is deprecated (registry tarball is now a
+    native-installer stub shipping `claude.exe`) — version sourcing is now
+    GitHub-release-first (`anthropics/claude-code`), confirmed `2.1.241`
+    remains latest via CHANGELOG.md on `main`.
+  - Confirmed unchanged/current: Codex 0.149.1, Gemini CLI 0.56.0,
+    VSCode 1.134.0, Cursor 3.17.8 (+connect-es 1.6.1), Kiro IDE 1.0.337,
+    CodeBuddy 2.138.0, Grok 1.0.5, Zed 1.16.2.
+  - Fixed `open-sse/services/usage/grok-cli.js` importing the Grok version
+    constants from `config/grokCli.js` (which no longer re-exports them since
+    the single-sourcing refactor) — the billing/user usage probes were sending
+    `x-grok-client-version: undefined`.
+  - `tests/__baseline__/verify-providers.mjs` now normalizes host-dependent
+    headers (`X-Stainless-Arch/Os`, antigravity UA platform suffix) so the
+    byte-baseline compares equal across OS/arch machines.
+- **Provider fingerprints — bump to current upstream (2026-08-25)**: every
+  outbound User-Agent / `editor-version` / `clientVersion` / `client_version`
+  / `connect-es` / `Anthropic-Beta` flag is now sourced from a single file
+  (`open-sse/config/clientVersions.js`) so a future bump touches one place.
+  Verified directly against upstream release pages, the npm registry, and the
+  canonical repo on GitHub. Specific bumps:
+  - **Claude Code** `2.1.92` → `2.1.241` (npm @anthropic-ai/claude-code,
+    2026-08-23). Beta-flag set carried over from 2.1.x; X-Stainless-* runtime
+    fingerprint kept on the 2.1.x baseline. `cc_version` in the cloaking
+    billing header now tracks the live CLI version.
+  - **Codex** `codex_cli_rs/0.136.0` → `0.149.1` (GitHub rust-v0.149.1,
+    2026-08-24) and `/backend-api/codex/models?client_version=` `0.144.6` →
+    `0.149.1`. Matches codex-rs `DEFAULT_ORIGINATOR = "codex_cli_rs"` and the
+    version that gates the newest `gpt-5.6-sol` entries via
+    `models-manager/models.json`.
+  - **GitHub Copilot** `GitHubCopilotChat/0.38.0` / `vscode/1.110.0` →
+    `0.64.0` / `1.134.0` for transport headers. OAuth + usage + probe paths
+    that still carried `0.26.7` / `vscode/1.85.0` / `vscode/1.100.0` /
+    `vscode/1.107.1` are now all aligned to `0.64.0` / `1.134.0` (matches
+    `microsoft/vscode/extensions/copilot/package.json` and the 2026-08-19
+    stable VSCode release).
+  - **Cursor** `x-cursor-client-version` `3.12.17` → `3.17.8`
+    (cursor.com changelog, 2026-08-20). Checksum algorithm (jyh cipher)
+    unchanged — verified by codex-rs not touching the related cipher code.
+  - **Antigravity** `antigravity/ide/2.1.1` → `2.9.1`
+    (antigravity.google/changelog, 2026-08-20). MITM rewrite override
+    (`src/mitm/antigravityIdeVersion.js`) is now opt-in via
+    `MITM_ANTIGRAVITY_VERSION_OVERRIDE=true`; default OFF because the legacy
+    `1.23.2` it used to force-replace broke real Antigravity 2.x clients.
+  - **Gemini CLI** `0.34.0` → `0.56.0` + `apiClient` `1.41.0` (npm
+    @google/gemini-cli, 2026-08-19).
+  - **Kiro** `kiro-ide/1.0.0` → `1.0.337` (kiro.dev/changelog, 2026-08-18).
+    `KIRO_VERSION` retired — was the deprecated 0.10.x CLI line; the new
+    `KIRO_FINGERPRINT` builder uses `kiro-ide/1.0.337` with `aws-sdk-js/3.0.0`
+    consistently across registry, OAuth service, model fetcher, and usage
+    handler.
+  - **Trae** `defaultAppVersion` `3.5.54` → `3.5.78` (trae.ai changelog,
+    Jul 2026).
+  - **CodeBuddy CN/Intl** transport `2.108.1` and oauth poll `2.63.2` both →
+    `2.138.0` (npm @tencent-ai/codebuddy-code, Aug 2026).
+  - **Grok CLI / Grok Build** `grok-shell/0.2.99` and oauth handshake
+    `grok-pager/0.2.93 grok-shell/0.2.93` → `1.0.5` (npm @xai-official/grok,
+    2026-08-22). Executor + oauth now share one signature.
+  - **Zed** fallback `x-zed-version` `0.200.0` → `1.16.2` (z.dev/releases,
+    2026-08-24). Includes the 1.16.2 fix for the filesystem sandbox escape
+    (PR #63147) and GitHub Copilot Chat auth routing for Enterprise Cloud
+    (PR #63142).
+  - **Kimchi** unified on `kimchi/0.1.50` (was split between `0.1.40` in the
+    model fetcher and `0.1.50` in the registry).
+- **Config**: new `open-sse/config/clientVersions.js` is the single source
+  of truth. Every registry, executor, OAuth service, MITM rewriter, and
+  test fixture that emits an upstream-impersonating header now imports from
+  it. Hardcoded duplicates removed (cursorChecksum, claudeCloaking,
+  iflow executor, kiro usage handler, kimchi models fetcher, testUtils).
+  Verified no orphan literals remain via
+  `grep -rnE '"claude-cli|codex_cli_rs|.../X.Y..." src open-sse cli'`.
+- **Tests**: `tests/__baseline__/providers-baseline.json`,
+  `tests/translator/__snapshots__/golden-url-header.test.js.snap`,
+  `tests/unit/{antigravity-retry-hook,grok-cli-executor,grok-cli-models,
+  grok-cli-usage,image-generation}.test.js` now import the constants
+  instead of hardcoding version strings. Run
+  `tests/__baseline__/verify-no-regression.mjs` to confirm parity.
+
+## Security
+- **Antigravity MITM override default OFF**: previously forced every IDE
+  client to `ideVersion=1.23.2`, which the 2.x Antigravity backend no
+  longer accepts. Switching the default to OFF (with an explicit
+  `MITM_ANTIGRAVITY_VERSION_OVERRIDE=true` opt-in) restores real-client
+  compatibility without breaking users that depended on the old behavior
+  in tests.
+
 # v0.5.55 (2026-08-14)
 
 ## Features
