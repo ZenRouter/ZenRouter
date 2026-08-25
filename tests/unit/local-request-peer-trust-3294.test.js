@@ -167,9 +167,13 @@ describe("peer header trust", () => {
   it("accepts the legacy Host fallback only in development", async () => {
     process.env.NODE_ENV = "development";
 
+    // Locked to the hardened contract: the spoofable Host header is never a
+    // trust signal, not even in development (removed in 1e099afb). Local dev
+    // relies on requireLogin=false for management routes and real API keys
+    // for the LLM surface.
     const response = await proxy(request("/api/v1/models", { host: "localhost:20127" }));
 
-    expect(response).toBe(mocks.nextResponse);
+    expect(response.status).toBe(401);
   });
 });
 
