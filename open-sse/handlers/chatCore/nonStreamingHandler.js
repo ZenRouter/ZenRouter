@@ -6,6 +6,8 @@ import { addBufferToUsage, filterUsageForFormat } from "../../utils/usageTrackin
 import { createErrorResult } from "../../utils/error.js";
 import { HTTP_STATUS } from "../../config/runtimeConfig.js";
 import { parseSSEToOpenAIResponse } from "./sseToJsonHandler.js";
+import { convertResponsesStreamToJson } from "../../transformer/streamToJsonConverter.js";
+import { openaiResponsesObjectToCompletion } from "../../translator/response/openai-responses.js";
 import { buildRequestDetail, extractRequestConfig, extractUsageFromResponse, saveUsageStats, formatDoneLine } from "./requestDetail.js";
 import { appendRequestLog, saveRequestDetail } from "@/lib/usageDb.js";
 import { decloakToolNames } from "../../utils/claudeCloaking.js";
@@ -149,6 +151,11 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
     return openAICompletionToClaudeMessage(responseBody);
   }
   if (targetFormat === sourceFormat) return responseBody;
+  // Provider answered with a completed Responses-API JSON body while the
+  // client speaks Chat Completions (e.g. OpenCode zen muse models).
+  if (targetFormat === FORMATS.OPENAI_RESPONSES && responseBody?.object === "response") {
+    return openaiResponsesObjectToCompletion(responseBody);
+  }
   // Provider responded in OpenAI Chat Completions shape but the client speaks
   // Responses API — convert so tool_calls/text surface as Responses `output`.
   if (targetFormat === FORMATS.OPENAI && sourceFormat === FORMATS.OPENAI_RESPONSES) {
@@ -293,13 +300,20 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
   let responseBody;
 
   if (contentType.includes("text/event-stream")) {
-    const sseText = await providerResponse.text();
-    const parsed = parseSSEToOpenAIResponse(sseText, model);
-    if (!parsed) {
-      appendLog({ status: `FAILED ${HTTP_STATUS.BAD_GATEWAY}` });
-      return createErrorResult(HTTP_STATUS.BAD_GATEWAY, "Invalid SSE response for non-streaming request");
+    if (targetFormat === FORMATS.OPENAI_RESPONSES) {
+      // Responses-API SSE (e.g. OpenCode zen muse): aggregate via the
+      // Responses stream converter — the Chat-Completions chunk parser below
+      // would silently drop every response.output_text.delta event.
+      responseBody = await convertResponsesStreamToJson(providerResponse.body);
+    } else {
+      const sseText = await providerResponse.text();
+      const parsed = parseSSEToOpenAIResponse(sseText, model);
+      if (!parsed) {
+        appendLog({ status: `FAILED ${HTTP_STATUS.BAD_GATEWAY}` });
+        return createErrorResult(HTTP_STATUS.BAD_GATEWAY, "Invalid SSE response for non-streaming request");
+      }
+      responseBody = parsed;
     }
-    responseBody = parsed;
   } else {
     try {
       responseBody = await providerResponse.json();

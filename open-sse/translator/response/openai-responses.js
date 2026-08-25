@@ -578,6 +578,73 @@ export function openaiResponsesToOpenAIResponse(chunk, state) {
   return null;
 }
 
+/**
+ * Convert a completed Responses-API JSON body (`object:"response"`) into an
+ * OpenAI Chat Completions response. Used when a chat-native client talks to a
+ * provider that only speaks the Responses transport (e.g. OpenCode zen muse)
+ * and the upstream answered non-streaming.
+ */
+export function openaiResponsesObjectToCompletion(body) {
+  if (!body || typeof body !== "object" || body.object !== "response") return body;
+  const output = Array.isArray(body.output) ? body.output : [];
+
+  let content = "";
+  let reasoning = "";
+  const toolCalls = [];
+
+  for (const item of output) {
+    if (item?.type === RESPONSES_ITEM.MESSAGE && Array.isArray(item.content)) {
+      for (const part of item.content) {
+        if (part?.type === RESPONSES_ITEM.OUTPUT_TEXT && typeof part.text === "string") {
+          content += part.text;
+        }
+      }
+    } else if (item?.type === RESPONSES_ITEM.REASONING) {
+      for (const s of Array.isArray(item.summary) ? item.summary : []) {
+        if (typeof s?.text === "string") reasoning += s.text;
+      }
+      if (typeof item.content === "string") reasoning += item.content;
+    } else if (item?.type === RESPONSES_ITEM.FUNCTION_CALL) {
+      toolCalls.push({
+        id: item.call_id || item.id || `call_${item.name}_${Date.now()}`,
+        type: "function",
+        function: {
+          name: item.name,
+          arguments: typeof item.arguments === "string"
+            ? item.arguments
+            : JSON.stringify(item.arguments ?? {}),
+        },
+      });
+    }
+  }
+
+  const message = { role: ROLE.ASSISTANT, content };
+  if (reasoning) message.reasoning_content = reasoning;
+  if (toolCalls.length > 0) message.tool_calls = toolCalls;
+
+  const usageIn = body.usage?.input_tokens;
+  const usageOut = body.usage?.output_tokens;
+  const completion = {
+    id: body.id || `chatcmpl-${Date.now()}`,
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: body.model,
+    choices: [{
+      index: 0,
+      message,
+      finish_reason: toolCalls.length > 0 ? "tool_calls" : "stop",
+    }],
+  };
+  if (usageIn != null || usageOut != null) {
+    completion.usage = {
+      prompt_tokens: usageIn || 0,
+      completion_tokens: usageOut || 0,
+      total_tokens: body.usage?.total_tokens || (usageIn || 0) + (usageOut || 0),
+    };
+  }
+  return completion;
+}
+
 // Register both directions
 register(FORMATS.OPENAI, FORMATS.OPENAI_RESPONSES, null, openaiToOpenAIResponsesResponse);
 register(FORMATS.OPENAI_RESPONSES, FORMATS.OPENAI, null, openaiResponsesToOpenAIResponse);
