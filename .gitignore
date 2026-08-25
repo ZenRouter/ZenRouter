@@ -87,3 +87,6 @@ graphify-out/*
 .PR/
 .next-analyze/*
 .env
+
+# Local runtime data
+.data/
