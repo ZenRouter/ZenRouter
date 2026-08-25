@@ -4,6 +4,7 @@ import { HTTP_STATUS } from "../config/runtimeConfig.js";
 import {
   generateCursorBody,
   encodeField,
+  encodeMcpTools,
   wrapConnectRPCFrame,
   decodeMessage,
   parseConnectRPCFrame,
@@ -83,6 +84,21 @@ function isAgentTextRequest(body) {
   });
 }
 
+// Whether a request can be served by the agent.v1 AgentService path: every
+// message must carry text-only content (assistant tool_call turns with null
+// content and tool results count — their payload travels in the tool fields).
+// Unlike isAgentTextRequest, declared tools and tool history are allowed; the
+// caller decides whether to advertise them via RunRequest.mcp_tools.
+export function isAgentCapableRequest(body) {
+  if (!body || !Array.isArray(body.messages) || !body.messages.length) return false;
+  return body.messages.every((message) => {
+    const content = message?.content;
+    if (typeof content === "string") return true;
+    if (Array.isArray(content)) return content.every((part) => part?.type === "text");
+    return Boolean(message?.tool_calls?.length || message?.role === "tool");
+  });
+}
+
 function encodeHistoryMessage(message) {
   const content = textFromContent(message?.content);
   if (!content) return null;
@@ -95,7 +111,7 @@ function encodeHistoryMessage(message) {
   return agentMessage(1, agentMessage(1, agentMessage(1, text)));
 }
 
-function buildAgentRunFrame(messages, model) {
+export function buildAgentRunFrame(messages, model, tools = []) {
   const system = messages
     .filter((message) => message?.role === "system")
     .map((message) => textFromContent(message.content))
@@ -124,10 +140,14 @@ function buildAgentRunFrame(messages, model) {
   );
   const conversationAction = agentMessage(1, userAction);
   const requestedModel = concatBuffers(agentString(1, model), agentBool(7, true));
+  // RunRequest.mcp_tools is only emitted when the client actually declared
+  // tools — an empty/absent list keeps the field omitted entirely.
+  const mcpTools = tools?.length ? agentMessage(4, encodeMcpTools(tools)) : null;
   const runRequest = concatBuffers(
     // An empty ConversationStateStructure starts a fresh local agent session.
     agentMessage(1, new Uint8Array()),
     agentMessage(2, conversationAction),
+    ...(mcpTools ? [mcpTools] : []),
     ...(system ? [agentString(8, system)] : []),
     agentMessage(9, requestedModel),
   );

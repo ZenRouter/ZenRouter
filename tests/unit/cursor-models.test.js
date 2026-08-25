@@ -1,4 +1,37 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// GetUsableModels travels over a raw HTTP/2 Connect call (node:http2), not
+// global fetch — mock the h2 client instead.
+const h2 = vi.hoisted(() => ({
+  payload: new Uint8Array(),
+  status: 200,
+  requests: [],
+}));
+
+vi.mock("http2", () => ({
+  default: {
+    connect: vi.fn(() => {
+      const client = {};
+      client.on = vi.fn();
+      client.close = vi.fn();
+      const req = {
+        on(event, cb) {
+          if (event === "response") queueMicrotask(() => cb({ ":status": h2.status }));
+          else if (event === "data") queueMicrotask(() => cb(Buffer.from(h2.payload)));
+          else if (event === "end") queueMicrotask(() => cb());
+          return req;
+        },
+        end: vi.fn(),
+      };
+      client.request = vi.fn((headers) => {
+        h2.requests.push(headers);
+        return req;
+      });
+      return client;
+    }),
+  },
+}));
+
 import {
   clearCursorModelCache,
   parseCursorUsableModels,
@@ -65,7 +98,9 @@ describe("Cursor live model catalog", () => {
 
   it("fetches the account-specific catalog and caches it", async () => {
     const payload = concat(model("claude-4.6-opus", "Claude 4.6 Opus"));
-    global.fetch = vi.fn().mockResolvedValue(new Response(payload, { status: 200 }));
+    h2.payload = payload;
+    h2.status = 200;
+    h2.requests.length = 0;
     const credentials = {
       accessToken: "cursor-token",
       providerSpecificData: { machineId: "machine-id" },
@@ -78,22 +113,15 @@ describe("Cursor live model catalog", () => {
       models: [{ id: "claude-4.6-opus", name: "Claude 4.6 Opus" }],
     });
 
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-    expect(global.fetch).toHaveBeenCalledWith(
-      "https://agent.api5.cursor.sh/agent.v1.AgentService/GetUsableModels",
-      expect.objectContaining({
-        method: "POST",
-        body: expect.any(Uint8Array),
-        headers: expect.objectContaining({
-          "content-type": "application/proto",
-          accept: "application/proto",
-        }),
-      }),
-    );
+    // One HTTP/2 call; the second resolve is served from the cache.
+    expect(h2.requests).toHaveLength(1);
+    expect(h2.requests[0][":path"]).toBe("/agent.v1.AgentService/GetUsableModels");
+    expect(h2.requests[0]["content-type"]).toBe("application/proto");
   });
 
   it("fails open when the Cursor catalog request fails", async () => {
-    global.fetch = vi.fn().mockResolvedValue(new Response("no", { status: 403 }));
+    h2.payload = new Uint8Array();
+    h2.status = 403;
 
     await expect(resolveCursorModels({
       accessToken: "cursor-token",

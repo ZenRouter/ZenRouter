@@ -887,6 +887,149 @@ export function extractTextFromResponse(payload) {
   }
 }
 
+// ==================== AGENT SERVICE (agent.v1) — MCP TOOL PROTOCOL ====================
+// Wire format verified against Cursor's agent.proto. Used by the AgentService
+// RunRequest path (executors/cursor.js) to advertise MCP tools and to
+// decode/answer server-initiated tool calls.
+
+const AGENT_TOOL_PROVIDER = "9router";
+
+function encodeFixed64Double(value) {
+  const buf = new ArrayBuffer(8);
+  new DataView(buf).setFloat64(0, value, true);
+  return new Uint8Array(buf);
+}
+
+function decodeFixed64Double(bytes) {
+  return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getFloat64(0, true);
+}
+
+function utf8(value) {
+  return Buffer.from(value).toString("utf8");
+}
+
+// google.protobuf.Value — oneof kind:
+//   null_value=1 (enum 0) | number_value=2 (double) | string_value=3 |
+//   bool_value=4 | struct_value=5 (Struct{map<string,Value> fields=1}) |
+//   list_value=6 (ListValue{repeated Value values=1})
+export function encodeAgentValue(value) {
+  if (value === null || value === undefined) return encodeField(1, WIRE_TYPE.VARINT, 0);
+  if (typeof value === "number") {
+    return concatArrays(encodeVarint((2 << 3) | WIRE_TYPE.FIXED64), encodeFixed64Double(value));
+  }
+  if (typeof value === "boolean") return encodeField(4, WIRE_TYPE.VARINT, value ? 1 : 0);
+  if (typeof value === "string") return encodeField(3, WIRE_TYPE.LEN, value);
+  if (Array.isArray(value)) {
+    const items = value.map((item) => encodeField(1, WIRE_TYPE.LEN, encodeAgentValue(item)));
+    return encodeField(6, WIRE_TYPE.LEN, concatArrays(...items));
+  }
+  if (typeof value === "object") {
+    const entries = Object.entries(value).map(([key, val]) =>
+      encodeField(1, WIRE_TYPE.LEN, concatArrays(
+        encodeField(1, WIRE_TYPE.LEN, key),
+        encodeField(2, WIRE_TYPE.LEN, encodeAgentValue(val)),
+      )));
+    return encodeField(5, WIRE_TYPE.LEN, concatArrays(...entries));
+  }
+  return encodeField(1, WIRE_TYPE.VARINT, 0);
+}
+
+export function decodeAgentValue(data) {
+  if (!data || !data.length) return null;
+  const msg = decodeMessage(data);
+  if (msg.has(2)) return decodeFixed64Double(msg.get(2)[0].value);
+  if (msg.has(3)) return utf8(msg.get(3)[0].value);
+  if (msg.has(4)) return msg.get(4)[0].value === 1;
+  if (msg.has(5)) {
+    const out = {};
+    const structBytes = msg.get(5)[0].value;
+    const entries = structBytes.length ? decodeMessage(structBytes).get(1) || [] : [];
+    for (const entry of entries) {
+      const entryMsg = decodeMessage(entry.value);
+      const key = utf8(entryMsg.get(1)[0].value);
+      out[key] = decodeAgentValue(entryMsg.get(2)[0].value);
+    }
+    return out;
+  }
+  if (msg.has(6)) {
+    const listBytes = msg.get(6)[0].value;
+    const values = listBytes.length ? decodeMessage(listBytes).get(1) || [] : [];
+    return values.map((value) => decodeAgentValue(value.value));
+  }
+  return null;
+}
+
+// McpToolDefinition: name=1, description=2, input_schema(Value)=3,
+// provider=4, tool_name=5. Accepts the OpenAI tool shape ({function:{...}})
+// and a flat shape ({name, description, inputSchema}).
+export function encodeMcpToolDefinition(tool) {
+  const fn = tool?.function ?? tool ?? {};
+  const name = String(fn.name ?? "");
+  const parts = [
+    encodeField(1, WIRE_TYPE.LEN, name),
+    ...(fn.description != null ? [encodeField(2, WIRE_TYPE.LEN, String(fn.description))] : []),
+    encodeField(3, WIRE_TYPE.LEN, encodeAgentValue(fn.parameters ?? fn.inputSchema ?? {})),
+    encodeField(4, WIRE_TYPE.LEN, AGENT_TOOL_PROVIDER),
+    encodeField(5, WIRE_TYPE.LEN, name),
+  ];
+  return concatArrays(...parts);
+}
+
+// RunRequest.mcp_tools carries repeated McpToolDefinition on field 1.
+export function encodeMcpTools(tools = []) {
+  if (!Array.isArray(tools) || !tools.length) return new Uint8Array(0);
+  return concatArrays(...tools.map((tool) => encodeField(1, WIRE_TYPE.LEN, encodeMcpToolDefinition(tool))));
+}
+
+// McpArgs: name=1, args(map<string,Value>)=2, tool_call_id=3, tool_name=5.
+export function decodeMcpArgs(data) {
+  const out = { name: "", toolName: "", toolCallId: "", args: {} };
+  const msg = decodeMessage(data);
+  for (const [fieldNum, occurrences] of msg.entries()) {
+    for (const { value } of occurrences) {
+      if (fieldNum === 1) out.name = utf8(value);
+      else if (fieldNum === 3) out.toolCallId = utf8(value);
+      else if (fieldNum === 5) out.toolName = utf8(value);
+      else if (fieldNum === 2) {
+        const entry = decodeMessage(value);
+        const key = utf8(entry.get(1)[0].value);
+        out.args[key] = decodeAgentValue(entry.get(2)[0].value);
+      }
+    }
+  }
+  return out;
+}
+
+// ContentItem oneof: text=1 (TextContent.text=1) | image=2 (ImageContent.data=1, mime_type=2).
+// McpSuccess: content(repeated)=1, is_error(varint)=2. McpResult oneof: success=1.
+export function encodeMcpResultSuccess({ textItems = [], imageItems = [], isError = false } = {}) {
+  const items = [];
+  for (const text of textItems) {
+    items.push(encodeField(1, WIRE_TYPE.LEN, encodeField(1, WIRE_TYPE.LEN, String(text))));
+  }
+  for (const image of imageItems) {
+    items.push(encodeField(2, WIRE_TYPE.LEN, concatArrays(
+      encodeField(1, WIRE_TYPE.LEN, image.data),
+      encodeField(2, WIRE_TYPE.LEN, String(image.mimeType)),
+    )));
+  }
+  const success = concatArrays(
+    ...items.map((item) => encodeField(1, WIRE_TYPE.LEN, item)),
+    encodeField(2, WIRE_TYPE.VARINT, isError ? 1 : 0),
+  );
+  return encodeField(1, WIRE_TYPE.LEN, success);
+}
+
+// McpResult oneof error=2 → ErrorResult.message=1.
+export function encodeMcpResultError(message) {
+  return encodeField(2, WIRE_TYPE.LEN, encodeField(1, WIRE_TYPE.LEN, String(message)));
+}
+
+// McpResult oneof tool_not_found=5 → ToolNotFoundResult.tool_name=1.
+export function encodeMcpResultToolNotFound(toolName) {
+  return encodeField(5, WIRE_TYPE.LEN, encodeField(1, WIRE_TYPE.LEN, String(toolName)));
+}
+
 // ==================== EXPORTS ====================
 
 export default {
