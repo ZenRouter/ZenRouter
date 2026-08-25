@@ -4,6 +4,7 @@
 
 ## Fixed
 - **getUsageStats performance & memory leak fix**: replaced full table scan in `getUsageStats('all')` with optimized SQL `MAX(timestamp)` aggregation grouped by entity (`src/lib/db/repos/usageRepo.js`). Prevents loading hundreds of thousands of historical rows into Node.js memory on dashboard usage stats refresh.
+- **GitBook docs build fix**: added missing `useEffect` import in `LanguageSwitcher.js` — this caused `ReferenceError: useEffect is not defined` and broke the docs deploy CI (`Deploy GitBook to 9router.github.io`).
 - **dashboardGuard path matching hardening**: enforced canonical path matching (`isLocalOnlyRoute` and `isAlwaysProtected`) in `src/dashboardGuard.js` to prevent trailing-slash route bypasses on `LOCAL_ONLY_PATHS` (such as `/api/mcp`).
 - **Dashboard UI React hooks**: fixed function hoisting and useEffect dependency/setState warnings in `PricingModal.js`, `RequestLogger.js`, and `useModelCaps.js`.
 ## Fixed
