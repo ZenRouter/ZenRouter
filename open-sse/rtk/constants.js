@@ -73,5 +73,7 @@ export const FILTERS = {
   PYTEST: "pytest",
   GO_TEST: "go-test",
   MYPY: "mypy",
-  VITEST: "vitest"
+  VITEST: "vitest",
+  JSON: "json",
+  ENV: "env"
 };

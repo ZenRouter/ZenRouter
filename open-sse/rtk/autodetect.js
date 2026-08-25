@@ -8,12 +8,14 @@
 //                  git-log → git-diff → git-status → build-output → porcelain
 //                  → tree → ls → search-list → read-numbered → dedup-log
 //                  → smart-truncate → null
-import { DETECT_WINDOW, READ_NUMBERED_MIN_HIT_RATIO, SMART_TRUNCATE_MIN_LINES } from "./constants.js";
+import { DETECT_WINDOW, READ_NUMBERED_MIN_HIT_RATIO, SMART_TRUNCATE_MIN_LINES, MIN_COMPRESS_SIZE } from "./constants.js";
 import { cargoTest } from "./filters/cargoTest.js";
 import { pytest } from "./filters/pytest.js";
 import { goTest } from "./filters/goTest.js";
 import { mypy } from "./filters/mypy.js";
 import { vitest } from "./filters/vitest.js";
+import { jsonFilter } from "./filters/jsonCompact.js";
+import { envFilter } from "./filters/env.js";
 import { gitDiff } from "./filters/gitDiff.js";
 import { gitStatus } from "./filters/gitStatus.js";
 import { gitLog } from "./filters/gitLog.js";
@@ -107,6 +109,17 @@ export function autoDetectFilter(text) {
   // Line-numbered file dump ("  N|content") — fire only if many lines match
   if (lines.length >= SMART_TRUNCATE_MIN_LINES && isLineNumbered(lines)) {
     return readNumbered;
+  }
+
+  // 9router extras: structured payloads before generic fallbacks.
+  // Large JSON → structural compact view; env dumps → redacted/truncated list.
+  if (text.length >= MIN_COMPRESS_SIZE) {
+    const t0 = text.trimStart();
+    if ((t0.startsWith("{") || t0.startsWith("[")) && (() => { try { JSON.parse(text); return true; } catch { return false; } })()) {
+      return jsonFilter;
+    }
+    const envLines = nonEmpty.filter((l) => /^[A-Za-z_][A-Za-z0-9_]*=/.test(l)).length;
+    if (envLines >= 5 && envLines >= Math.ceil(nonEmpty.length / 2)) return envFilter;
   }
 
   // Fallback: dedupLog for generic multi-line noise with duplicates

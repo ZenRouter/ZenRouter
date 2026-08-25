@@ -16,6 +16,8 @@ import { pytest } from "./filters/pytest.js";
 import { goTest } from "./filters/goTest.js";
 import { mypy } from "./filters/mypy.js";
 import { vitest } from "./filters/vitest.js";
+import { jsonFilter } from "./filters/jsonCompact.js";
+import { envFilter } from "./filters/env.js";
 
 const REGISTRY = {
   [FILTERS.GIT_DIFF]: gitDiff,
@@ -35,7 +37,9 @@ const REGISTRY = {
   [FILTERS.PYTEST]: pytest,
   [FILTERS.GO_TEST]: goTest,
   [FILTERS.MYPY]: mypy,
-  [FILTERS.VITEST]: vitest
+  [FILTERS.VITEST]: vitest,
+  [FILTERS.JSON]: jsonFilter,
+  [FILTERS.ENV]: envFilter
 };
 
 // Rust resolve_filter aliases (pipe_cmd.rs): cargo, rg, fd
