@@ -14,15 +14,21 @@ describe("normalizeClaudePassthrough — haiku adaptive thinking (docs 11 §1)",
     expect(out.thinking).toEqual({ type: "adaptive" });
   });
 
-  it("hoists mid-conversation system messages into top-level system", () => {
+  it("folds mid-conversation system messages into the previous user turn", () => {
+    // Updated contract (7e5f5a88): hoisting volatile system content
+    // (token counters, reminders) above the whole conversation invalidated the
+    // cached prefix on every request, so passthrough now FOLDS it into the
+    // neighbouring user turn instead of promoting it to body.system.
     const out = normalizeClaudePassthrough({
       messages: [
         { role: "user", content: "hi" },
         { role: "system", content: "be brief" },
       ],
     });
-    expect(out.system).toEqual([{ type: "text", text: "be brief" }]);
     expect(out.messages.every((m) => m.role !== "system")).toBe(true);
+    const prev = out.messages[0];
+    expect(Array.isArray(prev.content)).toBe(true);
+    expect(prev.content.at(-1)).toEqual({ type: "text", text: "be brief" });
   });
 });
 

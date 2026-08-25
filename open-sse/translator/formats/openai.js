@@ -53,7 +53,16 @@ export function filterToOpenAIFormat(body, opts = {}) {
       if (filteredContent.length === 0) {
         filteredContent.push({ type: OPENAI_BLOCK.TEXT, text: "" });
       }
-      
+
+      // Text-only arrays collapse to a joined string — strict OpenAI-
+      // compatible upstreams reject content arrays even when every block
+      // is plain text. Blocks carrying cache_control stay structured so
+      // prompt-cache breakpoints survive (alicode/DashScope #2069).
+      const keepsCacheBlocks = filteredContent.some((b) => b?.cache_control);
+      if (!keepsCacheBlocks && filteredContent.every((b) => b?.type === OPENAI_BLOCK.TEXT)) {
+        return { ...msg, content: filteredContent.map((b) => b.text ?? "").join("\n") };
+      }
+
       return { ...msg, content: filteredContent };
     }
     

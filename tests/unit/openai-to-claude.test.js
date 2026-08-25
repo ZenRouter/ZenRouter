@@ -170,6 +170,9 @@ describe("openaiToClaudeRequest", () => {
 
 describe("openaiToClaudeResponse", () => {
   it("omits empty Read pages tool argument before emitting Claude input deltas", () => {
+    // Since arg buffering landed (48253186), tool arguments are accumulated
+    // and sanitized once at finish_reason — the pages:"" strip must hold
+    // there, before the single input_json_delta is emitted.
     const state = { toolCalls: new Map() };
     const chunk = {
       id: "chatcmpl-test",
@@ -189,11 +192,12 @@ describe("openaiToClaudeResponse", () => {
               })
             }
           }]
-        }
+        },
+        finish_reason: "tool_calls"
       }]
     };
 
-    const result = openaiToClaudeResponse(chunk, state);
+    const result = openaiToClaudeResponse(chunk, state) || [];
     const inputDelta = result.find(event => event.delta?.type === "input_json_delta");
 
     expect(inputDelta).toBeDefined();
