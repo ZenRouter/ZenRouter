@@ -489,7 +489,7 @@ export default function TokenSaverClient() {
               </a>
             </p>
             <p className="text-sm text-text-muted">
-              git/grep/ls/tree/logs → 60-90% fewer input tokens
+              git/grep/ls/tree/logs + cargo/pytest/vitest/go/mypy → 60-90% fewer input tokens
             </p>
           </div>
           <Toggle
