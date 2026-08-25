@@ -1,4 +1,5 @@
 import { CURSOR_CONFIG } from "../constants/oauth.js";
+import { CURSOR_VERSION } from "open-sse/config/clientVersions.js";
 
 /**
  * Cursor IDE OAuth Service
@@ -17,6 +18,9 @@ import { CURSOR_CONFIG } from "../constants/oauth.js";
 export class CursorService {
   constructor() {
     this.config = CURSOR_CONFIG;
+    // clientVersion is single-sourced from open-sse/config/clientVersions.js
+    // so a bump there flows through to the OAuth handshake immediately.
+    this.config = { ...CURSOR_CONFIG, clientVersion: CURSOR_VERSION };
   }
 
   /**

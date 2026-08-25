@@ -1,6 +1,7 @@
 import { BaseExecutor } from "./base.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { PROVIDERS } from "../config/providers.js";
+import { TRAE_APP_VERSION } from "../config/clientVersions.js";
 
 // Trae executor — SOLO remote agent API.
 //
@@ -81,7 +82,7 @@ export default class TraeExecutor extends BaseExecutor {
       language: "en-us",
       app_language: psd.appLanguage || "en",
       quality: "stable",
-      app_version: psd.appVersion || "1.0.0.1229",
+      app_version: psd.appVersion || TRAE_APP_VERSION,
       web_id: psd.webId || "",
       user_identity: psd.userIdentity || "Free",
       is_freshman: "0",

@@ -22,12 +22,18 @@
 import { v4 as uuidv4 } from "uuid";
 import { createHash } from "crypto";
 import { refreshKiroToken } from "./tokenRefresh.js";
+import {
+  KIRO_IDE_VERSION,
+  KIRO_RUNTIME_SDK_VERSION,
+  KIRO_FINGERPRINT,
+} from "../config/clientVersions.js";
 
-const KIRO_RUNTIME_SDK_VERSION = "1.0.0";
 const KIRO_AGENT_OS = "windows";
 const KIRO_AGENT_OS_VERSION = "10.0.26200";
 const KIRO_NODE_VERSION = "22.21.1";
-const KIRO_VERSION = "0.10.32";
+// KIRO_VERSION kept as alias for back-compat (Kiro IDE version line; the
+// deprecated 0.10.32 CLI line is no longer referenced).
+const KIRO_VERSION = KIRO_IDE_VERSION;
 
 const DEFAULT_REGION = "us-east-1";
 const FETCH_TIMEOUT_MS = 30_000;
@@ -73,13 +79,12 @@ function buildKiroFingerprintHeaders(credentials) {
     || "kiro-anonymous";
   const machineId = createHash("sha256").update(String(seed)).digest("hex");
 
-  const userAgent =
-    `aws-sdk-js/${KIRO_RUNTIME_SDK_VERSION} ua/2.1 ` +
-    `os/${KIRO_AGENT_OS}#${KIRO_AGENT_OS_VERSION} ` +
-    `lang/js md/nodejs#${KIRO_NODE_VERSION} ` +
-    `api/codewhispererruntime#${KIRO_RUNTIME_SDK_VERSION} m/N,E ` +
-    `KiroIDE-${KIRO_VERSION}-${machineId}`;
-  const amzUserAgent = `aws-sdk-js/${KIRO_RUNTIME_SDK_VERSION} KiroIDE-${KIRO_VERSION}-${machineId}`;
+  const { userAgent, amzUserAgent } = KIRO_FINGERPRINT({
+    kiroAgentOs: KIRO_AGENT_OS,
+    kiroAgentOsVersion: KIRO_AGENT_OS_VERSION,
+    kiroNodeVersion: KIRO_NODE_VERSION,
+    machineId,
+  });
 
   return {
     "User-Agent": userAgent,

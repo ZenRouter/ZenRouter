@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { GROK_CLI_VERSION } from "../../open-sse/config/clientVersions.js";
 import {
   GrokCliExecutor,
   countGrokCliUserTurns,
@@ -98,7 +99,7 @@ describe("GrokCliExecutor", () => {
     expect(headers.Accept).toBe("text/event-stream");
     expect(headers["x-xai-token-auth"]).toBeUndefined();
     expect(headers["x-grok-client-identifier"]).toBe("grok-shell");
-    expect(headers["x-grok-client-version"]).toBe("0.2.99");
+    expect(headers["x-grok-client-version"]).toBe(GROK_CLI_VERSION);
     expect(headers["x-grok-session-id"]).toBe("sess-abc");
     expect(headers["x-grok-conv-id"]).toBe("sess-abc");
     expect(headers["x-grok-req-id"]).toBe("req-xyz");

@@ -5,11 +5,20 @@
 import { proxyAwareFetch } from "../../utils/proxyFetch.js";
 import { PROVIDER_OAUTH } from "../../providers/index.js";
 import { U, parseResetTime } from "./shared.js";
+import {
+  VSCODE_VERSION,
+  COPILOT_CHAT_VERSION,
+  COPILOT_API_VERSION,
+} from "../../config/clientVersions.js";
 
-// GitHub API config — single source from registry oauth block
+// GitHub API config — single source from registry oauth block. Editor-Version
+// and Editor-Plugin-Version come from clientVersions so a single bump there
+// flows to OAuth handshake, chat executor, usage handler, and probe.
 const GITHUB_CONFIG = {
-  apiVersion: PROVIDER_OAUTH.github?.apiVersion,
+  apiVersion: PROVIDER_OAUTH.github?.apiVersion ?? COPILOT_API_VERSION,
   userAgent: PROVIDER_OAUTH.github?.userAgent,
+  editorVersion: `vscode/${VSCODE_VERSION}`,
+  editorPluginVersion: `copilot-chat/${COPILOT_CHAT_VERSION}`,
 };
 
 /**
@@ -29,8 +38,8 @@ export async function getGitHubUsage(accessToken, providerSpecificData, proxyOpt
         "Accept": "application/json",
         "X-GitHub-Api-Version": GITHUB_CONFIG.apiVersion,
         "User-Agent": GITHUB_CONFIG.userAgent,
-        "Editor-Version": "vscode/1.100.0",
-        "Editor-Plugin-Version": "copilot-chat/0.26.7",
+        "Editor-Version": GITHUB_CONFIG.editorVersion,
+        "Editor-Plugin-Version": GITHUB_CONFIG.editorPluginVersion,
       },
     }, proxyOptions);
 

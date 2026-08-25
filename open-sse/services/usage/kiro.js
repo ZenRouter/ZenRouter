@@ -5,6 +5,7 @@
 import { proxyAwareFetch } from "../../utils/proxyFetch.js";
 import { resolveDefaultProfileArn } from "../../config/kiroConstants.js";
 import { U, parseResetTime } from "./shared.js";
+import { KIRO_USER_AGENT, KIRO_AMZ_USER_AGENT } from "../../config/clientVersions.js";
 
 /**
  * Kiro (AWS CodeWhisperer) Usage
@@ -83,8 +84,8 @@ export async function getKiroUsage(accessToken, providerSpecificData, proxyOptio
           headers: {
             "Authorization": `Bearer ${accessToken}`,
             "Accept": "application/json",
-            "x-amz-user-agent": "aws-sdk-js/1.0.0 KiroIDE",
-            "user-agent": "aws-sdk-js/1.0.0 KiroIDE",
+            "x-amz-user-agent": KIRO_AMZ_USER_AGENT,
+            "user-agent": KIRO_USER_AGENT,
             ...apiKeyHeaders,
             ...externalIdpHeaders,
           },

@@ -20,6 +20,26 @@ for (const f of ADDED_FIELDS) {
   for (const id of Object.keys(baseline)) delete baseline[id][f];
 }
 
+// Host-dependent header values vary with the OS/arch running the verify, so
+// normalize them on BOTH sides — the baseline is authored once on one machine
+// and must stay comparable everywhere.
+const HOST_DEPENDENT_HEADERS = new Set(["X-Stainless-Arch", "X-Stainless-Os"]);
+function normalizeHostDependent(providers) {
+  for (const p of Object.values(providers)) {
+    const h = p?.headers;
+    if (!h) continue;
+    for (const [k, v] of Object.entries(h)) {
+      if (HOST_DEPENDENT_HEADERS.has(k)) h[k] = `<${k}>`;
+      else if (typeof v === "string" && /^antigravity\/ide\//.test(v)) {
+        // UA suffix " <os>/<arch>" is derived from platform()/arch()
+        h[k] = v.replace(/ (darwin|windows|linux)\/(arm64|x64)$/, " <platform>");
+      }
+    }
+  }
+}
+normalizeHostDependent(baseline);
+normalizeHostDependent(current);
+
 const diffs = [];
 const allIds = new Set([...Object.keys(baseline), ...Object.keys(current)]);
 for (const id of allIds) {

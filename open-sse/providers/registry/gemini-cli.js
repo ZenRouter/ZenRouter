@@ -1,4 +1,5 @@
 import { GOOGLE_OAUTH_CLIENT } from "../shared.js";
+import { GEMINI_CLI_VERSION, GEMINI_CLI_API_CLIENT } from "../../config/clientVersions.js";
 
 export default {
   id: "gemini-cli",
@@ -21,8 +22,8 @@ export default {
   transport: {
     baseUrl: "https://cloudcode-pa.googleapis.com/v1internal",
     format: "gemini-cli",
-    cliVersion: "0.34.0",
-    apiClient: "google-genai-sdk/1.41.0 gl-node/v22.19.0",
+    cliVersion: GEMINI_CLI_VERSION,
+    apiClient: GEMINI_CLI_API_CLIENT,
     usage: {
       quotaUrl: "https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuota",
       loadCodeAssistUrl: "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist",

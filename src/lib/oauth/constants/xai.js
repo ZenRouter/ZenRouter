@@ -5,6 +5,7 @@
  * Mirrors the upstream Go constants 1:1.
  */
 import { PROVIDERS } from "open-sse/providers/index.js";
+import { XAI_USER_AGENT } from "open-sse/config/clientVersions.js";
 
 // xAI client_id for OAuth (PKCE public client) — single source: registry xai.transport
 export const XAI_CLIENT_ID = PROVIDERS["xai"]?.clientId;
@@ -32,8 +33,9 @@ export const XAI_PKCE_VERIFIER_BYTES = 96;
 // Refresh tokens this many seconds before expiry
 export const XAI_REFRESH_LEAD_SECONDS = 5 * 60;
 
-// User-Agent — mirror Go grok-cli UA. Version is best-effort; xAI does not pin a specific version.
-export const XAI_USER_AGENT = "grok-cli/9router";
+// Re-export for legacy callers — sourced from clientVersions so a single
+// bump there propagates everywhere.
+export { XAI_USER_AGENT };
 
 /**
  * Aggregated config object — mirrors the shape of CLAUDE_CONFIG/CODEX_CONFIG in oauth.js.

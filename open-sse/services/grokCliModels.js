@@ -1,10 +1,12 @@
 import {
   GROK_CLI_BASE_URL,
-  GROK_CLI_CLIENT_IDENTIFIER,
   GROK_CLI_MODEL,
+} from "../config/grokCli.js";
+import {
+  GROK_CLI_CLIENT_IDENTIFIER,
   GROK_CLI_USER_AGENT,
   GROK_CLI_VERSION,
-} from "../config/grokCli.js";
+} from "../config/clientVersions.js";
 import { refreshProviderCredentials } from "./oauthCredentialManager.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
 

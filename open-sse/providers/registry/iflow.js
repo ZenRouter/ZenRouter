@@ -1,3 +1,5 @@
+import { IFLOW_USER_AGENT } from "../../config/clientVersions.js";
+
 export default {
   id: "iflow",
   hidden: true,
@@ -17,7 +19,7 @@ export default {
     baseUrl: "https://apis.iflow.cn/v1/chat/completions",
     thinkingFormat: "openai",
     headers: {
-      "User-Agent": "iFlow-Cli",
+      "User-Agent": IFLOW_USER_AGENT,
     },
   },
   models: [

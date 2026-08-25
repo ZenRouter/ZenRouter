@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { GROK_CLI_VERSION } from "../../open-sse/config/clientVersions.js";
 
 vi.mock("../../open-sse/services/oauthCredentialManager.js", () => ({
   refreshProviderCredentials: vi.fn(),
@@ -75,6 +76,6 @@ describe("Grok CLI live models", () => {
     expect(fetchFn).toHaveBeenCalledTimes(2);
     expect(fetchFn.mock.calls[0][2]).toBe(proxyOptions);
     expect(fetchFn.mock.calls[1][1].headers.Authorization).toBe("Bearer new-token");
-    expect(fetchFn.mock.calls[1][1].headers["x-grok-client-version"]).toBe("0.2.99");
+    expect(fetchFn.mock.calls[1][1].headers["x-grok-client-version"]).toBe(GROK_CLI_VERSION);
   });
 });

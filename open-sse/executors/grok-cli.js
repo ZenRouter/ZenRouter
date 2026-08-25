@@ -10,8 +10,8 @@ import { getModelUpstreamId } from "../config/providerModels.js";
 import {
   GROK_CLI_CLIENT_IDENTIFIER,
   GROK_CLI_VERSION,
-  supportsGrokCliReasoningEffort,
-} from "../config/grokCli.js";
+} from "../config/clientVersions.js";
+import { supportsGrokCliReasoningEffort } from "../config/grokCli.js";
 import { MEMORY_CONFIG } from "../config/runtimeConfig.js";
 import { resolveSessionId } from "../utils/sessionManager.js";
 import { getConsistentMachineId } from "../shared/machineId.js";

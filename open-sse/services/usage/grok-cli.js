@@ -28,7 +28,7 @@ import {
   GROK_CLI_CLIENT_IDENTIFIER,
   GROK_CLI_USER_AGENT,
   GROK_CLI_VERSION,
-} from "../../config/grokCli.js";
+} from "../../config/clientVersions.js";
 import { decodeGrokCreditsFrame } from "./grokCliQuotaFrame.js";
 
 const USAGE = U("grok-cli");

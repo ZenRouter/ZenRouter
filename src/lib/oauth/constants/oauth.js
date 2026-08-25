@@ -4,6 +4,7 @@
 import { platform, arch } from "os";
 import { ANTIGRAVITY_OAUTH_CLIENT, GOOGLE_OAUTH_CLIENT } from "open-sse/providers/shared.js";
 import { PROVIDER_OAUTH, PROVIDERS as REGISTRY_PROVIDERS } from "open-sse/providers/index.js";
+import { TRAE_APP_VERSION, TRAE_USER_AGENT } from "open-sse/config/clientVersions.js";
 
 /**
  * Get the platform enum value based on the current OS.
@@ -148,13 +149,13 @@ export const TRAE_CONFIG = {
   getUserInfoPath: "/cloudide/api/v3/trae/GetUserInfo",
   authorizationPath: "/authorization",
   callbackPath: "/callback",
-  minAppVersion: "3.5.54",
-  defaultAppVersion: "3.5.54",
+  minAppVersion: TRAE_APP_VERSION,
+  defaultAppVersion: TRAE_APP_VERSION,
   defaultAppType: "stable",
   defaultPluginVersion: "local",
   // service machine id is derived at runtime; device_id "0" is the stable default
   defaultDeviceId: "0",
-  userAgent: "Trae/1.0.0 antigravity-cockpit-tools",
+  userAgent: TRAE_USER_AGENT,
   webUrl: "https://www.trae.ai",
   authScheme: "Cloud-IDE-JWT",
   tokenLifetimeDays: 14,

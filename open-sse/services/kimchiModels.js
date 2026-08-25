@@ -1,9 +1,13 @@
 import { createHash } from "crypto";
 
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
+import { KIMCHI_USER_AGENT } from "../config/clientVersions.js";
 
 export const KIMCHI_API = "https://llm.kimchi.dev";
-export const KIMCHI_USER_AGENT = "kimchi/0.1.40";
+// KIMCHI_USER_AGENT is single-sourced from open-sse/config/clientVersions.js
+// (verified 2026-08-25 against kimchi.dev landing page + getkimchi/kimchi repo).
+// Re-exported here for legacy callers that import from this module.
+export { KIMCHI_USER_AGENT };
 
 const FETCH_TIMEOUT_MS = 20_000;
 const CACHE_TTL_MS = 5 * 60 * 1000;

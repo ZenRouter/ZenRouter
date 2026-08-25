@@ -1,3 +1,5 @@
+import { CODEBUDDY_CN_TRANSPORT_UA, CODEBUDDY_CN_OAUTH_UA } from "../../config/clientVersions.js";
+
 export default {
   id: "codebuddy-cn",
   // Short model prefix (cbcn/glm-5.2). "cbcn" = CodeBuddy CN; reserve "cbai"
@@ -26,7 +28,7 @@ export default {
     // not its vendor-native thinking shape. Force the openai thinking format.
     thinkingFormat: "openai",
     headers: {
-      "User-Agent": "CLI/2.108.1 CodeBuddy/2.108.1",
+      "User-Agent": CODEBUDDY_CN_TRANSPORT_UA,
       "X-Product": "SaaS",
       "X-IDE-Type": "CLI",
       "X-IDE-Name": "CLI",
@@ -66,7 +68,7 @@ export default {
     stateUrl: "https://copilot.tencent.com/v2/plugin/auth/state",
     tokenUrl: "https://copilot.tencent.com/v2/plugin/auth/token",
     refreshUrl: "https://copilot.tencent.com/v2/plugin/auth/token/refresh",
-    userAgent: "CLI/2.63.2 CodeBuddy/2.63.2",
+    userAgent: CODEBUDDY_CN_OAUTH_UA,
     platform: "CLI",
     pollInterval: 5000,
   },

@@ -1,11 +1,20 @@
 "use strict";
 
 // Rewrite Antigravity IDE markers so upstream AG 2.x backend accepts the request.
-// User-Agent header (antigravity/<old>) and body.metadata.ideVersion are forced
-// to a known-good IDE version. Hardcoded MVP — toggle/version configurable later.
+// Default: do NOT override — trust the client UA/body. Forcing a stale version
+// (1.x on a 2.x client) silently breaks production IDE users because the
+// upstream Cloud Code Assist gateway fingerprints both the User-Agent and
+// body.metadata.ideVersion and rejects mismatched fingerprints.
+//
+// To opt into a forced version for compatibility tests, set
+//   MITM_ANTIGRAVITY_VERSION_OVERRIDE=true
+// The version used in that case is single-sourced from
+// open-sse/config/clientVersions.js (ANTIGRAVITY_IDE_VERSION).
 
-const ANTIGRAVITY_IDE_VERSION = "1.23.2";
-const ANTIGRAVITY_IDE_VERSION_OVERRIDE_ENABLED = true;
+import { ANTIGRAVITY_IDE_VERSION } from "../../open-sse/config/clientVersions.js";
+
+const ANTIGRAVITY_MITM_VERSION_OVERRIDE_ENABLED =
+  process.env.MITM_ANTIGRAVITY_VERSION_OVERRIDE === "true";
 
 function shouldRewriteMetadata(metadata) {
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return false;
@@ -20,31 +29,33 @@ function rewriteAntigravityUserAgent(userAgent, version) {
 }
 
 function applyAntigravityIdeVersionOverride(bodyBuffer, headers) {
-  if (!ANTIGRAVITY_IDE_VERSION_OVERRIDE_ENABLED) {
+  if (!ANTIGRAVITY_MITM_VERSION_OVERRIDE_ENABLED) {
     return { bodyBuffer, headers, applied: false, version: ANTIGRAVITY_IDE_VERSION };
   }
 
+  const version = ANTIGRAVITY_IDE_VERSION;
   const nextHeaders = { ...headers };
-  const nextUserAgent = rewriteAntigravityUserAgent(nextHeaders["user-agent"], ANTIGRAVITY_IDE_VERSION);
+  const nextUserAgent = rewriteAntigravityUserAgent(nextHeaders["user-agent"], version);
   const userAgentChanged = nextUserAgent !== nextHeaders["user-agent"];
   if (userAgentChanged) nextHeaders["user-agent"] = nextUserAgent;
 
   try {
     const parsed = JSON.parse(bodyBuffer.toString());
     if (!shouldRewriteMetadata(parsed?.metadata)) {
-      return { bodyBuffer, headers: nextHeaders, applied: userAgentChanged, version: ANTIGRAVITY_IDE_VERSION };
+      return { bodyBuffer, headers: nextHeaders, applied: userAgentChanged, version };
     }
 
-    parsed.metadata.ideVersion = ANTIGRAVITY_IDE_VERSION;
+    parsed.metadata.ideVersion = version;
     const nextBodyBuffer = Buffer.from(JSON.stringify(parsed));
-    return { bodyBuffer: nextBodyBuffer, headers: nextHeaders, applied: true, version: ANTIGRAVITY_IDE_VERSION };
+    return { bodyBuffer: nextBodyBuffer, headers: nextHeaders, applied: true, version };
   } catch {
-    return { bodyBuffer, headers: nextHeaders, applied: userAgentChanged, version: ANTIGRAVITY_IDE_VERSION };
+    return { bodyBuffer, headers: nextHeaders, applied: userAgentChanged, version };
   }
 }
 
 module.exports = {
   ANTIGRAVITY_IDE_VERSION,
+  ANTIGRAVITY_MITM_VERSION_OVERRIDE_ENABLED,
   applyAntigravityIdeVersionOverride,
   rewriteAntigravityUserAgent,
 };

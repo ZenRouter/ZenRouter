@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { BaseExecutor } from "./base.js";
 import { PROVIDERS } from "../config/providers.js";
+import { IFLOW_USER_AGENT } from "../config/clientVersions.js";
 
 /**
  * IFlowExecutor - Executor for iFlow API with HMAC-SHA256 signature
@@ -45,8 +46,8 @@ export class IFlowExecutor extends BaseExecutor {
     const sessionID = `session-${this.generateUUID()}`;
     const timestamp = Date.now();
 
-    // Get user agent from config
-    const userAgent = this.config.headers["User-Agent"] || "iFlow-Cli";
+    // Get user agent from config (or fall back to the SSoT constant)
+    const userAgent = this.config.headers["User-Agent"] || IFLOW_USER_AGENT;
 
     // Get API key (prefer apiKey, fallback to accessToken)
     const apiKey = credentials.apiKey || credentials.accessToken || "";

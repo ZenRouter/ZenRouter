@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { GROK_CLI_VERSION } from "../../open-sse/config/clientVersions.js";
 
 vi.mock("../../open-sse/utils/proxyFetch.js", () => ({
   proxyAwareFetch: vi.fn(),
@@ -272,7 +273,7 @@ describe("getUsageForProvider(grok-cli)", () => {
     expect(billingCall[0]).toContain("/v1/billing");
     expect(billingCall[1].headers.Authorization).toBe("Bearer test-token");
     expect(billingCall[1].headers["x-xai-token-auth"]).toBe("xai-grok-cli");
-    expect(billingCall[1].headers["x-grok-client-version"]).toBe("0.2.99");
+    expect(billingCall[1].headers["x-grok-client-version"]).toBe(GROK_CLI_VERSION);
     expect(billingCall[1].headers["x-grok-client-identifier"]).toBe("grok-shell");
     expect(billingCall[1].headers["x-userid"]).toBe(
       "d84768dd-224d-4052-ba49-0d336fa9160c",

@@ -1,6 +1,8 @@
 // CodeBuddy international (codebuddy.ai) — mirrors codebuddy-cn registry shape,
 // swapping the Tencent CN domain for the .ai endpoint set. All OAuth/plugin URLs
 // use the /v2/plugin prefix with platform=ide (CN uses platform=CLI).
+import { CODEBUDDY_INTL_TRANSPORT_UA, CODEBUDDY_INTL_OAUTH_UA } from "../../config/clientVersions.js";
+
 export default {
   id: "codebuddy-intl",
   alias: "cbai",
@@ -26,7 +28,7 @@ export default {
     // CodeBuddy intl speaks the same unified OpenAI reasoning_effort shape as CN.
     thinkingFormat: "openai",
     headers: {
-      "User-Agent": "IDE/2.108.1 CodeBuddy/2.108.1",
+      "User-Agent": CODEBUDDY_INTL_TRANSPORT_UA,
       "X-Product": "SaaS",
       "X-IDE-Type": "IDE",
       "X-IDE-Name": "IDE",
@@ -66,7 +68,7 @@ export default {
     stateUrl: "https://www.codebuddy.ai/v2/plugin/auth/state",
     tokenUrl: "https://www.codebuddy.ai/v2/plugin/auth/token",
     refreshUrl: "https://www.codebuddy.ai/v2/plugin/auth/token/refresh",
-    userAgent: "IDE/2.63.2 CodeBuddy/2.63.2",
+    userAgent: CODEBUDDY_INTL_OAUTH_UA,
     platform: "ide",
     pollInterval: 5000,
   },

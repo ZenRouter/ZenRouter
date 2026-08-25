@@ -18,6 +18,15 @@ import {
   KIMCHI_CONFIG,
 } from "@/lib/oauth/constants/oauth";
 import { buildClineHeaders } from "@/shared/utils/clineAuth";
+import {
+  CODEX_USER_AGENT,
+  GEMINI_CLI_VERSION,
+  ANTIGRAVITY_IDE_USER_AGENT,
+  KIMCHI_USER_AGENT,
+  GROK_CLI_USER_AGENT,
+  GROK_CLI_VERSION,
+  GROK_CLI_CLIENT_IDENTIFIER,
+} from "open-sse/config/clientVersions.js";
 
 // OAuth provider test endpoints
 const OAUTH_TEST_CONFIG = {
@@ -27,7 +36,7 @@ const OAUTH_TEST_CONFIG = {
     method: "POST",
     authHeader: "Authorization",
     authPrefix: "Bearer ",
-    extraHeaders: { "Content-Type": "application/json", "originator": "codex_cli_rs", "User-Agent": "codex_cli_rs/0.136.0" },
+    extraHeaders: { "Content-Type": "application/json", "originator": "codex_cli_rs", "User-Agent": CODEX_USER_AGENT },
     // Minimal invalid body — triggers fast 400 without consuming quota
     body: JSON.stringify({ model: "gpt-5.3-codex", input: [], stream: false, store: false }),
     // 400 (bad request) means auth succeeded; only 401/403 means token is bad
@@ -98,7 +107,7 @@ const OAUTH_TEST_CONFIG = {
     authPrefix: "Bearer ",
     extraHeaders: {
       Accept: "application/json",
-      "User-Agent": "kimchi/0.1.40",
+      "User-Agent": KIMCHI_USER_AGENT,
     },
     refreshable: false,
   },
@@ -111,10 +120,10 @@ const OAUTH_TEST_CONFIG = {
     extraHeaders: {
       Accept: "application/json",
       ...(PROVIDERS["grok-cli"]?.headers || {
-        "User-Agent": "grok-pager/0.2.93 grok-shell/0.2.93 (linux; x86_64)",
+        "User-Agent": GROK_CLI_USER_AGENT,
         "x-xai-token-auth": "xai-grok-cli",
-        "x-grok-client-identifier": "grok-pager",
-        "x-grok-client-version": "0.2.93",
+        "x-grok-client-identifier": GROK_CLI_CLIENT_IDENTIFIER,
+        "x-grok-client-version": GROK_CLI_VERSION,
       }),
     },
     refreshable: true,
@@ -192,8 +201,8 @@ function parseProviderErrorMessage(bodyText, fallback) {
 
 async function probeCloudCodeAssistAccess(connection, accessToken, effectiveProxy = null) {
   const userAgent = connection.provider === "antigravity"
-    ? "google-api-nodejs-client/9.15.1 vscode-antigravity/1.107.0"
-    : "google-api-nodejs-client/9.15.1 gemini-cli/0.34.0";
+    ? ANTIGRAVITY_IDE_USER_AGENT
+    : `google-api-nodejs-client/9.15.1 gemini-cli/${GEMINI_CLI_VERSION}`;
 
   const res = await fetchWithConnectionProxy(CLOUD_CODE_ASSIST_TEST_URL, {
     method: "POST",
@@ -804,7 +813,7 @@ case "llm7": {
           headers: {
             Accept: "application/json",
             Authorization: `Bearer ${connection.apiKey}`,
-            "User-Agent": "kimchi/0.1.40",
+            "User-Agent": KIMCHI_USER_AGENT,
           },
         }, effectiveProxy);
         return { valid: res.ok, error: res.ok ? null : "Invalid API key", refreshed: false };

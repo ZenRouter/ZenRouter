@@ -1,3 +1,10 @@
+import {
+  VSCODE_VERSION,
+  COPILOT_CHAT_VERSION,
+  COPILOT_USER_AGENT,
+  COPILOT_API_VERSION,
+} from "../../config/clientVersions.js";
+
 export default {
   id: "github",
   priority: 40,
@@ -21,21 +28,21 @@ export default {
     messagesUrl: "https://api.githubcopilot.com/v1/messages",
     headers: {
       "copilot-integration-id": "vscode-chat",
-      "editor-version": "vscode/1.110.0",
-      "editor-plugin-version": "copilot-chat/0.38.0",
-      "user-agent": "GitHubCopilotChat/0.38.0",
+      "editor-version": `vscode/${VSCODE_VERSION}`,
+      "editor-plugin-version": `copilot-chat/${COPILOT_CHAT_VERSION}`,
+      "user-agent": COPILOT_USER_AGENT,
       "openai-intent": "conversation-panel",
-      "x-github-api-version": "2025-04-01",
+      "x-github-api-version": COPILOT_API_VERSION,
       "x-vscode-user-agent-library-version": "electron-fetch",
       "X-Initiator": "user",
       Accept: "application/json",
       "Content-Type": "application/json",
     },
     copilot: {
-      vscodeVersion: "1.110.0",
-      chatVersion: "0.38.0",
-      userAgent: "GitHubCopilotChat/0.38.0",
-      apiVersion: "2025-04-01",
+      vscodeVersion: VSCODE_VERSION,
+      chatVersion: COPILOT_CHAT_VERSION,
+      userAgent: COPILOT_USER_AGENT,
+      apiVersion: COPILOT_API_VERSION,
     },
     usage: {
       url: "https://api.github.com/copilot_internal/user",
@@ -81,9 +88,9 @@ export default {
     scopes: "read:user",
     apiVersion: "2022-11-28",
     copilotTokenUrl: "https://api.github.com/copilot_internal/v2/token",
-    userAgent: "GitHubCopilotChat/0.26.7",
-    editorVersion: "vscode/1.85.0",
-    editorPluginVersion: "copilot-chat/0.26.7",
+    userAgent: COPILOT_USER_AGENT,
+    editorVersion: `vscode/${VSCODE_VERSION}`,
+    editorPluginVersion: `copilot-chat/${COPILOT_CHAT_VERSION}`,
   },
   features: {
     usage: true,

@@ -7,6 +7,7 @@
 
 import crypto from "crypto";
 import { v5 as uuidv5 } from "uuid";
+import { CURSOR_VERSION, CURSOR_CONNECT_ES_VERSION } from "../config/clientVersions.js";
 
 /**
  * Generate SHA-256 hash like generateHashed64Hex
@@ -124,11 +125,11 @@ export function buildCursorHeaders(accessToken, machineId = null, ghostMode = tr
     "connect-accept-encoding": "gzip",
     "connect-protocol-version": "1",
     "content-type": "application/connect+proto",
-    "user-agent": "connect-es/1.6.1",
+    "user-agent": `connect-es/${CURSOR_CONNECT_ES_VERSION}`,
     "x-amzn-trace-id": `Root=${crypto.randomUUID()}`,
     "x-client-key": clientKey,
     "x-cursor-checksum": checksum,
-    "x-cursor-client-version": "3.12.17",
+    "x-cursor-client-version": CURSOR_VERSION,
     "x-cursor-client-commit": "0fb762053c34788bb7760d5673f8a6d4c8589d50",
     "x-cursor-client-type": "ide",
     "x-cursor-client-os": os,

@@ -15,6 +15,10 @@
 // fit the generic transformRequest/buildUrl contract.
 
 import { BaseExecutor } from "./base.js";
+import {
+  ZED_USER_AGENT,
+  ZED_DEFAULT_APP_VERSION,
+} from "../config/clientVersions.js";
 import { FORMATS } from "../translator/formats.js";
 import { initState } from "../translator/index.js";
 import { openaiToClaudeRequest } from "../translator/request/openai-to-claude.js";
@@ -244,18 +248,18 @@ class ZedExecutor extends BaseExecutor {
     const response = await zedLlmFetch(credentials, "/completions", {
       config: this.config,
       signal,
-      fetchOptions: {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/x-ndjson, text/event-stream, */*",
-          "User-Agent": "9router/zed",
-          "x-zed-version": this.config?.appVersion?.toString() || "0.200.0",
-          [ZED_HEADERS.clientSupportsStatus]: "true",
-          [ZED_HEADERS.clientSupportsStreamEnded]: "true",
+        fetchOptions: {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/x-ndjson, text/event-stream, */*",
+            "User-Agent": ZED_USER_AGENT,
+            "x-zed-version": this.config?.appVersion?.toString() || ZED_DEFAULT_APP_VERSION,
+            [ZED_HEADERS.clientSupportsStatus]: "true",
+            [ZED_HEADERS.clientSupportsStreamEnded]: "true",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      },
     });
 
     const wrapped = response.ok ? wrapZedCompletionStream(response, provider, model) : response;

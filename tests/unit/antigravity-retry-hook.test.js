@@ -1,5 +1,6 @@
 // Guards D3: antigravity 429/503 retry merged into base via computeRetryDelay hook.
 import { describe, it, expect } from "vitest";
+import { ANTIGRAVITY_IDE_USER_AGENT } from "../../open-sse/config/clientVersions.js";
 import { AntigravityExecutor } from "../../open-sse/executors/antigravity.js";
 import antigravity from "../../open-sse/providers/registry/antigravity.js";
 
@@ -69,13 +70,13 @@ describe("antigravity computeRetryDelay hook (D3)", () => {
 
   it("registry uses the daily IDE cloudcode host and user agent", () => {
     expect(antigravity.transport.baseUrls).toEqual(["https://daily-cloudcode-pa.googleapis.com"]);
-    expect(antigravity.transport.headers["User-Agent"]).toBe("antigravity/ide/2.1.1 darwin/arm64");
+    expect(antigravity.transport.headers["User-Agent"]).toBe(ANTIGRAVITY_IDE_USER_AGENT);
   });
 
   it("buildHeaders matches official IDE stream headers", () => {
     ag._lastSessionId = "sess-123";
     const h = ag.buildHeaders({ accessToken: "tok" }, true);
-    expect(h["User-Agent"]).toBe("antigravity/ide/2.1.1 darwin/arm64");
+    expect(h["User-Agent"]).toBe(ANTIGRAVITY_IDE_USER_AGENT);
     expect(h["Content-Type"]).toBe("application/json");
     expect(h["Authorization"]).toBe("Bearer tok");
     expect(h).not.toHaveProperty("X-Machine-Session-Id");

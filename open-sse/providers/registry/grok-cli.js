@@ -1,7 +1,7 @@
 /**
  * Grok CLI / Grok Build (cli-chat-proxy.grok.com)
  *
- * Source of truth: wire capture of official @xai-official/grok 0.2.99
+ * Source of truth: wire capture of official @xai-official/grok 1.0.5
  * talking to https://cli-chat-proxy.grok.com (OpenAI Responses API).
  *
  * Distinct from:
@@ -10,11 +10,13 @@
  */
 import {
   GROK_CLI_BASE_URL,
-  GROK_CLI_CLIENT_IDENTIFIER,
   GROK_CLI_MODEL,
-  GROK_CLI_USER_AGENT,
-  GROK_CLI_VERSION,
 } from "../../config/grokCli.js";
+import {
+  GROK_CLI_VERSION,
+  GROK_CLI_CLIENT_IDENTIFIER,
+  GROK_CLI_USER_AGENT,
+} from "../../config/clientVersions.js";
 
 export default {
   id: "grok-cli",

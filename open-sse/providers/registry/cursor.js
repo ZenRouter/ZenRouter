@@ -1,3 +1,5 @@
+import { CURSOR_VERSION, CURSOR_CONNECT_ES_VERSION } from "../../config/clientVersions.js";
+
 export default {
   id: "cursor",
   priority: 50,
@@ -21,9 +23,9 @@ export default {
       "connect-accept-encoding": "gzip",
       "connect-protocol-version": "1",
       "Content-Type": "application/connect+proto",
-      "User-Agent": "connect-es/1.6.1",
+      "User-Agent": `connect-es/${CURSOR_CONNECT_ES_VERSION}`,
     },
-    clientVersion: "3.12.17",
+    clientVersion: CURSOR_VERSION,
   },
   models: [
     { id: "default", name: "Auto (Server Picks)" },
@@ -48,7 +50,7 @@ export default {
     api3Endpoint: "https://api3.cursor.sh",
     agentEndpoint: "https://agent.api5.cursor.sh",
     agentNonPrivacyEndpoint: "https://agentn.api5.cursor.sh",
-    clientVersion: "3.12.17",
+    clientVersion: CURSOR_VERSION,
     clientType: "ide",
     dbKeys: {
       accessToken: "cursorAuth/accessToken",

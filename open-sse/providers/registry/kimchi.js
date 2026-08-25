@@ -1,3 +1,5 @@
+import { KIMCHI_USER_AGENT } from "../../config/clientVersions.js";
+
 export default {
   id: "kimchi",
   priority: 95,
@@ -20,7 +22,7 @@ export default {
     baseUrl: "https://llm.kimchi.dev/openai/v1/chat/completions",
     format: "openai",
     headers: {
-      "User-Agent": "kimchi/0.1.50",
+      "User-Agent": KIMCHI_USER_AGENT,
     },
     auth: {
       combined: true,
