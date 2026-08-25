@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import { getAdapter } from "../driver.js";
 import { parseJson, stringifyJson } from "../helpers/jsonCol.js";
 import { getMeta, setMeta } from "../helpers/metaStore.js";
-import { hardenEmitter } from "@/lib/schedulerLifecycle.js";
+import { hardenEmitter } from "../../schedulerLifecycle.js";
 
 function maskApiKey(key) {
   if (!key || typeof key !== "string") return null;
