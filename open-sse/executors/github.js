@@ -8,7 +8,6 @@ import { initState, translateRequest, translateResponse } from "../translator/in
 import { FORMATS } from "../translator/formats.js";
 import { parseSSELine, formatSSE } from "../utils/streamHelpers.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
-import { stripUnsupportedParams } from "../translator/concerns/paramSupport.js";
 import { SSE_DONE } from "../utils/sseConstants.js";
 import { ANTHROPIC_API_VERSION } from "../providers/shared.js";
 import crypto from "crypto";
@@ -105,8 +104,6 @@ export class GithubExecutor extends BaseExecutor {
     if (transformed.reasoning_effort === "none") {
       delete transformed.reasoning_effort;
     }
-    // Config-driven strip of params unsupported by this provider/model
-    stripUnsupportedParams("github", model, transformed);
     return transformed;
   }
 

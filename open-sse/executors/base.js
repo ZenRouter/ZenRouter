@@ -4,6 +4,7 @@ import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { dbg } from "../utils/debugLog.js";
 import { ANTHROPIC_API_VERSION, OPENAI_COMPAT_BASE, ANTHROPIC_COMPAT_BASE } from "../providers/shared.js";
 import { resolveOpenAICompatibleApiType } from "../services/provider.js";
+import { stripUnsupportedParams } from "../translator/concerns/paramSupport.js";
 
 /**
  * BaseExecutor - Base class for provider executors
@@ -127,6 +128,11 @@ export class BaseExecutor {
     for (let urlIndex = 0; urlIndex < fallbackCount; urlIndex++) {
       const url = this.buildUrl(model, stream, urlIndex, credentials);
       const transformedBody = this.transformRequest(model, body, stream, credentials);
+      // Config-driven strip of params this provider/model rejects upstream.
+      // Applied centrally in the base so EVERY executor honors STRIP_RULES
+      // (e.g. opencode muse max_tokens), not just Default/GitHub which used
+      // to call it from their own transformRequest overrides. Idempotent.
+      stripUnsupportedParams(this.provider, model, transformedBody);
       const headers = this.buildHeaders(credentials, stream, url, model);
 
       if (!retryAttemptsByUrl[urlIndex]) retryAttemptsByUrl[urlIndex] = 0;
