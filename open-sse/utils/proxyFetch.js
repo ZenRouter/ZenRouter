@@ -113,9 +113,11 @@ const GOOGLE_DNS_SERVERS = ["8.8.8.8", "8.8.4.4"];
 // MITM bypass negative cache: when direct-IP attempts fail (VPN/proxy networks
 // refuse them), stop retrying per host for a cooldown window so requests don't
 // pay a failed connect every time. Set DISABLE_MITM_BYPASS=1 to disable entirely.
-const MITM_BYPASS_COOLDOWN_MS = 5 * 60 * 1000;
+const MITM_BYPASS_COOLDOWN_MS = 15 * 60 * 1000;
 const MITM_BYPASS_DISABLED = process.env.DISABLE_MITM_BYPASS === "1";
-const mitmBypassCooldown = new Map(); // host → retry-after timestamp
+// Shared across module instances (custom-server + Next server can each load
+// this file) so a failure learned by one silences all of them.
+const mitmBypassCooldown = (globalThis.__mitmBypassCooldown ??= new Map()); // host → retry-after
 
 function markMitmBypassCooldown(host) {
   mitmBypassCooldown.set(host, Date.now() + MITM_BYPASS_COOLDOWN_MS);
