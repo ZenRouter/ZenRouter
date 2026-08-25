@@ -127,9 +127,14 @@ export function reorderByCapabilities(models, required) {
     return soft.every((c) => caps[c] === true) ? 0 : 1;
   };
 
+  // Nothing satisfies the hard caps — order is already optimal, return the
+  // caller's array by identity (no reorder, no copy).
+  const tiers = models.map(tierOf);
+  if (tiers.every((t) => t === 2)) return models;
+
   // Stable sort by tier (Array.prototype.sort is stable in modern engines).
   return models
-    .map((m, i) => ({ m, i, t: tierOf(m) }))
+    .map((m, i) => ({ m, i, t: tiers[i] }))
     .sort((a, b) => a.t - b.t || a.i - b.i)
     .map((x) => x.m);
 }
@@ -231,7 +236,19 @@ export function detectRequiredCapabilities(body) {
   const contents = body.contents || body.request?.contents;                      // gemini / antigravity
   for (const c of trailingUserItems(contents)) scanContent(c.parts);
 
-  // search: temporarily disabled in auto-switch (feature not wired yet).
+  // search: a declared web-search tool on the request means this turn needs
+  // server-side grounding — prefer combo entries that declare search support.
+  // Matches OpenAI-style {type:"web_search"} and Gemini googleSearch shapes.
+  const declaredTools = Array.isArray(body.tools) ? body.tools : [];
+  for (const tool of declaredTools) {
+    const name = typeof tool === "string"
+      ? tool
+      : tool?.type || tool?.function?.name || tool?.name || "";
+    if (/^(web_search|webSearch|googleSearch|google_search)$/.test(String(name))) {
+      required.add("search");
+      break;
+    }
+  }
 
   return required;
 }
