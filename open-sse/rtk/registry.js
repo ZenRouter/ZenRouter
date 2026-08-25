@@ -10,6 +10,12 @@ import { tree } from "./filters/tree.js";
 import { smartTruncate } from "./filters/smartTruncate.js";
 import { readNumbered } from "./filters/readNumbered.js";
 import { searchList } from "./filters/searchList.js";
+import { buildOutput } from "./filters/buildOutput.js";
+import { cargoTest } from "./filters/cargoTest.js";
+import { pytest } from "./filters/pytest.js";
+import { goTest } from "./filters/goTest.js";
+import { mypy } from "./filters/mypy.js";
+import { vitest } from "./filters/vitest.js";
 
 const REGISTRY = {
   [FILTERS.GIT_DIFF]: gitDiff,
@@ -22,11 +28,19 @@ const REGISTRY = {
   [FILTERS.TREE]: tree,
   [FILTERS.SMART_TRUNCATE]: smartTruncate,
   [FILTERS.READ_NUMBERED]: readNumbered,
-  [FILTERS.SEARCH_LIST]: searchList
+  [FILTERS.SEARCH_LIST]: searchList,
+  [FILTERS.BUILD_OUTPUT]: buildOutput,
+  // Upstream pipe_cmd.rs filters (synced v0.45.x)
+  [FILTERS.CARGO_TEST]: cargoTest,
+  [FILTERS.PYTEST]: pytest,
+  [FILTERS.GO_TEST]: goTest,
+  [FILTERS.MYPY]: mypy,
+  [FILTERS.VITEST]: vitest
 };
 
-// Rust resolve_filter aliases (pipe_cmd.rs): grep|rg, find|fd
+// Rust resolve_filter aliases (pipe_cmd.rs): cargo, rg, fd
 const ALIASES = {
+  cargo: cargoTest,
   rg: grep,
   fd: find
 };

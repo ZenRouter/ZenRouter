@@ -2,6 +2,14 @@
 
 ## Fixed
 ## Fixed
+- **Token Saver engine synced with upstream rtk v0.45.x** (rtk-ai/rtk): new
+  autodetect chain + compressors for cargo test, pytest, go test -json, mypy
+  and vitest outputs (failures-only, compact summaries, caps mirrored from
+  src/core/truncate.rs). Detection order now runs the upstream pipe chain
+  first (test runners before grep/find) with 9router post-hoc extras layered
+  after: git shapes and build output stay above porcelain/find to preserve
+  PR #1175 precedence; Windows drive-letter path dumps keep routing to find.
+## Fixed
 - **OpenCode muse (free)**: requests 400'd upstream — `max_tokens` reached the
   zen /v1/responses endpoint (which rejects it) because STRIP_RULES were only
   applied by Default/GitHub executors. Stripping now runs centrally in

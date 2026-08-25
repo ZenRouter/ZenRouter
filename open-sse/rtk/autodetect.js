@@ -1,7 +1,19 @@
-// Port of auto_detect_filter (rtk/src/cmds/system/pipe_cmd.rs:132-188) + JS extras
-// Detection order: git-log → git-diff → git-status → build-output → grep → find → tree → ls → search-list
-//                  → read-numbered → dedup-log → smart-truncate → null
+// Port of auto_detect_filter (rtk src/cmds/system/pipe_cmd.rs, v0.45.x) +
+// 9router post-hoc extras appended after the upstream chain.
+//
+// Upstream chain (synced 2026-08-25): cargo-test → pytest → go-test → mypy
+//                     → grep → vitest → find → identity
+// 9router extras (post-hoc tool_result compression; agents run RAW commands,
+// so these stay valuable even though rtk CLI moved them into wrapped cmds):
+//                  git-log → git-diff → git-status → build-output → porcelain
+//                  → tree → ls → search-list → read-numbered → dedup-log
+//                  → smart-truncate → null
 import { DETECT_WINDOW, READ_NUMBERED_MIN_HIT_RATIO, SMART_TRUNCATE_MIN_LINES } from "./constants.js";
+import { cargoTest } from "./filters/cargoTest.js";
+import { pytest } from "./filters/pytest.js";
+import { goTest } from "./filters/goTest.js";
+import { mypy } from "./filters/mypy.js";
+import { vitest } from "./filters/vitest.js";
 import { gitDiff } from "./filters/gitDiff.js";
 import { gitStatus } from "./filters/gitStatus.js";
 import { gitLog } from "./filters/gitLog.js";
@@ -28,27 +40,62 @@ const RE_LS_TOTAL = /^total \d+$/m;
 export function autoDetectFilter(text) {
   // Rust: floor_char_boundary to avoid UTF-8 split — JS .slice() by char is safe
   const head = text.length > DETECT_WINDOW ? text.slice(0, DETECT_WINDOW) : text;
+  const firstTrimmed = head.trimStart();
 
+  // ── Upstream pipe_cmd.rs chain (order-sensitive, synced v0.45.x) ──
+
+  if (head.includes("test result:") && head.includes("passed;")) return cargoTest;
+
+  if (head.includes("=== test session starts")) return pytest;
+
+  // (phpunit banner detection omitted — no JS port of the phpunit filter yet)
+
+  if (firstTrimmed.startsWith("{") && head.includes("\"Action\"")) return goTest;
+
+  if (head.includes(": error:") && head.includes(".py:")) return mypy;
+
+  // 9router extras — git output shapes are highly specific and must win over
+  // the generic build-output detector when both appear in one blob.
   if (RE_GIT_LOG.test(head)) return gitLog;
   if (RE_GIT_DIFF.test(head) || RE_GIT_DIFF_HUNK.test(head)) return gitDiff;
   if (RE_GIT_STATUS.test(head)) return gitStatus;
 
-  // Build output BEFORE porcelain check: prevents cargo "Compiling" misdetection as git-status
+  // 9router extra, hoisted above grep/find/porcelain: compile & package-manager
+  // noise ("   Compiling x", "npm ERR!") must route to build-output — porcelain
+  // rows and grep lines would otherwise swallow it (old-order regression guard).
   if (RE_BUILD_OUTPUT.test(head)) return buildOutput;
 
-  if (isMostlyPorcelain(head)) return gitStatus;
-
+  // grep/rg: lines matching file:number:content
   const lines = head.split("\n");
-  const nonEmpty = lines.filter(l => l.trim().length > 0);
+  const nonEmpty = lines.filter((l) => l.trim().length > 0);
 
   // Rust grep rule: first 5 non-empty lines, ANY matches "file:number:content"
   const first5 = nonEmpty.slice(0, 5);
   if (first5.some(isGrepLine)) return grep;
 
-  // Rust find rule: ALL non-empty lines path-like (no ':'), >=3 lines
-  if (nonEmpty.length >= 3 && nonEmpty.every(isPathLike)) return find;
+  if (head.includes("\"testResults\"") || head.includes("\"numTotalTests\"")) return vitest;
 
-  // Tree: contains box-drawing glyphs typical of `tree` command
+  // git status --porcelain MUST be checked before the find/path-dump rule:
+  // porcelain rows (" M src/a.js") are shaped like paths and would otherwise
+  // be swallowed by find. Path dumps never match the status-code pattern.
+  if (isMostlyPorcelain(head)) return gitStatus;
+
+  // find/fd: all non-empty lines look like file paths, minimum 3 lines
+  let pathLikeLines = 0;
+  for (const l of nonEmpty) {
+    const t = l.trim();
+    if (!t.includes(":") && (t.startsWith(".") || t.startsWith("/") || t.includes("/"))) pathLikeLines++;
+  }
+  if (nonEmpty.length >= 3 && pathLikeLines === nonEmpty.length) return find;
+
+  // 9router extension: Windows drive-letter path dumps ("C:\repo\src\a.js").
+  // The upstream no-colon rule excludes them because of the colon in "C:",
+  // but agents on Windows emit these constantly — route them to `find`.
+  const winPathLike = nonEmpty.filter((l) => /^[A-Za-z]:[\\/]/.test(l.trim())).length;
+  if (nonEmpty.length >= 3 && winPathLike === nonEmpty.length) return find;
+
+  // ── 9router post-hoc extensions (below the upstream chain) ──
+
   if (RE_TREE_GLYPH.test(head)) return tree;
 
   // ls -la: has "total N" header or >=3 rows starting with perms string
@@ -66,7 +113,7 @@ export function autoDetectFilter(text) {
   if (nonEmpty.length >= 5) return dedupLog;
 
   // Last resort: big blob with no structure — smart truncate
-  if (text.split("\n").length >= SMART_TRUNCATE_MIN_LINES) return smartTruncate;
+  if (lines.length >= SMART_TRUNCATE_MIN_LINES) return smartTruncate;
 
   return null;
 }
@@ -79,18 +126,6 @@ function isGrepLine(line) {
   if (second === -1) return false;
   const lineno = line.slice(first + 1, second);
   return /^\d+$/.test(lineno);
-}
-
-function isPathLike(line) {
-  const t = line.trim();
-  if (t.length === 0) return false;
-  // A drive-letter prefix (e.g. "C:\Users\me" or "C:/Users/me") marks a
-  // Windows absolute path, so treat the whole line as path-like. Trailing
-  // colons (e.g. "C:\path\file.js:10") are tolerated, matching grep-style
-  // suffixes on Windows dumps.
-  if (/^[A-Za-z]:[\\/]/.test(t)) return true;
-  if (t.includes(":")) return false;
-  return t.startsWith(".") || t.startsWith("/") || t.includes("/");
 }
 
 function isMostlyPorcelain(head) {

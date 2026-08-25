@@ -38,6 +38,17 @@ export const SEARCH_LIST_TOTAL_DIR_MAX = 20;
 // Smart truncate (port of filter.rs smart_truncate fallback)
 export const SMART_TRUNCATE_HEAD = 120;        // lines kept from top
 export const SMART_TRUNCATE_TAIL = 60;         // lines kept from bottom
+
+// Upstream pipe caps (src/core/truncate.rs)
+export const CAP_WARNINGS = 10;               // per-file/per-suite failure caps
+export const CAP_LIST = 20;                   // directory listing cap
+
+// pytest (src/cmds/python/pytest_cmd.rs)
+export const MAX_PYTEST_FAILURES = 10;
+export const MAX_XFAIL = 10;
+
+// cargo test failure detail truncation
+export const CARGO_FAILURE_TRUNCATE = 200;
 export const SMART_TRUNCATE_MIN_LINES = 250;   // only kick in above this
 
 // readNumbered (files with "  N|content" lines, e.g. Cursor read_file)
@@ -56,5 +67,11 @@ export const FILTERS = {
   SMART_TRUNCATE: "smart-truncate",
   READ_NUMBERED: "read-numbered",
   SEARCH_LIST: "search-list",
-  BUILD_OUTPUT: "build-output"
+  BUILD_OUTPUT: "build-output",
+  // Upstream pipe_cmd.rs filters (synced v0.45.x)
+  CARGO_TEST: "cargo-test",
+  PYTEST: "pytest",
+  GO_TEST: "go-test",
+  MYPY: "mypy",
+  VITEST: "vitest"
 };
