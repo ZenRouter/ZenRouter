@@ -569,8 +569,9 @@ export async function getUsageStats(period = "all") {
       [overlayCutoffIso]
     );
     for (const r of maxApiKeyRows) {
+      const apiKeyMasked = maskApiKey(r.apiKey);
       const apiKeyKey = (r.apiKey && typeof r.apiKey === "string")
-        ? `${r.apiKey}|${r.model}|${r.provider || "unknown"}`
+        ? `${apiKeyMasked}|${r.model}|${r.provider || "unknown"}`
         : "local-no-key";
       if (stats.byApiKey[apiKeyKey] && new Date(r.lastUsed) > new Date(stats.byApiKey[apiKeyKey].lastUsed)) {
         stats.byApiKey[apiKeyKey].lastUsed = r.lastUsed;
