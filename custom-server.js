@@ -54,6 +54,11 @@ http.createServer = (...args) => {
   const rest = args.filter((a) => typeof a !== "function");
   if (!handler) return origCreate(...args);
   const wrapped = (req, res) => {
+    // Low-latency streaming tuning: disable Nagle's algorithm (TCP_NODELAY) and enable TCP Keep-Alive
+    if (req.socket) {
+      if (typeof req.socket.setNoDelay === "function") req.socket.setNoDelay(true);
+      if (typeof req.socket.setKeepAlive === "function") req.socket.setKeepAlive(true, 30000);
+    }
     const socketIp = req.socket && req.socket.remoteAddress ? req.socket.remoteAddress : "";
     const xff = req.headers["x-forwarded-for"];
     const xRealIp = req.headers["x-real-ip"];
