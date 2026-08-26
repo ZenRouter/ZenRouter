@@ -238,7 +238,10 @@ async function onboardUser(accessToken, tierID, externalSignal, endpoints, provi
                     console.log(`[ProjectId] Successfully onboarded, project ID: ${projectId}`);
                     return projectId;
                 }
-                throw new Error("onboardUser done but no project_id in response");
+                // Server indicated onboarding is done, but no project ID was provisioned (e.g. personal account without a default GCP project).
+                // Do not retry 5 times pointlessly; return null so the system falls back to synthetic project IDs immediately.
+                console.log(`[ProjectId] Onboarding done (no project ID assigned by server)`);
+                return null;
             }
 
             // Server not done yet – wait and retry
