@@ -223,6 +223,8 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
   const excludeConnectionIds = new Set();
   let lastError = null;
   let lastStatus = null;
+  let consecutiveSameErrors = 0;
+  const MAX_CONSECUTIVE_SAME_ERRORS = 3;
 
   while (true) {
     const credentials = await getProviderCredentials(provider, excludeConnectionIds, model);
@@ -306,8 +308,22 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
     if (shouldFallback) {
       log.warn("FALLBACK", `⇄ ACC:${credentials.connectionName} UNAVAILABLE (${result.status}) → NEXT ACCOUNT`);
       excludeConnectionIds.add(credentials.connectionId);
+      
+      // Fast-fail circuit breaker: if multiple accounts fail with the exact same systemic error,
+      // stop endless retries and return error immediately to save time and sockets.
+      if (lastStatus === result.status && (Number(result.status) === 402 || Number(result.status) === 403 || Number(result.status) >= 500)) {
+        consecutiveSameErrors++;
+      } else {
+        consecutiveSameErrors = 1;
+      }
       lastError = result.error;
       lastStatus = result.status;
+
+      if (consecutiveSameErrors >= MAX_CONSECUTIVE_SAME_ERRORS) {
+        log.warn("FALLBACK", `Circuit breaker: fast-failing ${provider}/${model} after ${consecutiveSameErrors} consecutive accounts failed with status ${result.status}`);
+        return result.response;
+      }
+
       continue;
     }
 
