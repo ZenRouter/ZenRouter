@@ -3,8 +3,26 @@ import tls from "tls";
 import { MEMORY_CONFIG, FETCH_CONNECT_TIMEOUT_MS } from "../config/runtimeConfig.js";
 import { dbg } from "./debugLog.js";
 
-const originalFetch = globalThis.fetch;
+let originalFetch = globalThis.fetch;
 const proxyDispatchers = new Map();
+let defaultUndiciAgent = null;
+
+export async function getDefaultAgent() {
+  if (!defaultUndiciAgent) {
+    try {
+      const { Agent } = await import("undici");
+      defaultUndiciAgent = new Agent({
+        keepAliveTimeout: 30000,
+        keepAliveMaxTimeout: 60000,
+        pipelining: 1,
+        connections: 50,
+      });
+    } catch {
+      defaultUndiciAgent = null;
+    }
+  }
+  return defaultUndiciAgent;
+}
 
 // ─── TLS fingerprinting via got-scraping (browser-like JA3) ───────────────
 // Disabled: not in use. Kept commented for future re-enable.
@@ -493,13 +511,14 @@ export async function proxyAwareFetch(url, options = {}, proxyOptions = null) {
         throw new Error(`[ProxyFetch] Proxy required but failed (strictProxy=true): ${proxyError.message}`);
       }
       console.warn(`[ProxyFetch] Proxy failed, falling back to direct: ${proxyError.message}`);
-      return originalFetch(url, options);
+      const fallbackDispatcher = options.dispatcher || await getDefaultAgent();
+      return originalFetch(url, fallbackDispatcher ? { ...options, dispatcher: fallbackDispatcher } : options);
     }
   }
 
-  // got-scraping disabled — use native fetch directly
-  // (Re-enable per-host by wrapping with tryGotScrapingFetch when needed)
-  return originalFetch(url, options);
+  // Attach default keep-alive Agent for direct upstream connections if no dispatcher provided
+  const agent = options.dispatcher || await getDefaultAgent();
+  return originalFetch(url, agent ? { ...options, dispatcher: agent } : options);
 }
 
 /**
