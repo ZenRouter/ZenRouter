@@ -43,6 +43,7 @@ export const MAX_RATE_LIMIT_COOLDOWN_MS = 30 * 60 * 1000;
 
 // Cooldown durations (ms)
 const COOLDOWN = {
+  extended: 15 * 60 * 1000, // 15m for zero balance / quota exhausted across accounts
   long: 2 * 60 * 1000,
   short: 5 * 1000,
 };
@@ -58,6 +59,10 @@ const COOLDOWN = {
  */
 export const ERROR_RULES = [
   // --- Text-based rules (checked first, order = priority) ---
+  { text: "balance is at $0",         cooldownMs: COOLDOWN.extended },
+  { text: "balance_zero",             cooldownMs: COOLDOWN.extended },
+  { text: "insufficient balance",     cooldownMs: COOLDOWN.extended },
+  { text: "insufficient funds",       cooldownMs: COOLDOWN.extended },
   { text: "no credentials",           cooldownMs: COOLDOWN.long },
   { text: "request not allowed",      cooldownMs: COOLDOWN.short },
   { text: "improperly formed request", cooldownMs: COOLDOWN.long },
@@ -69,7 +74,7 @@ export const ERROR_RULES = [
 
   // --- Status-based rules (fallback when text doesn't match) ---
   { status: 401, cooldownMs: COOLDOWN.long },
-  { status: 402, cooldownMs: COOLDOWN.long },
+  { status: 402, cooldownMs: COOLDOWN.extended },
   { status: 403, cooldownMs: COOLDOWN.long },
   { status: 404, cooldownMs: COOLDOWN.long },
   { status: 429, backoff: true },

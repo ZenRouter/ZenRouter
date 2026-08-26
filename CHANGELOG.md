@@ -4,6 +4,7 @@
 
 ## Performance & Optimization
 - **SSE streaming & TTFT latency tuning**: updated shared `SSE_HEADERS`, `SSE_HEADERS_CORS`, and `SSE_HEADERS_NO_BUFFER` in `open-sse/utils/sseConstants.js` to include `Cache-Control: no-cache, no-transform` and `X-Accel-Buffering: no`. Prevents reverse proxies (Cloudflare, Nginx, Vercel relay) from buffering SSE chunks or applying gzip compression, cutting Time-To-First-Token latency.
+- **Account fallback & circuit breaker for zero balance**: added extended 15-minute cooldown classification for zero balance / exhausted fund errors (`balance_zero`, `balance is at $0`, `insufficient balance`, HTTP 402) in `open-sse/config/errorConfig.js` to prevent repetitive fallback polling across exhausted accounts.
 
 ## Fixed
 - **getUsageStats performance & memory leak fix**: replaced full table scan in `getUsageStats('all')` with optimized SQL `MAX(timestamp)` aggregation grouped by entity (`src/lib/db/repos/usageRepo.js`). Prevents loading hundreds of thousands of historical rows into Node.js memory on dashboard usage stats refresh.
