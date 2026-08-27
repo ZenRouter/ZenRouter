@@ -132,35 +132,22 @@ export async function POST(request) {
     parsed.model = model;
     parsed.model_provider = "zenrouter";
 
-    // Update or create zenrouter provider section (no api_key - Codex reads from auth.json)
-    // Ensure /v1 suffix is added only once
+    // Custom providers ignore auth.json - the key must travel as a static header
     const normalizedBaseUrl = baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
     setNestedSection(parsed, "model_providers.zenrouter", {
       name: "ZenRouter",
       base_url: normalizedBaseUrl,
       wire_api: "responses",
+      http_headers: { Authorization: `Bearer ${apiKey}` },
     });
 
-    // Add subagent configuration
-    const effectiveSubagentModel = subagentModel || model;
-    setNestedSection(parsed, "agents.subagent", {
-      model: effectiveSubagentModel,
-    });
+    // Subagent model is a scalar under [agents]; agents.<role> now means a custom role
+    deleteNestedSection(parsed, "agents.subagent");
+    setNestedSection(parsed, "agents.default_subagent_model", subagentModel || model);
 
     // Write merged config
     const configContent = stringifyTOML(parsed);
     await fs.writeFile(configPath, configContent);
-
-    // Update auth.json with OPENAI_API_KEY (Codex reads this first)
-    const authPath = getCodexAuthPath();
-    // Same rule as above, and here it is the ChatGPT OAuth tokens that a silent
-    // "treat it as empty" would discard — the very thing the next lines preserve.
-    const authData = (await readExistingConfig(authPath, JSON.parse)) ?? {};
-    
-    // Force apikey mode (keep existing tokens untouched for ChatGPT login reuse)
-    authData.OPENAI_API_KEY = apiKey;
-    authData.auth_mode = "apikey";
-    await fs.writeFile(authPath, JSON.stringify(authData, null, 2));
 
     return NextResponse.json({
       success: true,
@@ -208,7 +195,8 @@ export async function DELETE() {
     // Remove zenrouter provider section
     deleteNestedSection(parsed, "model_providers.zenrouter");
 
-    // Remove subagent configuration
+    // Remove subagent configuration (both the current key and the legacy role form)
+    deleteNestedSection(parsed, "agents.default_subagent_model");
     deleteNestedSection(parsed, "agents.subagent");
 
     // Write updated config
