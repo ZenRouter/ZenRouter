@@ -1,6 +1,8 @@
-name: CI Test
+name: CI
 on:
   push:
+    branches: [master, main]
+  pull_request:
     branches: [master, main]
   workflow_dispatch:
 jobs:
@@ -8,4 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "hello ZenRouter"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test --if-present
+      - run: npm run build --if-present
