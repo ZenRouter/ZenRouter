@@ -1,6 +1,6 @@
 # 安装
 
-9Router 的详细安装指南,附故障排除技巧。
+ZenRoute 的详细安装指南,附故障排除技巧。
 
 ---
 
@@ -34,34 +34,34 @@ npm --version
 全局安装,任何位置都能使用:
 
 ```bash
-npm install -g 9router
+npm install -g zenroute
 ```
 
-**启动 9Router:**
+**启动 ZenRoute:**
 
 ```bash
-9router
+zenroute
 ```
 
 **优势:**
 - ✅ 任意目录均可运行
-- ✅ 命令简单:`9router`
-- ✅ 通过 `npm update -g 9router` 自动更新
+- ✅ 命令简单:`zenroute`
+- ✅ 通过 `npm update -g zenroute` 自动更新
 
 ### 方式 2:本地安装
 
 在特定项目中安装:
 
 ```bash
-mkdir my-9router
-cd my-9router
-npm install 9router
+mkdir my-zenroute
+cd my-zenroute
+npm install zenroute
 ```
 
-**启动 9Router:**
+**启动 ZenRoute:**
 
 ```bash
-npx 9router
+npx zenroute
 ```
 
 **优势:**
@@ -74,8 +74,8 @@ npx 9router
 从 GitHub 克隆并构建:
 
 ```bash
-git clone https://github.com/joyccn/9router.git
-cd 9router/app
+git clone https://github.com/joyccn/ZenRoute.git
+cd zenroute/app
 npm install
 npm run build
 npm start
@@ -93,19 +93,19 @@ npm start
 ### 启动服务器
 
 ```bash
-9router
+zenroute
 ```
 
 **发生了什么:**
 1. 服务器启动在 `http://localhost:20128`
 2. 仪表盘在浏览器中自动打开
-3. 数据目录创建在 `~/.9router`
+3. 数据目录创建在 `~/.zenroute`
 4. API key 自动生成
 
 ### 仪表盘登录
 
 **默认凭据:**
-- 密码:`123456`
+- 密码:`12345678`
 
 **⚠️ 立即修改密码:**
 1. 登录仪表盘
@@ -122,7 +122,7 @@ npm start
 
 **API key 格式示例:**
 ```
-9r_1234567890abcdef1234567890abcdef
+9r_123456787890abcdef123456787890abcdef
 ```
 
 ---
@@ -158,7 +158,7 @@ curl http://localhost:20128/v1/models \
     {
       "id": "cc/claude-opus-4-5-20251101",
       "object": "model",
-      "created": 1234567890,
+      "created": 123456787890,
       "owned_by": "claude-code"
     }
   ]
@@ -193,7 +193,7 @@ export JWT_SECRET="your-secure-secret-change-this"
 export INITIAL_PASSWORD="your-password"
 
 # Storage
-export DATA_DIR="~/.9router"
+export DATA_DIR="~/.zenroute"
 
 # Server
 export PORT="20128"
@@ -205,11 +205,11 @@ export ENABLE_REQUEST_LOGS="false"
 
 ### 数据目录
 
-**默认位置:** `~/.9router`
+**默认位置:** `~/.zenroute`
 
 **内容:**
 ```
-~/.9router/
+~/.zenroute/
   ├── db.json           # 数据库(提供商、组合、使用)
   ├── api-keys.json     # API keys
   └── logs/             # 请求日志(若启用)
@@ -219,7 +219,7 @@ export ENABLE_REQUEST_LOGS="false"
 
 ```bash
 export DATA_DIR="/custom/path"
-9router
+zenroute
 ```
 
 ### 端口配置
@@ -230,13 +230,13 @@ export DATA_DIR="/custom/path"
 
 ```bash
 export PORT="3000"
-9router
+zenroute
 ```
 
 **或用命令行:**
 
 ```bash
-9router --port 3000
+zenroute --port 3000
 ```
 
 ---
@@ -263,14 +263,14 @@ kill -9 <PID>
 **方案 2:使用其他端口**
 
 ```bash
-9router --port 3000
+zenroute --port 3000
 ```
 
 ### 权限被拒绝
 
 **错误:**
 ```
-Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/9router'
+Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/zenroute'
 ```
 
 **方案:使用 sudo(不推荐)或修复 npm 权限**
@@ -283,7 +283,7 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 
 # 然后重新安装
-npm install -g 9router
+npm install -g zenroute
 ```
 
 ### Node.js 版本过低
@@ -345,23 +345,23 @@ ping google.com
 
 ### 内存占用过高
 
-**问题:** 9Router 占用过多 RAM
+**问题:** ZenRoute 占用过多 RAM
 
 **方案:重启服务器**
 
 ```bash
 # 停止
-pkill -f 9router
+pkill -f zenroute
 
 # 启动
-9router
+zenroute
 ```
 
 **或用 PM2 自动重启:**
 
 ```bash
 npm install -g pm2
-pm2 start 9router --name 9router
+pm2 start zenroute --name zenroute
 pm2 save
 ```
 
@@ -372,8 +372,8 @@ pm2 save
 ### 本地开发
 
 ```bash
-npm install -g 9router
-9router
+npm install -g zenroute
+zenroute
 ```
 
 **适用场景:** 个人编码、测试
@@ -382,7 +382,7 @@ npm install -g 9router
 
 ```bash
 # 安装
-npm install -g 9router
+npm install -g zenroute
 
 # 配置
 export JWT_SECRET="your-secure-secret"
@@ -391,7 +391,7 @@ export NODE_ENV="production"
 
 # 用 PM2 启动
 npm install -g pm2
-pm2 start 9router --name 9router
+pm2 start zenroute --name zenroute
 pm2 save
 pm2 startup
 ```
@@ -401,15 +401,15 @@ pm2 startup
 ### Docker
 
 ```bash
-docker pull 9router/9router:latest
+docker pull zenroute/zenroute:latest
 
 docker run -d \
   -p 20128:20128 \
   -e JWT_SECRET="your-secure-secret" \
   -e INITIAL_PASSWORD="your-password" \
-  -v 9router-data:/root/.9router \
-  --name 9router \
-  9router/9router:latest
+  -v zenroute-data:/root/.zenroute \
+  --name zenroute \
+  zenroute/zenroute:latest
 ```
 
 **适用场景:** 容器化部署、Kubernetes
@@ -444,13 +444,13 @@ server {
 ### 移除全局安装
 
 ```bash
-npm uninstall -g 9router
+npm uninstall -g zenroute
 ```
 
 ### 移除数据目录
 
 ```bash
-rm -rf ~/.9router
+rm -rf ~/.zenroute
 ```
 
 ### 移除配置
@@ -458,7 +458,7 @@ rm -rf ~/.9router
 ```bash
 # 从 shell 配置中移除环境变量
 nano ~/.bashrc  # 或 ~/.zshrc
-# 删除 9router 相关的 export
+# 删除 zenroute 相关的 export
 ```
 
 ---
@@ -473,6 +473,6 @@ nano ~/.bashrc  # 或 ~/.zshrc
 
 ## 需要帮助?
 
-- **网站**: [9router.com](https://9router.com)
-- **GitHub**: [github.com/joyccn/9router](https://github.com/joyccn/9router)
-- **Issues**: [github.com/joyccn/9router/issues](https://github.com/joyccn/9router/issues)
+- **网站**: [zenroute.dev](https://zenroute.dev)
+- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
+- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)

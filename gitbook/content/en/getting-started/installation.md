@@ -1,6 +1,6 @@
 # Installation
 
-Detailed installation guide for 9Router with troubleshooting tips.
+Detailed installation guide for ZenRoute with troubleshooting tips.
 
 ---
 
@@ -31,37 +31,37 @@ npm --version
 
 ### Method 1: Global Installation (Recommended)
 
-Install 9Router globally to use from anywhere:
+Install ZenRoute globally to use from anywhere:
 
 ```bash
-npm install -g 9router
+npm install -g zenroute
 ```
 
-**Start 9Router:**
+**Start ZenRoute:**
 
 ```bash
-9router
+zenroute
 ```
 
 **Benefits:**
 - ✅ Run from any directory
-- ✅ Simple command: `9router`
-- ✅ Auto-updates with `npm update -g 9router`
+- ✅ Simple command: `zenroute`
+- ✅ Auto-updates with `npm update -g zenroute`
 
 ### Method 2: Local Installation
 
 Install in a specific project:
 
 ```bash
-mkdir my-9router
-cd my-9router
-npm install 9router
+mkdir my-zenroute
+cd my-zenroute
+npm install zenroute
 ```
 
-**Start 9Router:**
+**Start ZenRoute:**
 
 ```bash
-npx 9router
+npx zenroute
 ```
 
 **Benefits:**
@@ -74,8 +74,8 @@ npx 9router
 Clone and build from GitHub:
 
 ```bash
-git clone https://github.com/joyccn/9router.git
-cd 9router/app
+git clone https://github.com/joyccn/ZenRoute.git
+cd zenroute/app
 npm install
 npm run build
 npm start
@@ -93,19 +93,19 @@ npm start
 ### Start the Server
 
 ```bash
-9router
+zenroute
 ```
 
 **What happens:**
 1. Server starts on `http://localhost:20128`
 2. Dashboard opens automatically in browser
-3. Data directory created at `~/.9router`
+3. Data directory created at `~/.zenroute`
 4. API key generated automatically
 
 ### Dashboard Login
 
 **Default credentials:**
-- Password: `123456`
+- Password: `12345678`
 
 **⚠️ Change password immediately:**
 1. Login to dashboard
@@ -122,7 +122,7 @@ Dashboard → Settings → API Keys
 
 **Example API key format:**
 ```
-9r_1234567890abcdef1234567890abcdef
+9r_123456787890abcdef123456787890abcdef
 ```
 
 ---
@@ -158,7 +158,7 @@ curl http://localhost:20128/v1/models \
     {
       "id": "cc/claude-opus-4-5-20251101",
       "object": "model",
-      "created": 1234567890,
+      "created": 123456787890,
       "owned_by": "claude-code"
     }
   ]
@@ -193,7 +193,7 @@ export JWT_SECRET="your-secure-secret-change-this"
 export INITIAL_PASSWORD="your-password"
 
 # Storage
-export DATA_DIR="~/.9router"
+export DATA_DIR="~/.zenroute"
 
 # Server
 export PORT="20128"
@@ -205,11 +205,11 @@ export ENABLE_REQUEST_LOGS="false"
 
 ### Data Directory
 
-**Default location:** `~/.9router`
+**Default location:** `~/.zenroute`
 
 **Contents:**
 ```
-~/.9router/
+~/.zenroute/
   ├── db.json           # Database (providers, combos, usage)
   ├── api-keys.json     # API keys
   └── logs/             # Request logs (if enabled)
@@ -219,7 +219,7 @@ export ENABLE_REQUEST_LOGS="false"
 
 ```bash
 export DATA_DIR="/custom/path"
-9router
+zenroute
 ```
 
 ### Port Configuration
@@ -230,13 +230,13 @@ export DATA_DIR="/custom/path"
 
 ```bash
 export PORT="3000"
-9router
+zenroute
 ```
 
 **Or use command line:**
 
 ```bash
-9router --port 3000
+zenroute --port 3000
 ```
 
 ---
@@ -263,14 +263,14 @@ kill -9 <PID>
 **Solution 2: Use different port**
 
 ```bash
-9router --port 3000
+zenroute --port 3000
 ```
 
 ### Permission Denied
 
 **Error:**
 ```
-Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/9router'
+Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/zenroute'
 ```
 
 **Solution: Use sudo (not recommended) or fix npm permissions**
@@ -283,7 +283,7 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 
 # Then install again
-npm install -g 9router
+npm install -g zenroute
 ```
 
 ### Node.js Version Too Old
@@ -345,23 +345,23 @@ Dashboard → Provider → Disconnect → Reconnect
 
 ### High Memory Usage
 
-**Issue:** 9Router using too much RAM
+**Issue:** ZenRoute using too much RAM
 
 **Solution: Restart server**
 
 ```bash
 # Stop
-pkill -f 9router
+pkill -f zenroute
 
 # Start
-9router
+zenroute
 ```
 
 **Or use PM2 for auto-restart:**
 
 ```bash
 npm install -g pm2
-pm2 start 9router --name 9router
+pm2 start zenroute --name zenroute
 pm2 save
 ```
 
@@ -372,8 +372,8 @@ pm2 save
 ### Local Development
 
 ```bash
-npm install -g 9router
-9router
+npm install -g zenroute
+zenroute
 ```
 
 **Use case:** Personal coding, testing
@@ -382,7 +382,7 @@ npm install -g 9router
 
 ```bash
 # Install
-npm install -g 9router
+npm install -g zenroute
 
 # Configure
 export JWT_SECRET="your-secure-secret"
@@ -391,7 +391,7 @@ export NODE_ENV="production"
 
 # Start with PM2
 npm install -g pm2
-pm2 start 9router --name 9router
+pm2 start zenroute --name zenroute
 pm2 save
 pm2 startup
 ```
@@ -401,15 +401,15 @@ pm2 startup
 ### Docker
 
 ```bash
-docker pull 9router/9router:latest
+docker pull zenroute/zenroute:latest
 
 docker run -d \
   -p 20128:20128 \
   -e JWT_SECRET="your-secure-secret" \
   -e INITIAL_PASSWORD="your-password" \
-  -v 9router-data:/root/.9router \
-  --name 9router \
-  9router/9router:latest
+  -v zenroute-data:/root/.zenroute \
+  --name zenroute \
+  zenroute/zenroute:latest
 ```
 
 **Use case:** Containerized deployment, Kubernetes
@@ -444,13 +444,13 @@ server {
 ### Remove Global Installation
 
 ```bash
-npm uninstall -g 9router
+npm uninstall -g zenroute
 ```
 
 ### Remove Data Directory
 
 ```bash
-rm -rf ~/.9router
+rm -rf ~/.zenroute
 ```
 
 ### Remove Configuration
@@ -458,7 +458,7 @@ rm -rf ~/.9router
 ```bash
 # Remove environment variables from shell config
 nano ~/.bashrc  # or ~/.zshrc
-# Delete 9router-related exports
+# Delete zenroute-related exports
 ```
 
 ---
@@ -473,6 +473,6 @@ nano ~/.bashrc  # or ~/.zshrc
 
 ## Need Help?
 
-- **Website**: [9router.com](https://9router.com)
-- **GitHub**: [github.com/joyccn/9router](https://github.com/joyccn/9router)
-- **Issues**: [github.com/joyccn/9router/issues](https://github.com/joyccn/9router/issues)
+- **Website**: [zenroute.dev](https://zenroute.dev)
+- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
+- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)

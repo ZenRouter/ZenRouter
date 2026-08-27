@@ -1,29 +1,29 @@
-# 9Router — Agent Skills
+# ZenRoute — Agent Skills
 
-Drop-in skills for any AI agent (Claude, Cursor, ChatGPT, custom SDK). Just **copy a link** below and paste it to your AI — it will fetch the skill and use 9Router for you.
+Drop-in skills for any AI agent (Claude, Cursor, ChatGPT, custom SDK). Just **copy a link** below and paste it to your AI — it will fetch the skill and use ZenRoute for you.
 
-> Tip: start with the **9router** entry skill — it covers setup and links to all capability skills.
+> Tip: start with the **zenroute** entry skill — it covers setup and links to all capability skills.
 
 ## Skills
 
 | Capability | Copy link below and paste to your AI |
 |---|---|
-| **Entry / Setup** (start here) | https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/skills/9router/SKILL.md |
-| Chat / code-gen | https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/skills/9router-chat/SKILL.md |
-| Image generation | https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/skills/9router-image/SKILL.md |
-| Video generation (xAI Grok Imagine) | https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/skills/9router-video/SKILL.md |
-| Text-to-speech | https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/skills/9router-tts/SKILL.md |
-| Speech-to-text | https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/skills/9router-stt/SKILL.md |
-| Embeddings | https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/skills/9router-embeddings/SKILL.md |
-| Web search | https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/skills/9router-web-search/SKILL.md |
-| Web fetch (URL → markdown) | https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/skills/9router-web-fetch/SKILL.md |
+| **Entry / Setup** (start here) | https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute/SKILL.md |
+| Chat / code-gen | https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute-chat/SKILL.md |
+| Image generation | https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute-image/SKILL.md |
+| Video generation (xAI Grok Imagine) | https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute-video/SKILL.md |
+| Text-to-speech | https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute-tts/SKILL.md |
+| Speech-to-text | https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute-stt/SKILL.md |
+| Embeddings | https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute-embeddings/SKILL.md |
+| Web search | https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute-web-search/SKILL.md |
+| Web fetch (URL → markdown) | https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute-web-fetch/SKILL.md |
 
 ## How to use
 
 Paste to your AI (Claude, Cursor, ChatGPT, …):
 
 ```
-Read this skill and use it: https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/skills/9router/SKILL.md
+Read this skill and use it: https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute/SKILL.md
 ```
 
 Then ask normally — *"generate an image of a cat"*, *"transcribe this URL"*, etc.
@@ -31,13 +31,13 @@ Then ask normally — *"generate an image of a cat"*, *"transcribe this URL"*, e
 ## Configure your shell once
 
 ```bash
-export NINEROUTER_URL="http://localhost:20128"   # local default, or your VPS / tunnel URL
-export NINEROUTER_KEY="sk-..."                   # from Dashboard → Keys (only if requireApiKey=true)
+export ZENROUTE_URL="http://localhost:20128"   # local default, or your VPS / tunnel URL
+export ZENROUTE_KEY="sk-..."                   # from Dashboard → Keys (only if requireApiKey=true)
 ```
 
-Verify: `curl $NINEROUTER_URL/api/health` → `{"ok":true}`.
+Verify: `curl $ZENROUTE_URL/api/health` → `{"ok":true}`.
 
 ## Links
 
-- Source: https://github.com/joyccn/9router
-- Dashboard: https://9router.com
+- Source: https://github.com/joyccn/ZenRoute
+- Dashboard: https://zenroute.com

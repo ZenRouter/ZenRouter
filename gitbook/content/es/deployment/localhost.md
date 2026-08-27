@@ -1,15 +1,15 @@
 # 🏠 Despliegue en localhost
 
-Ejecuta 9Router en tu máquina local para desarrollo y uso personal.
+Ejecuta ZenRoute en tu máquina local para desarrollo y uso personal.
 
 ---
 
 ## 📦 Instalación
 
-Instala 9Router globalmente vía npm:
+Instala ZenRoute globalmente vía npm:
 
 ```bash
-npm install -g 9router
+npm install -g zenroute
 ```
 
 **Requisitos:**
@@ -20,10 +20,10 @@ npm install -g 9router
 
 ## 🚀 Iniciar el servidor
 
-Inicia 9Router con un solo comando:
+Inicia ZenRoute con un solo comando:
 
 ```bash
-9router
+zenroute
 ```
 
 El dashboard se abrirá automáticamente en tu navegador en `http://localhost:3000`
@@ -31,7 +31,7 @@ El dashboard se abrirá automáticamente en tu navegador en `http://localhost:30
 **Configuración por defecto:**
 - **Dashboard**: `http://localhost:3000`
 - **API Endpoint**: `http://localhost:20128/v1`
-- **Directorio de datos**: `~/.9router`
+- **Directorio de datos**: `~/.zenroute`
 
 ---
 
@@ -42,7 +42,7 @@ El dashboard se abrirá automáticamente en tu navegador en `http://localhost:30
 Establece un directorio de datos personalizado usando una variable de entorno:
 
 ```bash
-DATA_DIR=/path/to/data 9router
+DATA_DIR=/path/to/data zenroute
 ```
 
 ### Puerto personalizado
@@ -53,10 +53,10 @@ El puerto de API (20128) y el puerto del dashboard (3000) están configurados en
 
 ## 🛑 Detener el servidor
 
-Presiona `Ctrl+C` en la terminal donde 9Router se está ejecutando.
+Presiona `Ctrl+C` en la terminal donde ZenRoute se está ejecutando.
 
 ```bash
-# En la terminal ejecutando 9router
+# En la terminal ejecutando zenroute
 ^C  # Presiona Ctrl+C
 ```
 
@@ -69,25 +69,25 @@ El servidor se apagará correctamente y guardará todos los datos.
 Simplemente ejecuta el comando de inicio nuevamente:
 
 ```bash
-9router
+zenroute
 ```
 
 Todas tus configuraciones, API keys y combos se preservan en el directorio de datos.
 
 ---
 
-## 📊 Actualizar 9Router
+## 📊 Actualizar ZenRoute
 
 Actualiza a la última versión:
 
 ```bash
-npm update -g 9router
+npm update -g zenroute
 ```
 
 Verifica tu versión actual:
 
 ```bash
-npm list -g 9router
+npm list -g zenroute
 ```
 
 ---
@@ -113,7 +113,7 @@ Si encuentras errores de permisos durante la instalación:
 
 ```bash
 # Usar sudo (no recomendado)
-sudo npm install -g 9router
+sudo npm install -g zenroute
 
 # O corregir los permisos de npm (recomendado)
 mkdir ~/.npm-global
@@ -128,10 +128,10 @@ Si el directorio de datos no es accesible:
 
 ```bash
 # Verificar permisos
-ls -la ~/.9router
+ls -la ~/.zenroute
 
 # Corregir permisos
-chmod 755 ~/.9router
+chmod 755 ~/.zenroute
 ```
 
 ---
@@ -139,7 +139,7 @@ chmod 755 ~/.9router
 ## 📁 Estructura del directorio de datos
 
 ```
-~/.9router/
+~/.zenroute/
 ├── db.json           # Main database (providers, combos, settings)
 ├── logs/             # Application logs
 └── cache/            # Temporary cache files
@@ -149,10 +149,10 @@ chmod 755 ~/.9router
 
 ```bash
 # Respaldo
-cp -r ~/.9router ~/.9router.backup
+cp -r ~/.zenroute ~/.zenroute.backup
 
 # Restaurar
-cp -r ~/.9router.backup ~/.9router
+cp -r ~/.zenroute.backup ~/.zenroute
 ```
 
 ---

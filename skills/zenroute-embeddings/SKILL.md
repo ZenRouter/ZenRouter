@@ -1,23 +1,23 @@
 ---
-name: 9router-embeddings
-description: Generate vector embeddings via 9Router /v1/embeddings using OpenAI / Gemini / Mistral / Voyage / Nvidia / GitHub embedding models for RAG, semantic search, similarity. Use when the user wants embeddings, vectors, RAG, semantic search, or to embed text.
+name: zenroute-embeddings
+description: Generate vector embeddings via ZenRoute /v1/embeddings using OpenAI / Gemini / Mistral / Voyage / Nvidia / GitHub embedding models for RAG, semantic search, similarity. Use when the user wants embeddings, vectors, RAG, semantic search, or to embed text.
 ---
 
-# 9Router — Embeddings
+# ZenRoute — Embeddings
 
-Requires `NINEROUTER_URL` (and `NINEROUTER_KEY` if auth enabled). See https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/skills/9router/SKILL.md for setup.
+Requires `ZENROUTE_URL` (and `ZENROUTE_KEY` if auth enabled). See https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute/SKILL.md for setup.
 
 ## Discover
 
 ```bash
-curl $NINEROUTER_URL/v1/models/embedding | jq '.data[].id'
+curl $ZENROUTE_URL/v1/models/embedding | jq '.data[].id'
 # Per-model dimensions
-curl "$NINEROUTER_URL/v1/models/info?id=openai/text-embedding-3-small"
+curl "$ZENROUTE_URL/v1/models/info?id=openai/text-embedding-3-small"
 ```
 
 ## Endpoint
 
-`POST $NINEROUTER_URL/v1/embeddings`
+`POST $ZENROUTE_URL/v1/embeddings`
 
 | Field | Required | Notes |
 |---|---|---|
@@ -29,8 +29,8 @@ curl "$NINEROUTER_URL/v1/models/info?id=openai/text-embedding-3-small"
 ## Examples
 
 ```bash
-curl -X POST $NINEROUTER_URL/v1/embeddings \
-  -H "Authorization: Bearer $NINEROUTER_KEY" \
+curl -X POST $ZENROUTE_URL/v1/embeddings \
+  -H "Authorization: Bearer $ZENROUTE_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"openai/text-embedding-3-small","input":["hello","world"]}'
 ```
@@ -38,9 +38,9 @@ curl -X POST $NINEROUTER_URL/v1/embeddings \
 JS:
 
 ```js
-const r = await fetch(`${process.env.NINEROUTER_URL}/v1/embeddings`, {
+const r = await fetch(`${process.env.ZENROUTE_URL}/v1/embeddings`, {
   method: "POST",
-  headers: { "Authorization": `Bearer ${process.env.NINEROUTER_KEY}`, "Content-Type": "application/json" },
+  headers: { "Authorization": `Bearer ${process.env.ZENROUTE_KEY}`, "Content-Type": "application/json" },
   body: JSON.stringify({ model: "gemini/text-embedding-004", input: "RAG chunk text" }),
 });
 const { data } = await r.json();

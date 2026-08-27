@@ -1,15 +1,15 @@
 # 🏠 ローカルホストデプロイメント
 
-開発と個人利用のため、ローカルマシンで9Routerを実行。
+開発と個人利用のため、ローカルマシンでZenRouteを実行。
 
 ---
 
 ## 📦 インストール
 
-npm経由で9Routerをグローバルインストール:
+npm経由でZenRouteをグローバルインストール:
 
 ```bash
-npm install -g 9router
+npm install -g zenroute
 ```
 
 **要件:**
@@ -20,10 +20,10 @@ npm install -g 9router
 
 ## 🚀 サーバーの起動
 
-一つのコマンドで9Routerを起動:
+一つのコマンドでZenRouteを起動:
 
 ```bash
-9router
+zenroute
 ```
 
 ダッシュボードが自動的にブラウザで `http://localhost:3000` に開きます。
@@ -31,7 +31,7 @@ npm install -g 9router
 **デフォルト設定:**
 - **ダッシュボード**: `http://localhost:3000`
 - **APIエンドポイント**: `http://localhost:20128/v1`
-- **データディレクトリ**: `~/.9router`
+- **データディレクトリ**: `~/.zenroute`
 
 ---
 
@@ -42,7 +42,7 @@ npm install -g 9router
 環境変数を使ってカスタムデータディレクトリを設定:
 
 ```bash
-DATA_DIR=/path/to/data 9router
+DATA_DIR=/path/to/data zenroute
 ```
 
 ### カスタムポート
@@ -53,10 +53,10 @@ APIポート(20128)とダッシュボードポート(3000)はアプリケーシ�
 
 ## 🛑 サーバーの停止
 
-9Routerが実行されているターミナルで `Ctrl+C` を押します。
+ZenRouteが実行されているターミナルで `Ctrl+C` を押します。
 
 ```bash
-# 9routerを実行しているターミナル
+# zenrouteを実行しているターミナル
 ^C  # Ctrl+Cを押す
 ```
 
@@ -69,25 +69,25 @@ APIポート(20128)とダッシュボードポート(3000)はアプリケーシ�
 起動コマンドを再度実行するだけです:
 
 ```bash
-9router
+zenroute
 ```
 
 すべての設定、APIキー、コンボはデータディレクトリに保持されます。
 
 ---
 
-## 📊 9Routerの更新
+## 📊 ZenRouteの更新
 
 最新バージョンに更新:
 
 ```bash
-npm update -g 9router
+npm update -g zenroute
 ```
 
 現在のバージョンを確認:
 
 ```bash
-npm list -g 9router
+npm list -g zenroute
 ```
 
 ---
@@ -113,7 +113,7 @@ kill -9 <PID>
 
 ```bash
 # sudoを使用 (非推奨)
-sudo npm install -g 9router
+sudo npm install -g zenroute
 
 # またはnpm権限を修正 (推奨)
 mkdir ~/.npm-global
@@ -128,10 +128,10 @@ source ~/.bashrc
 
 ```bash
 # 権限を確認
-ls -la ~/.9router
+ls -la ~/.zenroute
 
 # 権限を修正
-chmod 755 ~/.9router
+chmod 755 ~/.zenroute
 ```
 
 ---
@@ -139,7 +139,7 @@ chmod 755 ~/.9router
 ## 📁 データディレクトリ構造
 
 ```
-~/.9router/
+~/.zenroute/
 ├── db.json           # メインデータベース (プロバイダー、コンボ、設定)
 ├── logs/             # アプリケーションログ
 └── cache/            # 一時キャッシュファイル
@@ -149,10 +149,10 @@ chmod 755 ~/.9router
 
 ```bash
 # バックアップ
-cp -r ~/.9router ~/.9router.backup
+cp -r ~/.zenroute ~/.zenroute.backup
 
 # 復元
-cp -r ~/.9router.backup ~/.9router
+cp -r ~/.zenroute.backup ~/.zenroute
 ```
 
 ---

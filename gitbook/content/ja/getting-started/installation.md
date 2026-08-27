@@ -1,6 +1,6 @@
 # インストール
 
-トラブルシューティングのヒント付きの9Router詳細インストールガイド。
+トラブルシューティングのヒント付きのZenRoute詳細インストールガイド。
 
 ---
 
@@ -31,37 +31,37 @@ npm --version
 
 ### 方法1: グローバルインストール (推奨)
 
-どこからでも使用できるように9Routerをグローバルインストール:
+どこからでも使用できるようにZenRouteをグローバルインストール:
 
 ```bash
-npm install -g 9router
+npm install -g zenroute
 ```
 
-**9Routerを起動:**
+**ZenRouteを起動:**
 
 ```bash
-9router
+zenroute
 ```
 
 **利点:**
 - ✅ どのディレクトリからでも実行
-- ✅ シンプルなコマンド: `9router`
-- ✅ `npm update -g 9router` で自動更新
+- ✅ シンプルなコマンド: `zenroute`
+- ✅ `npm update -g zenroute` で自動更新
 
 ### 方法2: ローカルインストール
 
 特定のプロジェクトにインストール:
 
 ```bash
-mkdir my-9router
-cd my-9router
-npm install 9router
+mkdir my-zenroute
+cd my-zenroute
+npm install zenroute
 ```
 
-**9Routerを起動:**
+**ZenRouteを起動:**
 
 ```bash
-npx 9router
+npx zenroute
 ```
 
 **利点:**
@@ -74,8 +74,8 @@ npx 9router
 GitHubからクローンしてビルド:
 
 ```bash
-git clone https://github.com/joyccn/9router.git
-cd 9router/app
+git clone https://github.com/joyccn/ZenRoute.git
+cd zenroute/app
 npm install
 npm run build
 npm start
@@ -93,19 +93,19 @@ npm start
 ### サーバーを起動
 
 ```bash
-9router
+zenroute
 ```
 
 **何が起こるか:**
 1. サーバーが `http://localhost:20128` で起動
 2. ダッシュボードが自動的にブラウザで開く
-3. `~/.9router` にデータディレクトリが作成される
+3. `~/.zenroute` にデータディレクトリが作成される
 4. APIキーが自動生成される
 
 ### ダッシュボードログイン
 
 **デフォルト認証情報:**
-- パスワード: `123456`
+- パスワード: `12345678`
 
 **⚠️ パスワードをすぐに変更:**
 1. ダッシュボードにログイン
@@ -122,7 +122,7 @@ Dashboard → Settings → API Keys
 
 **APIキー形式の例:**
 ```
-9r_1234567890abcdef1234567890abcdef
+9r_123456787890abcdef123456787890abcdef
 ```
 
 ---
@@ -158,7 +158,7 @@ curl http://localhost:20128/v1/models \
     {
       "id": "cc/claude-opus-4-5-20251101",
       "object": "model",
-      "created": 1234567890,
+      "created": 123456787890,
       "owned_by": "claude-code"
     }
   ]
@@ -193,7 +193,7 @@ export JWT_SECRET="your-secure-secret-change-this"
 export INITIAL_PASSWORD="your-password"
 
 # ストレージ
-export DATA_DIR="~/.9router"
+export DATA_DIR="~/.zenroute"
 
 # サーバー
 export PORT="20128"
@@ -205,11 +205,11 @@ export ENABLE_REQUEST_LOGS="false"
 
 ### データディレクトリ
 
-**デフォルトの場所:** `~/.9router`
+**デフォルトの場所:** `~/.zenroute`
 
 **内容:**
 ```
-~/.9router/
+~/.zenroute/
   ├── db.json           # データベース (プロバイダー、コンボ、使用量)
   ├── api-keys.json     # APIキー
   └── logs/             # リクエストログ (有効化されている場合)
@@ -219,7 +219,7 @@ export ENABLE_REQUEST_LOGS="false"
 
 ```bash
 export DATA_DIR="/custom/path"
-9router
+zenroute
 ```
 
 ### ポート設定
@@ -230,13 +230,13 @@ export DATA_DIR="/custom/path"
 
 ```bash
 export PORT="3000"
-9router
+zenroute
 ```
 
 **またはコマンドラインで:**
 
 ```bash
-9router --port 3000
+zenroute --port 3000
 ```
 
 ---
@@ -263,14 +263,14 @@ kill -9 <PID>
 **解決策2: 別のポートを使用**
 
 ```bash
-9router --port 3000
+zenroute --port 3000
 ```
 
 ### Permission Denied
 
 **エラー:**
 ```
-Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/9router'
+Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/zenroute'
 ```
 
 **解決策: sudoを使用 (非推奨) またはnpm権限を修正**
@@ -283,7 +283,7 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 
 # 再度インストール
-npm install -g 9router
+npm install -g zenroute
 ```
 
 ### Node.jsバージョンが古すぎる
@@ -345,23 +345,23 @@ Dashboard → Provider → Disconnect → Reconnect
 
 ### 高メモリ使用量
 
-**問題:** 9RouterがRAMを使いすぎている
+**問題:** ZenRouteがRAMを使いすぎている
 
 **解決策: サーバーを再起動**
 
 ```bash
 # 停止
-pkill -f 9router
+pkill -f zenroute
 
 # 起動
-9router
+zenroute
 ```
 
 **または自動再起動にPM2を使用:**
 
 ```bash
 npm install -g pm2
-pm2 start 9router --name 9router
+pm2 start zenroute --name zenroute
 pm2 save
 ```
 
@@ -372,8 +372,8 @@ pm2 save
 ### ローカル開発
 
 ```bash
-npm install -g 9router
-9router
+npm install -g zenroute
+zenroute
 ```
 
 **ユースケース:** 個人コーディング、テスト
@@ -382,7 +382,7 @@ npm install -g 9router
 
 ```bash
 # インストール
-npm install -g 9router
+npm install -g zenroute
 
 # 設定
 export JWT_SECRET="your-secure-secret"
@@ -391,7 +391,7 @@ export NODE_ENV="production"
 
 # PM2で起動
 npm install -g pm2
-pm2 start 9router --name 9router
+pm2 start zenroute --name zenroute
 pm2 save
 pm2 startup
 ```
@@ -401,15 +401,15 @@ pm2 startup
 ### Docker
 
 ```bash
-docker pull 9router/9router:latest
+docker pull zenroute/zenroute:latest
 
 docker run -d \
   -p 20128:20128 \
   -e JWT_SECRET="your-secure-secret" \
   -e INITIAL_PASSWORD="your-password" \
-  -v 9router-data:/root/.9router \
-  --name 9router \
-  9router/9router:latest
+  -v zenroute-data:/root/.zenroute \
+  --name zenroute \
+  zenroute/zenroute:latest
 ```
 
 **ユースケース:** コンテナデプロイ、Kubernetes
@@ -444,13 +444,13 @@ server {
 ### グローバルインストールを削除
 
 ```bash
-npm uninstall -g 9router
+npm uninstall -g zenroute
 ```
 
 ### データディレクトリを削除
 
 ```bash
-rm -rf ~/.9router
+rm -rf ~/.zenroute
 ```
 
 ### 設定を削除
@@ -458,7 +458,7 @@ rm -rf ~/.9router
 ```bash
 # シェル設定から環境変数を削除
 nano ~/.bashrc  # または ~/.zshrc
-# 9router関連のエクスポートを削除
+# zenroute関連のエクスポートを削除
 ```
 
 ---
@@ -473,6 +473,6 @@ nano ~/.bashrc  # または ~/.zshrc
 
 ## ヘルプが必要?
 
-- **ウェブサイト**: [9router.com](https://9router.com)
-- **GitHub**: [github.com/joyccn/9router](https://github.com/joyccn/9router)
-- **Issues**: [github.com/joyccn/9router/issues](https://github.com/joyccn/9router/issues)
+- **ウェブサイト**: [zenroute.dev](https://zenroute.dev)
+- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
+- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
