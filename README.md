@@ -1,62 +1,132 @@
-# 🌿 ZenRoute — Serene AI Gateway & Intelligent Routing Engine
+<div align="center">
 
+# ZenRoute
+
+**Serene AI Gateway & Intelligent Routing Engine**
+
+*Connect every AI coding tool to 40+ providers with automatic fallback, multi-account rotation, and 20–60% token compression.*
+
+<br/>
+
+[![npm version](https://img.shields.io/npm/v/zenroute.svg?color=4B72A4&label=npm)](https://www.npmjs.com/package/zenroute)
+[![npm downloads](https://img.shields.io/npm/dm/zenroute.svg?color=4B72A4&label=downloads)](https://www.npmjs.com/package/zenroute)
+[![Docker Pulls](https://img.shields.io/docker/pulls/joyccn/ZenRoute.svg?color=4B72A4&label=docker%20pulls)](https://hub.docker.com/r/joyccn/ZenRoute)
 [![GitHub stars](https://img.shields.io/github/stars/joyccn/ZenRoute?style=social)](https://github.com/joyccn/ZenRoute)
-[![License](https://img.shields.io/github/license/joyccn/ZenRoute)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/Node.js-%3E%3D18-green)](https://nodejs.org)
 [![Bun](https://img.shields.io/badge/Bun-%3E%3D1.1-black)](https://bun.sh)
 
-> **⚠️ INDEPENDENT PROJECT NOTICE & CREDITS**
+<br/>
+
+<table>
+  <tr>
+    <td align="right"><b>Start</b></td>
+    <td align="center"><a href="#quick-start">Quick Start</a></td>
+    <td align="center"><a href="#installation-methods">Installation</a></td>
+    <td align="center"><a href="#zero-config-usage">Zero Config</a></td>
+  </tr>
+  <tr>
+    <td align="right"><b>Learn</b></td>
+    <td align="center"><a href="#why-zenroute">Why ZenRoute</a></td>
+    <td align="center"><a href="#architecture--engineering-highlights">Architecture</a></td>
+    <td align="center"><a href="#3-layer-resilience">Resilience</a></td>
+  </tr>
+  <tr>
+    <td align="right"><b>Features</b></td>
+    <td align="center"><a href="#smart-combos--routing-strategies">Smart Combos</a></td>
+    <td align="center"><a href="#token-compression-rtk--caveman">Token Savers</a></td>
+    <td align="center"><a href="#supported-providers--models">Providers</a></td>
+  </tr>
+  <tr>
+    <td align="right"><b>Integrations</b></td>
+    <td align="center"><a href="#cli-tools--coding-agents">CLI Tools</a></td>
+    <td align="center"><a href="#agent-skills">Agent Skills</a></td>
+    <td align="center"><a href="#testing--verification">Test Suite</a></td>
+  </tr>
+</table>
+
+</div>
+
+---
+
+> **Independent Project Notice & Credits**
 > 
-> ZenRoute is an independent, enhanced AI routing gateway maintained by **0xJoy**.
-> All credit for the original foundations belongs to **decolua** ([github.com/decolua](https://github.com/decolua)). This repository actively maintains, expands, and evolves the codebase under the **ZenRoute** project banner.
+> ZenRoute is an independent AI gateway maintained by **0xJoy** ([github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)). All credit for the original foundations belongs to **decolua** ([github.com/decolua](https://github.com/decolua)). This repository actively maintains, hardens, and evolves the codebase under the **ZenRoute** banner.
 
 ---
 
-## ⚡ Overview & Architectural Enhancements
+## Why ZenRoute?
 
-**ZenRoute** is a serene, high-performance, multi-provider AI gateway designed to unify upstream LLM providers (Claude, OpenAI, Gemini, DeepSeek, MiniMax, Kiro, Antigravity) into a single OpenAI-compatible `/v1/*` endpoint with real-time SSE streaming, cross-platform client spoofing, and adaptive payload compression.
+When developing with modern AI coding assistants (Claude Code, Cursor, Codex, Antigravity, Cline, OpenCode), developers frequently face frustrating bottlenecks:
 
-> *"Cultivate, prune, and route all your AI models from a single unified gateway."*
-
----
-
-## 🛠️ Core Engineering Highlights
-
-### 1. ✂️ Ported RTK (Request Token-Killer) Pipe Engine
-* Native JavaScript state-machine filters ported directly from Rust (`rtk-ai/rtk`).
-* Aggregated test outcomes and failure-capping for `cargo test`, `pytest`, `go test -json`, `mypy`, and `vitest`.
-* Reduces repetitive CLI and test output tokens by **20% to 60%** without losing stack-trace context.
-
-### 2. 🎭 Unified Client Version & Fingerprint Spoofing
-* Centralized single-source client registry (`open-sse/config/clientVersions.js`).
-* Native headers, editor fingerprints, and protocol flags for modern clients: Claude Code, Codex CLI, Cursor AgentService, Antigravity IDE, Kiro, and Grok CLI.
-
-### 3. 🔒 Hardened Security & Password Onboarding
-* Default gateway protection with first-time onboarding prompt to secure credentials.
-* Dual-auth gating for database import/export operations.
-* Explicit non-deterministic secret enforcement and loopback peer trust verification (`x-zen-peer-token`).
-* Strict SSRF prevention via asynchronous DNS-pinning and private CIDR blocklist guards.
-
-### 4. 🌊 High-Throughput Streaming & Zero-Leak Lifecycle
-* Fully decoupled SSE/NDJSON streaming parser with duplicate token-delta prevention.
-* Atomic database fsync synchronization and automatic cleanup of dangling SSE listeners on client disconnection.
+| Challenge | Impact | ZenRoute Solution |
+| :--- | :--- | :--- |
+| **Quota Expiration** | Unused subscription quotas reset every month. | **Maximized Utilization**: Live quota tracking across multiple accounts with intelligent rotation. |
+| **Rate Limit Interruptions** | 429/5xx errors halt coding sessions mid-flow. | **Multi-Tier Fallback**: Cascades automatically from Subscription → API Key → Cheap → Free. |
+| **Verbose CLI Logs** | `git diff`, `pytest`, and `cargo test` burn tokens fast. | **RTK Filter Engine**: Ported Rust state-machine filters compress CLI outputs by **20% to 60%**. |
+| **Tool Fragmentation** | Every tool requires separate keys, endpoints, and configs. | **Unified Endpoint**: Single OpenAI-compatible `/v1/*` endpoint for all your tools. |
+| **Privacy & Security Concerns** | Sending credentials through third-party cloud brokers. | **Local-First & Hardened**: Local SQLite database with encrypted secrets and loopback peer trust. |
 
 ---
 
-## 🚀 Quick Start (Local Setup)
+## Quick Start
 
-### Prerequisites
-* **Node.js** `>= 18.0.0` or **Bun** `>= 1.1.0`
-* **npm**, **pnpm**, or **bun**
+### 1. Global Installation (npm)
 
-### Installation
+```bash
+# Install globally
+npm install -g zenroute
+
+# Start the gateway
+zenroute
+```
+
+The gateway dashboard will open automatically at **`http://localhost:20128/dashboard`** with the API available at **`http://localhost:20128/v1`**.
+
+---
+
+### 2. Docker Deployment
+
+```bash
+docker run -d \
+  --name zenroute \
+  -p 20128:20128 \
+  -v "$HOME/.zenroute:/app/data" \
+  -e DATA_DIR=/app/data \
+  --restart always \
+  joyccn/ZenRoute:latest
+```
+
+Or with `docker-compose.yml`:
+
+```yaml
+services:
+  zenroute:
+    image: joyccn/ZenRoute:latest
+    container_name: zenroute
+    restart: always
+    ports:
+      - "20128:20128"
+    volumes:
+      - zenroute-data:/app/data
+    environment:
+      DATA_DIR: /app/data
+      PORT: "20128"
+
+volumes:
+  zenroute-data:
+```
+
+---
+
+### 3. Local Development from Source
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/joyccn/ZenRoute.git zenroute
 cd zenroute
 
-# 2. Copy environment configuration
+# 2. Setup configuration
 cp .env.example .env
 
 # 3. Install dependencies
@@ -64,28 +134,216 @@ npm install
 # or with Bun:
 bun install
 
-# 4. Start Development Server
+# 4. Start the server
 npm run dev
 # or with Bun:
 bun run dev:bun
 ```
 
-The gateway dashboard and `/v1/*` proxy will be accessible at:
-* **Serene Dashboard:** `http://localhost:20128/dashboard`
-* **Unified OpenAI Endpoint:** `http://localhost:20128/v1`
-
 ---
 
-## 🧪 Running the Test Suite
+## Zero-Config Usage
+
+ZenRoute works out-of-the-box. Free providers (such as OpenCode Free and Kiro) can be used immediately without requiring external API keys:
 
 ```bash
-# Run unit & integration tests
-cd tests && npm install
-npx vitest run
+# Test direct completion via OpenAI-compatible endpoint
+curl http://localhost:20128/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "auto",
+    "messages": [
+      { "role": "user", "content": "Explain binary search in one concise sentence." }
+    ]
+  }'
 ```
 
 ---
 
-## 📜 License
+## Architecture & Engineering Highlights
 
-This project is licensed under the [MIT License](LICENSE) with all respective upstream copyrights acknowledged for the original base foundations.
+```
+┌─────────────────────────────────────────────────────────────┐
+│             Your AI Coding Tools & IDEs                     │
+│   (Claude Code, Cursor, Codex, Antigravity, Cline, Aider)   │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ OpenAI/Anthropic Wire Format
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    ZenRoute Smart Gateway                   │
+│                                                             │
+│  ├─ Hardened Loopback Auth (x-zen-peer-token verification)  │
+│  ├─ Ported RTK Engine (20-60% context compression)          │
+│  ├─ Smart Combos (Priority, Round-Robin, Headroom, Least)   │
+│  ├─ 3-Layer Resilience (Circuit Breaker, Cooldown, Lockout) │
+│  └─ Client Fingerprint Spoofing & TLS Stealth               │
+└──────────────┬────────────────┬───────────────┬─────────────┘
+               │                │               │
+               ▼                ▼               ▼
+      [Tier 1: Subscriptions]  [Tier 2: APIs]  [Tier 3: Free]
+      Claude Pro/Max, Codex,    OpenAI, Gemini,  Kiro, OpenCode,
+      Kiro AWS, Antigravity     DeepSeek, GLM    Groq Free Tiers
+```
+
+### 1. Ported RTK (Request Token-Killer) Engine
+- Ported state-machine filters from Rust (`rtk-ai/rtk`).
+- Compresses repetitive CLI outputs (`git diff`, `git status`, `cargo test`, `pytest`, `go test -json`, `vitest`) before forwarding to the LLM.
+- Preserves crucial failure stack traces while reducing input tokens by **20% to 60%**.
+
+### 2. Unified Client Fingerprint & Protocol Spoofing
+- Single-source client header registry (`open-sse/config/clientVersions.js`).
+- Emulates official protocol headers and client fingerprints for Claude Code, Codex CLI, Cursor AgentService, Antigravity IDE, and Grok CLI.
+
+### 3. Hardened Security & Loopback Peer Trust
+- Custom HTTP server generates an ephemeral 48-character hex peer token (`x-zen-peer-token`) at boot.
+- Derives client IP directly from the TCP socket to prevent `X-Forwarded-For` spoofing on loopback endpoints.
+- Built-in SSRF protection with asynchronous DNS-pinning and private CIDR blocklist filters.
+- Local SQLite database stored securely at `~/.zenroute/db/data.sqlite` with fallback support for `~/.9router`.
+
+### 4. Zero-Leak SSE Streaming Engine
+- Decoupled SSE/NDJSON streaming parser with duplicate token-delta prevention.
+- Automatic cleanup of dangling upstream connections on client disconnects.
+
+---
+
+## 3-Layer Resilience
+
+ZenRoute employs three distinct self-healing layers to ensure continuous availability:
+
+```
+[Request Failed]
+       │
+       ├─► 5xx / Gateway Timeout ──► Layer 1: Provider Circuit Breaker
+       │                             (Trips provider, switches to next target in combo)
+       │
+       ├─► 429 Rate Limit        ──► Layer 2: Key / Account Cooldown
+       │                             (Exponential backoff honoring Retry-After per key)
+       │
+       └─► Model 404 / Mode Deny ──► Layer 3: Model-Level Lockout
+                                     (Locks specific model ID, keeps account active)
+```
+
+1. **Layer 1: Provider Circuit Breaker** — Automatically trips when a provider encounters repeated upstream 5xx errors or network timeouts, immediately failing over to the next candidate in the active combo.
+2. **Layer 2: Key & Account Cooldown** — When an account hits a 429 rate limit, ZenRoute places only that specific key into cooldown (honoring `Retry-After`) and routes subsequent traffic to sibling keys in the pool.
+3. **Layer 3: Model-Level Lockout** — Isolates failures to specific model IDs without disabling entire provider credentials.
+
+---
+
+## Smart Combos & Routing Strategies
+
+A **Combo** is a prioritized group of models that ZenRoute routes across automatically. If a provider reaches quota or errors, ZenRoute seamlessly advances to the next healthy model.
+
+| Strategy | Description | Best For |
+| :--- | :--- | :--- |
+| `priority` | Strict sequential order; drains each target before moving to the next. | Primary subscription with free backup |
+| `round-robin` | Distributes requests evenly across all targets in the list. | Multi-account load distribution |
+| `least-used` | Selects the target with the lowest recent request count. | Balancing API usage across team keys |
+| `headroom` | Routes to the target with the most remaining quota. | Multi-subscription balance |
+| `cost-optimized` | Selects the lowest-cost model for the requested tier. | Budget optimization |
+| `cache-optimized` | Pins identical prompt prefixes to the same connection. | Maximizing prompt-cache hit rates |
+
+---
+
+## CLI Tools & Coding Agents
+
+ZenRoute seamlessly connects to any tool that supports OpenAI-compatible or Anthropic-compatible APIs:
+
+### Claude Code
+
+```bash
+export ANTHROPIC_BASE_URL="http://localhost:20128"
+export ANTHROPIC_API_KEY="sk-zenroute" # or your dashboard key
+claude
+```
+
+### Cursor / Cline / Roo Code / OpenCode
+
+Configure the API settings in your editor:
+- **Base URL / Endpoint:** `http://localhost:20128/v1`
+- **API Key:** `sk-zenroute` (or copy from Dashboard → Keys)
+- **Model:** `auto` (or provider-specific model IDs like `claude-3-7-sonnet`, `gpt-4o`, `deepseek-chat`)
+
+### Codex CLI
+
+```bash
+export OPENAI_BASE_URL="http://localhost:20128/v1"
+export OPENAI_API_KEY="sk-zenroute"
+codex
+```
+
+### Aider
+
+```bash
+aider --openai-api-base http://localhost:20128/v1 --openai-api-key sk-zenroute --model openai/gpt-4o
+```
+
+---
+
+## Supported Providers & Models
+
+ZenRoute connects to over 40 AI providers and hundreds of models across multiple categories:
+
+- **Frontier Models:** Anthropic Claude (Opus / Sonnet / Haiku), OpenAI (GPT-4o, o1, o3-mini, GPT-5), Google Gemini (2.5 Pro / Flash).
+- **Open Weights & Fast Inference:** DeepSeek (V3, R1), Groq, Together AI, Mistral AI, Cerebras, Sambanova, Fireworks.
+- **Specialized & Coding Providers:** Kiro (AWS SSO), OpenCode Free, Antigravity, MiniMax, Qwen, GLM / Zhipu, Moonshot / Kimi, xAI Grok.
+- **Multimodal & Tools:** Text-to-Image (DALL-E, FLUX, Imagen), Text-to-Speech (ElevenLabs, Deepgram, Edge TTS), Speech-to-Text (Whisper, Groq STT), Web Search (Tavily, Exa, Brave, SearXNG), and Web Fetch (Firecrawl, Jina).
+
+---
+
+## Agent Skills
+
+ZenRoute provides standard AI Agent Skills ready to index and consume directly from your agentic workflows:
+
+```bash
+export ZENROUTE_URL="http://localhost:20128"
+export ZENROUTE_KEY="sk-zenroute"
+```
+
+| Skill | Endpoint | Description |
+| :--- | :--- | :--- |
+| `zenroute` | `/` | Entry skill with setup guide and capability catalog index. |
+| `zenroute-chat` | `/v1/chat/completions` | Chat and code generation with streaming SSE. |
+| `zenroute-image` | `/v1/images/generations` | Image generation across DALL-E, FLUX, Imagen, etc. |
+| `zenroute-tts` | `/v1/audio/speech` | Text-to-speech with multi-provider voice options. |
+| `zenroute-stt` | `/v1/audio/transcriptions` | Audio transcription via Whisper and Groq STT. |
+| `zenroute-embeddings` | `/v1/embeddings` | Vector generation for semantic search and RAG. |
+| `zenroute-web-search` | `/v1/search` | Web search aggregation (Tavily, Exa, Brave, SearXNG). |
+| `zenroute-web-fetch` | `/v1/web/fetch` | Web content scraping to markdown and clean HTML. |
+
+Skill specifications are located in [`skills/`](skills/).
+
+---
+
+## Testing & Verification
+
+ZenRoute includes a test suite covering unit, integration, and security scenarios:
+
+```bash
+# Run the complete test suite
+npm test
+
+# Run a specific test file
+npx vitest run tests/unit/custom-server-peer-headers.test.js
+```
+
+---
+
+## Configuration Reference
+
+Key environment variables configurable via `.env`:
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `PORT` | `20128` | HTTP gateway port. |
+| `DATA_DIR` | `~/.zenroute` | Database and persistent configuration directory. |
+| `JWT_SECRET` | *(auto-generated)* | Signing secret for web dashboard session cookies. |
+| `INITIAL_PASSWORD` | *(prompted on first boot)* | Initial dashboard admin password. |
+| `REQUIRE_API_KEY` | `false` | When true, requires API keys for all remote `/v1` requests. |
+| `HTTP_PROXY` / `ALL_PROXY` | `""` | Optional outbound proxy for upstream API requests. |
+| `ZENROUTE_MAX_OLD_SPACE_SIZE` | `6144` | V8 memory heap size limit in megabytes. |
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
