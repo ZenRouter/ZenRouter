@@ -1,5 +1,5 @@
 // Stream handler with disconnect detection - shared for all providers
-import { STREAM_STALL_TIMEOUT_MS } from "../config/runtimeConfig.js";
+import { STREAM_STALL_TIMEOUT_MS, STREAM_FIRST_CHUNK_TIMEOUT_MS } from "../config/runtimeConfig.js";
 import { dbg, isDebugEnabled } from "./debugLog.js";
 
 // Get HH:MM:SS timestamp
@@ -188,7 +188,7 @@ export function createDisconnectAwareStream(transformStream, streamController, o
  * @param {TransformStream} transformStream - Transform stream for SSE
  * @param {object} streamController - Stream controller from createStreamController
  */
-export function pipeWithDisconnect(providerResponse, transformStream, streamController, onAbortTerminal = null, stallTimeoutMs = STREAM_STALL_TIMEOUT_MS) {
+export function pipeWithDisconnect(providerResponse, transformStream, streamController, onAbortTerminal = null, stallTimeoutMs = STREAM_STALL_TIMEOUT_MS, firstChunkTimeoutMs = STREAM_FIRST_CHUNK_TIMEOUT_MS) {
   let stallTimer = null;
   let chunkCount = 0;
   let totalBytes = 0;
@@ -200,12 +200,15 @@ export function pipeWithDisconnect(providerResponse, transformStream, streamCont
   };
   const armStall = () => {
     clearStall();
+    const currentTimeout = chunkCount === 0 ? firstChunkTimeoutMs : stallTimeoutMs;
     stallTimer = setTimeout(() => {
       stallTimer = null;
-      dbg(tag, `STALL TIMEOUT ${stallTimeoutMs}ms | chunks=${chunkCount} | bytes=${totalBytes} | sinceLast=${Date.now() - lastChunkAt}ms`);
-      streamController.handleError?.(new Error("stream stall timeout"));
+      const isTtft = chunkCount === 0;
+      const reason = isTtft ? `TTFT timeout (${firstChunkTimeoutMs}ms)` : `stream stall timeout (${stallTimeoutMs}ms)`;
+      dbg(tag, `STALL TIMEOUT | isTtft=${isTtft} | chunks=${chunkCount} | bytes=${totalBytes} | sinceLast=${Date.now() - lastChunkAt}ms`);
+      streamController.handleError?.(new Error(reason));
       streamController.abort?.();
-    }, stallTimeoutMs);
+    }, currentTimeout);
   };
 
   // Wrap controller so every termination path clears the stall timer.

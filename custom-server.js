@@ -59,6 +59,23 @@ http.createServer = (...args) => {
       if (typeof req.socket.setNoDelay === "function") req.socket.setNoDelay(true);
       if (typeof req.socket.setKeepAlive === "function") req.socket.setKeepAlive(true, 30000);
     }
+    // Ensure socket disconnect/abort propagates to res when client disconnects
+    if (req.socket && typeof req.socket.on === "function") {
+      req.socket.on("error", (err) => {
+        if (err && err.code !== "ECONNRESET" && err.code !== "EPIPE") {
+          console.error("[Socket] Client socket error:", err.message);
+        }
+      });
+    }
+
+    const onClientClose = () => {
+      if (!res.writableEnded && typeof res.destroy === "function") {
+        res.destroy();
+      }
+    };
+    req.once("close", onClientClose);
+    req.once("aborted", onClientClose);
+
     const socketIp = req.socket && req.socket.remoteAddress ? req.socket.remoteAddress : "";
     const xff = req.headers["x-forwarded-for"];
     const xRealIp = req.headers["x-real-ip"];

@@ -227,6 +227,11 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
   const MAX_CONSECUTIVE_SAME_ERRORS = 3;
 
   while (true) {
+    if (request?.signal?.aborted) {
+      log.warn("CHAT", "Client aborted before upstream connection");
+      return errorResponse(499, "Client Closed Request");
+    }
+
     const credentials = await getProviderCredentials(provider, excludeConnectionIds, model);
 
     // All accounts unavailable
@@ -286,6 +291,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       pxpipeTransform: chatSettings.pxpipeEnabled ? await getPxpipeTransform() : null,
       onPxpipeEvent: appendPxpipeEvent,
       providerThinking,
+      clientSignal: request?.signal || null,
       // Detect source format by endpoint + body
       sourceFormatOverride: request?.url ? detectFormatByEndpoint(new URL(request.url).pathname, body) : null,
       onCredentialsRefreshed: async (newCreds) => {

@@ -16,6 +16,8 @@
 - **Dashboard Sidebar cleanup**: removed 9Remote and 9English promotional buttons and modals from the dashboard UI navigation.
 
 ## Performance & Optimization
+- **Time-To-First-Token (TTFT) watchdog (#3556)**: added dedicated first-chunk watchdog timer (`STREAM_FIRST_CHUNK_TIMEOUT_MS`) in `pipeWithDisconnect` before switching to inter-chunk stall timeout, preventing indefinite request hangs when upstream providers stall before emitting the first token.
+- **Client disconnect abort & Bun runtime compatibility (#3559, #3564)**: bridged incoming HTTP socket error & close events in `custom-server.js` directly to the active response stream, hooked `request.signal` into `streamController` in `chatCore.js`, and added pre-stream abort fast-return in `chat.js` to ensure upstream requests and billing are immediately aborted when clients disconnect under Bun and Node.
 - **SSE streaming & TTFT latency tuning**: updated shared `SSE_HEADERS`, `SSE_HEADERS_CORS`, and `SSE_HEADERS_NO_BUFFER` in `open-sse/utils/sseConstants.js` to include `Cache-Control: no-cache, no-transform` and `X-Accel-Buffering: no`. Prevents reverse proxies (Cloudflare, Nginx, Vercel relay) from buffering SSE chunks or applying gzip compression, cutting Time-To-First-Token latency.
 - **TCP socket low-latency tuning**: enabled `socket.setNoDelay(true)` (TCP_NODELAY) and `socket.setKeepAlive(true, 30000)` in `custom-server.js` to eliminate Nagle algorithm micro-buffering on incoming client connections.
 - **Fast-fail circuit breaker for multi-account fallback**: added fast-fail detection in `src/sse/handlers/chat.js` after 3 consecutive identical systemic failures (402/403/5xx) across account pool, saving 30+ seconds of hung socket requests.
