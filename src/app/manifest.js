@@ -1,12 +1,12 @@
 export default function manifest() {
   return {
-    name: '9Router - AI Infrastructure Management',
-    short_name: '9Router',
-    description: 'One endpoint for all your AI providers. Manage keys, monitor usage, and scale effortlessly.',
+    name: 'ZenRoute - Serene AI Gateway & Intelligent Routing Engine',
+    short_name: 'ZenRoute',
+    description: 'Serene AI Gateway & Intelligent Routing Engine. Cultivate, prune, and route all your AI models from a single unified gateway.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#0a0a0a',
-    theme_color: '#0a0a0a',
+    background_color: '#12161f',
+    theme_color: '#12161f',
     orientation: 'portrait-primary',
     icons: [
       {

@@ -151,28 +151,41 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg p-4 relative overflow-hidden">
+      {/* Dynamic ambient gradient glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-brand-500/10 dark:bg-brand-500/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/3 w-[300px] h-[200px] bg-accent-sun/10 rounded-full blur-[100px] pointer-events-none" />
       {/* Faint grid background */}
-      <div className="landing-grid absolute inset-0 pointer-events-none" aria-hidden="true" />
-      <div className="relative z-10 w-full max-w-md">
+      <div className="landing-grid absolute inset-0 pointer-events-none opacity-40" aria-hidden="true" />
+      
+      <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in-95 duration-300">
+        {/* Brand Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">9Router</h1>
-          <p className="text-text-muted">
+          <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-surface border border-border p-3 mb-4 shadow-[var(--shadow-warm)] hover:scale-105 transition-transform duration-300">
+            <img src="/icons/logo.svg" alt="ZenRoute" className="w-full h-full object-contain" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-text-main mb-1.5 flex items-center justify-center gap-2">
+            ZenRoute
+            <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">Gateway</span>
+          </h1>
+          <p className="text-sm text-text-muted max-w-xs mx-auto">
             {samlAvailable
               ? "Sign in with SAML 2.0 Single Sign-On"
               : oidcAvailable
-              ? "Sign in with your OIDC provider to access the dashboard"
-              : "Enter your password to access the dashboard"}
+              ? "Sign in with your OIDC identity provider"
+              : "Serene AI Gateway & Intelligent Routing Engine"}
           </p>
         </div>
 
-        <Card>
+        <div className="bg-surface/85 backdrop-blur-xl border border-border rounded-2xl p-6 sm:p-8 shadow-[var(--shadow-elev)]">
           {mustChange ? (
             <form onSubmit={handleSetNewPassword} className="flex flex-col gap-4">
-              <p className="text-sm text-amber-600 dark:text-amber-400 text-center">
-                Set a new password before accessing the dashboard remotely.
-              </p>
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+                <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                  Set a secure password before accessing the dashboard remotely.
+                </p>
+              </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">New password</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-text-muted">New Password</label>
                 <Input
                   type="password"
                   placeholder="Enter new password"
@@ -181,33 +194,38 @@ export default function LoginPage() {
                   required
                   autoFocus
                 />
-                {error && <p className="text-xs text-red-500">{error}</p>}
+                {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
               </div>
-              <Button type="submit" variant="primary" className="w-full" loading={loading} disabled={!newPassword}>
-                Set password
+              <Button type="submit" variant="primary" className="w-full h-11" loading={loading} disabled={!newPassword}>
+                Set Password &amp; Continue
               </Button>
             </form>
           ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             {samlAvailable && (
-              <Button type="button" variant="primary" className="w-full" onClick={handleSamlLogin}>
+              <Button type="button" variant="primary" className="w-full h-11" onClick={handleSamlLogin}>
                 {samlLoginLabel}
               </Button>
             )}
 
             {oidcAvailable && (
-              <Button type="button" variant="primary" className="w-full" onClick={handleOidcLogin}>
+              <Button type="button" variant="primary" className="w-full h-11" onClick={handleOidcLogin}>
                 {oidcLoginLabel}
               </Button>
             )}
 
-            {ssoAvailable && passwordAvailable && <div className="h-px bg-border/60" />}
+            {ssoAvailable && passwordAvailable && (
+              <div className="relative flex items-center justify-center">
+                <div className="border-t border-border w-full" />
+                <span className="bg-surface px-3 text-xs uppercase tracking-wider text-text-subtle absolute">or</span>
+              </div>
+            )}
 
             {passwordAvailable ? (
               <form onSubmit={handleLogin} className="flex flex-col gap-4">
                 {isSsoEnabled && !ssoAvailable && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
-                    {activeSsoType === "saml" ? "SAML SSO" : "OIDC"} login is enabled, but configuration is incomplete. Password login is still available for recovery.
+                  <p className="text-xs text-amber-600 dark:text-amber-400 text-center bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                    {activeSsoType === "saml" ? "SAML SSO" : "OIDC"} login is enabled, but configuration is incomplete. Password login is active.
                   </p>
                 )}
 
@@ -218,7 +236,9 @@ export default function LoginPage() {
                 )}
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium">Password</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-text-muted">Password</label>
+                  </div>
                   <Input
                     type="password"
                     placeholder="Enter password"
@@ -227,15 +247,15 @@ export default function LoginPage() {
                     required
                     autoFocus={!oidcAvailable}
                   />
-                  {error && <p className="text-xs text-red-500">{error}</p>}
+                  {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
                   {retryAfter > 0 && (
                     <p className="text-xs text-amber-600 dark:text-amber-400">
-                      Locked. Retry in <span className="font-mono">{retryAfter}s</span>.
+                      Locked. Retry in <span className="font-mono font-bold">{retryAfter}s</span>.
                     </p>
                   )}
                   {resetHint && (
-                    <p className="text-xs text-text-muted">
-                      Forgot password? Open <code className="bg-sidebar px-1 rounded">9router</code> CLI on the host → <b>Settings</b> → <b>Reset Password to Default</b>.
+                    <p className="text-xs text-text-muted bg-surface-2 p-2 rounded-lg border border-border">
+                      Forgot password? Open <code className="bg-surface px-1 py-0.5 rounded text-brand-600 dark:text-brand-400 font-mono">zenroute</code> CLI → <b>Settings</b> → <b>Reset Password to Default</b>.
                     </p>
                   )}
                 </div>
@@ -243,28 +263,30 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   variant="primary"
-                  className="w-full"
+                  className="w-full h-11 text-sm font-semibold cursor-pointer shadow-[var(--shadow-warm)]"
                   loading={loading}
                   disabled={retryAfter > 0}
                 >
-                  {retryAfter > 0 ? `Wait ${retryAfter}s` : "Login"}
+                  {retryAfter > 0 ? `Wait ${retryAfter}s` : "Sign In to Dashboard"}
                 </Button>
 
-                <p className="text-xs text-center text-text-muted mt-2">
-                  Default password is <code className="bg-sidebar px-1 rounded">123456</code>
-                </p>
+                <div className="text-center pt-1">
+                  <p className="text-xs text-text-muted">
+                    Default password is <code className="bg-surface-2 border border-border px-1.5 py-0.5 rounded font-mono font-medium text-text-main">12345678</code>
+                  </p>
+                </div>
                 {hasPassword === false && (
                   <p className="text-xs text-center text-amber-600 dark:text-amber-400">
-                    Security risk: no password set. You will be asked to set one when logging in remotely.
+                    Security notice: default password active. You will be prompted to update it on remote access.
                   </p>
                 )}
               </form>
             ) : (
-              error && <p className="text-xs text-red-500">{error}</p>
+              error && <p className="text-xs text-red-500 font-medium text-center">{error}</p>
             )}
           </div>
           )}
-        </Card>
+        </div>
       </div>
     </div>
   );
