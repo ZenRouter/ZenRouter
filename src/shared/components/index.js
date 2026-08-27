@@ -21,7 +21,6 @@ export { default as McpMarketplaceModal } from "./McpMarketplaceModal";
 export { default as UsageStats } from "./UsageStats";
 export { default as LanguageSwitcher } from "./LanguageSwitcher";
 export { default as HeaderMenu } from "./HeaderMenu";
-export { default as ChangelogModal } from "./ChangelogModal";
 export { default as RequestLogger } from "./RequestLogger";
 export { default as KiroAuthModal } from "./KiroAuthModal";
 export { default as KiroOAuthWrapper } from "./KiroOAuthWrapper";

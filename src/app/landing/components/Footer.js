@@ -29,7 +29,6 @@ export default function Footer() {
             <h4 className="font-bold text-white">Product</h4>
             <a className="text-gray-400 hover:text-[#f97815] text-sm transition-colors" href="#features">Features</a>
             <Link className="text-gray-400 hover:text-[#f97815] text-sm transition-colors" href="/dashboard">Dashboard</Link>
-            <a className="text-gray-400 hover:text-[#f97815] text-sm transition-colors" href="https://github.com/joyccn/ZenRoute" target="_blank" rel="noopener noreferrer">Changelog</a>
           </div>
 
           {/* Resources */}

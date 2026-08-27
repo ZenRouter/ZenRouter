@@ -7,12 +7,6 @@ export const APP_CONFIG = {
   version: pkg.version,
 };
 
-// GitHub configuration
-export const GITHUB_CONFIG = {
-  changelogUrl: "https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/CHANGELOG.md",
-  donateUrl: "https://zenroute.dev/api/donate",
-};
-
 // Updater configuration
 export const UPDATER_CONFIG = {
   npmPackageName: "zenroute",

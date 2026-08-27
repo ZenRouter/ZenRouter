@@ -41,4 +41,4 @@ for (const file of files) {
   console.log(`${file}: ${pkg.version}`);
   next = target;
 }
-console.log(`\nBumped both packages to v${next}. Update CHANGELOG.md and rebuild.`);
+console.log(`\nBumped both packages to v${next}. Rebuild when ready.`);
