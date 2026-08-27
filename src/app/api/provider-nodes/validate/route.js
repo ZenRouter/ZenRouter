@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assertPublicUrl } from "@/shared/utils/ssrfGuard.js";
+import { assertPublicUrlAsync } from "@/shared/utils/ssrfGuard.js";
 import { isLocalRequest } from "@/dashboardGuard";
 
 // Fetch with timeout wrapper
@@ -69,7 +69,7 @@ export async function POST(request) {
     // SSRF guard for remote callers; local host keeps self-hosted nodes (e.g. ollama-local)
     if (!isLocalRequest(request)) {
       try {
-        assertPublicUrl(baseUrl);
+        await assertPublicUrlAsync(baseUrl);
       } catch {
         return NextResponse.json({ error: "URL not allowed" }, { status: 400 });
       }

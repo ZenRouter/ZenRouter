@@ -45,6 +45,7 @@ vi.mock("@/sse/utils/logger.js", () => ({
 
 vi.mock("@/shared/utils/ssrfGuard.js", () => ({
   assertPublicUrl: vi.fn(),
+  assertPublicUrlAsync: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { handleFetch } from "@/sse/handlers/fetch.js";
