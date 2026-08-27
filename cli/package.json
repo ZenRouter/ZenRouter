@@ -1,6 +1,6 @@
 {
   "name": "zenrouter",
-  "version": "0.5.56",
+  "version": "0.5.57",
   "description": "ZenRouter CLI - Serene AI Gateway & Intelligent Routing Engine",
   "bin": {
     "zenrouter": "./cli.js"
