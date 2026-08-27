@@ -396,6 +396,30 @@ export class AntigravityExecutor extends BaseExecutor {
     return ANTIGRAVITY_TRANSIENT_ERROR_PATTERNS.some(pattern => pattern.test(message || ""));
   }
 
+  // Parse Antigravity 429/409/403 errors to extract precise resetsAtMs for quota-aware routing
+  parseError(response, bodyText) {
+    if ((response.status === HTTP_STATUS.RATE_LIMITED || response.status === HTTP_STATUS.CONFLICT || response.status === HTTP_STATUS.FORBIDDEN) && bodyText) {
+      try {
+        let errorJson = null;
+        try {
+          errorJson = JSON.parse(bodyText);
+        } catch {}
+
+        const errorMessage = this.extractErrorMessage(errorJson, bodyText);
+        let retryMs = this.parseRetryHeaders(response.headers);
+        if (!retryMs) {
+          retryMs = this.parseRetryFromErrorMessage(errorMessage);
+        }
+
+        if (retryMs && retryMs > 0) {
+          const resetsAtMs = Date.now() + retryMs;
+          return { status: response.status, message: errorMessage || bodyText, resetsAtMs };
+        }
+      } catch { /* fall through to super */ }
+    }
+    return super.parseError(response, bodyText);
+  }
+
   // Hook called by BaseExecutor.tryRetry: derive delay from Retry-After (header → body),
   // cap at MAX_RETRY_AFTER_MS, else retry transient Antigravity failures with backoff.
   // Return false to veto (fallback URL / final error).
