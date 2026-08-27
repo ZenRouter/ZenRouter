@@ -1,8 +1,8 @@
 services:
   zenroute:
-    image: joyccn/ZenRoute:latest
+    image: joyccn/zenroute:latest
     container_name: zenroute
-    restart: always
+    restart: unless-stopped
     ports:
       - "20128:20128"
     volumes:

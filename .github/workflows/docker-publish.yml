@@ -8,7 +8,7 @@ on:
 
 env:
   GHCR_IMAGE: ghcr.io/${{ github.repository }}
-  DOCKERHUB_IMAGE: joyccn/ZenRoute
+  DOCKERHUB_IMAGE: joyccn/zenroute
 
 jobs:
   build-and-push:
@@ -58,3 +58,13 @@ jobs:
           platforms: linux/amd64,linux/arm64
           provenance: false
           sbom: false
+
+      - name: Update Docker Hub Description
+        if: github.event_name != 'pull_request'
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: joyccn/zenroute
+          readme-filepath: ./DOCKER_README.md
+          short-description: "🌿 ZenRoute: Serene AI Gateway & Intelligent Multi-Provider Routing Engine"
