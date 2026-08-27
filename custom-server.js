@@ -59,7 +59,12 @@ http.createServer = (...args) => {
       if (typeof req.socket.setNoDelay === "function") req.socket.setNoDelay(true);
       if (typeof req.socket.setKeepAlive === "function") req.socket.setKeepAlive(true, 30000);
     }
-    // Ensure socket disconnect/abort propagates to res when client disconnects
+    // Log unexpected socket errors, but do NOT destroy the response on req 'close'/'aborted'.
+    // Previous logic (req.once('close', () => res.destroy())) broke all POST bodies:
+    // Node's IncomingMessage emits 'close' after the request stream ends, so
+    // wrapping it here caused every POST (login, /v1/chat) to get Empty reply /
+    // Invalid JSON body. Client abort is already handled via request.signal in
+    // src/sse/handlers/chat.js and open-sse/handlers/chatCore.js (clientSignal).
     if (req.socket && typeof req.socket.on === "function") {
       req.socket.on("error", (err) => {
         if (err && err.code !== "ECONNRESET" && err.code !== "EPIPE") {
@@ -67,14 +72,6 @@ http.createServer = (...args) => {
         }
       });
     }
-
-    const onClientClose = () => {
-      if (!res.writableEnded && typeof res.destroy === "function") {
-        res.destroy();
-      }
-    };
-    req.once("close", onClientClose);
-    req.once("aborted", onClientClose);
 
     const socketIp = req.socket && req.socket.remoteAddress ? req.socket.remoteAddress : "";
     const xff = req.headers["x-forwarded-for"];
