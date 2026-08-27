@@ -72,6 +72,9 @@ describe("AUDIT-003: Proxy URL validation", () => {
     delete process.env.HTTP_PROXY;
     delete process.env.HTTPS_PROXY;
     delete process.env.ALL_PROXY;
+    delete process.env.ZENROUTE_PROXY_MANAGED;
+    delete process.env.ZENROUTE_PROXY_URL;
+    delete process.env.ZENROUTE_NO_PROXY;
     delete process.env.NINE_ROUTER_PROXY_MANAGED;
     delete process.env.NINE_ROUTER_PROXY_URL;
     delete process.env.NINE_ROUTER_NO_PROXY;

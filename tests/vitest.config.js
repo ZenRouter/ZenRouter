@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
-// Auto-load the repo's `.env` so JWT_SECRET / NINEROUTER_PEER_TOKEN / etc. are
+// Auto-load the repo's `.env` so JWT_SECRET / ZENROUTE_PEER_TOKEN / etc. are
 // available to tests without requiring `export JWT_SECRET=…` in the shell.
 // We do NOT install dotenv as a runtime dependency — instead we read the file
 // inline and merge it into process.env before vitest collects any test file.

@@ -52,6 +52,7 @@ const originalNodeEnv = process.env.NODE_ENV;
 describe("peer header trust", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.ZENROUTE_PEER_TOKEN = PEER_TOKEN;
     process.env.NINEROUTER_PEER_TOKEN = PEER_TOKEN;
     process.env.NODE_ENV = "production";
     mocks.getSettings.mockResolvedValue({ requireLogin: true });
@@ -62,6 +63,7 @@ describe("peer header trust", () => {
 
   afterEach(() => {
     process.env.NODE_ENV = originalNodeEnv;
+    delete process.env.ZENROUTE_PEER_TOKEN;
     delete process.env.NINEROUTER_PEER_TOKEN;
   });
 
@@ -92,6 +94,7 @@ describe("peer header trust", () => {
   });
 
   it("rejects a spoofed loopback peer IP when the wrapper never booted", async () => {
+    delete process.env.ZENROUTE_PEER_TOKEN;
     delete process.env.NINEROUTER_PEER_TOKEN;
 
     const response = await proxy(request("/api/v1/models", {
@@ -179,11 +182,13 @@ describe("peer header trust", () => {
 
 describe("login limiter client IP", () => {
   beforeEach(() => {
+    process.env.ZENROUTE_PEER_TOKEN = PEER_TOKEN;
     process.env.NINEROUTER_PEER_TOKEN = PEER_TOKEN;
     delete process.env.TRUST_PROXY;
   });
 
   afterEach(() => {
+    delete process.env.ZENROUTE_PEER_TOKEN;
     delete process.env.NINEROUTER_PEER_TOKEN;
     delete process.env.TRUST_PROXY;
   });

@@ -2,6 +2,7 @@
 // [[tests]] vectors from rtk-ai/rtk src/filters/*.toml (v0.45.x).
 import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseFilterToml, applyTomlFilter, loadTomlFilters } from "../../open-sse/rtk/tomlEngine.js";
@@ -89,7 +90,7 @@ describe("loader + autodetect routing", () => {
 
 describe("user filter dir is honored", () => {
   it("loads a custom TOML from RTK_FILTERS_DIR", async () => {
-    const tmp = mkdtempSync("/tmp/opencode/rtk-filters-");
+    const tmp = mkdtempSync(join(tmpdir(), "rtk-filters-"));
     writeFileSync(join(tmp, "mytool.toml"), `
 [filters.mytool]
 description = "test fixture"
