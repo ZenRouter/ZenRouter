@@ -37,10 +37,13 @@ import {
   QODER_MODEL_MAP,
 } from "../shared/qoder/constants.js";
 import { getQoderModelConfig, resolveQoderModels, isQoderPat, resolveQoderCredentials } from "../services/qoderModels.js";
+import { OPENAI_BLOCK, CLAUDE_BLOCK } from "../translator/schema/blocks.js";
+import { encodeDataUri } from "../translator/concerns/image.js";
 
 /**
  * Hoist role:"system" messages out of the messages array (Qoder rejects
- * system in messages) and flatten any multipart content arrays.
+ * system in messages) and flatten multipart content arrays — EXCEPT image
+ * blocks, which are preserved (see normalizeContent).
  */
 function normalizeMessages(messages) {
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -50,16 +53,55 @@ function normalizeMessages(messages) {
   const out = [];
   for (const msg of messages) {
     if (!msg || typeof msg !== "object") continue;
-    const text = extractText(msg.content);
     if (msg.role === "system") {
+      const text = extractText(msg.content);
       if (text) systemParts.push(text);
       continue;
     }
     const cloned = { ...msg };
-    cloned.content = text;
+    cloned.content = normalizeContent(msg.content);
     out.push(cloned);
   }
   return { messages: out, systemText: systemParts.join("\n\n") };
+}
+
+/**
+ * Normalize one message's content for Qoder.
+ */
+function normalizeContent(content) {
+  if (typeof content === "string") return content;
+  if (content == null) return "";
+  if (!Array.isArray(content)) return String(content);
+
+  const blocks = [];
+  const textParts = [];
+  let hasImage = false;
+  for (const item of content) {
+    if (!item || typeof item !== "object") continue;
+    if (item.type === OPENAI_BLOCK.IMAGE_URL && typeof item.image_url?.url === "string" && item.image_url.url) {
+      blocks.push({ type: OPENAI_BLOCK.IMAGE_URL, image_url: { url: item.image_url.url } });
+      hasImage = true;
+    } else if (item.type === CLAUDE_BLOCK.IMAGE && item.source) {
+      const src = item.source;
+      const url = src.type === "base64" && src.data
+        ? encodeDataUri(src.media_type || "image/png", src.data)
+        : typeof src.url === "string" && src.url ? src.url : null;
+      if (url) {
+        blocks.push({ type: OPENAI_BLOCK.IMAGE_URL, image_url: { url } });
+        hasImage = true;
+      }
+    } else if (typeof item.text === "string" && item.text) {
+      if (hasImage || blocks.length) {
+        blocks.push({ type: OPENAI_BLOCK.TEXT, text: item.text });
+      } else {
+        textParts.push(item.text);
+      }
+    }
+  }
+
+  if (!hasImage) return textParts.join("\n");
+  if (textParts.length) blocks.unshift({ type: OPENAI_BLOCK.TEXT, text: textParts.join("\n") });
+  return blocks;
 }
 
 function extractText(content) {
@@ -110,6 +152,9 @@ function stableChatRecordId(model, messages, tools, maxTokens) {
     if (m.role) { h.update("\0"); h.update(m.role); }
     if (typeof m.content === "string" && m.content) {
       h.update("\0"); h.update(m.content);
+    } else if (Array.isArray(m.content)) {
+      h.update("\0");
+      try { h.update(JSON.stringify(m.content)); } catch {}
     }
   }
   if (tools) {
