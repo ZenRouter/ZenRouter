@@ -3,6 +3,7 @@
 > **🙏 Credits:** 9Router was originally created by **decolua**. This repository is a maintained fork under **joyccn**, continuing and building upon the original work.
 
 ## Fixed
+- **Quota Tracker countdown drift & visibility timer fix (#3470)**: synchronized `createQuotaAutoRefresh` countdown against absolute wall-clock timestamps (`nextRefreshTime - Date.now()`) instead of decrementing state integers, preventing accelerated timers and desynchronization when switching browser tabs or windows.
 - **Headroom compression for Codex Responses agentic turns (#3571)**: replaced whole-request roundtrip translation with in-place text and tool output projection mapping (`collectResponsesHeadroomMessages` / `applyResponsesHeadroomMessages`), safely compressing user/assistant text and tool results while keeping `function_call`, `custom_tool_call`, and `reasoning` continuity tokens 100% intact.
 - **RTK custom tool output compression**: added `custom_tool_call_output` support to `open-sse/rtk/index.js` to compress large patch and command outputs from custom tools (such as Codex `apply_patch`).
 - **Codex Responses to OpenAI request translation fixes**: guarded against emitting empty `tool_calls: []` arrays on assistant messages and sanitized `input_image` items with bare `file_id`.

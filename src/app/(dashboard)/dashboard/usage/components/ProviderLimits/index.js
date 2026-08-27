@@ -630,7 +630,7 @@ export default function ProviderLimits() {
 
     const timers = createQuotaAutoRefresh({
       onRefresh: refreshAll,
-      onTick: () => setCountdown((prev) => (prev <= 1 ? 60 : prev - 1)),
+      onTick: (remainingSecs) => setCountdown(typeof remainingSecs === "number" ? remainingSecs : 60),
     });
     timers.start();
     return () => timers.stop();

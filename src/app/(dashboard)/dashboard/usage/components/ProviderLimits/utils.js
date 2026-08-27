@@ -32,6 +32,7 @@ export function createQuotaAutoRefresh({
   let refreshId = null;
   let tickId = null;
   let subscribed = false;
+  let nextRefreshTime = Date.now() + refreshIntervalMs;
 
   const clearTimers = () => {
     if (refreshId !== null) clearInterval(refreshId);
@@ -40,10 +41,28 @@ export function createQuotaAutoRefresh({
     tickId = null;
   };
 
+  const tick = () => {
+    const remainingMs = Math.max(0, nextRefreshTime - Date.now());
+    const remainingSecs = Math.max(1, Math.ceil(remainingMs / 1000));
+    onTick?.(remainingSecs);
+  };
+
+  const triggerRefresh = () => {
+    nextRefreshTime = Date.now() + refreshIntervalMs;
+    tick();
+    onRefresh?.();
+  };
+
   const startTimers = () => {
     clearTimers();
-    refreshId = setInterval(() => onRefresh?.(), refreshIntervalMs);
-    tickId = setInterval(() => onTick?.(), tickIntervalMs);
+    // If returning from background tab and refresh time already expired, trigger immediate refresh
+    if (Date.now() >= nextRefreshTime) {
+      triggerRefresh();
+    } else {
+      tick();
+    }
+    refreshId = setInterval(triggerRefresh, refreshIntervalMs);
+    tickId = setInterval(tick, tickIntervalMs);
   };
 
   const handleVisibilityChange = () => {
@@ -53,6 +72,7 @@ export function createQuotaAutoRefresh({
 
   return {
     start() {
+      nextRefreshTime = Date.now() + refreshIntervalMs;
       if (!doc?.hidden) startTimers();
       if (!subscribed) {
         doc?.addEventListener?.("visibilitychange", handleVisibilityChange);
