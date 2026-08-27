@@ -153,7 +153,7 @@ export async function POST(request) {
       type: "openai-compatible",
       base_url: normalizedBaseUrl,
       auth: "bearer",
-      api_key_env: "JCODE_9ROUTER_API_KEY",
+      api_key_env: "JCODE_ZENROUTE_API_KEY",
       env_file: "provider-zenroute.env",
       default_model: models && models.length > 0 ? models[0] : "cc/claude-opus-4-7",
       requires_api_key: true,
@@ -169,7 +169,7 @@ export async function POST(request) {
     await fs.mkdir(jcodeConfigDir, { recursive: true });
 
     const env = await readProviderEnv();
-    env.JCODE_9ROUTER_API_KEY = apiKey;
+    env.JCODE_ZENROUTE_API_KEY = apiKey;
     await writeProviderEnv(env);
 
     return NextResponse.json({
@@ -199,7 +199,7 @@ export async function DELETE() {
     await writeConfig(config);
 
     const env = await readProviderEnv();
-    delete env.JCODE_9ROUTER_API_KEY;
+    delete env.JCODE_ZENROUTE_API_KEY;
     await writeProviderEnv(env);
 
     return NextResponse.json({

@@ -45,7 +45,7 @@ async function setupTestContext(nodeData) {
 }
 
 function makeRequest(provider, name = "Test Connection") {
-  return new Request("https://9router.local/api/providers", {
+  return new Request("https://zenroute.local/api/providers", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

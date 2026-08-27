@@ -3,7 +3,7 @@
 > **🙏 Credits:** ZenRoute was originally created by **decolua**. This repository is actively maintained and evolved by **0xJoy** ([github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)).
 
 ## 🌿 Brand & Visual Identity
-- **Full Rebranding to ZenRoute**: Transitioned project identity from 9Router to ZenRoute with official repository at `https://github.com/joyccn/ZenRoute.git`.
+- **Full Rebranding to ZenRoute**: Transitioned project identity from the original base project to ZenRoute with official repository at `https://github.com/joyccn/ZenRoute.git`.
 - **New Vector Logo & Assets**: Added organic Matisse-style multi-branch routing star in Zen Slate Blue (`#4B72A4`) with Vermilion Gateway Sun accent (`#E85D3F`) across `favicon.svg`, `favicon.ico`, PWA manifest icons, and tray binaries.
 - **Modern Zen UI Color Theme**: Replaced warm orange palette with serene slate blue scale and dark obsidian surfaces (`#0f141c` / `#192230`) across all dashboard components, topology nodes, and landing pages.
 - **Password Onboarding Modal**: Added first-time security onboarding dialog for new installations with default password `12345678`, prompt notification, and auto-focus navigation to profile settings.

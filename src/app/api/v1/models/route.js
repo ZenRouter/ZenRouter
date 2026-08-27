@@ -131,7 +131,7 @@ const parseOpenAIStyleModels = (data) => {
 
 // Header sent by fetchCompatibleModelIds to detect cross-instance /models fetches
 // and break recursive loops between zenroute instances connected to each other.
-const INTERNAL_MODELS_FETCH_HEADER = "x-9r-internal-models-fetch";
+const INTERNAL_MODELS_FETCH_HEADER = "x-zen-internal-models-fetch";
 
 // LLM kind sentinel — combos/models with no explicit kind default to LLM
 const LLM_KIND = "llm";

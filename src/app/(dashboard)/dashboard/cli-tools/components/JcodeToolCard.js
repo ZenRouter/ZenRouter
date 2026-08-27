@@ -187,7 +187,7 @@ export default function JcodeToolCard({
 type = "openai-compatible"
 base_url = "${getEffectiveBaseUrl()}"
 auth = "bearer"
-api_key_env = "JCODE_9ROUTER_API_KEY"
+api_key_env = "JCODE_ZENROUTE_API_KEY"
 env_file = "provider-zenroute.env"
 default_model = "${selectedModel || "cc/claude-opus-4-7"}"
 requires_api_key = true
@@ -195,7 +195,7 @@ requires_api_key = true
 [[providers.zenroute.models]]
 id = "${selectedModel || "cc/claude-opus-4-7"}"`;
 
-    const envContent = `JCODE_9ROUTER_API_KEY="${keyToUse}"`;
+    const envContent = `JCODE_ZENROUTE_API_KEY="${keyToUse}"`;
 
     return [
       {

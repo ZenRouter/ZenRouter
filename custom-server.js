@@ -89,19 +89,19 @@ http.createServer = (...args) => {
     const proxyIp = xRealIp || (xff ? String(xff).split(",")[0].trim() : "");
     const ip = isLoopbackProxy && proxyIp ? proxyIp : socketIp;
     delete req.headers["x-zen-real-ip"];
-    delete req.headers["x-9r-real-ip"];
+    delete req.headers["x-zen-real-ip"];
     delete req.headers["x-forwarded-for"];
     delete req.headers["x-zen-via-proxy"];
-    delete req.headers["x-9r-via-proxy"];
+    delete req.headers["x-zen-via-proxy"];
     delete req.headers["x-zen-peer-token"];
-    delete req.headers["x-9r-peer-token"];
+    delete req.headers["x-zen-peer-token"];
     req.headers["x-zen-real-ip"] = ip;
-    req.headers["x-9r-real-ip"] = ip;
+    req.headers["x-zen-real-ip"] = ip;
     req.headers["x-zen-peer-token"] = PEER_TOKEN;
-    req.headers["x-9r-peer-token"] = PEER_TOKEN;
+    req.headers["x-zen-peer-token"] = PEER_TOKEN;
     if (viaProxy) {
       req.headers["x-zen-via-proxy"] = "1";
-      req.headers["x-9r-via-proxy"] = "1";
+      req.headers["x-zen-via-proxy"] = "1";
     }
     return handler(req, res);
   };

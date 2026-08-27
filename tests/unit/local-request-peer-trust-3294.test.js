@@ -1,5 +1,5 @@
 // GHSA-pjm4-8fpg-f9p6 (#3294): `next start` leaves custom-server.js out of the request
-// path, so x-9r-real-ip arrives straight from the client and a remote caller can claim to
+// path, so x-zen-real-ip arrives straight from the client and a remote caller can claim to
 // be loopback. Host is spoofable the same way, so it cannot be the production fallback.
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
@@ -68,7 +68,7 @@ describe("peer header trust", () => {
   it("rejects a spoofed loopback peer IP that carries no trust proof", async () => {
     const response = await proxy(request("/api/v1/models", {
       host: "172.18.192.1:20140",
-      "x-9r-real-ip": "127.0.0.1",
+      "x-zen-real-ip": "127.0.0.1",
     }));
 
     expect(response.status).toBe(401);
@@ -78,8 +78,8 @@ describe("peer header trust", () => {
   it("rejects a spoofed loopback peer IP carrying a wrong trust token", async () => {
     const response = await proxy(request("/api/v1/models", {
       host: "172.18.192.1:20140",
-      "x-9r-real-ip": "127.0.0.1",
-      "x-9r-peer-token": "guessed-token",
+      "x-zen-real-ip": "127.0.0.1",
+      "x-zen-peer-token": "guessed-token",
     }));
 
     expect(response.status).toBe(401);
@@ -96,8 +96,8 @@ describe("peer header trust", () => {
 
     const response = await proxy(request("/api/v1/models", {
       host: "172.18.192.1:20140",
-      "x-9r-real-ip": "127.0.0.1",
-      "x-9r-peer-token": "any-token",
+      "x-zen-real-ip": "127.0.0.1",
+      "x-zen-peer-token": "any-token",
     }));
 
     expect(response.status).toBe(401);
@@ -106,8 +106,8 @@ describe("peer header trust", () => {
   it("keeps serving a genuinely local request stamped by the wrapper", async () => {
     const response = await proxy(request("/api/v1/models", {
       host: "localhost:20128",
-      "x-9r-real-ip": "127.0.0.1",
-      "x-9r-peer-token": PEER_TOKEN,
+      "x-zen-real-ip": "127.0.0.1",
+      "x-zen-peer-token": PEER_TOKEN,
     }));
 
     expect(response).toBe(mocks.nextResponse);
@@ -121,8 +121,8 @@ describe("peer header trust", () => {
     async (peerIp) => {
       const response = await proxy(request("/api/v1/models", {
         host: "localhost:20128",
-        "x-9r-real-ip": peerIp,
-        "x-9r-peer-token": PEER_TOKEN,
+        "x-zen-real-ip": peerIp,
+        "x-zen-peer-token": PEER_TOKEN,
       }));
 
       expect(response).toBe(mocks.nextResponse);
@@ -134,8 +134,8 @@ describe("peer header trust", () => {
     async (peerIp) => {
       const response = await proxy(request("/api/v1/models", {
         host: "localhost:20128",
-        "x-9r-real-ip": peerIp,
-        "x-9r-peer-token": PEER_TOKEN,
+        "x-zen-real-ip": peerIp,
+        "x-zen-peer-token": PEER_TOKEN,
       }));
 
       expect(response.status).toBe(401);
@@ -145,8 +145,8 @@ describe("peer header trust", () => {
   it("still refuses a stamped non-loopback peer IP", async () => {
     const response = await proxy(request("/api/v1/models", {
       host: "localhost:20128",
-      "x-9r-real-ip": "10.204.111.34",
-      "x-9r-peer-token": PEER_TOKEN,
+      "x-zen-real-ip": "10.204.111.34",
+      "x-zen-peer-token": PEER_TOKEN,
     }));
 
     expect(response.status).toBe(401);
@@ -157,7 +157,7 @@ describe("peer header trust", () => {
 
     const response = await proxy(request("/api/mcp/filesystem/sse", {
       host: "172.18.192.1:20140",
-      "x-9r-real-ip": "127.0.0.1",
+      "x-zen-real-ip": "127.0.0.1",
     }));
 
     expect(response.status).toBe(403);
@@ -189,8 +189,8 @@ describe("login limiter client IP", () => {
   });
 
   it("buckets spoofed peer IPs together so lockout cannot be rotated away", () => {
-    const first = getClientIp(request("/api/auth/login", { "x-9r-real-ip": "1.1.1.1" }));
-    const second = getClientIp(request("/api/auth/login", { "x-9r-real-ip": "2.2.2.2" }));
+    const first = getClientIp(request("/api/auth/login", { "x-zen-real-ip": "1.1.1.1" }));
+    const second = getClientIp(request("/api/auth/login", { "x-zen-real-ip": "2.2.2.2" }));
 
     expect(first).toBe("unknown");
     expect(second).toBe("unknown");
@@ -198,14 +198,14 @@ describe("login limiter client IP", () => {
 
   it("keys on the stamped peer IP when the wrapper proved it", () => {
     const ip = getClientIp(request("/api/auth/login", {
-      "x-9r-real-ip": "203.0.113.9",
-      "x-9r-peer-token": PEER_TOKEN,
+      "x-zen-real-ip": "203.0.113.9",
+      "x-zen-peer-token": PEER_TOKEN,
     }));
 
     expect(ip).toBe("203.0.113.9");
   });
 
-  it("still honours TRUST_PROXY for operators fronting 9router with a reverse proxy", () => {
+  it("still honours TRUST_PROXY for operators fronting zenroute with a reverse proxy", () => {
     process.env.TRUST_PROXY = "true";
 
     const ip = getClientIp(request("/api/auth/login", { "x-forwarded-for": "198.51.100.7, 10.0.0.1" }));

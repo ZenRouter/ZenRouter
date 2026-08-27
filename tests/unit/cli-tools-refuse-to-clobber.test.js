@@ -7,7 +7,7 @@ import { readExistingConfig } from "@/lib/cliTools/readExistingConfig.js";
 
 let dir;
 
-beforeEach(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), "9router-clitools-")); });
+beforeEach(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), "zenroute-clitools-")); });
 afterEach(() => { fs.rmSync(dir, { recursive: true, force: true }); });
 
 describe("readExistingConfig", () => {

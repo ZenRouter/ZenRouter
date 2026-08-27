@@ -7,7 +7,7 @@ import { DATA_DIR } from '@/lib/dataDir';
 const MACHINE_ID_FILE = path.join(DATA_DIR, 'machine-id');
 const AUTH_DIR = path.join(DATA_DIR, 'auth');
 const CLI_SECRET_FILE = path.join(AUTH_DIR, 'cli-secret');
-const CLI_AUTH_SALT = '9r-cli-auth';
+const CLI_AUTH_SALT = 'zen-cli-auth';
 let cachedRawId = null;
 let cachedCliSecret = null;
 

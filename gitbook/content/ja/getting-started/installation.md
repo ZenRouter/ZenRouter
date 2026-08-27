@@ -122,7 +122,7 @@ Dashboard → Settings → API Keys
 
 **APIキー形式の例:**
 ```
-9r_123456787890abcdef123456787890abcdef
+zen_123456787890abcdef123456787890abcdef
 ```
 
 ---

@@ -320,8 +320,8 @@
 
 2. **检查 key 格式:**
    ```
-   正确: 9r_xxxxxxxxxxxxxxxxxxxxxxxx
-   错误: 缺少 9r_ 前缀
+   正确: zen_xxxxxxxxxxxxxxxxxxxxxxxx
+   错误: 缺少 zen_ 前缀
    ```
 
 3. **检查 CLI 配置中的 key:**
@@ -333,13 +333,13 @@
    Settings → API Key
    
    # 环境变量
-   export OPENAI_API_KEY="9r_your_key"
+   export OPENAI_API_KEY="zen_your_key"
    ```
 
 4. **测试 API key:**
    ```bash
    curl http://localhost:20128/v1/models \
-     -H "Authorization: Bearer 9r_your_key"
+     -H "Authorization: Bearer zen_your_key"
    ```
 
 ---

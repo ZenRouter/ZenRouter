@@ -4,8 +4,8 @@ import { applyOutboundProxyEnv } from "@/lib/network/outboundProxy";
 import { verifyDashboardPassword } from "@/lib/auth/dashboardSession";
 import { hasValidCliToken, hasValidToken } from "@/dashboardGuard";
 
-const CLI_TOKEN_HEADER = "x-9r-cli-token";
-const PASSWORD_HEADER = "x-9r-password";
+const CLI_TOKEN_HEADER = "x-zen-cli-token";
+const PASSWORD_HEADER = "x-zen-password";
 
 async function checkAuth(request, password) {
   if (await hasValidCliToken(request) || await hasValidToken(request)) {

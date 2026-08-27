@@ -320,8 +320,8 @@ Các vấn đề và giải pháp phổ biến khi dùng ZenRoute.
 
 2. **Xác minh format key:**
    ```
-   Correct: 9r_xxxxxxxxxxxxxxxxxxxxxxxx
-   Wrong: Missing 9r_ prefix
+   Correct: zen_xxxxxxxxxxxxxxxxxxxxxxxx
+   Wrong: Missing zen_ prefix
    ```
 
 3. **Kiểm tra key trong CLI config:**
@@ -333,13 +333,13 @@ Các vấn đề và giải pháp phổ biến khi dùng ZenRoute.
    Settings → API Key
    
    # Environment variable
-   export OPENAI_API_KEY="9r_your_key"
+   export OPENAI_API_KEY="zen_your_key"
    ```
 
 4. **Test API key:**
    ```bash
    curl http://localhost:20128/v1/models \
-     -H "Authorization: Bearer 9r_your_key"
+     -H "Authorization: Bearer zen_your_key"
    ```
 
 ---

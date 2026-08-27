@@ -1,4 +1,4 @@
-docker stop 9router
-docker rm 9router
-docker build -t 9router .
-docker run -d --name 9router -p 20128:20128 --env-file .env -v 9router-data:/app/data 9router
+docker stop zenroute
+docker rm zenroute
+docker build -t zenroute .
+docker run -d --name zenroute -p 20128:20128 --env-file .env -v zenroute-data:/app/data zenroute

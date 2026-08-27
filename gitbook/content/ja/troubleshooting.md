@@ -320,8 +320,8 @@ ZenRoute利用時の一般的な問題と解決策。
 
 2. **キー形式を確認:**
    ```
-   正しい: 9r_xxxxxxxxxxxxxxxxxxxxxxxx
-   誤り: 9r_プレフィックスがない
+   正しい: zen_xxxxxxxxxxxxxxxxxxxxxxxx
+   誤り: zen_プレフィックスがない
    ```
 
 3. **CLI設定でキーを確認:**
@@ -333,13 +333,13 @@ ZenRoute利用時の一般的な問題と解決策。
    Settings → API Key
    
    # 環境変数
-   export OPENAI_API_KEY="9r_your_key"
+   export OPENAI_API_KEY="zen_your_key"
    ```
 
 4. **APIキーをテスト:**
    ```bash
    curl http://localhost:20128/v1/models \
-     -H "Authorization: Bearer 9r_your_key"
+     -H "Authorization: Bearer zen_your_key"
    ```
 
 ---

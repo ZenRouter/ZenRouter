@@ -122,7 +122,7 @@ zenroute
 
 **API key 格式示例:**
 ```
-9r_123456787890abcdef123456787890abcdef
+zen_123456787890abcdef123456787890abcdef
 ```
 
 ---

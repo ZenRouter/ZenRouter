@@ -320,8 +320,8 @@ Problemas comunes y soluciones al usar ZenRoute.
 
 2. **Verifica el formato de la key:**
    ```
-   Correcto: 9r_xxxxxxxxxxxxxxxxxxxxxxxx
-   Incorrecto: Falta el prefijo 9r_
+   Correcto: zen_xxxxxxxxxxxxxxxxxxxxxxxx
+   Incorrecto: Falta el prefijo zen_
    ```
 
 3. **Verifica la key en la configuración del CLI:**
@@ -333,13 +333,13 @@ Problemas comunes y soluciones al usar ZenRoute.
    Settings → API Key
    
    # Variable de entorno
-   export OPENAI_API_KEY="9r_your_key"
+   export OPENAI_API_KEY="zen_your_key"
    ```
 
 4. **Prueba la API key:**
    ```bash
    curl http://localhost:20128/v1/models \
-     -H "Authorization: Bearer 9r_your_key"
+     -H "Authorization: Bearer zen_your_key"
    ```
 
 ---

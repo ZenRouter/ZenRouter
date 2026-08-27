@@ -4,8 +4,8 @@ import { getConsistentMachineId } from "@/shared/utils/machineId";
 import { verifyDashboardAuthToken } from "@/lib/auth/dashboardSession";
 import { hasTrustedPeerHeaders } from "@/lib/auth/trustedPeer";
 
-const CLI_TOKEN_HEADER = "x-9r-cli-token";
-const CLI_TOKEN_SALT = "9r-cli-auth";
+const CLI_TOKEN_HEADER = "x-zen-cli-token";
+const CLI_TOKEN_SALT = "zen-cli-auth";
 
 let cachedCliToken = null;
 async function getCliToken() {
@@ -123,16 +123,16 @@ function isLoopbackPeer(request) {
   // Only trust peer IP when custom-server.js has validated it via peer token.
   // Host header is spoofable and cannot be used for security decisions.
   if (!hasTrustedPeerHeaders(request)) return false;
-  return isLoopbackHostname(request.headers.get("x-9r-real-ip"));
+  return isLoopbackHostname(request.headers.get("x-zen-real-ip"));
 }
 
 export function isLocalRequest(request) {
   // Stamped by custom-server.js when forwarding headers exist: request came through
   // a reverse proxy, so the loopback socket is the proxy hop, not the end-user.
-  if (request.headers.get("x-9r-via-proxy")) return false;
+  if (request.headers.get("x-zen-via-proxy")) return false;
   // Only trust peer IP when custom-server.js has validated it via peer token.
   if (!hasTrustedPeerHeaders(request)) return false;
-  if (!isLoopbackHostname(request.headers.get("x-9r-real-ip"))) return false;
+  if (!isLoopbackHostname(request.headers.get("x-zen-real-ip"))) return false;
   const origin = request.headers.get("origin");
   if (origin) {
     try {

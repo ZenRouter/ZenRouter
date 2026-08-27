@@ -22,7 +22,7 @@ describe("mcp sse session leak fix (#3527)", () => {
 
     const request = {
       signal: controller.signal,
-      headers: new Headers({ "x-9r-cli-token": "dummy" }),
+      headers: new Headers({ "x-zen-cli-token": "dummy" }),
     };
 
     // Mock hasValidCliToken to return true
