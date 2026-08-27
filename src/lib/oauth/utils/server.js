@@ -97,6 +97,48 @@ export function startLocalServer(onCallback, fixedPort = null) {
 }
 
 /**
+ * Wait for callback params with proper timer cleanup on settled/timeout.
+ * @param {Function} getParams - Returns callback params when available, or null
+ * @param {number} timeoutMs - Timeout in milliseconds
+ * @param {number} pollMs - Polling interval in milliseconds
+ * @returns {Promise<Object>} - Callback params
+ */
+export function waitForCallbackParams(getParams, timeoutMs = 300000, pollMs = 100) {
+  return new Promise((resolve, reject) => {
+    let timeout = null;
+    let interval = null;
+    let settled = false;
+
+    const stop = () => {
+      if (settled) return;
+      settled = true;
+      if (timeout) clearTimeout(timeout);
+      if (interval) clearInterval(interval);
+      timeout = null;
+      interval = null;
+    };
+
+    timeout = setTimeout(() => {
+      stop();
+      reject(new Error("Authentication timeout (5 minutes)"));
+    }, timeoutMs);
+
+    interval = setInterval(() => {
+      try {
+        const params = getParams();
+        if (params) {
+          stop();
+          resolve(params);
+        }
+      } catch (err) {
+        stop();
+        reject(err);
+      }
+    }, pollMs);
+  });
+}
+
+/**
  * Wait for callback with timeout
  * @param {number} timeoutMs - Timeout in milliseconds
  * @returns {Promise<Object>} - Callback params

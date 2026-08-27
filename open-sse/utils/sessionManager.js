@@ -50,6 +50,8 @@ export function deriveSessionId(connectionId) {
     const existing = runtimeSessionStore.get(connectionId);
     if (existing) {
         existing.lastUsed = Date.now();
+        runtimeSessionStore.delete(connectionId);
+        runtimeSessionStore.set(connectionId, existing);
         return existing.sessionId;
     }
 
@@ -183,6 +185,8 @@ function assistantTextSessionId(scope, body) {
     const existing = assistantSessionStore.get(hash);
     if (existing) {
         existing.lastUsed = Date.now();
+        assistantSessionStore.delete(hash);
+        assistantSessionStore.set(hash, existing);
         return existing.sessionId;
     }
     if (assistantSessionStore.size >= MAX_ASSISTANT_SESSIONS) {

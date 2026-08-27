@@ -2,7 +2,7 @@ import crypto from "crypto";
 import open from "open";
 import { ANTIGRAVITY_CONFIG, getOAuthClientMetadata } from "../constants/oauth.js";
 import { getServerCredentials } from "../config/index.js";
-import { startLocalServer } from "../utils/server.js";
+import { startLocalServer, waitForCallbackParams } from "../utils/server.js";
 import { spinner as createSpinner } from "../utils/ui.js";
 
 /**
@@ -253,22 +253,11 @@ export class AntigravityService {
 
       // Wait for callback
       spinner.start("Waiting for Antigravity authorization...");
-
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error("Authentication timeout (5 minutes)"));
-        }, 300000);
-
-        const checkInterval = setInterval(() => {
-          if (callbackParams) {
-            clearInterval(checkInterval);
-            clearTimeout(timeout);
-            resolve();
-          }
-        }, 100);
-      });
-
-      close();
+      try {
+        await waitForCallbackParams(() => callbackParams);
+      } finally {
+        close();
+      }
 
       if (callbackParams.error) {
         throw new Error(callbackParams.error_description || callbackParams.error);
