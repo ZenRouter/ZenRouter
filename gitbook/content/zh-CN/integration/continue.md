@@ -6,7 +6,7 @@
 
 - 已安装 Visual Studio Code
 - 从 VSCode 市场安装了 Continue 扩展
-- 来自 [仪表盘](https://zenroute.dev/dashboard) 的 ZenRoute API key
+- 来自 [仪表盘](http://localhost:20128/dashboard) 的 ZenRoute API key
 - ZenRoute 正在运行(本地或云端)
 
 ## 配置步骤
@@ -76,7 +76,7 @@
 **云端 ZenRoute:**
 将 `apiBase` 替换为:
 ```json
-"apiBase": "https://zenroute.dev/v1"
+"apiBase": "http://localhost:20128/v1"
 ```
 
 ### 3. 保存并重新加载

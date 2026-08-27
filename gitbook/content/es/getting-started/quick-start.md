@@ -242,6 +242,6 @@ Rutina diaria:
 
 ## ¿Necesitas ayuda?
 
-- **Sitio web**: [zenroute.dev](https://zenroute.dev)
+- **Sitio web**: [GitHub](https://github.com/joyccn/ZenRoute)
 - **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
 - **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)

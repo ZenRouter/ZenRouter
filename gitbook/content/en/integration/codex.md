@@ -113,7 +113,7 @@ If you get "model not available" errors:
 To use ZenRoute cloud endpoint instead of localhost:
 
 ```bash
-export OPENAI_BASE_URL="https://zenroute.dev"
+export OPENAI_BASE_URL="http://localhost:20128"
 ```
 
 Make sure you have configured your API key in the ZenRoute cloud dashboard.

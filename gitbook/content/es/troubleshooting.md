@@ -164,7 +164,7 @@ Problemas comunes y soluciones al usar ZenRoute.
 4. **Usa el endpoint en la nube:**
    Si localhost no funciona (ej. Cursor IDE):
    ```
-   Endpoint: https://zenroute.dev/v1
+   Endpoint: http://localhost:20128/v1
    ```
 
 ---
@@ -347,5 +347,5 @@ Problemas comunes y soluciones al usar ZenRoute.
 ## ¿Necesitas más ayuda?
 
 - **GitHub Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
-- **Documentación:** [zenroute.dev/docs](https://zenroute.dev/docs)
+- **Documentación:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
 - **FAQ:** [faq.md](faq.md)

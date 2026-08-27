@@ -24,7 +24,7 @@ Model: 任意のZenRouteモデル (cc/*, cx/*, glm/*など)
 
 **クラウドZenRoute:**
 ```
-Base URL: https://zenroute.dev/v1
+Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
 Model: 任意のZenRouteモデル (cc/*, cx/*, glm/*など)
 ```

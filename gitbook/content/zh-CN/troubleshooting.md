@@ -164,7 +164,7 @@
 4. **使用云端 endpoint:**
    如果 localhost 不行(例如 Cursor IDE):
    ```
-   Endpoint: https://zenroute.dev/v1
+   Endpoint: http://localhost:20128/v1
    ```
 
 ---
@@ -347,5 +347,5 @@
 ## 需要更多帮助?
 
 - **GitHub Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
-- **文档:** [zenroute.dev/docs](https://zenroute.dev/docs)
+- **文档:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
 - **常见问题:** [faq.md](faq.md)

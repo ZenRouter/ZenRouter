@@ -164,7 +164,7 @@ Xem [tài liệu quota tracking](features/quota-tracking.md) để biết chi ti
 
 ```
 Cursor Settings → Models → Advanced:
-  OpenAI API Base URL: https://zenroute.dev/v1
+  OpenAI API Base URL: http://localhost:20128/v1
   OpenAI API Key: [from dashboard]
   Model: cc/claude-opus-4-5-20251101
 ```
@@ -316,7 +316,6 @@ zenroute --version
 ```
 
 **Breaking changes:**
-- Xem [CHANGELOG.md](https://github.com/joyccn/ZenRoute/blob/main/CHANGELOG.md)
 - Backup `~/.zenroute` trước khi update lớn
 - Xem hướng dẫn migration cho major version
 
@@ -381,7 +380,7 @@ Xem [CONTRIBUTING.md](https://github.com/joyccn/ZenRoute/blob/main/CONTRIBUTING.
 
 ## Cần trợ giúp thêm?
 
-- **Documentation:** [zenroute.dev/docs](https://zenroute.dev/docs)
+- **Documentation:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
 - **GitHub:** [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
 - **Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
 - **Troubleshooting:** [troubleshooting.md](troubleshooting.md)

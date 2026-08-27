@@ -11,7 +11,7 @@ Tích hợp ZenRoute với Cursor IDE để định tuyến request AI qua hệ 
 
 ## ⚠️ Lưu ý Quan trọng
 
-> **Yêu cầu Cloud Endpoint**: Cursor định tuyến request qua server của chính nó và không hỗ trợ endpoint localhost. Bạn phải dùng ZenRoute cloud endpoint: `https://zenroute.dev`
+> **Yêu cầu Cloud Endpoint**: Cursor định tuyến request qua server của chính nó và không hỗ trợ endpoint localhost. Bạn phải dùng ZenRoute cloud endpoint: `http://localhost:20128`
 
 > **Yêu cầu Cursor Pro**: Tính năng này yêu cầu tài khoản Cursor Pro để dùng custom API endpoint.
 
@@ -33,12 +33,12 @@ Tích hợp ZenRoute với Cursor IDE để định tuyến request AI qua hệ 
 Đặt base URL tới ZenRoute cloud endpoint:
 
 ```
-https://zenroute.dev
+http://localhost:20128
 ```
 
 **Các bước:**
 1. Trong cài đặt Models, tìm field **Base URL**
-2. Nhập: `https://zenroute.dev`
+2. Nhập: `http://localhost:20128`
 3. Click **Save**
 
 ### 4. Thêm API Key
@@ -66,7 +66,7 @@ Cursor settings của bạn nên trông như sau:
 
 ```
 OpenAI API: ✓ Enabled
-Base URL: https://zenroute.dev
+Base URL: http://localhost:20128
 API Key: sk-zenroute-xxxxxxxxxxxxx
 Custom Models: gpt-4, claude-opus-4-5, gemini-2.0-flash
 ```
@@ -123,14 +123,14 @@ Bạn có thể dùng bất kỳ model nào đã cấu hình trong ZenRoute dash
 
 ### Lỗi Connection
 
-1. Xác minh bạn đang dùng cloud endpoint: `https://zenroute.dev`
+1. Xác minh bạn đang dùng cloud endpoint: `http://localhost:20128`
 2. Kiểm tra kết nối internet
 3. Đảm bảo dịch vụ ZenRoute cloud đang hoạt động
 4. Thử tắt VPN hoặc proxy nếu đang bật
 
 ### Localhost không hoạt động
 
-> **Nhớ**: Cursor không hỗ trợ endpoint localhost. Bạn phải dùng cloud endpoint `https://zenroute.dev`. Nếu cần dùng ZenRoute cục bộ, hãy cân nhắc dùng dịch vụ tunneling như ngrok để expose endpoint cục bộ.
+> **Nhớ**: Cursor không hỗ trợ endpoint localhost. Bạn phải dùng cloud endpoint `http://localhost:20128`. Nếu cần dùng ZenRoute cục bộ, hãy cân nhắc dùng dịch vụ tunneling như ngrok để expose endpoint cục bộ.
 
 ## Setup Cloud Endpoint
 

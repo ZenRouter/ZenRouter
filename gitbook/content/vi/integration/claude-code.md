@@ -103,7 +103,7 @@ Nếu gặp lỗi "model not found":
 Để dùng ZenRoute cloud endpoint thay vì localhost:
 
 ```bash
-export ANTHROPIC_BASE_URL="https://zenroute.dev"
+export ANTHROPIC_BASE_URL="http://localhost:20128"
 ```
 
 Đảm bảo bạn đã cấu hình API key trong ZenRoute cloud dashboard.

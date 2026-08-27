@@ -164,7 +164,7 @@ Dashboard → Providers → Quota Tracking
 
 ```
 Cursor Settings → Models → Advanced:
-  OpenAI API Base URL: https://zenroute.dev/v1
+  OpenAI API Base URL: http://localhost:20128/v1
   OpenAI API Key: [ダッシュボードから取得]
   Model: cc/claude-opus-4-5-20251101
 ```
@@ -316,7 +316,6 @@ zenroute --version
 ```
 
 **破壊的変更:**
-- [CHANGELOG.md](https://github.com/joyccn/ZenRoute/blob/main/CHANGELOG.md)を確認
 - メジャー更新前に`~/.zenroute`をバックアップ
 - メジャーバージョンの移行ガイドを確認
 
@@ -381,7 +380,7 @@ zenroute --version
 
 ## さらにヘルプが必要?
 
-- **ドキュメント:** [zenroute.dev/docs](https://zenroute.dev/docs)
+- **ドキュメント:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
 - **GitHub:** [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
 - **Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
 - **トラブルシューティング:** [troubleshooting.md](troubleshooting.md)

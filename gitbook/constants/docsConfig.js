@@ -236,7 +236,7 @@ export const DOCS_CONFIG = {
   title: "ZenRoute Documentation",
   description: "Smart AI model router - Maximize subscriptions, minimize costs",
   logo: "ZenRoute",
-  appUrl: "https://zenroute.dev",
+  appUrl: "http://localhost:20128",
   githubUrl: "https://github.com/joyccn/ZenRoute",
   navigation: getNavigation(DEFAULT_LANG)
 };

@@ -6,7 +6,7 @@ ZenRouteをContinue拡張機能と統合し、Visual Studio Codeに直接AIア�
 
 - Visual Studio Codeがインストール済み
 - VSCodeマーケットプレイスからContinue拡張機能がインストール済み
-- [ダッシュボード](https://zenroute.dev/dashboard)からのZenRoute APIキー
+- [ダッシュボード](http://localhost:20128/dashboard)からのZenRoute APIキー
 - ZenRouteが動作中 (ローカルまたはクラウド)
 
 ## 設定手順
@@ -76,7 +76,7 @@ ZenRouteをContinue拡張機能と統合し、Visual Studio Codeに直接AIア�
 **クラウドZenRoute用:**
 `apiBase` を以下に置き換え:
 ```json
-"apiBase": "https://zenroute.dev/v1"
+"apiBase": "http://localhost:20128/v1"
 ```
 
 ### 3. 保存してリロード

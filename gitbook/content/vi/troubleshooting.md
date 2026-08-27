@@ -164,7 +164,7 @@ Các vấn đề và giải pháp phổ biến khi dùng ZenRoute.
 4. **Dùng cloud endpoint:**
    Nếu localhost không hoạt động (ví dụ: Cursor IDE):
    ```
-   Endpoint: https://zenroute.dev/v1
+   Endpoint: http://localhost:20128/v1
    ```
 
 ---
@@ -347,5 +347,5 @@ Các vấn đề và giải pháp phổ biến khi dùng ZenRoute.
 ## Cần trợ giúp thêm?
 
 - **GitHub Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
-- **Documentation:** [zenroute.dev/docs](https://zenroute.dev/docs)
+- **Documentation:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
 - **FAQ:** [faq.md](faq.md)

@@ -5,7 +5,7 @@ ZenRouteをRoo AIアシスタントと統合し、統一インターフェイス
 ## 前提条件
 
 - Roo AIアシスタントがインストール済み
-- [ダッシュボード](https://zenroute.dev/dashboard)からのZenRoute APIキー
+- [ダッシュボード](http://localhost:20128/dashboard)からのZenRoute APIキー
 - ZenRouteが動作中 (ローカルまたはクラウド)
 
 ## 設定手順
@@ -28,7 +28,7 @@ API Key: your-api-key-from-dashboard
 
 **クラウドZenRoute用:**
 ```
-Base URL: https://zenroute.dev/v1
+Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
 ```
 

@@ -34,7 +34,7 @@ http://localhost:20128/v1
 
 **Para ZenRoute en la nube:**
 ```
-https://zenroute.dev
+http://localhost:20128
 ```
 
 **Pasos:**
@@ -150,7 +150,7 @@ Puedes usar cualquier modelo configurado en tu dashboard de ZenRoute. Ejemplos c
 
 Para usar el endpoint en la nube de ZenRoute en lugar de localhost:
 
-1. En la configuración de Cline, establece Base URL a: `https://zenroute.dev`
+1. En la configuración de Cline, establece Base URL a: `http://localhost:20128`
 2. Asegúrate de haber configurado tu API key en el dashboard en la nube de ZenRoute
 3. Asegúrate de que tu endpoint en la nube esté activo y accesible
 

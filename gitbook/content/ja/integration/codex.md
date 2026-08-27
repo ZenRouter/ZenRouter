@@ -113,7 +113,7 @@ codex --model cx/gpt-5.1-codex-max "Explain what this code does: $(cat myfile.js
 localhostの代わりにZenRouteクラウドエンドポイントを使用するには:
 
 ```bash
-export OPENAI_BASE_URL="https://zenroute.dev"
+export OPENAI_BASE_URL="http://localhost:20128"
 ```
 
 ZenRouteクラウドダッシュボードでAPIキーが設定されていることを確認してください。

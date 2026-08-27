@@ -11,7 +11,7 @@ Integrate ZenRoute with Cursor IDE to route your AI requests through ZenRoute's 
 
 ## ⚠️ Important Notes
 
-> **Cloud Endpoint Required**: Cursor routes requests through its own server and does not support localhost endpoints. You must use the ZenRoute cloud endpoint: `https://zenroute.dev`
+> **Cloud Endpoint Required**: Cursor routes requests through its own server and does not support localhost endpoints. You must use the ZenRoute cloud endpoint: `http://localhost:20128`
 
 > **Cursor Pro Required**: This feature requires a Cursor Pro account to use custom API endpoints.
 
@@ -33,12 +33,12 @@ Integrate ZenRoute with Cursor IDE to route your AI requests through ZenRoute's 
 Set the base URL to ZenRoute cloud endpoint:
 
 ```
-https://zenroute.dev
+http://localhost:20128
 ```
 
 **Steps:**
 1. In the Models settings, locate the **Base URL** field
-2. Enter: `https://zenroute.dev`
+2. Enter: `http://localhost:20128`
 3. Click **Save**
 
 ### 4. Add API Key
@@ -66,7 +66,7 @@ Your Cursor settings should look like this:
 
 ```
 OpenAI API: ✓ Enabled
-Base URL: https://zenroute.dev
+Base URL: http://localhost:20128
 API Key: sk-zenroute-xxxxxxxxxxxxx
 Custom Models: gpt-4, claude-opus-4-5, gemini-2.0-flash
 ```
@@ -123,14 +123,14 @@ You can use any model configured in your ZenRoute dashboard. Common examples:
 
 ### Connection Issues
 
-1. Verify you are using the cloud endpoint: `https://zenroute.dev`
+1. Verify you are using the cloud endpoint: `http://localhost:20128`
 2. Check your internet connection
 3. Ensure ZenRoute cloud service is operational
 4. Try disabling VPN or proxy if enabled
 
 ### Localhost Not Working
 
-> **Remember**: Cursor does not support localhost endpoints. You must use the cloud endpoint `https://zenroute.dev`. If you need to use a local ZenRoute instance, consider using a tunneling service like ngrok to expose your local endpoint.
+> **Remember**: Cursor does not support localhost endpoints. You must use the cloud endpoint `http://localhost:20128`. If you need to use a local ZenRoute instance, consider using a tunneling service like ngrok to expose your local endpoint.
 
 ## Cloud Endpoint Setup
 

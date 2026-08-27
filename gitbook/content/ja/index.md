@@ -143,7 +143,7 @@ Model: cc/claude-opus-4-5-20251101
 
 ### モバイル/リモートコーディング向け
 
-- クラウドデプロイ(https://zenroute.dev)を使用
+- クラウドデプロイ(http://localhost:20128)を使用
 - iPad、スマホ、どこからでもアクセス
 - localhost制限なし
 - Cloudflareエッジネットワーク(300以上のロケーション)

@@ -5,7 +5,7 @@ Integra ZenRoute con Roo AI Assistant para acceder a múltiples modelos de IA a 
 ## Requisitos previos
 
 - Roo AI Assistant instalado
-- API key de ZenRoute desde el [dashboard](https://zenroute.dev/dashboard)
+- API key de ZenRoute desde el [dashboard](http://localhost:20128/dashboard)
 - ZenRoute ejecutándose (local o en la nube)
 
 ## Pasos de configuración
@@ -28,7 +28,7 @@ API Key: your-api-key-from-dashboard
 
 **Para ZenRoute en la nube:**
 ```
-Base URL: https://zenroute.dev/v1
+Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
 ```
 

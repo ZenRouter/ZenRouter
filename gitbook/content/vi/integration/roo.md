@@ -5,7 +5,7 @@ Tích hợp ZenRoute với Roo AI Assistant để truy cập nhiều model AI qu
 ## Yêu cầu
 
 - Roo AI Assistant đã cài đặt
-- ZenRoute API key từ [dashboard](https://zenroute.dev/dashboard)
+- ZenRoute API key từ [dashboard](http://localhost:20128/dashboard)
 - ZenRoute đang chạy (cục bộ hoặc cloud)
 
 ## Các bước Cấu hình
@@ -28,7 +28,7 @@ API Key: your-api-key-from-dashboard
 
 **Cho ZenRoute cloud:**
 ```
-Base URL: https://zenroute.dev/v1
+Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
 ```
 

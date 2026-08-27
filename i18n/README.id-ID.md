@@ -11,7 +11,7 @@
   [![Downloads](https://img.shields.io/npm/dm/zenroute.svg)](https://www.npmjs.com/package/zenroute)
   [![License](https://img.shields.io/npm/l/zenroute.svg)](https://github.com/joyccn/ZenRoute/blob/main/LICENSE)
 
-  [🚀 Mulai Cepat](#-mulai-cepat) • [💡 Fitur](#-fitur-utama) • [📖 Setup](#-panduan-setup) • [🌐 Website](https://zenroute.dev)
+  [🚀 Mulai Cepat](#-mulai-cepat) • [💡 Fitur](#-fitur-utama) • [📖 Setup](#-panduan-setup)
 
   [🇻🇳 Tiếng Việt](./README.vi.md) • [🇨🇳 中文](./README.zh-CN.md) • [🇯🇵 日本語](./README.ja-JP.md) • [🇮🇩 Bahasa Indonesia](./README.id-ID.md)
 </div>
@@ -946,6 +946,6 @@ MIT License — lihat [LICENSE](https://github.com/joyccn/ZenRoute/blob/main/LIC
 
 **Kalau ZenRoute membantumu, kasih ⭐ di [GitHub](https://github.com/joyccn/ZenRoute)!**
 
-[🌐 Website](https://zenroute.dev) • [📦 npm](https://www.npmjs.com/package/zenroute) • [🐛 Laporkan Bug](https://github.com/joyccn/ZenRoute/issues)
+[📦 npm](https://www.npmjs.com/package/zenroute) • [🐛 Laporkan Bug](https://github.com/joyccn/ZenRoute/issues)
 
 </div>

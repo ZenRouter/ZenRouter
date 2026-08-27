@@ -164,7 +164,7 @@
 
 ```
 Cursor Settings → Models → Advanced:
-  OpenAI API Base URL: https://zenroute.dev/v1
+  OpenAI API Base URL: http://localhost:20128/v1
   OpenAI API Key: [从仪表盘获取]
   Model: cc/claude-opus-4-5-20251101
 ```
@@ -316,7 +316,6 @@ zenroute --version
 ```
 
 **破坏性变更:**
-- 查看 [CHANGELOG.md](https://github.com/joyccn/ZenRoute/blob/main/CHANGELOG.md)
 - 大版本更新前备份 `~/.zenroute`
 - 阅读大版本的迁移指南
 
@@ -381,7 +380,7 @@ zenroute --version
 
 ## 需要更多帮助?
 
-- **文档:** [zenroute.dev/docs](https://zenroute.dev/docs)
+- **文档:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
 - **GitHub:** [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
 - **Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
 - **故障排除:** [troubleshooting.md](troubleshooting.md)

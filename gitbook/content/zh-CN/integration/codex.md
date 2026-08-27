@@ -113,7 +113,7 @@ codex --model cx/gpt-5.1-codex-max "Explain what this code does: $(cat myfile.js
 使用 ZenRoute 云端 endpoint 而非 localhost:
 
 ```bash
-export OPENAI_BASE_URL="https://zenroute.dev"
+export OPENAI_BASE_URL="http://localhost:20128"
 ```
 
 确保已在 ZenRoute 云端仪表盘中配置 API key。

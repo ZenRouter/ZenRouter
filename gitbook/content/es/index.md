@@ -143,7 +143,7 @@ Model: cc/claude-opus-4-5-20251101
 
 ### Para codificación móvil/remota
 
-- Usa el despliegue en la nube (https://zenroute.dev)
+- Usa el despliegue en la nube (http://localhost:20128)
 - Accede desde iPad, teléfono, donde sea
 - Sin limitaciones de localhost
 - Red edge de Cloudflare (300+ ubicaciones)

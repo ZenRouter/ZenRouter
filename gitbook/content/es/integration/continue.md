@@ -6,7 +6,7 @@ Integra ZenRoute con la extensión Continue para llevar la asistencia de IA dire
 
 - Visual Studio Code instalado
 - Extensión Continue instalada desde el marketplace de VSCode
-- API key de ZenRoute desde el [dashboard](https://zenroute.dev/dashboard)
+- API key de ZenRoute desde el [dashboard](http://localhost:20128/dashboard)
 - ZenRoute ejecutándose (local o en la nube)
 
 ## Pasos de configuración
@@ -76,7 +76,7 @@ Agrega la siguiente configuración a tu `config.json`:
 **Para ZenRoute en la nube:**
 Reemplaza `apiBase` con:
 ```json
-"apiBase": "https://zenroute.dev/v1"
+"apiBase": "http://localhost:20128/v1"
 ```
 
 ### 3. Guardar y recargar

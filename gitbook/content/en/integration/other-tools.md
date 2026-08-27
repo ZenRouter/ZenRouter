@@ -24,7 +24,7 @@ Model: any ZenRoute model (cc/*, cx/*, glm/*, etc.)
 
 **Cloud ZenRoute:**
 ```
-Base URL: https://zenroute.dev/v1
+Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
 Model: any ZenRoute model (cc/*, cx/*, glm/*, etc.)
 ```

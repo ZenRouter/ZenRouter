@@ -103,7 +103,7 @@ Claude Codeは設定を `~/.claude/settings.json` に保存します。必要に
 localhostの代わりにZenRouteクラウドエンドポイントを使用するには:
 
 ```bash
-export ANTHROPIC_BASE_URL="https://zenroute.dev"
+export ANTHROPIC_BASE_URL="http://localhost:20128"
 ```
 
 ZenRouteクラウドダッシュボードでAPIキーが設定されていることを確認してください。

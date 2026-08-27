@@ -12,7 +12,7 @@
 
 <a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="joyccn%2Fzenroute | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-[🌐 Website](https://zenroute.dev) • [📖 Full Docs](https://github.com/joyccn/ZenRoute)
+[📖 Full Documentation](https://github.com/joyccn/ZenRoute)
 
 ---
 
@@ -123,8 +123,7 @@ Any tool supporting OpenAI/Claude-compatible API works.
 Full docs, advanced setup, video tutorials & development guide:
 
 - **GitHub**: https://github.com/joyccn/ZenRoute
-- **Full README**: https://github.com/joyccn/ZenRoute/blob/main/app/README.md
-- **Website**: https://zenroute.dev
+- **Full README**: https://github.com/joyccn/ZenRoute/blob/main/README.md
 
 ---
 

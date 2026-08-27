@@ -6,7 +6,7 @@ Tích hợp ZenRoute với extension Continue để mang trợ lý AI trực ti�
 
 - Visual Studio Code đã cài đặt
 - Extension Continue đã cài đặt từ VSCode marketplace
-- ZenRoute API key từ [dashboard](https://zenroute.dev/dashboard)
+- ZenRoute API key từ [dashboard](http://localhost:20128/dashboard)
 - ZenRoute đang chạy (cục bộ hoặc cloud)
 
 ## Các bước Cấu hình
@@ -76,7 +76,7 @@ Thêm cấu hình sau vào `config.json`:
 **Cho Cloud ZenRoute:**
 Thay `apiBase` bằng:
 ```json
-"apiBase": "https://zenroute.dev/v1"
+"apiBase": "http://localhost:20128/v1"
 ```
 
 ### 3. Lưu và Reload

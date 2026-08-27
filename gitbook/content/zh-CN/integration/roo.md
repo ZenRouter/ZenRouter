@@ -5,7 +5,7 @@
 ## 前置要求
 
 - 已安装 Roo AI 助手
-- 来自 [仪表盘](https://zenroute.dev/dashboard) 的 ZenRoute API key
+- 来自 [仪表盘](http://localhost:20128/dashboard) 的 ZenRoute API key
 - ZenRoute 正在运行(本地或云端)
 
 ## 配置步骤
@@ -28,7 +28,7 @@ API Key: your-api-key-from-dashboard
 
 **云端 ZenRoute:**
 ```
-Base URL: https://zenroute.dev/v1
+Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
 ```
 

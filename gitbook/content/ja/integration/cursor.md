@@ -11,7 +11,7 @@ ZenRouteをCursor IDEと統合し、AIリクエストをZenRouteのインテリ�
 
 ## ⚠️ 重要な注意点
 
-> **クラウドエンドポイントが必要**: Cursorは独自のサーバー経由でリクエストをルーティングし、localhostエンドポイントをサポートしません。ZenRouteクラウドエンドポイント `https://zenroute.dev` を使用する必要があります。
+> **クラウドエンドポイントが必要**: Cursorは独自のサーバー経由でリクエストをルーティングし、localhostエンドポイントをサポートしません。ZenRouteクラウドエンドポイント `http://localhost:20128` を使用する必要があります。
 
 > **Cursor Proが必要**: この機能はカスタムAPIエンドポイントを使用するためにCursor Proアカウントが必要です。
 
@@ -33,12 +33,12 @@ ZenRouteをCursor IDEと統合し、AIリクエストをZenRouteのインテリ�
 Base URLをZenRouteクラウドエンドポイントに設定:
 
 ```
-https://zenroute.dev
+http://localhost:20128
 ```
 
 **手順:**
 1. Models設定で **Base URL** フィールドを見つける
-2. 入力: `https://zenroute.dev`
+2. 入力: `http://localhost:20128`
 3. **Save** をクリック
 
 ### 4. APIキーを追加
@@ -66,7 +66,7 @@ Cursor設定は次のようになります:
 
 ```
 OpenAI API: ✓ Enabled
-Base URL: https://zenroute.dev
+Base URL: http://localhost:20128
 API Key: sk-zenroute-xxxxxxxxxxxxx
 Custom Models: gpt-4, claude-opus-4-5, gemini-2.0-flash
 ```
@@ -123,14 +123,14 @@ ZenRouteダッシュボードで設定されたモデルを使用できます。
 
 ### 接続の問題
 
-1. クラウドエンドポイントを使用しているか確認: `https://zenroute.dev`
+1. クラウドエンドポイントを使用しているか確認: `http://localhost:20128`
 2. インターネット接続を確認
 3. ZenRouteクラウドサービスが運用中か確認
 4. VPNまたはプロキシが有効な場合は無効化してみる
 
 ### Localhostが動作しない
 
-> **覚えておいてください**: Cursorはlocalhostエンドポイントをサポートしません。クラウドエンドポイント `https://zenroute.dev` を使用する必要があります。ローカルZenRouteインスタンスを使用したい場合は、ngrokなどのトンネリングサービスを検討してローカルエンドポイントを公開してください。
+> **覚えておいてください**: Cursorはlocalhostエンドポイントをサポートしません。クラウドエンドポイント `http://localhost:20128` を使用する必要があります。ローカルZenRouteインスタンスを使用したい場合は、ngrokなどのトンネリングサービスを検討してローカルエンドポイントを公開してください。
 
 ## クラウドエンドポイントのセットアップ
 
