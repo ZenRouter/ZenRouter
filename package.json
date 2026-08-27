@@ -1,7 +1,7 @@
 {
-  "name": "9router-app",
+  "name": "zenroute-app",
   "version": "0.5.56",
-  "description": "9Router web dashboard",
+  "description": "ZenRoute web dashboard & Serene AI Gateway",
   "private": true,
   "scripts": {
     "dev": "next dev --port 20128",

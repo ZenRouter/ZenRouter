@@ -40,7 +40,7 @@ export const CLAUDE_API_HEADERS = {
 
 // Full Claude CLI fingerprint — required by providers that gate on client identity (e.g. agentrouter).
 // Versions and beta flags are sourced from open-sse/config/clientVersions.js so a single bump
-// propagates everywhere; OS/Arch come from runtime so 9router passes host detection.
+// propagates everywhere; OS/Arch come from runtime so zenroute passes host detection.
 export const CLAUDE_CLI_SPOOF_HEADERS = {
   "Anthropic-Version": ANTHROPIC_API_VERSION,
   "Anthropic-Beta": [
@@ -84,7 +84,7 @@ export const ANTHROPIC_COMPAT_BASE = "https://api.anthropic.com/v1";
 // Official Antigravity IDE Desktop fingerprint. Version + UA are
 // single-sourced from open-sse/config/clientVersions.js; the platform
 // token is computed at import time so the spoof matches the IDE client,
-// not the 9router host OS.
+// not the zenroute host OS.
 export { ANTIGRAVITY_IDE_VERSION, ANTIGRAVITY_IDE_USER_AGENT };
 export const ANTIGRAVITY_IDE_BASE_URL = "https://daily-cloudcode-pa.googleapis.com";
 

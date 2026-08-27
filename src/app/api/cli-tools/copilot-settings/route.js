@@ -31,26 +31,26 @@ const readConfig = async () => {
   }
 };
 
-const has9RouterConfig = (config) => {
+const hasZenRouteConfig = (config) => {
   if (!Array.isArray(config)) return false;
-  return config.some((entry) => entry.name === "9Router");
+  return config.some((entry) => entry.name === "ZenRoute");
 };
 
-const get9RouterEntry = (config) => {
+const getZenRouteEntry = (config) => {
   if (!Array.isArray(config)) return null;
-  return config.find((entry) => entry.name === "9Router") || null;
+  return config.find((entry) => entry.name === "ZenRoute") || null;
 };
 
 // GET - Read current copilot config
 export async function GET() {
   try {
     const config = await readConfig();
-    const entry = get9RouterEntry(config);
+    const entry = getZenRouteEntry(config);
 
     return NextResponse.json({
       installed: true,
       config,
-      has9Router: has9RouterConfig(config),
+      hasZenRoute: hasZenRouteConfig(config),
       configPath: getConfigPath(),
       currentModel: entry?.models?.[0]?.id || null,
       currentUrl: entry?.models?.[0]?.url || null,
@@ -61,7 +61,7 @@ export async function GET() {
   }
 }
 
-// POST - Apply 9Router config to chatLanguageModels.json
+// POST - Apply ZenRoute config to chatLanguageModels.json
 export async function POST(request) {
   try {
     const { baseUrl, apiKey, models } = await request.json();
@@ -83,10 +83,10 @@ export async function POST(request) {
     const config = existingConfig ?? [];
 
     const endpointUrl = `${baseUrl}/chat/completions#models.ai.azure.com`;
-    const keyToUse = apiKey || "sk_9router";
+    const keyToUse = apiKey || "sk_zenroute";
 
     const newEntry = {
-      name: "9Router",
+      name: "ZenRoute",
       vendor: "azure",
       apiKey: keyToUse,
       models: models.map((id) => ({
@@ -100,8 +100,8 @@ export async function POST(request) {
       })),
     };
 
-    // Replace existing 9Router entry or append
-    const idx = config.findIndex((e) => e.name === "9Router");
+    // Replace existing ZenRoute entry or append
+    const idx = config.findIndex((e) => e.name === "ZenRoute");
     if (idx >= 0) {
       config[idx] = newEntry;
     } else {
@@ -127,7 +127,7 @@ export async function POST(request) {
   }
 }
 
-// DELETE - Remove 9Router entry from chatLanguageModels.json
+// DELETE - Remove ZenRoute entry from chatLanguageModels.json
 export async function DELETE() {
   try {
     const configPath = getConfigPath();
@@ -144,12 +144,12 @@ export async function DELETE() {
       throw error;
     }
 
-    config = config.filter((e) => e.name !== "9Router");
+    config = config.filter((e) => e.name !== "ZenRoute");
     await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 
     return NextResponse.json({
       success: true,
-      message: "9Router removed from Copilot config",
+      message: "ZenRoute removed from Copilot config",
     });
   } catch (error) {
     console.log("Error resetting copilot settings:", error);

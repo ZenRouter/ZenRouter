@@ -1,8 +1,9 @@
 {
-  "name": "9router",
+  "name": "zenroute",
   "version": "0.5.56",
-  "description": "9Router CLI - Start and manage 9Router server",
+  "description": "ZenRoute CLI - Serene AI Gateway & Intelligent Routing Engine",
   "bin": {
+    "zenroute": "./cli.js",
     "9router": "./cli.js"
   },
   "files": [
@@ -28,17 +29,20 @@
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },
-  "comment_sqlite": "sql.js + better-sqlite3 are NOT bundled here. They are installed into ~/.9router/runtime/node_modules by hooks/postinstall.js (and re-checked at runtime by cli.js). This avoids Windows EBUSY errors when updating the global CLI, since native .node files no longer live under the locked install dir.",
-  "comment_systray": "systray2 is NOT bundled here. It is lazy-installed into ~/.9router/runtime/node_modules by hooks/postinstall.js on macOS/Linux only. Windows uses PowerShell NotifyIcon (zero binary). This avoids shipping unsigned Go binaries that trigger antivirus false positives (Kaspersky). We use the systray2 fork because the legacy systray@1.0.5 ships a 2017 x86_64 binary that fails on modern macOS dyld.",
+  "comment_sqlite": "sql.js + better-sqlite3 are NOT bundled here. They are installed into runtime directories (~/.zenroute/runtime or ~/.9router/runtime) by hooks/postinstall.js.",
+  "comment_systray": "systray2 is NOT bundled here. It is lazy-installed into runtime directories by hooks/postinstall.js.",
   "engines": {
     "node": ">=18.0.0"
   },
   "keywords": [
+    "zenroute",
     "9router",
     "cli",
+    "gateway",
     "proxy",
     "ai",
-    "api"
+    "api",
+    "llm-router"
   ],
   "license": "MIT",
   "devDependencies": {

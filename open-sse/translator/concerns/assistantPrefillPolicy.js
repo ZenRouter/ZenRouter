@@ -2,7 +2,7 @@ import { CLAUDE_BLOCK, ROLE } from "../schema/index.js";
 
 const ASSISTANT_CONTINUATION_PROMPT = "Continue from the assistant response above without repeating it.";
 const INCOMPLETE_TOOL_RESULT = "Tool execution was not completed before this request continued.";
-const PRESERVE_HEADER = "x-9router-assistant-prefill";
+const PRESERVE_HEADER = "x-zenroute-assistant-prefill";
 
 function getHeader(headers, name) {
   if (!headers) return null;

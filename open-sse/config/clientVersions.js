@@ -1,5 +1,5 @@
 // Single source of truth for upstream client versions, user-agents, and
-// editor/CLI fingerprints that 9router spoofs in outbound requests.
+// editor/CLI fingerprints that zenroute spoofs in outbound requests.
 //
 // Why this exists: previously each provider scattered its User-Agent,
 // editor-version, client_version, and plugin-version strings across
@@ -108,7 +108,7 @@ export const CURSOR_CONNECT_ES_VERSION = "1.6.1";
 export const ANTIGRAVITY_IDE_VERSION = "2.10.0";
 export const ANTIGRAVITY_IDE_USER_AGENT = (() => {
   // macOS arm64 is the official captured fingerprint; we keep the
-  // platform stable even when 9router runs on Linux/Windows because
+  // platform stable even when zenroute runs on Linux/Windows because
   // the upstream profile is matched to the IDE client, not the host.
   const os = platform();
   const a = arch();
@@ -193,7 +193,7 @@ export const GROK_CLI_USER_AGENT =
   `grok-pager/${GROK_CLI_VERSION} grok-shell/${GROK_CLI_VERSION} (linux; x86_64)`;
 // xAI discovery-time UA — not pinned to a specific version (xAI does
 // not gate on user-agent for api.x.ai).
-export const XAI_USER_AGENT = "grok-cli/9router";
+export const XAI_USER_AGENT = "grok-cli/zenroute";
 
 // ─── Kimchi ────────────────────────────────────────────────────────────
 // We impersonate the public CLI (getkimchi/kimchi GitHub releases): the 1.x
@@ -207,7 +207,7 @@ export const KIMCHI_USER_AGENT = `kimchi/${KIMCHI_GATEWAY_VERSION}`;
 // 1.16.2 (2026-08-24). x-zed-version header fallback when the client
 // does not provide appVersion via providerSpecificData.
 export const ZED_VERSION = "1.16.2";
-export const ZED_USER_AGENT = "9router/zed";
+export const ZED_USER_AGENT = "zenroute/zed";
 export const ZED_DEFAULT_APP_VERSION = ZED_VERSION;
 
 // ─── iFlow ─────────────────────────────────────────────────────────────

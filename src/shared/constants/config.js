@@ -2,22 +2,22 @@ import pkg from "../../../package.json" with { type: "json" };
 
 // App configuration
 export const APP_CONFIG = {
-  name: "9Router Proxy",
-  description: "AI Infrastructure Management",
+  name: "ZenRoute",
+  description: "Serene AI Gateway & Intelligent Routing Engine",
   version: pkg.version,
 };
 
 // GitHub configuration
 export const GITHUB_CONFIG = {
-  changelogUrl: "https://raw.githubusercontent.com/joyccn/9router/refs/heads/master/CHANGELOG.md",
-  donateUrl: "https://9router.com/api/donate",
+  changelogUrl: "https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/CHANGELOG.md",
+  donateUrl: "https://zenroute.dev/api/donate",
 };
 
 // Updater configuration
 export const UPDATER_CONFIG = {
-  npmPackageName: "9router",
-  installCmd: "npm i -g 9router",
-  installCmdLatest: "npm i -g 9router@latest --prefer-online",
+  npmPackageName: "zenroute",
+  installCmd: "npm i -g zenroute",
+  installCmdLatest: "npm i -g zenroute@latest --prefer-online",
   shutdownCountdownSec: 3,
   exitDelayMs: 500,
   statusPort: 20129,

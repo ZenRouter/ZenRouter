@@ -2,13 +2,25 @@ import fs from "node:fs";
 import path from "path";
 import os from "os";
 
-const APP_NAME = "9router";
+const APP_NAME = "zenroute";
+const LEGACY_APP_NAME = "zenroute";
 
 function defaultDir() {
   if (process.platform === "win32") {
-    return path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), APP_NAME);
+    const base = process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming");
+    const zenPath = path.join(base, APP_NAME);
+    const legacyPath = path.join(base, LEGACY_APP_NAME);
+    if (!fs.existsSync(zenPath) && fs.existsSync(legacyPath)) {
+      return legacyPath;
+    }
+    return zenPath;
   }
-  return path.join(os.homedir(), `.${APP_NAME}`);
+  const zenPath = path.join(os.homedir(), `.${APP_NAME}`);
+  const legacyPath = path.join(os.homedir(), `.${LEGACY_APP_NAME}`);
+  if (!fs.existsSync(zenPath) && fs.existsSync(legacyPath)) {
+    return legacyPath;
+  }
+  return zenPath;
 }
 
 export function getDataDir() {

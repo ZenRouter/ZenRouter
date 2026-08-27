@@ -1,9 +1,9 @@
 // Port of auto_detect_filter (rtk src/cmds/system/pipe_cmd.rs, v0.45.x) +
-// 9router post-hoc extras appended after the upstream chain.
+// zenroute post-hoc extras appended after the upstream chain.
 //
 // Upstream chain (synced 2026-08-25): cargo-test → pytest → go-test → mypy
 //                     → grep → vitest → find → identity
-// 9router extras (post-hoc tool_result compression; agents run RAW commands,
+// zenroute extras (post-hoc tool_result compression; agents run RAW commands,
 // so these stay valuable even though rtk CLI moved them into wrapped cmds):
 //                  git-log → git-diff → git-status → build-output → porcelain
 //                  → tree → ls → search-list → read-numbered → dedup-log
@@ -57,13 +57,13 @@ export function autoDetectFilter(text) {
 
   if (head.includes(": error:") && head.includes(".py:")) return mypy;
 
-  // 9router extras — git output shapes are highly specific and must win over
+  // zenroute extras — git output shapes are highly specific and must win over
   // the generic build-output detector when both appear in one blob.
   if (RE_GIT_LOG.test(head)) return gitLog;
   if (RE_GIT_DIFF.test(head) || RE_GIT_DIFF_HUNK.test(head)) return gitDiff;
   if (RE_GIT_STATUS.test(head)) return gitStatus;
 
-  // 9router extra, hoisted above grep/find/porcelain: compile & package-manager
+  // zenroute extra, hoisted above grep/find/porcelain: compile & package-manager
   // noise ("   Compiling x", "npm ERR!") must route to build-output — porcelain
   // rows and grep lines would otherwise swallow it (old-order regression guard).
   if (RE_BUILD_OUTPUT.test(head)) return buildOutput;
@@ -91,13 +91,13 @@ export function autoDetectFilter(text) {
   }
   if (nonEmpty.length >= 3 && pathLikeLines === nonEmpty.length) return find;
 
-  // 9router extension: Windows drive-letter path dumps ("C:\repo\src\a.js").
+  // zenroute extension: Windows drive-letter path dumps ("C:\repo\src\a.js").
   // The upstream no-colon rule excludes them because of the colon in "C:",
   // but agents on Windows emit these constantly — route them to `find`.
   const winPathLike = nonEmpty.filter((l) => /^[A-Za-z]:[\\/]/.test(l.trim())).length;
   if (nonEmpty.length >= 3 && winPathLike === nonEmpty.length) return find;
 
-  // ── 9router post-hoc extensions (below the upstream chain) ──
+  // ── zenroute post-hoc extensions (below the upstream chain) ──
 
   if (RE_TREE_GLYPH.test(head)) return tree;
 
@@ -112,7 +112,7 @@ export function autoDetectFilter(text) {
     return readNumbered;
   }
 
-  // 9router extras: structured payloads before generic fallbacks.
+  // zenroute extras: structured payloads before generic fallbacks.
   // Large JSON → structural compact view; env dumps → redacted/truncated list.
   if (text.length >= MIN_COMPRESS_SIZE) {
     const t0 = text.trimStart();

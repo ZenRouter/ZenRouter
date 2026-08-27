@@ -6,12 +6,11 @@ const { pathToFileURL } = require("url");
 
 const origCreate = http.createServer.bind(http);
 
-// Per-process secret proving x-9r-real-ip was stamped below rather than sent by the client.
+// Per-process secret proving x-zen-real-ip was stamped below rather than sent by the client.
 // A bare `next start` / `next dev` never loads this file, so it cannot produce a matching
-// header even though the env var is inherited by child processes. Named like x-9r-cli-token
-// so the request-detail header sanitizer redacts it too.
+// header even though the env var is inherited by child processes.
 const PEER_TOKEN = crypto.randomBytes(24).toString("hex");
-process.env.NINEROUTER_PEER_TOKEN = PEER_TOKEN;
+process.env.ZENROUTE_PEER_TOKEN = PEER_TOKEN;
 
 let backgroundRefreshStarted = false;
 
@@ -58,20 +57,27 @@ http.createServer = (...args) => {
     if (req.socket) {
       if (typeof req.socket.setNoDelay === "function") req.socket.setNoDelay(true);
       if (typeof req.socket.setKeepAlive === "function") req.socket.setKeepAlive(true, 30000);
-    }
-    // Log unexpected socket errors, but do NOT destroy the response on req 'close'/'aborted'.
-    // Previous logic (req.once('close', () => res.destroy())) broke all POST bodies:
-    // Node's IncomingMessage emits 'close' after the request stream ends, so
-    // wrapping it here caused every POST (login, /v1/chat) to get Empty reply /
-    // Invalid JSON body. Client abort is already handled via request.signal in
-    // src/sse/handlers/chat.js and open-sse/handlers/chatCore.js (clientSignal).
-    if (req.socket && typeof req.socket.on === "function") {
-      req.socket.on("error", (err) => {
+      // Log unexpected client socket errors without leaking listeners across requests
+      const onSocketError = (err) => {
         if (err && err.code !== "ECONNRESET" && err.code !== "EPIPE") {
           console.error("[Socket] Client socket error:", err.message);
         }
-      });
+      };
+      req.socket.once("error", onSocketError);
+      if (typeof res.once === "function") {
+        res.once("finish", () => {
+          if (req.socket && typeof req.socket.removeListener === "function") {
+            req.socket.removeListener("error", onSocketError);
+          }
+        });
+      }
     }
+
+    // NOTE: Client abort is handled natively via request.signal (see src/sse/handlers/chat.js
+    // and open-sse/handlers/chatCore.js clientSignal.addEventListener('abort')).
+    // Do NOT attach destructive req.once('close', () => res.destroy()) here because IncomingMessage
+    // emits 'close' as soon as the request body stream finishes reading, which prematurely terminates
+    // pending POST bodies (e.g. login and chat completions) before request.json() can parse them.
 
     const socketIp = req.socket && req.socket.remoteAddress ? req.socket.remoteAddress : "";
     const xff = req.headers["x-forwarded-for"];
@@ -82,13 +88,21 @@ http.createServer = (...args) => {
     // Direct/public sockets remain keyed by the unspoofable peer address.
     const proxyIp = xRealIp || (xff ? String(xff).split(",")[0].trim() : "");
     const ip = isLoopbackProxy && proxyIp ? proxyIp : socketIp;
+    delete req.headers["x-zen-real-ip"];
     delete req.headers["x-9r-real-ip"];
     delete req.headers["x-forwarded-for"];
+    delete req.headers["x-zen-via-proxy"];
     delete req.headers["x-9r-via-proxy"];
+    delete req.headers["x-zen-peer-token"];
     delete req.headers["x-9r-peer-token"];
+    req.headers["x-zen-real-ip"] = ip;
     req.headers["x-9r-real-ip"] = ip;
+    req.headers["x-zen-peer-token"] = PEER_TOKEN;
     req.headers["x-9r-peer-token"] = PEER_TOKEN;
-    if (viaProxy) req.headers["x-9r-via-proxy"] = "1";
+    if (viaProxy) {
+      req.headers["x-zen-via-proxy"] = "1";
+      req.headers["x-9r-via-proxy"] = "1";
+    }
     return handler(req, res);
   };
   const server = origCreate(...rest, wrapped);

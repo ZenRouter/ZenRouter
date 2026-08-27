@@ -10,7 +10,7 @@ function resolveHeapFlags(env = process.env) {
       return [`--max-old-space-size=${megabytes}`];
     }
     console.warn(
-      `[9router] ignoring NINEROUTER_MAX_OLD_SPACE_SIZE="${explicit}": expected a positive integer (MB) or 0`,
+      `[zenroute] ignoring NINEROUTER_MAX_OLD_SPACE_SIZE="${explicit}": expected a positive integer (MB) or 0`,
     );
   }
 

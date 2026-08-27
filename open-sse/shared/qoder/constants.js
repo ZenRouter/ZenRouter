@@ -59,6 +59,7 @@ export const QODER_MODEL_MAP = {
   dmodel: "dmodel",
   dfmodel: "dfmodel",
   gmodel: "gmodel",
+  gm51model: "gmodel", // backward-compat alias for older combo/config references
   kmodel: "kmodel",
   mmodel: "mmodel",
 };

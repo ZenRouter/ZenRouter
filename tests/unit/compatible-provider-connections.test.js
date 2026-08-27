@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 const originalDataDir = process.env.DATA_DIR;
 
 async function setupTestContext(nodeData) {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "9router-compatible-provider-"));
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "zenroute.devpatible-provider-"));
   process.env.DATA_DIR = tempDir;
   vi.resetModules();
   vi.doMock("next/server", () => ({
