@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  GHCR_IMAGE: ghcr.io/${{ github.repository }}
+  GHCR_IMAGE: ghcr.io/zenrouter/zenrouter
   DOCKERHUB_IMAGE: zenrouter/zenrouter
 
 jobs:
@@ -56,8 +56,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.GHCR_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.GHCR_IMAGE }}:buildcache,mode=max
+          cache-from: type=registry,ref=ghcr.io/zenrouter/zenrouter:buildcache
+          cache-to: type=registry,ref=ghcr.io/zenrouter/zenrouter:buildcache,mode=max
           platforms: linux/amd64,linux/arm64
           provenance: false
           sbom: false
