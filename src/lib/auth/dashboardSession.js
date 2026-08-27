@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { getSettings } from "@/lib/localDb";
 
-const DEFAULT_PASSWORD = "123456";
+const DEFAULT_PASSWORD = "12345678";
 
 /**
  * The dashboard's auth-token signing key.
