@@ -1,6 +1,6 @@
 services:
   zenrouter:
-    image: zenrouter/zenrouter:latest
+    image: joyccn/zenrouter:latest
     container_name: zenrouter
     restart: unless-stopped
     ports:

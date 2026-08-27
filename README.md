@@ -81,7 +81,7 @@ docker run -d \
   -v "$HOME/.zenrouter:/app/data" \
   -e DATA_DIR=/app/data \
   --restart unless-stopped \
-  zenrouter/zenrouter:latest
+  joyccn/zenrouter:latest
 ```
 
 Or with `docker-compose.yml`:
@@ -89,7 +89,7 @@ Or with `docker-compose.yml`:
 ```yaml
 services:
   zenrouter:
-    image: zenrouter/zenrouter:latest
+    image: joyccn/zenrouter:latest
     container_name: zenrouter
     restart: unless-stopped
     ports:

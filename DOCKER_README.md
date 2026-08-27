@@ -2,8 +2,8 @@
 
 > **Serene AI Gateway & Intelligent Multi-Provider Routing Engine**
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/zenrouter/zenrouter.svg?style=flat-square&color=4B72A4)](https://hub.docker.com/r/zenrouter/zenrouter)
-[![Docker Image Size](https://img.shields.io/docker/image-size/zenrouter/zenrouter/latest?style=flat-square&color=E85D3F)](https://hub.docker.com/r/zenrouter/zenrouter)
+[![Docker Pulls](https://img.shields.io/docker/pulls/joyccn/zenrouter.svg?style=flat-square&color=4B72A4)](https://hub.docker.com/r/joyccn/zenrouter)
+[![Docker Image Size](https://img.shields.io/docker/image-size/joyccn/zenrouter/latest?style=flat-square&color=E85D3F)](https://hub.docker.com/r/joyccn/zenrouter)
 [![GitHub License](https://img.shields.io/github/license/ZenRouter/ZenRouter?style=flat-square)](https://github.com/ZenRouter/ZenRouter)
 [![GitHub Stars](https://img.shields.io/github/stars/ZenRouter/ZenRouter?style=flat-square)](https://github.com/ZenRouter/ZenRouter)
 
@@ -21,7 +21,7 @@ docker run -d \
   --restart unless-stopped \
   -p 20128:20128 \
   -v zenrouter-data:/app/data \
-  zenrouter/zenrouter:latest
+  joyccn/zenrouter:latest
 ```
 
 Open your browser and navigate to **`http://localhost:20128`** to configure your API keys and provider connections.
@@ -35,7 +35,7 @@ Create a `docker-compose.yml` file:
 ```yaml
 services:
   zenrouter:
-    image: zenrouter/zenrouter:latest
+    image: joyccn/zenrouter:latest
     container_name: zenrouter
     restart: unless-stopped
     ports:

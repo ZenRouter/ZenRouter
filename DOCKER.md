@@ -1,6 +1,6 @@
 # Docker
 
-Run ZenRouter in a container. Published image: [`ZenRouter/ZenRouter`](https://hub.docker.com/r/ZenRouter/ZenRouter) — multi-platform `linux/amd64` + `linux/arm64`.
+Run ZenRouter in a container. Published image: [`joyccn/zenrouter`](https://hub.docker.com/r/joyccn/zenrouter) — multi-platform `linux/amd64` + `linux/arm64`.
 
 ---
 
@@ -14,7 +14,7 @@ docker run -d \
   -v "$HOME/.zenrouter:/app/data" \
   -e DATA_DIR=/app/data \
   --name zenrouter \
-  ZenRouter/ZenRouter:latest
+  joyccn/zenrouter:latest
 ```
 
 App listens on port `20128`. Open: http://localhost:20128
@@ -61,7 +61,7 @@ docker run -d \
   -e HOSTNAME=0.0.0.0 \
   -e DEBUG=true \
   --name zenrouter \
-  ZenRouter/ZenRouter:latest
+  joyccn/zenrouter:latest
 ```
 
 ## Optional Headroom sidecar
@@ -71,7 +71,7 @@ The ZenRouter image does not bundle Python or Headroom. To use Headroom in Docke
 ```yaml
 services:
   zenrouter:
-    image: ZenRouter/ZenRouter:latest
+    image: joyccn/zenrouter:latest
     ports:
       - "20128:20128"
     volumes:
@@ -95,7 +95,7 @@ If Headroom runs on the Docker host instead of as a sidecar, use `http://host.do
 ## Update to latest
 
 ```bash
-docker pull ZenRouter/ZenRouter:latest
+docker pull joyccn/zenrouter:latest
 docker rm -f zenrouter
 # re-run the quick start command
 ```
@@ -118,8 +118,8 @@ docker run --rm -p 20128:20128 \
 ## Publish (automatic via CI)
 
 Push a git tag `v*` → GitHub Actions builds multi-platform (amd64+arm64) and pushes to:
-- `ghcr.io/ZenRouter/ZenRouter:v{version}` + `:latest`
-- `ZenRouter/ZenRouter:v{version}` + `:latest`
+- `ghcr.io/zenrouter/zenrouter:v{version}` + `:latest`
+- `joyccn/zenrouter:v{version}` + `:latest`
 
 ```bash
 # Use scripts/release.js (recommended)

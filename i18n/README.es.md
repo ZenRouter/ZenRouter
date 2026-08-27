@@ -9,7 +9,7 @@
   
   [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
   [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
-  [![Docker Pulls](https://img.shields.io/docker/pulls/ZenRouter/ZenRouter.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/ZenRouter/ZenRouter)
+  [![Docker Pulls](https://img.shields.io/docker/pulls/joyccn/zenrouter.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/joyccn/zenrouter)
   [![GHCR](https://img.shields.io/badge/GHCR-ZenRouter%2FZenRouter-blue?logo=github)](https://github.com/ZenRouter/ZenRouter/pkgs/container/zenrouter)
   [![License](https://img.shields.io/npm/l/zenrouter.svg)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
 
@@ -1158,7 +1158,7 @@ pm2 startup
 
 Imágenes publicadas (multi-plataforma `linux/amd64` + `linux/arm64`):
 
-- Docker Hub: [`ZenRouter/ZenRouter`](https://hub.docker.com/r/ZenRouter/ZenRouter)
+- Docker Hub: [joyccn/zenrouter](https://hub.docker.com/r/joyccn/zenrouter)
 - GHCR: [`ghcr.io/ZenRouter/ZenRouter`](https://github.com/ZenRouter/ZenRouter/pkgs/container/zenrouter)
 
 **Inicio rápido (usa la imagen publicada):**
@@ -1169,7 +1169,7 @@ docker run -d \
   -p 20128:20128 \
   -v "$HOME/.zenrouter:/app/data" \
   -e DATA_DIR=/app/data \
-  ZenRouter/ZenRouter:latest
+  joyccn/zenrouter:latest
 ```
 
 → Abre http://localhost:20128
@@ -1195,7 +1195,7 @@ docker run -d --name zenrouter -p 20128:20128 \
 docker logs -f zenrouter
 docker restart zenrouter
 docker stop zenrouter && docker rm zenrouter
-docker pull ZenRouter/ZenRouter:latest   # actualiza a la última versión
+docker pull joyccn/zenrouter:latest   # actualiza a la última versión
 ```
 
 **Persistencia de datos:** `$HOME/.zenrouter/db/data.sqlite` en el host ↔ `/app/data/db/data.sqlite` en el contenedor.

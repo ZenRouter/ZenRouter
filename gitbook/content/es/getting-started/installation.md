@@ -401,7 +401,7 @@ pm2 startup
 ### Docker
 
 ```bash
-docker pull zenrouter/zenrouter:latest
+docker pull joyccn/zenrouter:latest
 
 docker run -d \
   -p 20128:20128 \
@@ -409,7 +409,7 @@ docker run -d \
   -e INITIAL_PASSWORD="your-password" \
   -v zenrouter-data:/root/.zenrouter \
   --name zenrouter \
-  zenrouter/zenrouter:latest
+  joyccn/zenrouter:latest
 ```
 
 **Caso de uso:** Despliegue containerizado, Kubernetes

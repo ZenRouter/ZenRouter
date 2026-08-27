@@ -158,7 +158,7 @@ detect_os() {
   if [ "$OS" = "windows" ]; then
     log_warn "Native Windows detected — WSL2 or Docker is strongly recommended."
     log_info "  WSL: wsl --install"
-    log_info "  Docker: docker run -p 20128:20128 zenrouter/zenrouter"
+    log_info "  Docker: docker run -p 20128:20128 joyccn/zenrouter"
   fi
   if is_wsl; then log_info "WSL detected — using Linux flow"; fi
 }
