@@ -1,4 +1,4 @@
-# ZenRoute tray icon for Windows using NotifyIcon
+# ZenRouter tray icon for Windows using NotifyIcon
 # IPC: stdin JSON commands, stdout JSON events
 param([string]$IconPath, [string]$Tooltip)
 
