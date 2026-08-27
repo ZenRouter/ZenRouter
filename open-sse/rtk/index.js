@@ -26,8 +26,8 @@ export function compressMessages(body, enabled) {
       const msg = items[i];
       if (!msg) continue;
 
-      // Shape 4: OpenAI Responses — top-level { type:"function_call_output", output: string | [{type:"input_text", text}] }
-      if (msg.type === "function_call_output") {
+      // Shape 4: OpenAI Responses — top-level { type:"function_call_output" | "custom_tool_call_output", output: string | [{type:"input_text", text}] }
+      if (msg.type === "function_call_output" || msg.type === "custom_tool_call_output") {
         if (typeof msg.output === "string") {
           msg.output = compressText(msg.output, stats, "openai-responses-string");
         } else if (Array.isArray(msg.output)) {

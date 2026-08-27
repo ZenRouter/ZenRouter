@@ -48,12 +48,15 @@ describe("compressWithHeadroom openai-responses format (#1998)", () => {
     expect(typeof body.input[0].content).not.toBe("string");
   });
 
-  it("skips Responses tool/reasoning history instead of collapsing it into a message (#2132)", async () => {
+  it("compresses message and tool output text in-place while preserving non-message items (#3571)", async () => {
     global.fetch = vi.fn(async () => ({
       ok: true,
       json: async () => ({
-        messages: [{ role: "user", content: "compressed tool history" }],
-        tokens_saved: 10,
+        messages: [
+          { role: "user", content: "investigate bug (compressed)" },
+          { role: "tool", content: "ok (compressed)" },
+        ],
+        tokens_saved: 20,
       }),
     }));
 
@@ -99,9 +102,52 @@ describe("compressWithHeadroom openai-responses format (#1998)", () => {
       diagnostics,
     });
 
+    expect(data).not.toBeNull();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    // User message content was compressed
+    expect(body.input[0].content[0].text).toBe("investigate bug (compressed)");
+    // Function call and reasoning remain 100% intact
+    expect(body.input[1]).toEqual(input[1]);
+    expect(body.input[3]).toEqual(input[3]);
+    // Function call output was compressed in-place
+    expect(body.input[2].output).toBe("ok (compressed)");
+    expect(body.input[2].call_id).toBe("call_apply_patch_123");
+  });
+
+  it("fails open if proxy response count does not match projected message count (#2132)", async () => {
+    global.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        messages: [{ role: "user", content: "collapsed summary" }],
+        tokens_saved: 10,
+      }),
+    }));
+
+    const input = [
+      {
+        type: "message",
+        role: "user",
+        content: [{ type: "input_text", text: "investigate bug" }],
+      },
+      {
+        type: "function_call_output",
+        call_id: "call_apply_patch_123",
+        output: "ok",
+      },
+    ];
+    const body = { input: structuredClone(input) };
+    const diagnostics = {};
+
+    const data = await compressWithHeadroom(body, {
+      enabled: true,
+      url: "http://headroom.test",
+      model: "gpt-5",
+      format: "openai-responses",
+      diagnostics,
+    });
+
     expect(data).toBeNull();
-    expect(global.fetch).not.toHaveBeenCalled();
     expect(body.input).toEqual(input);
-    expect(diagnostics.reason).toBe("skipped: openai-responses tool/reasoning input is not safe to compress");
+    expect(diagnostics.reason).toBe("proxy response did not match Responses message count");
   });
 });

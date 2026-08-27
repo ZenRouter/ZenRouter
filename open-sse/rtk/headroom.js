@@ -30,6 +30,10 @@ function captureSizeSnapshot(body) {
     || message?.role === "function"
     || message?.tool_calls?.length
     || message?.content?.some?.((part) => part?.type === "tool_use" || part?.type === "tool_result")
+    || message?.type === "function_call"
+    || message?.type === "function_call_output"
+    || message?.type === "custom_tool_call"
+    || message?.type === "custom_tool_call_output"
   ) || [];
   return {
     bodyBytes: jsonBytes(body),
@@ -83,12 +87,77 @@ function maskEndpoint(endpoint) {
   }
 }
 
-function hasUnsafeResponsesInputForCompression(body) {
-  if (!Array.isArray(body?.input)) return false;
-  return body.input.some((item) => {
-    if (!item || typeof item !== "object" || Array.isArray(item)) return false;
-    return typeof item.type === "string" && item.type !== "message";
-  });
+function collectResponsesHeadroomMessages(body) {
+  if (!Array.isArray(body?.input)) return null;
+
+  const messages = [];
+  const targets = [];
+
+  for (const item of body.input) {
+    if (!item || typeof item !== "object") continue;
+    const itemType = item.type || (item.role ? "message" : null);
+
+    // 1. Regular message text
+    if (itemType === "message") {
+      const role = item.role || "user";
+      if (typeof item.content === "string") {
+        messages.push({ role, content: item.content });
+        targets.push({ object: item, key: "content" });
+      } else if (Array.isArray(item.content)) {
+        for (const part of item.content) {
+          if (part && (part.type === "input_text" || part.type === "output_text") && typeof part.text === "string") {
+            messages.push({ role, content: part.text });
+            targets.push({ object: part, key: "text" });
+          }
+        }
+      }
+    }
+    // 2. Tool outputs (function_call_output & custom_tool_call_output)
+    else if (itemType === "function_call_output" || itemType === "custom_tool_call_output") {
+      if (typeof item.output === "string") {
+        messages.push({ role: "tool", content: item.output, ...(item.call_id ? { tool_call_id: item.call_id } : {}) });
+        targets.push({ object: item, key: "output" });
+      } else if (Array.isArray(item.output)) {
+        for (const part of item.output) {
+          if (part && (part.type === "input_text" || part.type === "output_text") && typeof part.text === "string") {
+            messages.push({ role: "tool", content: part.text, ...(item.call_id ? { tool_call_id: item.call_id } : {}) });
+            targets.push({ object: part, key: "text" });
+          }
+        }
+      }
+    }
+  }
+
+  return messages.length > 0 ? { messages, targets } : null;
+}
+
+function applyResponsesHeadroomMessages(projection, compressedMessages, diagnostics) {
+  if (!Array.isArray(compressedMessages) || compressedMessages.length !== projection.messages.length) {
+    setDiagnostic(diagnostics, "proxy response did not match Responses message count");
+    return false;
+  }
+
+  const updates = [];
+  for (let i = 0; i < projection.messages.length; i++) {
+    const expected = projection.messages[i];
+    const actual = compressedMessages[i];
+    if (!actual || actual.role !== expected.role) {
+      setDiagnostic(diagnostics, "proxy response did not preserve Responses message order/role");
+      return false;
+    }
+
+    const text = textFromHeadroomMessage(actual);
+    if (text === null) {
+      setDiagnostic(diagnostics, "proxy response missing Responses text content");
+      return false;
+    }
+    updates.push({ target: projection.targets[i], text });
+  }
+
+  for (const update of updates) {
+    update.target.object[update.target.key] = update.text;
+  }
+  return true;
 }
 
 function collectKiroHeadroomMessages(body) {
@@ -273,25 +342,18 @@ export async function compressWithHeadroom(body, { enabled, url, model, format, 
     }
 
     // OpenAI Responses shape (Codex): body.input holds Responses items, NOT OpenAI
-    // messages. Translate input -> OpenAI -> compress -> translate back to input so
-    // body.input keeps the Responses contract (the proxy only understands OpenAI). (#1998)
+    // messages. Project text and tool outputs to messages[] for the proxy, then copy
+    // back in-place into body.input. Keeps non-text/tool-call/reasoning items and IDs
+    // 100% intact without unsafe roundtrip translation. (#1998, #3571)
     if (format === "openai-responses") {
-      if (hasUnsafeResponsesInputForCompression(body)) {
-        setDiagnostic(diagnostics, "skipped: openai-responses tool/reasoning input is not safe to compress");
+      const projection = collectResponsesHeadroomMessages(body);
+      if (!projection) {
+        setDiagnostic(diagnostics, "Responses request did not project to messages[]");
         return null;
       }
-      const oai = openaiResponsesToOpenAIRequest(model, body, false);
-      if (!Array.isArray(oai?.messages)) return null;
-      const data = await callCompress(url, oai.messages, model, timeoutMs, compressUserMessages, diagnostics || {});
+      const data = await callCompress(url, projection.messages, model, timeoutMs, compressUserMessages, diagnostics || {});
       if (!data) return null;
-      // input: undefined so the translator rebuilds input from the compressed
-      // messages instead of returning the original input unchanged.
-      const responsesBody = openaiToOpenAIResponsesRequest(
-        model,
-        { ...oai, input: undefined, messages: data.messages },
-        false
-      );
-      if (Array.isArray(responsesBody?.input)) body.input = responsesBody.input;
+      if (!applyResponsesHeadroomMessages(projection, data.messages, diagnostics)) return null;
       if (diagnostics) diagnostics.after = captureSizeSnapshot(body);
       return data;
     }

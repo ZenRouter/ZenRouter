@@ -3,6 +3,9 @@
 > **🙏 Credits:** 9Router was originally created by **decolua**. This repository is a maintained fork under **joyccn**, continuing and building upon the original work.
 
 ## Fixed
+- **Headroom compression for Codex Responses agentic turns (#3571)**: replaced whole-request roundtrip translation with in-place text and tool output projection mapping (`collectResponsesHeadroomMessages` / `applyResponsesHeadroomMessages`), safely compressing user/assistant text and tool results while keeping `function_call`, `custom_tool_call`, and `reasoning` continuity tokens 100% intact.
+- **RTK custom tool output compression**: added `custom_tool_call_output` support to `open-sse/rtk/index.js` to compress large patch and command outputs from custom tools (such as Codex `apply_patch`).
+- **Codex Responses to OpenAI request translation fixes**: guarded against emitting empty `tool_calls: []` arrays on assistant messages and sanitized `input_image` items with bare `file_id`.
 - **sql.js graceful shutdown & signal handling (#3551)**: aligned `sqljsAdapter.js` with `betterSqliteAdapter` by clearing `saveTimer`, persisting unwritten changes, and cleanly terminating the process on `SIGINT`/`SIGTERM` to prevent hung zombie processes.
 - **Landing page "Get Started" CTA & navigation routing (#3569)**: added missing Next.js `useRouter().push('/dashboard')` navigation handler to the HeroSection "Get Started" CTA button, auto-closed mobile dropdown menu on nav link clicks, and replaced full-page reload `<a>` tags with `<Link>` in `Footer.js`.
 - **LRU session store eviction (PR #3550)**: updated `runtimeSessionStore` and `assistantSessionStore` in `open-sse/utils/sessionManager.js` to re-insert existing entries on access, ensuring true LRU eviction order instead of insertion-order eviction when reaching store caps.
