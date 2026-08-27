@@ -615,7 +615,7 @@ function startServer(updatePromise) {
     crashLog = [];
     const child = spawn(RUNTIME, ["--dns-result-order=ipv4first", ...resolveHeapFlags(process.env), serverPath], {
       cwd: standaloneDir,
-      stdio: showLog ? "inherit" : ["ignore", "ignore", "pipe"],
+      stdio: ["ignore", "pipe", "pipe"],
       detached: true,
       windowsHide: true,
       env: {
@@ -624,12 +624,26 @@ function startServer(updatePromise) {
         HOSTNAME: host
       }
     });
-    if (!showLog && child.stderr) {
+
+    if (child.stdout) {
+      child.stdout.on("data", (data) => {
+        if (showLog) {
+          process.stdout.write(data);
+        }
+      });
+      child.stdout.on("error", () => {});
+    }
+
+    if (child.stderr) {
       child.stderr.on("data", (data) => {
+        if (showLog) {
+          process.stderr.write(data);
+        }
         const lines = data.toString().split("\n").filter(Boolean);
         crashLog.push(...lines);
         if (crashLog.length > CRASH_LOG_LINES) crashLog = crashLog.slice(-CRASH_LOG_LINES);
       });
+      child.stderr.on("error", () => {});
     }
     return child;
   }

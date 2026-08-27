@@ -181,7 +181,12 @@ export async function installHeadroomExtras(extras = []) {
   // ['proxy', ...requested]. No shell interpolation.
   const extrasList = ["proxy", ...requested].join(",");
   const spec = `headroom-ai[${extrasList}]`;
-  const args = ["-m", "pip", "install", "--upgrade", spec];
+  const args = ["-m", "pip", "install", "--upgrade"];
+  // Handle PEP 668 EXTERNALLY-MANAGED on Linux systems (Debian/Ubuntu/Arch)
+  if (process.platform === "linux") {
+    args.push("--break-system-packages");
+  }
+  args.push(spec);
 
   ensureDir();
   // Truncate ("w") so the log reflects only the current install for live progress.

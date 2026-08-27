@@ -1,5 +1,34 @@
 const REFRESH_RESULT_TTL_MS = 10_000;
+const MAX_DEDUP_CACHE_SIZE = 500;
 const refreshDedupCache = new Map();
+
+// Periodic sweep to clean up expired cache entries and prevent memory leaks
+const sweepInterval = setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of refreshDedupCache.entries()) {
+    if (!val.promise && val.expiresAt && val.expiresAt <= now) {
+      refreshDedupCache.delete(key);
+    }
+  }
+}, 60_000);
+
+if (sweepInterval.unref) sweepInterval.unref();
+
+function evictOldestIfNeeded() {
+  if (refreshDedupCache.size >= MAX_DEDUP_CACHE_SIZE) {
+    const now = Date.now();
+    // Try to evict expired entry first
+    for (const [key, val] of refreshDedupCache.entries()) {
+      if (!val.promise && val.expiresAt && val.expiresAt <= now) {
+        refreshDedupCache.delete(key);
+        if (refreshDedupCache.size < MAX_DEDUP_CACHE_SIZE) return;
+      }
+    }
+    // Fall back to oldest inserted entry
+    const oldestKey = refreshDedupCache.keys().next().value;
+    if (oldestKey) refreshDedupCache.delete(oldestKey);
+  }
+}
 
 export async function dedupRefresh(provider, oldToken, fn, log) {
   if (!oldToken) return fn();
@@ -16,6 +45,9 @@ export async function dedupRefresh(provider, oldToken, fn, log) {
     }
     refreshDedupCache.delete(key);
   }
+
+  evictOldestIfNeeded();
+
   const promise = (async () => {
     try {
       const result = await fn();
