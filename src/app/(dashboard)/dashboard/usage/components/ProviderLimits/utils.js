@@ -58,8 +58,6 @@ export function createQuotaAutoRefresh({
     // If returning from background tab and refresh time already expired, trigger immediate refresh
     if (Date.now() >= nextRefreshTime) {
       triggerRefresh();
-    } else {
-      tick();
     }
     refreshId = setInterval(triggerRefresh, refreshIntervalMs);
     tickId = setInterval(tick, tickIntervalMs);
