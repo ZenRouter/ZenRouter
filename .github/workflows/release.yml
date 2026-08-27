@@ -33,18 +33,31 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: "https://registry.npmjs.org"
           cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            tests/package-lock.json
 
       - name: Install Dependencies
         run: npm ci
 
+      - name: Install tests deps
+        run: cd tests && npm ci || npm install
+
       - name: Run Test Suite
         run: npm test
+        env:
+          JWT_SECRET: test-jwt-secret-at-least-32-chars-long-for-ci-simulation
+          ZENROUTER_PEER_TOKEN: test-peer-token-for-ci-1234567890abcdef
+          NODE_ENV: test
 
       - name: Build Next.js & Standalone Assets
         run: npm run build
+        env:
+          JWT_SECRET: test-jwt-secret-at-least-32-chars-long-for-ci-simulation
+          NEXT_PHASE: phase-production-build
 
       - name: Build and Pack CLI Package
         run: npm run cli:pack

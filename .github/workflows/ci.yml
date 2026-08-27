@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: |
             package-lock.json
@@ -21,4 +21,11 @@ jobs:
       - name: Install tests deps
         run: cd tests && npm ci || npm install
       - run: npm test --if-present
+        env:
+          JWT_SECRET: test-jwt-secret-at-least-32-chars-long-for-ci-simulation
+          ZENROUTER_PEER_TOKEN: test-peer-token-for-ci-1234567890abcdef
+          NODE_ENV: test
       - run: npm run build --if-present
+        env:
+          JWT_SECRET: test-jwt-secret-at-least-32-chars-long-for-ci-simulation
+          NEXT_PHASE: phase-production-build

@@ -407,6 +407,7 @@ export class DevinCliExecutor extends BaseExecutor {
         // WARNING: bypass lets the agent run shell/modify FS unattended — local only.
         env.DEVIN_PERMISSION_MODE = process.env.DEVIN_PERMISSION_MODE || "bypass";
         if (mcpConfigDir) env.XDG_CONFIG_HOME = mcpConfigDir;
+        else delete env.XDG_CONFIG_HOME;
 
         // Agent type: default (omitted) = full agent with built-in tools
         // (fs/shell/search) so the model can actually perform tasks. Override to
