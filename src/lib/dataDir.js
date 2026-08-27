@@ -3,7 +3,7 @@ import path from "path";
 import os from "os";
 
 const APP_NAME = "zenroute";
-const LEGACY_APP_NAME = "zenroute";
+const LEGACY_APP_NAME = "9router";
 
 function defaultDir() {
   if (process.platform === "win32") {

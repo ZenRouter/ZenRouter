@@ -11,6 +11,7 @@ const origCreate = http.createServer.bind(http);
 // header even though the env var is inherited by child processes.
 const PEER_TOKEN = crypto.randomBytes(24).toString("hex");
 process.env.ZENROUTE_PEER_TOKEN = PEER_TOKEN;
+process.env.NINEROUTER_PEER_TOKEN = PEER_TOKEN;
 
 let backgroundRefreshStarted = false;
 

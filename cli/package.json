@@ -3,7 +3,6 @@
   "version": "0.5.56",
   "description": "ZenRoute CLI - Serene AI Gateway & Intelligent Routing Engine",
   "bin": {
-    "zenroute": "./cli.js",
     "zenroute": "./cli.js"
   },
   "files": [
@@ -29,13 +28,12 @@
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },
-  "comment_sqlite": "sql.js + better-sqlite3 are NOT bundled here. They are installed into runtime directories (~/.zenroute/runtime or ~/.zenroute/runtime) by hooks/postinstall.js.",
+  "comment_sqlite": "sql.js + better-sqlite3 are NOT bundled here. They are installed into runtime directories (~/.zenroute/runtime or ~/.9router/runtime) by hooks/postinstall.js.",
   "comment_systray": "systray2 is NOT bundled here. It is lazy-installed into runtime directories by hooks/postinstall.js.",
   "engines": {
     "node": ">=18.0.0"
   },
   "keywords": [
-    "zenroute",
     "zenroute",
     "cli",
     "gateway",
