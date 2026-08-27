@@ -2,7 +2,7 @@
   "name": "zenrouter-app",
   "version": "0.5.57",
   "description": "ZenRouter web dashboard & Serene AI Gateway",
-  "private": false,
+  "private": true,
   "scripts": {
     "dev": "next dev --port 20128",
     "dev:webpack": "next dev --webpack --port 20128",
@@ -55,12 +55,16 @@
   "optionalDependencies": {
     "better-sqlite3": "^12.6.2"
   },
-  "comment_better_sqlite3": "kept in optionalDependencies so npm install doesn't fail on systems without build tools — sql.js is used as fallback at runtime",
+  "comment_better_sqlite3": "kept in optionalDependencies so npm install doesn't fail on systems without build tools \u2014 sql.js is used as fallback at runtime",
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "postcss": "^8.5.6",
     "tailwindcss": "^4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZenRouter/ZenRouter.git"
   }
 }
