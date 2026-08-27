@@ -1,12 +1,12 @@
 # Claude Code 集成
 
-将 ZenRoute 与 Claude Code CLI 集成,通过 ZenRoute 的智能路由系统转发你的 Anthropic API 请求。
+将 ZenRouter 与 Claude Code CLI 集成,通过 ZenRouter 的智能路由系统转发你的 Anthropic API 请求。
 
 ## 前置要求
 
 - 已安装 Claude Code CLI
-- ZenRoute 本地运行或已配置云端 endpoint
-- 来自 ZenRoute 仪表盘的 API key
+- ZenRouter 本地运行或已配置云端 endpoint
+- 来自 ZenRouter 仪表盘的 API key
 
 ## 设置
 
@@ -15,7 +15,7 @@
 在 shell 配置文件(`~/.bashrc`、`~/.zshrc` 或 `~/.bash_profile`)中设置以下环境变量:
 
 ```bash
-# ZenRoute 的 Base URL
+# ZenRouter 的 Base URL
 export ANTHROPIC_BASE_URL="http://localhost:20128/v1"
 
 # 可选: 为别名设置默认模型
@@ -40,7 +40,7 @@ echo $ANTHROPIC_BASE_URL
 
 ## 模型别名
 
-Claude Code 支持以下模型别名,映射到 ZenRoute 模型:
+Claude Code 支持以下模型别名,映射到 ZenRouter 模型:
 
 | 别名 | 模型 | 环境变量 |
 |-------|-------|---------------------|
@@ -86,7 +86,7 @@ Claude Code 将配置存储在 `~/.claude/settings.json`。如有需要可手动
 
 遇到连接错误时:
 
-1. 确认 ZenRoute 正在运行:`curl http://localhost:20128/health`
+1. 确认 ZenRouter 正在运行:`curl http://localhost:20128/health`
 2. 检查环境变量设置是否正确
 3. 确保防火墙没有阻止 20128 端口
 
@@ -94,16 +94,16 @@ Claude Code 将配置存储在 `~/.claude/settings.json`。如有需要可手动
 
 出现 "model not found" 错误时:
 
-1. 确认模型名与 ZenRoute 配置一致
-2. 检查 ZenRoute 仪表盘中提供商连接是否激活
+1. 确认模型名与 ZenRouter 配置一致
+2. 检查 ZenRouter 仪表盘中提供商连接是否激活
 3. 确认所连接的提供商中包含该模型
 
 ## 云端 Endpoint
 
-使用 ZenRoute 云端 endpoint 而非 localhost:
+使用 ZenRouter 云端 endpoint 而非 localhost:
 
 ```bash
 export ANTHROPIC_BASE_URL="http://localhost:20128"
 ```
 
-确保已在 ZenRoute 云端仪表盘中配置 API key。
+确保已在 ZenRouter 云端仪表盘中配置 API key。

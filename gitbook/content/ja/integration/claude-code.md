@@ -1,12 +1,12 @@
 # Claude Code統合
 
-ZenRouteをClaude Code CLIと統合し、AnthropicのAPIリクエストをZenRouteのインテリジェントルーティングシステム経由でルーティングします。
+ZenRouterをClaude Code CLIと統合し、AnthropicのAPIリクエストをZenRouterのインテリジェントルーティングシステム経由でルーティングします。
 
 ## 前提条件
 
 - Claude Code CLIがインストール済み
-- ZenRouteがローカルで動作中、またはクラウドエンドポイントが設定済み
-- ZenRouteダッシュボードからのAPIキー
+- ZenRouterがローカルで動作中、またはクラウドエンドポイントが設定済み
+- ZenRouterダッシュボードからのAPIキー
 
 ## セットアップ
 
@@ -15,7 +15,7 @@ ZenRouteをClaude Code CLIと統合し、AnthropicのAPIリクエストをZenRou
 シェル設定ファイル (`~/.bashrc`、`~/.zshrc`、または `~/.bash_profile`) で以下の環境変数を設定:
 
 ```bash
-# ZenRoute用Base URL
+# ZenRouter用Base URL
 export ANTHROPIC_BASE_URL="http://localhost:20128/v1"
 
 # オプション: エイリアス用のデフォルトモデルを設定
@@ -40,7 +40,7 @@ echo $ANTHROPIC_BASE_URL
 
 ## モデルエイリアス
 
-Claude CodeはZenRouteモデルにマッピングされる以下のモデルエイリアスをサポート:
+Claude CodeはZenRouterモデルにマッピングされる以下のモデルエイリアスをサポート:
 
 | エイリアス | モデル | 環境変数 |
 |-------|-------|---------------------|
@@ -86,7 +86,7 @@ Claude Codeは設定を `~/.claude/settings.json` に保存します。必要に
 
 接続エラーが発生した場合:
 
-1. ZenRouteが動作中か確認: `curl http://localhost:20128/health`
+1. ZenRouterが動作中か確認: `curl http://localhost:20128/health`
 2. 環境変数が正しく設定されているか確認
 3. ファイアウォールがポート20128をブロックしていないか確認
 
@@ -94,16 +94,16 @@ Claude Codeは設定を `~/.claude/settings.json` に保存します。必要に
 
 「model not found」エラーが発生した場合:
 
-1. モデル名がZenRouteの設定と一致しているか確認
-2. ZenRouteダッシュボードでプロバイダー接続がアクティブか確認
+1. モデル名がZenRouterの設定と一致しているか確認
+2. ZenRouterダッシュボードでプロバイダー接続がアクティブか確認
 3. 接続されたプロバイダーでモデルが利用可能か確認
 
 ## クラウドエンドポイント
 
-localhostの代わりにZenRouteクラウドエンドポイントを使用するには:
+localhostの代わりにZenRouterクラウドエンドポイントを使用するには:
 
 ```bash
 export ANTHROPIC_BASE_URL="http://localhost:20128"
 ```
 
-ZenRouteクラウドダッシュボードでAPIキーが設定されていることを確認してください。
+ZenRouterクラウドダッシュボードでAPIキーが設定されていることを確認してください。

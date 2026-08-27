@@ -16,14 +16,14 @@ export default function GetStarted() {
           <div className="flex-1">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Get Started in 30 Seconds</h2>
             <p className="text-gray-400 text-lg mb-8">
-              Launch ZenRoute, configure your providers via the serene web dashboard, and supercharge your local AI coding workflows.
+              Launch ZenRouter, configure your providers via the serene web dashboard, and supercharge your local AI coding workflows.
             </p>
             
             <div className="flex flex-col gap-6">
               <div className="flex gap-4">
                 <div className="flex-none w-8 h-8 rounded-full bg-[#4B72A4]/25 text-[#7b9fc8] border border-[#4B72A4]/40 flex items-center justify-center font-bold">1</div>
                 <div>
-                  <h4 className="font-bold text-lg text-white">Start ZenRoute</h4>
+                  <h4 className="font-bold text-lg text-white">Start ZenRouter</h4>
                   <p className="text-sm text-gray-400 mt-1">Run npx command to launch the local gateway</p>
                 </div>
               </div>
@@ -61,17 +61,17 @@ export default function GetStarted() {
               <div className="p-6 font-mono text-sm leading-relaxed overflow-x-auto">
                 <div 
                   className="flex items-center gap-2 mb-4 group cursor-pointer"
-                  onClick={() => handleCopy("npx zenroute")}
+                  onClick={() => handleCopy("npx zenrouter")}
                 >
                   <span className="text-emerald-400">$</span>
-                  <span className="text-white font-medium">npx zenroute</span>
+                  <span className="text-white font-medium">npx zenrouter</span>
                   <span className="ml-auto text-gray-400 text-xs opacity-0 group-hover:opacity-100">
                     {copied === "landing" ? "✓ Copied" : "Copy"}
                   </span>
                 </div>
                 
                 <div className="text-gray-300 mb-6">
-                  <span className="text-[#5D87B8]">&gt;</span> Starting ZenRoute Engine...<br/>
+                  <span className="text-[#5D87B8]">&gt;</span> Starting ZenRouter Engine...<br/>
                   <span className="text-[#5D87B8]">&gt;</span> Server active on <span className="text-blue-400">http://localhost:20128</span><br/>
                   <span className="text-[#5D87B8]">&gt;</span> Dashboard: <span className="text-blue-400">http://localhost:20128/dashboard</span><br/>
                   <span className="text-emerald-400">&gt;</span> Gateway ready to route! ✓
@@ -83,8 +83,8 @@ export default function GetStarted() {
                 
                 <div className="text-gray-400 text-xs">
                   <span className="text-[#b0c6df]">Database Storage:</span><br/>
-                  <span className="text-gray-500">  macOS/Linux:</span> ~/.zenroute/db/data.sqlite (or ~/.zenroute)<br/>
-                  <span className="text-gray-500">  Windows:</span> %APPDATA%/zenroute/db/data.sqlite
+                  <span className="text-gray-500">  macOS/Linux:</span> ~/.zenrouter/db/data.sqlite (or ~/.zenrouter)<br/>
+                  <span className="text-gray-500">  Windows:</span> %APPDATA%/zenrouter/db/data.sqlite
                 </div>
               </div>
             </div>

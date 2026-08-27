@@ -1,12 +1,12 @@
 # Tích hợp Roo AI Assistant
 
-Tích hợp ZenRoute với Roo AI Assistant để truy cập nhiều model AI qua một giao diện thống nhất.
+Tích hợp ZenRouter với Roo AI Assistant để truy cập nhiều model AI qua một giao diện thống nhất.
 
 ## Yêu cầu
 
 - Roo AI Assistant đã cài đặt
-- ZenRoute API key từ [dashboard](http://localhost:20128/dashboard)
-- ZenRoute đang chạy (cục bộ hoặc cloud)
+- ZenRouter API key từ [dashboard](http://localhost:20128/dashboard)
+- ZenRouter đang chạy (cục bộ hoặc cloud)
 
 ## Các bước Cấu hình
 
@@ -20,13 +20,13 @@ Khởi chạy Roo AI Assistant và mở panel settings.
 2. Chọn **Ollama** làm provider type
 3. Cấu hình các settings sau:
 
-**Cho ZenRoute cục bộ:**
+**Cho ZenRouter cục bộ:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
 ```
 
-**Cho ZenRoute cloud:**
+**Cho ZenRouter cloud:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
@@ -34,7 +34,7 @@ API Key: your-api-key-from-dashboard
 
 ### 3. Chọn Model
 
-Chọn từ các model ZenRoute có sẵn:
+Chọn từ các model ZenRouter có sẵn:
 
 **Claude Models:**
 - `cc/claude-opus-4-5-20251101` - Mạnh nhất
@@ -54,7 +54,7 @@ Chọn từ các model ZenRoute có sẵn:
 Gửi tin nhắn test để xác minh tích hợp:
 
 ```
-Hello! Can you confirm you're connected through ZenRoute?
+Hello! Can you confirm you're connected through ZenRouter?
 ```
 
 ## Ví dụ Sử dụng
@@ -87,19 +87,19 @@ Model: cx/deepseek-reasoner
 ## Troubleshooting
 
 ### Connection Failed
-- Xác minh ZenRoute đang chạy: `curl http://localhost:20128/health`
+- Xác minh ZenRouter đang chạy: `curl http://localhost:20128/health`
 - Kiểm tra API key đúng
 - Đảm bảo Base URL bao gồm hậu tố `/v1`
 
 ### Model không khả dụng
 - Kiểm tra tên model khớp chính xác (case-sensitive)
-- Xác minh model được bật trong ZenRoute plan
+- Xác minh model được bật trong ZenRouter plan
 - Thử model khác từ danh sách
 
 ### Phản hồi Chậm
 - Chuyển sang model nhanh hơn (haiku, flash)
 - Kiểm tra kết nối network
-- Theo dõi logs ZenRoute để xem vấn đề
+- Theo dõi logs ZenRouter để xem vấn đề
 
 ## Cấu hình Nâng cao
 

@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common issues and solutions when using ZenRoute.
+Common issues and solutions when using ZenRouter.
 
 ---
 
@@ -78,7 +78,7 @@ Common issues and solutions when using ZenRoute.
 **Solutions:**
 
 1. **Auto-refresh (default):**
-   ZenRoute automatically refreshes tokens. Wait 30 seconds and retry.
+   ZenRouter automatically refreshes tokens. Wait 30 seconds and retry.
 
 2. **Manual reconnect:**
    ```
@@ -135,15 +135,15 @@ Common issues and solutions when using ZenRoute.
 **Problem:** "ECONNREFUSED" or "Cannot connect to localhost:20128".
 
 **Causes:**
-- ZenRoute not running
+- ZenRouter not running
 - Port 20128 blocked
 - Firewall blocking connection
 
 **Solutions:**
 
-1. **Start ZenRoute:**
+1. **Start ZenRouter:**
    ```bash
-   zenroute
+   zenrouter
    ```
    Dashboard should open at http://localhost:3000
 
@@ -175,15 +175,15 @@ Common issues and solutions when using ZenRoute.
 
 **Causes:**
 - Port 3000 already in use
-- ZenRoute crashed
+- ZenRouter crashed
 - Browser cache issues
 
 **Solutions:**
 
-1. **Check if ZenRoute is running:**
+1. **Check if ZenRouter is running:**
    ```bash
    # Check process
-   ps aux | grep zenroute
+   ps aux | grep zenrouter
    
    # Check port 3000
    lsof -i :3000
@@ -199,13 +199,13 @@ Common issues and solutions when using ZenRoute.
    taskkill /PID <PID> /F
    ```
 
-3. **Restart ZenRoute:**
+3. **Restart ZenRouter:**
    ```bash
    # Stop
-   pkill -f zenroute
+   pkill -f zenrouter
    
    # Start
-   zenroute
+   zenrouter
    ```
 
 4. **Clear browser cache:**
@@ -346,6 +346,6 @@ Common issues and solutions when using ZenRoute.
 
 ## Need More Help?
 
-- **GitHub Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
-- **Documentation:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
+- **GitHub Issues:** [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
+- **Documentation:** [GitHub Docs](https://github.com/ZenRouter/ZenRouter)
 - **FAQ:** [faq.md](faq.md)

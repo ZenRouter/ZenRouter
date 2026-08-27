@@ -52,7 +52,7 @@ const originalNodeEnv = process.env.NODE_ENV;
 describe("peer header trust", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.ZENROUTE_PEER_TOKEN = PEER_TOKEN;
+    process.env.ZENROUTER_PEER_TOKEN = PEER_TOKEN;
     process.env.NINEROUTER_PEER_TOKEN = PEER_TOKEN;
     process.env.NODE_ENV = "production";
     mocks.getSettings.mockResolvedValue({ requireLogin: true });
@@ -63,7 +63,7 @@ describe("peer header trust", () => {
 
   afterEach(() => {
     process.env.NODE_ENV = originalNodeEnv;
-    delete process.env.ZENROUTE_PEER_TOKEN;
+    delete process.env.ZENROUTER_PEER_TOKEN;
     delete process.env.NINEROUTER_PEER_TOKEN;
   });
 
@@ -94,7 +94,7 @@ describe("peer header trust", () => {
   });
 
   it("rejects a spoofed loopback peer IP when the wrapper never booted", async () => {
-    delete process.env.ZENROUTE_PEER_TOKEN;
+    delete process.env.ZENROUTER_PEER_TOKEN;
     delete process.env.NINEROUTER_PEER_TOKEN;
 
     const response = await proxy(request("/api/v1/models", {
@@ -182,13 +182,13 @@ describe("peer header trust", () => {
 
 describe("login limiter client IP", () => {
   beforeEach(() => {
-    process.env.ZENROUTE_PEER_TOKEN = PEER_TOKEN;
+    process.env.ZENROUTER_PEER_TOKEN = PEER_TOKEN;
     process.env.NINEROUTER_PEER_TOKEN = PEER_TOKEN;
     delete process.env.TRUST_PROXY;
   });
 
   afterEach(() => {
-    delete process.env.ZENROUTE_PEER_TOKEN;
+    delete process.env.ZENROUTER_PEER_TOKEN;
     delete process.env.NINEROUTER_PEER_TOKEN;
     delete process.env.TRUST_PROXY;
   });
@@ -210,7 +210,7 @@ describe("login limiter client IP", () => {
     expect(ip).toBe("203.0.113.9");
   });
 
-  it("still honours TRUST_PROXY for operators fronting zenroute with a reverse proxy", () => {
+  it("still honours TRUST_PROXY for operators fronting zenrouter with a reverse proxy", () => {
     process.env.TRUST_PROXY = "true";
 
     const ip = getClientIp(request("/api/auth/login", { "x-forwarded-for": "198.51.100.7, 10.0.0.1" }));

@@ -1,6 +1,6 @@
 # 故障排除
 
-使用 ZenRoute 时常见的问题与解决方案。
+使用 ZenRouter 时常见的问题与解决方案。
 
 ---
 
@@ -78,7 +78,7 @@
 **解决方案:**
 
 1. **自动刷新(默认):**
-   ZenRoute 会自动刷新 token。等待 30 秒后重试。
+   ZenRouter 会自动刷新 token。等待 30 秒后重试。
 
 2. **手动重连:**
    ```
@@ -135,15 +135,15 @@
 **问题:** 出现 "ECONNREFUSED" 或 "Cannot connect to localhost:20128"。
 
 **原因:**
-- ZenRoute 未运行
+- ZenRouter 未运行
 - 端口 20128 被阻止
 - 防火墙拦截连接
 
 **解决方案:**
 
-1. **启动 ZenRoute:**
+1. **启动 ZenRouter:**
    ```bash
-   zenroute
+   zenrouter
    ```
    仪表盘应该在 http://localhost:3000 打开。
 
@@ -175,15 +175,15 @@
 
 **原因:**
 - 端口 3000 被占用
-- ZenRoute 崩溃
+- ZenRouter 崩溃
 - 浏览器缓存问题
 
 **解决方案:**
 
-1. **确认 ZenRoute 是否运行:**
+1. **确认 ZenRouter 是否运行:**
    ```bash
    # 检查进程
-   ps aux | grep zenroute
+   ps aux | grep zenrouter
    
    # 检查端口 3000
    lsof -i :3000
@@ -199,13 +199,13 @@
    taskkill /PID <PID> /F
    ```
 
-3. **重启 ZenRoute:**
+3. **重启 ZenRouter:**
    ```bash
    # 停止
-   pkill -f zenroute
+   pkill -f zenrouter
    
    # 启动
-   zenroute
+   zenrouter
    ```
 
 4. **清除浏览器缓存:**
@@ -346,6 +346,6 @@
 
 ## 需要更多帮助?
 
-- **GitHub Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
-- **文档:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
+- **GitHub Issues:** [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
+- **文档:** [GitHub Docs](https://github.com/ZenRouter/ZenRouter)
 - **常见问题:** [faq.md](faq.md)

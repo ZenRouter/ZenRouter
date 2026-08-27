@@ -17,7 +17,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "ZenRoute - Serene AI Gateway & Intelligent Routing Engine",
+  title: "ZenRouter - Serene AI Gateway & Intelligent Routing Engine",
   description: "Cultivate, prune, and route all your AI models from a single unified gateway.",
   icons: {
     icon: [
@@ -30,7 +30,7 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#0f141c",
+  themeColor: "#141414",
 };
 
 export default function RootLayout({ children }) {

@@ -45,10 +45,10 @@ Dashboard → API Keys → Create New
 → Copia la API key (comienza con "zhipu-")
 ```
 
-**Paso 3: Agregar a ZenRoute**
+**Paso 3: Agregar a ZenRouter**
 
 ```bash
-zenroute
+zenrouter
 # Dashboard → Providers → Add API Key
 
 Provider: glm
@@ -117,10 +117,10 @@ Dashboard → API Management → Create Key
 → Copia la API key
 ```
 
-**Paso 3: Agregar a ZenRoute**
+**Paso 3: Agregar a ZenRouter**
 
 ```bash
-zenroute
+zenrouter
 # Dashboard → Providers → Add API Key
 
 Provider: minimax
@@ -190,10 +190,10 @@ Dashboard → API Keys → Create New
 → Copia la API key
 ```
 
-**Paso 3: Agregar a ZenRoute**
+**Paso 3: Agregar a ZenRouter**
 
 ```bash
-zenroute
+zenrouter
 # Dashboard → Providers → Add API Key
 
 Provider: kimi
@@ -255,7 +255,7 @@ Total: 10M tokens = $9 plano
 ```
 Settings → Models → Advanced:
   OpenAI API Base URL: http://localhost:20128/v1
-  OpenAI API Key: [desde el dashboard de zenroute]
+  OpenAI API Key: [desde el dashboard de zenrouter]
   Model: glm/glm-4.7
 ```
 

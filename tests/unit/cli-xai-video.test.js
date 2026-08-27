@@ -1,7 +1,7 @@
 /**
- * Tests for the `zenroute xai video` CLI command (cli/src/cli/commands/xaiVideo.js)
+ * Tests for the `zenrouter xai video` CLI command (cli/src/cli/commands/xaiVideo.js)
  *
- * Uses a real local HTTP server standing in for the zenroute gateway + video CDN.
+ * Uses a real local HTTP server standing in for the zenrouter gateway + video CDN.
  * No real credentials or upstream calls.
  *
  * Covers:
@@ -109,7 +109,7 @@ describe("run (against a mock gateway)", () => {
         req.on("data", (c) => (body += c));
         req.on("end", () => {
           seen.createBody = JSON.parse(body);
-          res.writeHead(200, { "Content-Type": "application/json", "x-zenroute-connection-id": "conn-42" });
+          res.writeHead(200, { "Content-Type": "application/json", "x-zenrouter-connection-id": "conn-42" });
           res.end(JSON.stringify({ request_id: "job-1" }));
         });
         return;

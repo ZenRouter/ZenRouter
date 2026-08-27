@@ -12,8 +12,8 @@ const { runElevatedPowerShell, isAdmin } = require("../winElevated.js");
  * If anything fails mid-way, restore from `.bak`. Same-volume renames are atomic on NTFS.
  */
 function atomicWriteHostsWin(target, originalContent, newContent) {
-  const tmpNew = `${target}.zenroute.new`;
-  const tmpBak = `${target}.zenroute.bak`;
+  const tmpNew = `${target}.zenrouter.new`;
+  const tmpBak = `${target}.zenrouter.bak`;
   try {
     fs.writeFileSync(tmpNew, newContent, "utf8");
     try { fs.unlinkSync(tmpBak); } catch { /* none */ }

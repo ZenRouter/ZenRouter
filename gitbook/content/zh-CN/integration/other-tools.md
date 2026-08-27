@@ -1,10 +1,10 @@
 # 其他工具集成
 
-ZenRoute 兼容任何支持 OpenAI API 格式的工具。本指南介绍各种工具和自定义应用的通用集成模式。
+ZenRouter 兼容任何支持 OpenAI API 格式的工具。本指南介绍各种工具和自定义应用的通用集成模式。
 
 ## 概览
 
-ZenRoute 提供 OpenAI 兼容的 API endpoint,可与以下场景配合使用:
+ZenRouter 提供 OpenAI 兼容的 API endpoint,可与以下场景配合使用:
 - 自定义脚本与应用
 - API 客户端与测试工具
 - CLI 工具与实用程序
@@ -13,20 +13,20 @@ ZenRoute 提供 OpenAI 兼容的 API endpoint,可与以下场景配合使用:
 
 ## 通用设置模式
 
-任何 OpenAI 兼容的工具都可以通过以下设置连接到 ZenRoute:
+任何 OpenAI 兼容的工具都可以通过以下设置连接到 ZenRouter:
 
-**本地 ZenRoute:**
+**本地 ZenRouter:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
-Model: 任意 ZenRoute 模型(cc/*, cx/*, glm/*, 等)
+Model: 任意 ZenRouter 模型(cc/*, cx/*, glm/*, 等)
 ```
 
-**云端 ZenRoute:**
+**云端 ZenRouter:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
-Model: 任意 ZenRoute 模型(cc/*, cx/*, glm/*, 等)
+Model: 任意 ZenRouter 模型(cc/*, cx/*, glm/*, 等)
 ```
 
 ## 可用模型
@@ -318,9 +318,9 @@ def chat_with_retry(prompt, max_retries=3):
 
 ### 连接问题
 
-**问题:** 无法连接到 ZenRoute
+**问题:** 无法连接到 ZenRouter
 ```bash
-# 检查 ZenRoute 是否运行
+# 检查 ZenRouter 是否运行
 curl http://localhost:20128/health
 
 # 预期响应:
@@ -328,7 +328,7 @@ curl http://localhost:20128/health
 ```
 
 **方案:**
-- 确认 ZenRoute 正在运行
+- 确认 ZenRouter 正在运行
 - 检查 20128 端口未被阻止
 - 确保 base URL 正确(包含 `/v1`)
 
@@ -366,7 +366,7 @@ Error: Request timed out after 30s
 **方案:**
 - 在客户端配置中增大超时
 - 时间敏感任务使用更快的模型
-- 检查到 ZenRoute 的网络连接
+- 检查到 ZenRouter 的网络连接
 
 ### 速率限制
 

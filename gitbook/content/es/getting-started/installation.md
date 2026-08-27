@@ -1,6 +1,6 @@
 # Instalación
 
-Guía detallada de instalación de ZenRoute con consejos de solución de problemas.
+Guía detallada de instalación de ZenRouter con consejos de solución de problemas.
 
 ---
 
@@ -31,37 +31,37 @@ npm --version
 
 ### Método 1: Instalación global (Recomendado)
 
-Instala ZenRoute globalmente para usar desde cualquier lugar:
+Instala ZenRouter globalmente para usar desde cualquier lugar:
 
 ```bash
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
-**Iniciar ZenRoute:**
+**Iniciar ZenRouter:**
 
 ```bash
-zenroute
+zenrouter
 ```
 
 **Beneficios:**
 - ✅ Ejecuta desde cualquier directorio
-- ✅ Comando simple: `zenroute`
-- ✅ Auto-actualizaciones con `npm update -g zenroute`
+- ✅ Comando simple: `zenrouter`
+- ✅ Auto-actualizaciones con `npm update -g zenrouter`
 
 ### Método 2: Instalación local
 
 Instala en un proyecto específico:
 
 ```bash
-mkdir my-zenroute
-cd my-zenroute
-npm install zenroute
+mkdir my-zenrouter
+cd my-zenrouter
+npm install zenrouter
 ```
 
-**Iniciar ZenRoute:**
+**Iniciar ZenRouter:**
 
 ```bash
-npx zenroute
+npx zenrouter
 ```
 
 **Beneficios:**
@@ -74,8 +74,8 @@ npx zenroute
 Clona y compila desde GitHub:
 
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install
 npm run build
 npm start
@@ -93,13 +93,13 @@ npm start
 ### Iniciar el servidor
 
 ```bash
-zenroute
+zenrouter
 ```
 
 **Qué sucede:**
 1. El servidor inicia en `http://localhost:20128`
 2. El dashboard se abre automáticamente en el navegador
-3. Se crea el directorio de datos en `~/.zenroute`
+3. Se crea el directorio de datos en `~/.zenrouter`
 4. API key generada automáticamente
 
 ### Login del dashboard
@@ -193,7 +193,7 @@ export JWT_SECRET="your-secure-secret-change-this"
 export INITIAL_PASSWORD="your-password"
 
 # Storage
-export DATA_DIR="~/.zenroute"
+export DATA_DIR="~/.zenrouter"
 
 # Server
 export PORT="20128"
@@ -205,11 +205,11 @@ export ENABLE_REQUEST_LOGS="false"
 
 ### Directorio de datos
 
-**Ubicación por defecto:** `~/.zenroute`
+**Ubicación por defecto:** `~/.zenrouter`
 
 **Contenido:**
 ```
-~/.zenroute/
+~/.zenrouter/
   ├── db.json           # Database (providers, combos, usage)
   ├── api-keys.json     # API keys
   └── logs/             # Request logs (if enabled)
@@ -219,7 +219,7 @@ export ENABLE_REQUEST_LOGS="false"
 
 ```bash
 export DATA_DIR="/custom/path"
-zenroute
+zenrouter
 ```
 
 ### Configuración de puerto
@@ -230,13 +230,13 @@ zenroute
 
 ```bash
 export PORT="3000"
-zenroute
+zenrouter
 ```
 
 **O usa la línea de comandos:**
 
 ```bash
-zenroute --port 3000
+zenrouter --port 3000
 ```
 
 ---
@@ -263,14 +263,14 @@ kill -9 <PID>
 **Solución 2: Usa otro puerto**
 
 ```bash
-zenroute --port 3000
+zenrouter --port 3000
 ```
 
 ### Permiso denegado
 
 **Error:**
 ```
-Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/zenroute'
+Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/zenrouter'
 ```
 
 **Solución: Usa sudo (no recomendado) o corrige los permisos de npm**
@@ -283,7 +283,7 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 
 # Luego instalar nuevamente
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
 ### Versión de Node.js muy antigua
@@ -345,23 +345,23 @@ Dashboard → Provider → Disconnect → Reconnect
 
 ### Uso alto de memoria
 
-**Problema:** ZenRoute usa demasiada RAM
+**Problema:** ZenRouter usa demasiada RAM
 
 **Solución: Reinicia el servidor**
 
 ```bash
 # Detener
-pkill -f zenroute
+pkill -f zenrouter
 
 # Iniciar
-zenroute
+zenrouter
 ```
 
 **O usa PM2 para auto-reinicio:**
 
 ```bash
 npm install -g pm2
-pm2 start zenroute --name zenroute
+pm2 start zenrouter --name zenrouter
 pm2 save
 ```
 
@@ -372,8 +372,8 @@ pm2 save
 ### Desarrollo local
 
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 ```
 
 **Caso de uso:** Codificación personal, pruebas
@@ -382,7 +382,7 @@ zenroute
 
 ```bash
 # Instalar
-npm install -g zenroute
+npm install -g zenrouter
 
 # Configurar
 export JWT_SECRET="your-secure-secret"
@@ -391,7 +391,7 @@ export NODE_ENV="production"
 
 # Iniciar con PM2
 npm install -g pm2
-pm2 start zenroute --name zenroute
+pm2 start zenrouter --name zenrouter
 pm2 save
 pm2 startup
 ```
@@ -401,15 +401,15 @@ pm2 startup
 ### Docker
 
 ```bash
-docker pull zenroute/zenroute:latest
+docker pull zenrouter/zenrouter:latest
 
 docker run -d \
   -p 20128:20128 \
   -e JWT_SECRET="your-secure-secret" \
   -e INITIAL_PASSWORD="your-password" \
-  -v zenroute-data:/root/.zenroute \
-  --name zenroute \
-  zenroute/zenroute:latest
+  -v zenrouter-data:/root/.zenrouter \
+  --name zenrouter \
+  zenrouter/zenrouter:latest
 ```
 
 **Caso de uso:** Despliegue containerizado, Kubernetes
@@ -444,13 +444,13 @@ server {
 ### Eliminar instalación global
 
 ```bash
-npm uninstall -g zenroute
+npm uninstall -g zenrouter
 ```
 
 ### Eliminar el directorio de datos
 
 ```bash
-rm -rf ~/.zenroute
+rm -rf ~/.zenrouter
 ```
 
 ### Eliminar la configuración
@@ -458,7 +458,7 @@ rm -rf ~/.zenroute
 ```bash
 # Eliminar variables de entorno del archivo de configuración del shell
 nano ~/.bashrc  # o ~/.zshrc
-# Eliminar exports relacionados con zenroute
+# Eliminar exports relacionados con zenrouter
 ```
 
 ---
@@ -473,6 +473,6 @@ nano ~/.bashrc  # o ~/.zshrc
 
 ## ¿Necesitas ayuda?
 
-- **Sitio web**: [GitHub](https://github.com/joyccn/ZenRoute)
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **Sitio web**: [GitHub](https://github.com/ZenRouter/ZenRouter)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)

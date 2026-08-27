@@ -9,16 +9,16 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 lg:col-span-2">
             <div className="flex items-center gap-3 mb-6">
-              <div className="size-6 rounded bg-[#f97815] flex items-center justify-center text-white">
+              <div className="size-6 rounded bg-[#FF3B1D] flex items-center justify-center text-white">
                 <span className="material-symbols-outlined text-[16px]">hub</span>
               </div>
-              <h3 className="text-white text-lg font-bold">ZenRoute</h3>
+              <h3 className="text-white text-lg font-bold">ZenRouter</h3>
             </div>
             <p className="text-gray-500 text-sm max-w-xs mb-6">
               The unified endpoint for AI generation. Connect, route, and manage your AI providers with ease.
             </p>
             <div className="flex gap-4">
-              <a className="text-gray-400 hover:text-white transition-colors" href="https://github.com/joyccn/ZenRoute" target="_blank" rel="noopener noreferrer">
+              <a className="text-gray-400 hover:text-white transition-colors" href="https://github.com/ZenRouter/ZenRouter" target="_blank" rel="noopener noreferrer">
                 <span className="material-symbols-outlined">code</span>
               </a>
             </div>
@@ -27,31 +27,31 @@ export default function Footer() {
           {/* Product */}
           <div className="flex flex-col gap-4">
             <h4 className="font-bold text-white">Product</h4>
-            <a className="text-gray-400 hover:text-[#f97815] text-sm transition-colors" href="#features">Features</a>
-            <Link className="text-gray-400 hover:text-[#f97815] text-sm transition-colors" href="/dashboard">Dashboard</Link>
+            <a className="text-gray-400 hover:text-[#FF3B1D] text-sm transition-colors" href="#features">Features</a>
+            <Link className="text-gray-400 hover:text-[#FF3B1D] text-sm transition-colors" href="/dashboard">Dashboard</Link>
           </div>
 
           {/* Resources */}
           <div className="flex flex-col gap-4">
             <h4 className="font-bold text-white">Resources</h4>
-            <a className="text-gray-400 hover:text-[#f97815] text-sm transition-colors" href="https://github.com/joyccn/ZenRoute#readme" target="_blank" rel="noopener noreferrer">Documentation</a>
-            <a className="text-gray-400 hover:text-[#f97815] text-sm transition-colors" href="https://github.com/joyccn/ZenRoute" target="_blank" rel="noopener noreferrer">GitHub</a>
-            <a className="text-gray-400 hover:text-[#f97815] text-sm transition-colors" href="https://www.npmjs.com/package/zenroute" target="_blank" rel="noopener noreferrer">NPM</a>
+            <a className="text-gray-400 hover:text-[#FF3B1D] text-sm transition-colors" href="https://github.com/ZenRouter/ZenRouter#readme" target="_blank" rel="noopener noreferrer">Documentation</a>
+            <a className="text-gray-400 hover:text-[#FF3B1D] text-sm transition-colors" href="https://github.com/ZenRouter/ZenRouter" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a className="text-gray-400 hover:text-[#FF3B1D] text-sm transition-colors" href="https://www.npmjs.com/package/zenrouter" target="_blank" rel="noopener noreferrer">NPM</a>
           </div>
 
           {/* Legal */}
           <div className="flex flex-col gap-4">
             <h4 className="font-bold text-white">Legal</h4>
-            <a className="text-gray-400 hover:text-[#f97815] text-sm transition-colors" href="https://github.com/joyccn/ZenRoute/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+            <a className="text-gray-400 hover:text-[#FF3B1D] text-sm transition-colors" href="https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
           </div>
         </div>
 
         {/* Bottom */}
         <div className="border-t border-[#3a2f27] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-600 text-sm">© 2026 ZenRoute. All rights reserved.</p>
+          <p className="text-gray-600 text-sm">© 2026 ZenRouter. All rights reserved.</p>
           <div className="flex gap-6">
-            <a className="text-gray-600 hover:text-white text-sm transition-colors" href="https://github.com/joyccn/ZenRoute" target="_blank" rel="noopener noreferrer">GitHub</a>
-            <a className="text-gray-600 hover:text-white text-sm transition-colors" href="https://www.npmjs.com/package/zenroute" target="_blank" rel="noopener noreferrer">NPM</a>
+            <a className="text-gray-600 hover:text-white text-sm transition-colors" href="https://github.com/ZenRouter/ZenRouter" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a className="text-gray-600 hover:text-white text-sm transition-colors" href="https://www.npmjs.com/package/zenrouter" target="_blank" rel="noopener noreferrer">NPM</a>
           </div>
         </div>
       </div>

@@ -1,12 +1,12 @@
 # Tích hợp Claude Code
 
-Tích hợp ZenRoute với Claude Code CLI để định tuyến request API Anthropic qua hệ thống routing thông minh của ZenRoute.
+Tích hợp ZenRouter với Claude Code CLI để định tuyến request API Anthropic qua hệ thống routing thông minh của ZenRouter.
 
 ## Yêu cầu
 
 - Claude Code CLI đã cài đặt
-- ZenRoute đang chạy cục bộ hoặc cloud endpoint đã cấu hình
-- API key từ ZenRoute dashboard
+- ZenRouter đang chạy cục bộ hoặc cloud endpoint đã cấu hình
+- API key từ ZenRouter dashboard
 
 ## Setup
 
@@ -15,7 +15,7 @@ Tích hợp ZenRoute với Claude Code CLI để định tuyến request API Ant
 Đặt các biến môi trường sau trong file cấu hình shell (`~/.bashrc`, `~/.zshrc`, hoặc `~/.bash_profile`):
 
 ```bash
-# Base URL for ZenRoute
+# Base URL for ZenRouter
 export ANTHROPIC_BASE_URL="http://localhost:20128/v1"
 
 # Optional: Set default models for aliases
@@ -40,7 +40,7 @@ echo $ANTHROPIC_BASE_URL
 
 ## Model Aliases
 
-Claude Code hỗ trợ các alias model sau ánh xạ sang model ZenRoute:
+Claude Code hỗ trợ các alias model sau ánh xạ sang model ZenRouter:
 
 | Alias | Model | Biến môi trường |
 |-------|-------|---------------------|
@@ -86,7 +86,7 @@ Claude Code lưu cấu hình trong `~/.claude/settings.json`. Bạn có thể s�
 
 Nếu gặp lỗi kết nối:
 
-1. Xác minh ZenRoute đang chạy: `curl http://localhost:20128/health`
+1. Xác minh ZenRouter đang chạy: `curl http://localhost:20128/health`
 2. Kiểm tra biến môi trường đã set đúng
 3. Đảm bảo không firewall nào chặn port 20128
 
@@ -94,16 +94,16 @@ Nếu gặp lỗi kết nối:
 
 Nếu gặp lỗi "model not found":
 
-1. Xác minh tên model khớp với cấu hình ZenRoute
-2. Kiểm tra kết nối provider đang hoạt động trong ZenRoute dashboard
+1. Xác minh tên model khớp với cấu hình ZenRouter
+2. Kiểm tra kết nối provider đang hoạt động trong ZenRouter dashboard
 3. Đảm bảo model có sẵn trong các provider đã kết nối
 
 ## Cloud Endpoint
 
-Để dùng ZenRoute cloud endpoint thay vì localhost:
+Để dùng ZenRouter cloud endpoint thay vì localhost:
 
 ```bash
 export ANTHROPIC_BASE_URL="http://localhost:20128"
 ```
 
-Đảm bảo bạn đã cấu hình API key trong ZenRoute cloud dashboard.
+Đảm bảo bạn đã cấu hình API key trong ZenRouter cloud dashboard.

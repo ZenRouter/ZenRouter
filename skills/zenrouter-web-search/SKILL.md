@@ -1,25 +1,25 @@
 ---
-name: zenroute-web-search
-description: Web search via ZenRoute /v1/search using Tavily / Exa / Brave / Serper / SearXNG / Google PSE / Linkup / SearchAPI / You.com / Perplexity. Use when the user wants to search the web, look up information, find articles, or query a search engine.
+name: zenrouter-web-search
+description: Web search via ZenRouter /v1/search using Tavily / Exa / Brave / Serper / SearXNG / Google PSE / Linkup / SearchAPI / You.com / Perplexity. Use when the user wants to search the web, look up information, find articles, or query a search engine.
 ---
 
-# ZenRoute — Web Search
+# ZenRouter — Web Search
 
-Requires `ZENROUTE_URL` (and `ZENROUTE_KEY` if auth enabled). See https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute/SKILL.md for setup.
+Requires `ZENROUTER_URL` (and `ZENROUTER_KEY` if auth enabled). See https://raw.githubusercontent.com/ZenRouter/ZenRouter/refs/heads/master/skills/zenrouter/SKILL.md for setup.
 
 ## Discover
 
 ```bash
-curl $ZENROUTE_URL/v1/models/web | jq '.data[] | select(.kind=="webSearch") | .id'
+curl $ZENROUTER_URL/v1/models/web | jq '.data[] | select(.kind=="webSearch") | .id'
 # Per-provider params (searchTypes, maxResults, required options like cx for google-pse)
-curl "$ZENROUTE_URL/v1/models/info?id=tavily/search"
+curl "$ZENROUTER_URL/v1/models/info?id=tavily/search"
 ```
 
 IDs end in `/search` (e.g. `tavily/search`). Combos (`owned_by:"combo"`) chain providers with auto-fallback.
 
 ## Endpoint
 
-`POST $ZENROUTE_URL/v1/search`
+`POST $ZENROUTER_URL/v1/search`
 
 | Field | Required | Notes |
 |---|---|---|
@@ -32,18 +32,18 @@ IDs end in `/search` (e.g. `tavily/search`). Combos (`owned_by:"combo"`) chain p
 ## Examples
 
 ```bash
-curl -X POST $ZENROUTE_URL/v1/search \
-  -H "Authorization: Bearer $ZENROUTE_KEY" \
+curl -X POST $ZENROUTER_URL/v1/search \
+  -H "Authorization: Bearer $ZENROUTER_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"tavily","query":"ZenRoute open source","max_results":5}'
+  -d '{"model":"tavily","query":"ZenRouter open source","max_results":5}'
 ```
 
 JS:
 
 ```js
-const r = await fetch(`${process.env.ZENROUTE_URL}/v1/search`, {
+const r = await fetch(`${process.env.ZENROUTER_URL}/v1/search`, {
   method: "POST",
-  headers: { "Authorization": `Bearer ${process.env.ZENROUTE_KEY}`, "Content-Type": "application/json" },
+  headers: { "Authorization": `Bearer ${process.env.ZENROUTER_KEY}`, "Content-Type": "application/json" },
   body: JSON.stringify({ model: "search-combo", query: "latest LLM benchmarks", max_results: 10 }),
 });
 console.log(await r.json());
@@ -54,7 +54,7 @@ console.log(await r.json());
 ```json
 {
   "provider": "tavily",
-  "query": "ZenRoute open source",
+  "query": "ZenRouter open source",
   "results": [
     {
       "title": "...", "url": "https://...", "display_url": "github.com/...",

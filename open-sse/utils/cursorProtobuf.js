@@ -892,7 +892,7 @@ export function extractTextFromResponse(payload) {
 // RunRequest path (executors/cursor.js) to advertise MCP tools and to
 // decode/answer server-initiated tool calls.
 
-const AGENT_TOOL_PROVIDER = "zenroute";
+const AGENT_TOOL_PROVIDER = "zenrouter";
 
 function encodeFixed64Double(value) {
   const buf = new ArrayBuffer(8);

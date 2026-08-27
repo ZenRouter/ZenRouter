@@ -1,12 +1,12 @@
 # よくある質問
 
-ZenRouteに関する一般的な質問。
+ZenRouterに関する一般的な質問。
 
 ---
 
-## ZenRouteとは?
+## ZenRouterとは?
 
-**ZenRouteは、サブスクリプションの価値を最大化し、コストを最小限に抑えるAIモデルルーターです。**
+**ZenRouterは、サブスクリプションの価値を最大化し、コストを最小限に抑えるAIモデルルーターです。**
 
 3階層フォールバックシステムを使用して、複数のAIプロバイダー間でリクエストをインテリジェントにルーティングします:
 1. **サブスクリプション階層** - すでに支払っているClaude Code、Codex、Geminiのクォータを最大化
@@ -23,7 +23,7 @@ ZenRouteに関する一般的な質問。
 
 ## 料金体系はどうなっていますか?
 
-**ZenRouteは3階層の料金戦略を使用します:**
+**ZenRouterは3階層の料金戦略を使用します:**
 
 ### Tier 1: サブスクリプション(最初に最大化)
 - **Claude Code** (Pro/Max): 月$20〜100 - 5時間 + 週次クォータ
@@ -50,9 +50,9 @@ ZenRouteに関する一般的な質問。
 
 ---
 
-## ZenRouteは無料ですか?
+## ZenRouterは無料ですか?
 
-**はい、ZenRoute自体は100%無料でオープンソースです。**
+**はい、ZenRouter自体は100%無料でオープンソースです。**
 
 **利用可能な無料階層プロバイダー:**
 - **Gemini CLI** - 月18万コンプリーション(無料Googleアカウント)
@@ -96,7 +96,7 @@ ZenRouteに関する一般的な質問。
 
 ## 複数のプロバイダーを使用できますか?
 
-**はい! これはZenRouteのコア機能です。**
+**はい! これはZenRouterのコア機能です。**
 
 **コンボにより、複数のプロバイダーを自動フォールバック付きで連鎖させることができます:**
 
@@ -129,7 +129,7 @@ Dashboard → Combos → Create New
 
 ## クォータトラッキングはどのように機能しますか?
 
-**ZenRouteはすべてのプロバイダーのクォータをリアルタイムで追跡します:**
+**ZenRouterはすべてのプロバイダーのクォータをリアルタイムで追跡します:**
 
 **機能:**
 - **トークン消費** - リクエストごとの入出力トークン
@@ -154,13 +154,13 @@ Dashboard → Providers → Quota Tracking
 
 ---
 
-## ZenRouteはCursorで動作しますか?
+## ZenRouterはCursorで動作しますか?
 
 **はい、ただしCursorはクラウドエンドポイントが必要です。**
 
 **問題:** Cursor IDEはlocalhostエンドポイントをサポートしていません。
 
-**解決策:** ZenRouteクラウドデプロイメントを使用:
+**解決策:** ZenRouterクラウドデプロイメントを使用:
 
 ```
 Cursor Settings → Models → Advanced:
@@ -172,8 +172,8 @@ Cursor Settings → Models → Advanced:
 **代替案:** パブリックドメインでVPSにセルフホスト:
 ```bash
 # VPSへデプロイ
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install && npm run build
 npm start
 
@@ -192,22 +192,22 @@ npm start
 
 ---
 
-## ZenRouteをセルフホストできますか?
+## ZenRouterをセルフホストできますか?
 
-**はい! ZenRouteは複数のデプロイメントオプションをサポートします:**
+**はい! ZenRouterは複数のデプロイメントオプションをサポートします:**
 
 ### Localhost(デフォルト)
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 → Dashboard: http://localhost:3000
 → API: http://localhost:20128/v1
 ```
 
 ### VPS/クラウド
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install && npm run build
 
 export JWT_SECRET="your-secure-secret"
@@ -219,23 +219,23 @@ npm start
 
 ### Docker
 ```bash
-docker build -t zenroute .
+docker build -t zenrouter .
 docker run -d \
   -p 3000:3000 \
   -e JWT_SECRET="your-secret" \
-  -v zenroute-data:/app/data \
-  zenroute
+  -v zenrouter-data:/app/data \
+  zenrouter
 ```
 
 ### Cloudflare Workers
 ```bash
-cd zenroute/app
+cd zenrouter/app
 npm run deploy:cloudflare
 ```
 
 **環境変数:**
 - `JWT_SECRET` - **本番環境で必ず変更!**
-- `DATA_DIR` - データベース保存パス(デフォルト: `~/.zenroute`)
+- `DATA_DIR` - データベース保存パス(デフォルト: `~/.zenrouter`)
 - `INITIAL_PASSWORD` - ダッシュボードログイン(デフォルト: `12345678`)
 - `NODE_ENV` - デプロイ時は`production`に設定
 
@@ -245,11 +245,11 @@ npm run deploy:cloudflare
 
 ## データは安全ですか?
 
-**はい、ZenRouteはセキュリティとプライバシーを優先します:**
+**はい、ZenRouterはセキュリティとプライバシーを優先します:**
 
 **ローカルストレージ:**
-- すべてのデータは`~/.zenroute`(またはカスタム`DATA_DIR`)にローカル保存
-- ZenRouteサーバーへのデータ送信なし
+- すべてのデータは`~/.zenrouter`(またはカスタム`DATA_DIR`)にローカル保存
+- ZenRouterサーバーへのデータ送信なし
 - OAuthトークンはJWTで暗号化
 
 **テレメトリなし:**
@@ -268,31 +268,31 @@ npm run deploy:cloudflare
 - クラウドデプロイでHTTPSを有効化
 - APIキーを定期的にローテーション
 
-**ZenRouteが保存するもの:**
+**ZenRouterが保存するもの:**
 - プロバイダーOAuthトークン(暗号化)
 - APIキー(暗号化)
 - 使用統計(ローカルのみ)
 - コンボ設定
 
-**ZenRouteが保存しないもの:**
+**ZenRouterが保存しないもの:**
 - プロンプトやレスポンス
 - 生成したコード
 - 個人情報
 
 ---
 
-## ZenRouteを更新するには?
+## ZenRouterを更新するには?
 
 **更新方法はインストールタイプによって異なります:**
 
 ### グローバルNPMインストール
 ```bash
-npm update -g zenroute
+npm update -g zenrouter
 ```
 
 ### ローカルインストール
 ```bash
-cd zenroute/app
+cd zenrouter/app
 git pull origin main
 npm install
 npm run build
@@ -301,22 +301,22 @@ npm start
 
 ### Docker
 ```bash
-docker pull zenroute:latest
-docker stop zenroute
-docker rm zenroute
+docker pull zenrouter:latest
+docker stop zenrouter
+docker rm zenrouter
 docker run -d \
   -p 3000:3000 \
-  -v zenroute-data:/app/data \
-  zenroute:latest
+  -v zenrouter-data:/app/data \
+  zenrouter:latest
 ```
 
 **バージョンを確認:**
 ```bash
-zenroute --version
+zenrouter --version
 ```
 
 **破壊的変更:**
-- メジャー更新前に`~/.zenroute`をバックアップ
+- メジャー更新前に`~/.zenrouter`をバックアップ
 - メジャーバージョンの移行ガイドを確認
 
 ---
@@ -328,18 +328,18 @@ zenroute --version
 ### 貢献方法:
 
 1. **バグを報告:**
-   - [GitHub Issues](https://github.com/joyccn/ZenRoute/issues)
+   - [GitHub Issues](https://github.com/ZenRouter/ZenRouter/issues)
    - エラーログ、再現手順を含める
 
 2. **機能をリクエスト:**
-   - [GitHub Discussions](https://github.com/joyccn/ZenRoute/discussions)
+   - [GitHub Discussions](https://github.com/ZenRouter/ZenRouter/discussions)
    - ユースケースと利点を説明
 
 3. **コードを提出:**
    ```bash
    # リポジトリをフォーク
-   git clone https://github.com/YOUR_USERNAME/zenroute.git
-   cd zenroute
+   git clone https://github.com/YOUR_USERNAME/zenrouter.git
+   cd zenrouter
    
    # ブランチを作成
    git checkout -b feature/your-feature
@@ -374,13 +374,13 @@ zenroute --version
 - ドキュメントを更新
 - コミットは小さく、わかりやすく
 
-詳細は[CONTRIBUTING.md](https://github.com/joyccn/ZenRoute/blob/main/CONTRIBUTING.md)を参照。
+詳細は[CONTRIBUTING.md](https://github.com/ZenRouter/ZenRouter/blob/main/CONTRIBUTING.md)を参照。
 
 ---
 
 ## さらにヘルプが必要?
 
-- **ドキュメント:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
-- **GitHub:** [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **ドキュメント:** [GitHub Docs](https://github.com/ZenRouter/ZenRouter)
+- **GitHub:** [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues:** [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
 - **トラブルシューティング:** [troubleshooting.md](troubleshooting.md)

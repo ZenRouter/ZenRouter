@@ -1,13 +1,13 @@
 # Continue VSCode拡張機能統合
 
-ZenRouteをContinue拡張機能と統合し、Visual Studio Codeに直接AIアシスタンスを導入します。
+ZenRouterをContinue拡張機能と統合し、Visual Studio Codeに直接AIアシスタンスを導入します。
 
 ## 前提条件
 
 - Visual Studio Codeがインストール済み
 - VSCodeマーケットプレイスからContinue拡張機能がインストール済み
-- [ダッシュボード](http://localhost:20128/dashboard)からのZenRoute APIキー
-- ZenRouteが動作中 (ローカルまたはクラウド)
+- [ダッシュボード](http://localhost:20128/dashboard)からのZenRouter APIキー
+- ZenRouterが動作中 (ローカルまたはクラウド)
 
 ## 設定手順
 
@@ -18,7 +18,7 @@ ZenRouteをContinue拡張機能と統合し、Visual Studio Codeに直接AIア�
 3. 「Continue: Open Config」と入力して選択
 4. `~/.continue/config.json` が開きます
 
-### 2. ZenRouteモデル設定を追加
+### 2. ZenRouterモデル設定を追加
 
 以下の設定を `config.json` に追加:
 
@@ -27,7 +27,7 @@ ZenRouteをContinue拡張機能と統合し、Visual Studio Codeに直接AIア�
 {
   "models": [
     {
-      "title": "ZenRoute - Claude Opus",
+      "title": "ZenRouter - Claude Opus",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key-from-dashboard",
@@ -42,28 +42,28 @@ ZenRouteをContinue拡張機能と統合し、Visual Studio Codeに直接AIア�
 {
   "models": [
     {
-      "title": "ZenRoute - Claude Opus (Best)",
+      "title": "ZenRouter - Claude Opus (Best)",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - Claude Sonnet (Balanced)",
+      "title": "ZenRouter - Claude Sonnet (Balanced)",
       "provider": "openai",
       "model": "cc/claude-sonnet-4-20250514",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - DeepSeek Chat (Code)",
+      "title": "ZenRouter - DeepSeek Chat (Code)",
       "provider": "openai",
       "model": "cx/deepseek-chat",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - Claude Haiku (Fast)",
+      "title": "ZenRouter - Claude Haiku (Fast)",
       "provider": "openai",
       "model": "cc/claude-haiku-4-20250514",
       "apiKey": "your-api-key-from-dashboard",
@@ -73,7 +73,7 @@ ZenRouteをContinue拡張機能と統合し、Visual Studio Codeに直接AIア�
 }
 ```
 
-**クラウドZenRoute用:**
+**クラウドZenRouter用:**
 `apiBase` を以下に置き換え:
 ```json
 "apiBase": "http://localhost:20128/v1"
@@ -89,7 +89,7 @@ ZenRouteをContinue拡張機能と統合し、Visual Studio Codeに直接AIア�
 
 1. Continueサイドバーを開く (左パネルのContinueアイコンをクリック)
 2. 上部のモデルセレクタードロップダウンをクリック
-3. お好みのZenRouteモデルを選択
+3. お好みのZenRouterモデルを選択
 
 ## 利用可能なモデル
 
@@ -139,7 +139,7 @@ ZenRouteをContinue拡張機能と統合し、Visual Studio Codeに直接AIア�
 {
   "models": [
     {
-      "title": "ZenRoute - Code Expert",
+      "title": "ZenRouter - Code Expert",
       "provider": "openai",
       "model": "cx/deepseek-chat",
       "apiKey": "your-api-key",
@@ -158,7 +158,7 @@ ZenRouteをContinue拡張機能と統合し、Visual Studio Codeに直接AIア�
 {
   "models": [
     {
-      "title": "ZenRoute - Creative Writer",
+      "title": "ZenRouter - Creative Writer",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key",
@@ -204,13 +204,13 @@ Continueがモデルに送信するコンテキストを設定:
 ## トラブルシューティング
 
 ### モデルが応答しない
-- ZenRouteが動作中か確認: `curl http://localhost:20128/health`
+- ZenRouterが動作中か確認: `curl http://localhost:20128/health`
 - config.jsonのAPIキーを確認
 - エラーについてVSCode開発者コンソールを確認: `Help` → `Toggle Developer Tools`
 
 ### 間違ったモデルが選択されている
 - Continueサイドバーのモデルドロップダウンをクリック
-- 正しいZenRouteモデルを選択
+- 正しいZenRouterモデルを選択
 - モデル名は正確に一致する必要があります (大文字小文字を区別)
 
 ### 設定が読み込まれない
@@ -221,7 +221,7 @@ Continueがモデルに送信するコンテキストを設定:
 ### パフォーマンスが遅い
 - より高速なモデルへ切替 (haiku、flash)
 - contextProvidersでコンテキストサイズを削減
-- ZenRouteへのネットワークレイテンシを確認
+- ZenRouterへのネットワークレイテンシを確認
 
 ## ベストプラクティス
 

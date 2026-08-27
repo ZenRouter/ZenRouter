@@ -1,10 +1,10 @@
 # Tích hợp các Công cụ khác
 
-ZenRoute tương thích với mọi công cụ hỗ trợ format API OpenAI. Hướng dẫn này bao gồm pattern tích hợp tổng quát cho nhiều công cụ và ứng dụng tùy chỉnh.
+ZenRouter tương thích với mọi công cụ hỗ trợ format API OpenAI. Hướng dẫn này bao gồm pattern tích hợp tổng quát cho nhiều công cụ và ứng dụng tùy chỉnh.
 
 ## Tổng quan
 
-ZenRoute cung cấp API endpoint tương thích OpenAI hoạt động với:
+ZenRouter cung cấp API endpoint tương thích OpenAI hoạt động với:
 - Script và ứng dụng tùy chỉnh
 - API client và công cụ test
 - Công cụ CLI và utility
@@ -13,20 +13,20 @@ ZenRoute cung cấp API endpoint tương thích OpenAI hoạt động với:
 
 ## Pattern Setup Tổng quát
 
-Mọi công cụ tương thích OpenAI có thể kết nối đến ZenRoute bằng các cài đặt sau:
+Mọi công cụ tương thích OpenAI có thể kết nối đến ZenRouter bằng các cài đặt sau:
 
-**ZenRoute cục bộ:**
+**ZenRouter cục bộ:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
-Model: any ZenRoute model (cc/*, cx/*, glm/*, etc.)
+Model: any ZenRouter model (cc/*, cx/*, glm/*, etc.)
 ```
 
-**ZenRoute cloud:**
+**ZenRouter cloud:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
-Model: any ZenRoute model (cc/*, cx/*, glm/*, etc.)
+Model: any ZenRouter model (cc/*, cx/*, glm/*, etc.)
 ```
 
 ## Model có sẵn
@@ -318,9 +318,9 @@ def chat_with_retry(prompt, max_retries=3):
 
 ### Vấn đề Connection
 
-**Vấn đề:** Không kết nối được đến ZenRoute
+**Vấn đề:** Không kết nối được đến ZenRouter
 ```bash
-# Check if ZenRoute is running
+# Check if ZenRouter is running
 curl http://localhost:20128/health
 
 # Expected response:
@@ -328,7 +328,7 @@ curl http://localhost:20128/health
 ```
 
 **Giải pháp:**
-- Xác minh ZenRoute đang chạy
+- Xác minh ZenRouter đang chạy
 - Kiểm tra port 20128 không bị chặn
 - Đảm bảo base URL đúng (bao gồm `/v1`)
 
@@ -366,7 +366,7 @@ Error: Request timed out after 30s
 **Giải pháp:**
 - Tăng timeout trong cấu hình client
 - Dùng model nhanh hơn cho task nhạy cảm về thời gian
-- Kiểm tra kết nối network đến ZenRoute
+- Kiểm tra kết nối network đến ZenRouter
 
 ### Rate Limiting
 

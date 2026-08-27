@@ -1,15 +1,15 @@
 # 🏠 ローカルホストデプロイメント
 
-開発と個人利用のため、ローカルマシンでZenRouteを実行。
+開発と個人利用のため、ローカルマシンでZenRouterを実行。
 
 ---
 
 ## 📦 インストール
 
-npm経由でZenRouteをグローバルインストール:
+npm経由でZenRouterをグローバルインストール:
 
 ```bash
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
 **要件:**
@@ -20,10 +20,10 @@ npm install -g zenroute
 
 ## 🚀 サーバーの起動
 
-一つのコマンドでZenRouteを起動:
+一つのコマンドでZenRouterを起動:
 
 ```bash
-zenroute
+zenrouter
 ```
 
 ダッシュボードが自動的にブラウザで `http://localhost:3000` に開きます。
@@ -31,7 +31,7 @@ zenroute
 **デフォルト設定:**
 - **ダッシュボード**: `http://localhost:3000`
 - **APIエンドポイント**: `http://localhost:20128/v1`
-- **データディレクトリ**: `~/.zenroute`
+- **データディレクトリ**: `~/.zenrouter`
 
 ---
 
@@ -42,7 +42,7 @@ zenroute
 環境変数を使ってカスタムデータディレクトリを設定:
 
 ```bash
-DATA_DIR=/path/to/data zenroute
+DATA_DIR=/path/to/data zenrouter
 ```
 
 ### カスタムポート
@@ -53,10 +53,10 @@ APIポート(20128)とダッシュボードポート(3000)はアプリケーシ�
 
 ## 🛑 サーバーの停止
 
-ZenRouteが実行されているターミナルで `Ctrl+C` を押します。
+ZenRouterが実行されているターミナルで `Ctrl+C` を押します。
 
 ```bash
-# zenrouteを実行しているターミナル
+# zenrouterを実行しているターミナル
 ^C  # Ctrl+Cを押す
 ```
 
@@ -69,25 +69,25 @@ ZenRouteが実行されているターミナルで `Ctrl+C` を押します。
 起動コマンドを再度実行するだけです:
 
 ```bash
-zenroute
+zenrouter
 ```
 
 すべての設定、APIキー、コンボはデータディレクトリに保持されます。
 
 ---
 
-## 📊 ZenRouteの更新
+## 📊 ZenRouterの更新
 
 最新バージョンに更新:
 
 ```bash
-npm update -g zenroute
+npm update -g zenrouter
 ```
 
 現在のバージョンを確認:
 
 ```bash
-npm list -g zenroute
+npm list -g zenrouter
 ```
 
 ---
@@ -113,7 +113,7 @@ kill -9 <PID>
 
 ```bash
 # sudoを使用 (非推奨)
-sudo npm install -g zenroute
+sudo npm install -g zenrouter
 
 # またはnpm権限を修正 (推奨)
 mkdir ~/.npm-global
@@ -128,10 +128,10 @@ source ~/.bashrc
 
 ```bash
 # 権限を確認
-ls -la ~/.zenroute
+ls -la ~/.zenrouter
 
 # 権限を修正
-chmod 755 ~/.zenroute
+chmod 755 ~/.zenrouter
 ```
 
 ---
@@ -139,7 +139,7 @@ chmod 755 ~/.zenroute
 ## 📁 データディレクトリ構造
 
 ```
-~/.zenroute/
+~/.zenrouter/
 ├── db.json           # メインデータベース (プロバイダー、コンボ、設定)
 ├── logs/             # アプリケーションログ
 └── cache/            # 一時キャッシュファイル
@@ -149,10 +149,10 @@ chmod 755 ~/.zenroute
 
 ```bash
 # バックアップ
-cp -r ~/.zenroute ~/.zenroute.backup
+cp -r ~/.zenrouter ~/.zenrouter.backup
 
 # 復元
-cp -r ~/.zenroute.backup ~/.zenroute
+cp -r ~/.zenrouter.backup ~/.zenrouter
 ```
 
 ---

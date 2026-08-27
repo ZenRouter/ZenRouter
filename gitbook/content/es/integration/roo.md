@@ -1,12 +1,12 @@
 # Integración con Roo AI Assistant
 
-Integra ZenRoute con Roo AI Assistant para acceder a múltiples modelos de IA a través de una interfaz unificada.
+Integra ZenRouter con Roo AI Assistant para acceder a múltiples modelos de IA a través de una interfaz unificada.
 
 ## Requisitos previos
 
 - Roo AI Assistant instalado
-- API key de ZenRoute desde el [dashboard](http://localhost:20128/dashboard)
-- ZenRoute ejecutándose (local o en la nube)
+- API key de ZenRouter desde el [dashboard](http://localhost:20128/dashboard)
+- ZenRouter ejecutándose (local o en la nube)
 
 ## Pasos de configuración
 
@@ -20,13 +20,13 @@ Inicia Roo AI Assistant y abre el panel de configuración.
 2. Selecciona **Ollama** como tipo de proveedor
 3. Configura los siguientes ajustes:
 
-**Para ZenRoute local:**
+**Para ZenRouter local:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
 ```
 
-**Para ZenRoute en la nube:**
+**Para ZenRouter en la nube:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
@@ -34,7 +34,7 @@ API Key: your-api-key-from-dashboard
 
 ### 3. Seleccionar modelo
 
-Elige entre los modelos disponibles de ZenRoute:
+Elige entre los modelos disponibles de ZenRouter:
 
 **Modelos Claude:**
 - `cc/claude-opus-4-5-20251101` - El más capaz
@@ -54,7 +54,7 @@ Elige entre los modelos disponibles de ZenRoute:
 Envía un mensaje de prueba para verificar la integración:
 
 ```
-Hello! Can you confirm you're connected through ZenRoute?
+Hello! Can you confirm you're connected through ZenRouter?
 ```
 
 ## Ejemplos de uso
@@ -87,19 +87,19 @@ Modelo: cx/deepseek-reasoner
 ## Solución de problemas
 
 ### Connection Failed
-- Verifica que ZenRoute esté corriendo: `curl http://localhost:20128/health`
+- Verifica que ZenRouter esté corriendo: `curl http://localhost:20128/health`
 - Verifica que la API key sea correcta
 - Asegúrate de que la Base URL incluya el sufijo `/v1`
 
 ### Modelo no disponible
 - Verifica que el nombre del modelo coincida exactamente (sensible a mayúsculas)
-- Verifica que el modelo esté habilitado en tu plan de ZenRoute
+- Verifica que el modelo esté habilitado en tu plan de ZenRouter
 - Intenta otro modelo de la lista
 
 ### Respuestas lentas
 - Cambia a modelos más rápidos (haiku, flash)
 - Verifica la conexión de red
-- Monitorea los logs de ZenRoute por problemas
+- Monitorea los logs de ZenRouter por problemas
 
 ## Configuración avanzada
 

@@ -44,12 +44,12 @@ const readJson = async (filePath) => {
   }
 };
 
-const hasZenRouteConfig = (globalState) => {
+const hasZenRouterConfig = (globalState) => {
   if (!globalState) return false;
   const isOpenAi =
     globalState.actModeApiProvider === "openai" || globalState.planModeApiProvider === "openai";
   const baseUrl = globalState.openAiBaseUrl || "";
-  return isOpenAi && (baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1") || baseUrl.includes("zenroute"));
+  return isOpenAi && (baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1") || baseUrl.includes("zenrouter"));
 };
 
 export async function GET() {
@@ -67,7 +67,7 @@ export async function GET() {
         openAiBaseUrl: globalState?.openAiBaseUrl,
         openAiModelId: globalState?.openAiModelId,
       },
-      hasZenRoute: hasZenRouteConfig(globalState),
+      hasZenRouter: hasZenRouterConfig(globalState),
       globalStatePath: getGlobalStatePath(),
     });
   } catch (error) {
@@ -127,7 +127,7 @@ export async function DELETE() {
     delete secrets.openAiApiKey;
     await fs.writeFile(getSecretsPath(), JSON.stringify(secrets, null, 2));
 
-    return NextResponse.json({ success: true, message: "ZenRoute settings removed from Cline" });
+    return NextResponse.json({ success: true, message: "ZenRouter settings removed from Cline" });
   } catch (error) {
     console.log("Error resetting cline settings:", error);
     return NextResponse.json({ error: "Failed to reset cline settings" }, { status: 500 });

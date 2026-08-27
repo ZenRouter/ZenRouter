@@ -32,7 +32,7 @@
 **ステップ1: ダッシュボード経由で接続**
 
 ```bash
-zenroute
+zenrouter
 # Dashboard開く → Providers → Connect Claude Code
 ```
 
@@ -82,7 +82,7 @@ Model: cc/claude-opus-4-5-20251101
 **ステップ1: ダッシュボード経由で接続**
 
 ```bash
-zenroute
+zenrouter
 # Dashboard → Providers → Connect Codex
 ```
 
@@ -134,7 +134,7 @@ Model: cx/gpt-5.2-codex
 **ステップ1: ダッシュボード経由で接続**
 
 ```bash
-zenroute
+zenrouter
 # Dashboard → Providers → Connect Gemini CLI
 ```
 
@@ -186,7 +186,7 @@ Model: gc/gemini-3-flash-preview
 **ステップ1: ダッシュボード経由で接続**
 
 ```bash
-zenroute
+zenrouter
 # Dashboard → Providers → Connect GitHub
 ```
 
@@ -236,7 +236,7 @@ Model: gh/gpt-5
 **ステップ1: ダッシュボード経由で接続**
 
 ```bash
-zenroute
+zenrouter
 # Dashboard → Providers → Connect Antigravity
 ```
 
@@ -292,7 +292,7 @@ Model: ag/gemini-3-pro-high
 ```
 Settings → Models → Advanced:
   OpenAI API Base URL: http://localhost:20128/v1
-  OpenAI API Key: [zenrouteダッシュボードから取得]
+  OpenAI API Key: [zenrouterダッシュボードから取得]
   Model: cc/claude-opus-4-5-20251101
 ```
 
@@ -316,7 +316,7 @@ CLIで使用: premium-coding
 
 ## クォータトラッキング
 
-ZenRouteはクォータをリアルタイムで追跡:
+ZenRouterはクォータをリアルタイムで追跡:
 
 - **トークン消費** - リクエストごとの入出力トークン
 - **リセットカウントダウン** - 次のクォータリセットまでの時間
@@ -385,7 +385,7 @@ Claude Code Pro
 ### 「OAuthトークン期限切れ」
 
 **解決策:**
-- ZenRouteにより自動更新
+- ZenRouterにより自動更新
 - 問題がある場合: Dashboard → Provider → Reconnect
 
 ### 「レート制限」

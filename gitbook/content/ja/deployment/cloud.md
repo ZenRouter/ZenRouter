@@ -1,6 +1,6 @@
 # ☁️ クラウドデプロイメント
 
-リモートアクセスと本番利用のため、VPSまたはDockerにZenRouteをデプロイ。
+リモートアクセスと本番利用のため、VPSまたはDockerにZenRouterをデプロイ。
 
 ---
 
@@ -16,8 +16,8 @@
 ### ステップ1: リポジトリをクローン
 
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 ```
 
 ### ステップ2: 依存関係をインストール
@@ -39,7 +39,7 @@ npm run build
 ```bash
 export JWT_SECRET="your-secure-secret-change-this-to-random-string"
 export INITIAL_PASSWORD="your-secure-password"
-export DATA_DIR="/var/lib/zenroute"
+export DATA_DIR="/var/lib/zenrouter"
 export NODE_ENV="production"
 ```
 
@@ -49,15 +49,15 @@ export NODE_ENV="production"
 |----------|---------|-------------|
 | `JWT_SECRET` | 自動生成 | **本番環境では必ず変更!** JWTトークンの署名に使用 |
 | `INITIAL_PASSWORD` | `12345678` | ダッシュボードログインパスワード |
-| `DATA_DIR` | `~/.zenroute` | データベースとデータの保存パス |
+| `DATA_DIR` | `~/.zenrouter` | データベースとデータの保存パス |
 | `NODE_ENV` | `development` | デプロイ時は `production` に設定 |
 | `ENABLE_REQUEST_LOGS` | `false` | デバッグリクエスト/レスポンスログを有効化 |
 
 ### ステップ5: データディレクトリを作成
 
 ```bash
-sudo mkdir -p /var/lib/zenroute
-sudo chown $USER:$USER /var/lib/zenroute
+sudo mkdir -p /var/lib/zenrouter
+sudo chown $USER:$USER /var/lib/zenrouter
 ```
 
 ### ステップ6: アプリケーションを起動
@@ -74,8 +74,8 @@ PM2はアプリケーションを稼働させ続け、クラッシュ時に再�
 # PM2をグローバルにインストール
 npm install -g pm2
 
-# PM2でZenRouteを起動
-pm2 start npm --name zenroute -- start
+# PM2でZenRouterを起動
+pm2 start npm --name zenrouter -- start
 
 # PM2設定を保存
 pm2 save
@@ -89,13 +89,13 @@ pm2 startup
 
 ```bash
 # ログを表示
-pm2 logs zenroute
+pm2 logs zenrouter
 
 # アプリケーションを再起動
-pm2 restart zenroute
+pm2 restart zenrouter
 
 # アプリケーションを停止
-pm2 stop zenroute
+pm2 stop zenrouter
 
 # ステータスを表示
 pm2 status
@@ -147,17 +147,17 @@ CMD ["npm", "run", "start"]
 
 ```bash
 # イメージをビルド
-docker build -t zenroute .
+docker build -t zenrouter .
 
 # コンテナを実行
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 3000:3000 \
   -p 20128:20128 \
   -e JWT_SECRET="your-secure-secret-change-this" \
   -e INITIAL_PASSWORD="your-secure-password" \
-  -v zenroute-data:/app/data \
-  zenroute
+  -v zenrouter-data:/app/data \
+  zenrouter
 ```
 
 ### オプション2: Docker Compose
@@ -168,9 +168,9 @@ docker run -d \
 version: '3.8'
 
 services:
-  zenroute:
+  zenrouter:
     build: .
-    container_name: zenroute
+    container_name: zenrouter
     ports:
       - "3000:3000"
       - "20128:20128"
@@ -180,11 +180,11 @@ services:
       - INITIAL_PASSWORD=your-secure-password
       - DATA_DIR=/app/data
     volumes:
-      - zenroute-data:/app/data
+      - zenrouter-data:/app/data
     restart: unless-stopped
 
 volumes:
-  zenroute-data:
+  zenrouter-data:
 ```
 
 **Docker Composeで実行:**
@@ -223,7 +223,7 @@ sudo apt install nginx
 
 ### ステップ2: Nginxを設定
 
-`/etc/nginx/sites-available/zenroute` を作成:
+`/etc/nginx/sites-available/zenrouter` を作成:
 
 ```nginx
 server {
@@ -247,7 +247,7 @@ server {
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
 
-    # Proxy to ZenRoute
+    # Proxy to ZenRouter
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -284,7 +284,7 @@ server {
 
 ```bash
 # シンボリックリンクを作成
-sudo ln -s /etc/nginx/sites-available/zenroute /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/zenrouter /etc/nginx/sites-enabled/
 
 # 設定をテスト
 sudo nginx -t
@@ -333,7 +333,7 @@ sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
-# リバースプロキシを使用しない場合、ZenRouteポートを許可
+# リバースプロキシを使用しない場合、ZenRouterポートを許可
 sudo ufw allow 3000/tcp
 sudo ufw allow 20128/tcp
 
@@ -363,22 +363,22 @@ ssh -L 3000:localhost:3000 user@your-server.com
 # システムパッケージを更新
 sudo apt update && sudo apt upgrade -y
 
-# ZenRouteを更新
-cd /path/to/zenroute/app
+# ZenRouterを更新
+cd /path/to/zenrouter/app
 git pull
 npm install
 npm run build
-pm2 restart zenroute
+pm2 restart zenrouter
 ```
 
 ### 5. バックアップ戦略
 
 ```bash
 # データディレクトリをバックアップ
-tar -czf zenroute-backup-$(date +%Y%m%d).tar.gz /var/lib/zenroute
+tar -czf zenrouter-backup-$(date +%Y%m%d).tar.gz /var/lib/zenrouter
 
 # 自動毎日バックアップ (crontabに追加)
-0 2 * * * tar -czf /backups/zenroute-$(date +\%Y\%m\%d).tar.gz /var/lib/zenroute
+0 2 * * * tar -czf /backups/zenrouter-$(date +\%Y\%m\%d).tar.gz /var/lib/zenrouter
 ```
 
 ---
@@ -392,7 +392,7 @@ tar -czf zenroute-backup-$(date +%Y%m%d).tar.gz /var/lib/zenroute
 pm2 status
 
 # ログを表示
-pm2 logs zenroute --lines 100
+pm2 logs zenrouter --lines 100
 
 # リソースをモニタリング
 pm2 monit
@@ -429,20 +429,20 @@ netstat -tulpn | grep -E '3000|20128'
 
 ```bash
 # ログを確認
-pm2 logs zenroute
+pm2 logs zenrouter
 
 # ポートが使用中か確認
 sudo lsof -i :3000
 sudo lsof -i :20128
 
 # 環境変数を確認
-pm2 env zenroute
+pm2 env zenrouter
 ```
 
 ### Nginx 502 Bad Gateway
 
 ```bash
-# ZenRouteが実行中か確認
+# ZenRouterが実行中か確認
 pm2 status
 
 # Nginxエラーログを確認
@@ -460,8 +460,8 @@ SSEサポート用にNginx設定で `proxy_buffering off` が設定されてい�
 
 ```bash
 # データディレクトリ権限を修正
-sudo chown -R $USER:$USER /var/lib/zenroute
-chmod 755 /var/lib/zenroute
+sudo chown -R $USER:$USER /var/lib/zenrouter
+chmod 755 /var/lib/zenrouter
 ```
 
 ---

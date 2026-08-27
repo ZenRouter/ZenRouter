@@ -1,6 +1,6 @@
 # ☁️ Despliegue en la nube
 
-Despliega ZenRoute en VPS o Docker para acceso remoto y uso en producción.
+Despliega ZenRouter en VPS o Docker para acceso remoto y uso en producción.
 
 ---
 
@@ -16,8 +16,8 @@ Despliega ZenRoute en VPS o Docker para acceso remoto y uso en producción.
 ### Paso 1: Clonar el repositorio
 
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 ```
 
 ### Paso 2: Instalar dependencias
@@ -39,7 +39,7 @@ Crea un archivo `.env` o exporta variables:
 ```bash
 export JWT_SECRET="your-secure-secret-change-this-to-random-string"
 export INITIAL_PASSWORD="your-secure-password"
-export DATA_DIR="/var/lib/zenroute"
+export DATA_DIR="/var/lib/zenrouter"
 export NODE_ENV="production"
 ```
 
@@ -49,15 +49,15 @@ export NODE_ENV="production"
 |----------|---------|-------------|
 | `JWT_SECRET` | Auto-generado | **¡DEBE cambiarse en producción!** Usado para firmar tokens JWT |
 | `INITIAL_PASSWORD` | `12345678` | Contraseña de login del dashboard |
-| `DATA_DIR` | `~/.zenroute` | Ruta de almacenamiento de la base de datos |
+| `DATA_DIR` | `~/.zenrouter` | Ruta de almacenamiento de la base de datos |
 | `NODE_ENV` | `development` | Establece a `production` para despliegue |
 | `ENABLE_REQUEST_LOGS` | `false` | Habilita logs de debug de request/response |
 
 ### Paso 5: Crear el directorio de datos
 
 ```bash
-sudo mkdir -p /var/lib/zenroute
-sudo chown $USER:$USER /var/lib/zenroute
+sudo mkdir -p /var/lib/zenrouter
+sudo chown $USER:$USER /var/lib/zenrouter
 ```
 
 ### Paso 6: Iniciar la aplicación
@@ -74,8 +74,8 @@ PM2 mantiene tu aplicación corriendo y la reinicia en caso de crash:
 # Instalar PM2 globalmente
 npm install -g pm2
 
-# Iniciar ZenRoute con PM2
-pm2 start npm --name zenroute -- start
+# Iniciar ZenRouter con PM2
+pm2 start npm --name zenrouter -- start
 
 # Guardar la configuración de PM2
 pm2 save
@@ -89,13 +89,13 @@ pm2 startup
 
 ```bash
 # Ver logs
-pm2 logs zenroute
+pm2 logs zenrouter
 
 # Reiniciar aplicación
-pm2 restart zenroute
+pm2 restart zenrouter
 
 # Detener aplicación
-pm2 stop zenroute
+pm2 stop zenrouter
 
 # Ver estado
 pm2 status
@@ -147,17 +147,17 @@ CMD ["npm", "run", "start"]
 
 ```bash
 # Construir imagen
-docker build -t zenroute .
+docker build -t zenrouter .
 
 # Ejecutar contenedor
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 3000:3000 \
   -p 20128:20128 \
   -e JWT_SECRET="your-secure-secret-change-this" \
   -e INITIAL_PASSWORD="your-secure-password" \
-  -v zenroute-data:/app/data \
-  zenroute
+  -v zenrouter-data:/app/data \
+  zenrouter
 ```
 
 ### Opción 2: Docker Compose
@@ -168,9 +168,9 @@ Crea `docker-compose.yml`:
 version: '3.8'
 
 services:
-  zenroute:
+  zenrouter:
     build: .
-    container_name: zenroute
+    container_name: zenrouter
     ports:
       - "3000:3000"
       - "20128:20128"
@@ -180,11 +180,11 @@ services:
       - INITIAL_PASSWORD=your-secure-password
       - DATA_DIR=/app/data
     volumes:
-      - zenroute-data:/app/data
+      - zenrouter-data:/app/data
     restart: unless-stopped
 
 volumes:
-  zenroute-data:
+  zenrouter-data:
 ```
 
 **Ejecutar con Docker Compose:**
@@ -223,7 +223,7 @@ sudo apt install nginx
 
 ### Paso 2: Configurar Nginx
 
-Crea `/etc/nginx/sites-available/zenroute`:
+Crea `/etc/nginx/sites-available/zenrouter`:
 
 ```nginx
 server {
@@ -247,7 +247,7 @@ server {
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
 
-    # Proxy to ZenRoute
+    # Proxy to ZenRouter
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -284,7 +284,7 @@ server {
 
 ```bash
 # Crear enlace simbólico
-sudo ln -s /etc/nginx/sites-available/zenroute /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/zenrouter /etc/nginx/sites-enabled/
 
 # Probar configuración
 sudo nginx -t
@@ -333,7 +333,7 @@ sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
-# Si NO usas proxy reverso, permite los puertos de ZenRoute
+# Si NO usas proxy reverso, permite los puertos de ZenRouter
 sudo ufw allow 3000/tcp
 sudo ufw allow 20128/tcp
 
@@ -363,22 +363,22 @@ ssh -L 3000:localhost:3000 user@your-server.com
 # Actualizar paquetes del sistema
 sudo apt update && sudo apt upgrade -y
 
-# Actualizar ZenRoute
-cd /path/to/zenroute/app
+# Actualizar ZenRouter
+cd /path/to/zenrouter/app
 git pull
 npm install
 npm run build
-pm2 restart zenroute
+pm2 restart zenrouter
 ```
 
 ### 5. Estrategia de respaldo
 
 ```bash
 # Respaldar el directorio de datos
-tar -czf zenroute-backup-$(date +%Y%m%d).tar.gz /var/lib/zenroute
+tar -czf zenrouter-backup-$(date +%Y%m%d).tar.gz /var/lib/zenrouter
 
 # Respaldo automatizado diario (agregar a crontab)
-0 2 * * * tar -czf /backups/zenroute-$(date +\%Y\%m\%d).tar.gz /var/lib/zenroute
+0 2 * * * tar -czf /backups/zenrouter-$(date +\%Y\%m\%d).tar.gz /var/lib/zenrouter
 ```
 
 ---
@@ -392,7 +392,7 @@ tar -czf zenroute-backup-$(date +%Y%m%d).tar.gz /var/lib/zenroute
 pm2 status
 
 # Ver logs
-pm2 logs zenroute --lines 100
+pm2 logs zenrouter --lines 100
 
 # Monitorear recursos
 pm2 monit
@@ -429,20 +429,20 @@ netstat -tulpn | grep -E '3000|20128'
 
 ```bash
 # Verificar logs
-pm2 logs zenroute
+pm2 logs zenrouter
 
 # Verificar si los puertos están en uso
 sudo lsof -i :3000
 sudo lsof -i :20128
 
 # Verificar variables de entorno
-pm2 env zenroute
+pm2 env zenrouter
 ```
 
 ### Nginx 502 Bad Gateway
 
 ```bash
-# Verificar si ZenRoute está corriendo
+# Verificar si ZenRouter está corriendo
 pm2 status
 
 # Verificar logs de error de Nginx
@@ -460,8 +460,8 @@ Asegúrate de que `proxy_buffering off` esté configurado en Nginx para soporte 
 
 ```bash
 # Corregir permisos del directorio de datos
-sudo chown -R $USER:$USER /var/lib/zenroute
-chmod 755 /var/lib/zenroute
+sudo chown -R $USER:$USER /var/lib/zenrouter
+chmod 755 /var/lib/zenrouter
 ```
 
 ---

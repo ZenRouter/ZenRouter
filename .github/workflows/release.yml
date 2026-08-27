@@ -48,12 +48,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name || github.event.inputs.tag }}
-          name: "🌿 ZenRoute ${{ github.ref_name || github.event.inputs.tag }}"
+          name: "🌿 ZenRouter ${{ github.ref_name || github.event.inputs.tag }}"
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            zenroute-*.tgz
+            zenrouter-*.tgz
             install.sh
             docker-compose.yml
         env:

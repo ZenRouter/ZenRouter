@@ -9,7 +9,7 @@ import ApiKeySelect from "./ApiKeySelect";
 import { matchKnownEndpoint } from "./cliEndpointMatch";
 
 const ENDPOINT = "/api/cli-tools/grok-build-settings";
-const MODEL_SLOT = "zenroute";
+const MODEL_SLOT = "zenrouter";
 const SUBAGENT_TYPES = [
   { id: "general-purpose", label: "General-purpose", help: "Implementation, testing, and full-capability delegated tasks" },
   { id: "explore", label: "Explore", help: "Read-only codebase research and investigation" },
@@ -164,7 +164,7 @@ export default function GrokBuildToolCard({
     try {
       const keyToUse = selectedApiKey?.trim()
         || (apiKeys?.length > 0 ? apiKeys[0].key : null)
-        || (!cloudEnabled ? "sk_zenroute" : null);
+        || (!cloudEnabled ? "sk_zenrouter" : null);
       const mappedSubagents = {};
       for (const type of SUBAGENT_TYPES) {
         const model = subagentModels[type.id]?.trim();
@@ -228,12 +228,12 @@ export default function GrokBuildToolCard({
 
   const getManualConfigs = () => {
     const keyToUse = selectedApiKey?.trim()
-      || (!cloudEnabled ? "sk_zenroute" : "<API_KEY_FROM_DASHBOARD>");
+      || (!cloudEnabled ? "sk_zenrouter" : "<API_KEY_FROM_DASHBOARD>");
     const baseUrl = getEffectiveBaseUrl();
     const mainModel = selectedModel || "provider/model-id";
     const blocks = [
       `[models]\ndefault = "${MODEL_SLOT}"`,
-      `[model.${MODEL_SLOT}]\nmodel = "${mainModel}"\nbase_url = "${baseUrl}"\nname = "ZenRoute"\ndescription = "Routed via ZenRoute gateway"\napi_backend = "chat_completions"\napi_key = "${keyToUse}"\ncontext_window = ${getContextWindow(mainModel) || 200000}`,
+      `[model.${MODEL_SLOT}]\nmodel = "${mainModel}"\nbase_url = "${baseUrl}"\nname = "ZenRouter"\ndescription = "Routed via ZenRouter gateway"\napi_backend = "chat_completions"\napi_key = "${keyToUse}"\ncontext_window = ${getContextWindow(mainModel) || 200000}`,
     ];
     const mappings = [];
     for (const type of SUBAGENT_TYPES) {
@@ -241,7 +241,7 @@ export default function GrokBuildToolCard({
       if (!model) continue;
       const slot = `${MODEL_SLOT}-${type.id}`;
       mappings.push(`${type.id} = "${slot}"`);
-      blocks.push(`[model.${slot}]\nmodel = "${model}"\nbase_url = "${baseUrl}"\nname = "ZenRoute ${type.id}"\ndescription = "Routed via ZenRoute gateway"\napi_backend = "chat_completions"\napi_key = "${keyToUse}"\ncontext_window = ${getContextWindow(model) || 200000}`);
+      blocks.push(`[model.${slot}]\nmodel = "${model}"\nbase_url = "${baseUrl}"\nname = "ZenRouter ${type.id}"\ndescription = "Routed via ZenRouter gateway"\napi_backend = "chat_completions"\napi_key = "${keyToUse}"\ncontext_window = ${getContextWindow(model) || 200000}`);
     }
     if (mappings.length) blocks.splice(1, 0, `[subagents.models]\n${mappings.join("\n")}`);
     return [{ filename: "~/.grok/config.toml", content: `${blocks.join("\n\n")}\n` }];
@@ -357,7 +357,7 @@ export default function GrokBuildToolCard({
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <Button variant="primary" size="sm" onClick={handleApply} disabled={!selectedModel} loading={applying} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply</Button>
-                <Button variant="outline" size="sm" onClick={handleReset} disabled={!grokStatus?.hasZenRoute} loading={restoring} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset</Button>
+                <Button variant="outline" size="sm" onClick={handleReset} disabled={!grokStatus?.hasZenRouter} loading={restoring} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset</Button>
                 <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config</Button>
               </div>
             </>

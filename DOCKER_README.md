@@ -1,13 +1,13 @@
-# 🌿 ZenRoute
+# 🌿 ZenRouter
 
 > **Serene AI Gateway & Intelligent Multi-Provider Routing Engine**
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/joyccn/zenroute.svg?style=flat-square&color=4B72A4)](https://hub.docker.com/r/joyccn/zenroute)
-[![Docker Image Size](https://img.shields.io/docker/image-size/joyccn/zenroute/latest?style=flat-square&color=E85D3F)](https://hub.docker.com/r/joyccn/zenroute)
-[![GitHub License](https://img.shields.io/github/license/joyccn/ZenRoute?style=flat-square)](https://github.com/joyccn/ZenRoute)
-[![GitHub Stars](https://img.shields.io/github/stars/joyccn/ZenRoute?style=flat-square)](https://github.com/joyccn/ZenRoute)
+[![Docker Pulls](https://img.shields.io/docker/pulls/zenrouter/zenrouter.svg?style=flat-square&color=4B72A4)](https://hub.docker.com/r/zenrouter/zenrouter)
+[![Docker Image Size](https://img.shields.io/docker/image-size/zenrouter/zenrouter/latest?style=flat-square&color=E85D3F)](https://hub.docker.com/r/zenrouter/zenrouter)
+[![GitHub License](https://img.shields.io/github/license/ZenRouter/ZenRouter?style=flat-square)](https://github.com/ZenRouter/ZenRouter)
+[![GitHub Stars](https://img.shields.io/github/stars/ZenRouter/ZenRouter?style=flat-square)](https://github.com/ZenRouter/ZenRouter)
 
-**ZenRoute** is a lightweight, high-performance AI gateway designed to unify, balance, and route model traffic across **OpenAI, Anthropic Claude, Google Gemini, xAI Grok, DeepSeek, Mistral, Ollama, Kiro, Kilo, and custom endpoints** with enterprise-grade resilience and zero latency overhead.
+**ZenRouter** is a lightweight, high-performance AI gateway designed to unify, balance, and route model traffic across **OpenAI, Anthropic Claude, Google Gemini, xAI Grok, DeepSeek, Mistral, Ollama, Kiro, Kilo, and custom endpoints** with enterprise-grade resilience and zero latency overhead.
 
 ---
 
@@ -17,11 +17,11 @@
 
 ```bash
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   --restart unless-stopped \
   -p 20128:20128 \
-  -v zenroute-data:/app/data \
-  joyccn/zenroute:latest
+  -v zenrouter-data:/app/data \
+  zenrouter/zenrouter:latest
 ```
 
 Open your browser and navigate to **`http://localhost:20128`** to configure your API keys and provider connections.
@@ -34,14 +34,14 @@ Create a `docker-compose.yml` file:
 
 ```yaml
 services:
-  zenroute:
-    image: joyccn/zenroute:latest
-    container_name: zenroute
+  zenrouter:
+    image: zenrouter/zenrouter:latest
+    container_name: zenrouter
     restart: unless-stopped
     ports:
       - "20128:20128"
     volumes:
-      - zenroute-data:/app/data
+      - zenrouter-data:/app/data
     environment:
       - DATA_DIR=/app/data
       - PORT=20128
@@ -49,8 +49,8 @@ services:
       - NODE_ENV=production
 
 volumes:
-  zenroute-data:
-    name: zenroute-data
+  zenrouter-data:
+    name: zenrouter-data
 ```
 
 Launch the container:
@@ -63,7 +63,7 @@ docker compose up -d
 
 ## 🌐 Endpoints & API Access
 
-ZenRoute exposes standard OpenAI and Anthropic compatible interfaces:
+ZenRouter exposes standard OpenAI and Anthropic compatible interfaces:
 
 | Purpose | Endpoint URL | Format |
 |---------|-------------|--------|
@@ -79,7 +79,7 @@ curl http://localhost:20128/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "Hello from ZenRoute!"}]
+    "messages": [{"role": "user", "content": "Hello from ZenRouter!"}]
   }'
 ```
 
@@ -107,9 +107,9 @@ curl http://localhost:20128/v1/chat/completions \
 | `HOSTNAME` | `0.0.0.0` | Bind host address |
 | `DATA_DIR` | `/app/data` | Persistent SQLite database & config directory |
 | `NODE_ENV` | `production` | Node runtime environment |
-| `ZENROUTE_PROXY_HTTP` | _none_ | Optional outbound HTTP proxy |
-| `ZENROUTE_PROXY_HTTPS` | _none_ | Optional outbound HTTPS proxy |
-| `ZENROUTE_MAX_OLD_SPACE_SIZE` | _auto_ | V8 heap memory ceiling in MB (e.g. `2048`) |
+| `ZENROUTER_PROXY_HTTP` | _none_ | Optional outbound HTTP proxy |
+| `ZENROUTER_PROXY_HTTPS` | _none_ | Optional outbound HTTPS proxy |
+| `ZENROUTER_MAX_OLD_SPACE_SIZE` | _auto_ | V8 heap memory ceiling in MB (e.g. `2048`) |
 
 ---
 
@@ -118,20 +118,20 @@ curl http://localhost:20128/v1/chat/completions \
 ### Claude Code
 ```bash
 export ANTHROPIC_BASE_URL="http://localhost:20128/v1"
-export ANTHROPIC_API_KEY="your-zenroute-key"
+export ANTHROPIC_API_KEY="your-zenrouter-key"
 claude
 ```
 
 ### Cursor / Cline / OpenAI SDK
 ```bash
 OPENAI_BASE_URL=http://localhost:20128/v1
-OPENAI_API_KEY=your-zenroute-key
+OPENAI_API_KEY=your-zenrouter-key
 ```
 
 ---
 
 ## 🔗 Links & Resources
 
-- **GitHub Repository**: [https://github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Documentation**: [https://github.com/joyccn/ZenRoute#readme](https://github.com/joyccn/ZenRoute#readme)
-- **Issues & Feedback**: [https://github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **GitHub Repository**: [https://github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Documentation**: [https://github.com/ZenRouter/ZenRouter#readme](https://github.com/ZenRouter/ZenRouter#readme)
+- **Issues & Feedback**: [https://github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)

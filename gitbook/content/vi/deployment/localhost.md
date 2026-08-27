@@ -1,15 +1,15 @@
 # 🏠 Triển khai Localhost
 
-Chạy ZenRoute trên máy cá nhân để phát triển và dùng cá nhân.
+Chạy ZenRouter trên máy cá nhân để phát triển và dùng cá nhân.
 
 ---
 
 ## 📦 Cài đặt
 
-Cài đặt ZenRoute toàn cục qua npm:
+Cài đặt ZenRouter toàn cục qua npm:
 
 ```bash
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
 **Yêu cầu:**
@@ -20,10 +20,10 @@ npm install -g zenroute
 
 ## 🚀 Khởi động Server
 
-Khởi động ZenRoute với một lệnh duy nhất:
+Khởi động ZenRouter với một lệnh duy nhất:
 
 ```bash
-zenroute
+zenrouter
 ```
 
 Dashboard sẽ tự động mở trong trình duyệt tại `http://localhost:3000`
@@ -31,7 +31,7 @@ Dashboard sẽ tự động mở trong trình duyệt tại `http://localhost:30
 **Cấu hình mặc định:**
 - **Dashboard**: `http://localhost:3000`
 - **API Endpoint**: `http://localhost:20128/v1`
-- **Data Directory**: `~/.zenroute`
+- **Data Directory**: `~/.zenrouter`
 
 ---
 
@@ -42,7 +42,7 @@ Dashboard sẽ tự động mở trong trình duyệt tại `http://localhost:30
 Đặt thư mục data tùy chỉnh qua biến môi trường:
 
 ```bash
-DATA_DIR=/path/to/data zenroute
+DATA_DIR=/path/to/data zenrouter
 ```
 
 ### Custom Port
@@ -53,10 +53,10 @@ Port API (20128) và port dashboard (3000) được cấu hình trong applicatio
 
 ## 🛑 Dừng Server
 
-Nhấn `Ctrl+C` trong terminal đang chạy ZenRoute.
+Nhấn `Ctrl+C` trong terminal đang chạy ZenRouter.
 
 ```bash
-# In the terminal running zenroute
+# In the terminal running zenrouter
 ^C  # Press Ctrl+C
 ```
 
@@ -69,25 +69,25 @@ Server sẽ shutdown an toàn và lưu mọi dữ liệu.
 Chỉ cần chạy lệnh start lại:
 
 ```bash
-zenroute
+zenrouter
 ```
 
 Mọi cấu hình, API keys và combos được giữ lại trong thư mục data.
 
 ---
 
-## 📊 Cập nhật ZenRoute
+## 📊 Cập nhật ZenRouter
 
 Cập nhật phiên bản mới nhất:
 
 ```bash
-npm update -g zenroute
+npm update -g zenrouter
 ```
 
 Kiểm tra version hiện tại:
 
 ```bash
-npm list -g zenroute
+npm list -g zenrouter
 ```
 
 ---
@@ -113,7 +113,7 @@ Nếu gặp lỗi permission khi cài đặt:
 
 ```bash
 # Use sudo (not recommended)
-sudo npm install -g zenroute
+sudo npm install -g zenrouter
 
 # Or fix npm permissions (recommended)
 mkdir ~/.npm-global
@@ -128,10 +128,10 @@ Nếu thư mục data không truy cập được:
 
 ```bash
 # Check permissions
-ls -la ~/.zenroute
+ls -la ~/.zenrouter
 
 # Fix permissions
-chmod 755 ~/.zenroute
+chmod 755 ~/.zenrouter
 ```
 
 ---
@@ -139,7 +139,7 @@ chmod 755 ~/.zenroute
 ## 📁 Cấu trúc Data Directory
 
 ```
-~/.zenroute/
+~/.zenrouter/
 ├── db.json           # Main database (providers, combos, settings)
 ├── logs/             # Application logs
 └── cache/            # Temporary cache files
@@ -149,10 +149,10 @@ chmod 755 ~/.zenroute
 
 ```bash
 # Backup
-cp -r ~/.zenroute ~/.zenroute.backup
+cp -r ~/.zenrouter ~/.zenrouter.backup
 
 # Restore
-cp -r ~/.zenroute.backup ~/.zenroute
+cp -r ~/.zenrouter.backup ~/.zenrouter
 ```
 
 ---

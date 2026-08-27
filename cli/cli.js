@@ -68,7 +68,7 @@ const { resolveHeapFlags } = require("./hooks/nodeFlags");
 const { ensureTrayRuntime } = require("./hooks/trayRuntime");
 const args = process.argv.slice(2);
 
-// Subcommands (`zenroute xai video …`) run against an already-running gateway
+// Subcommands (`zenrouter xai video …`) run against an already-running gateway
 // and bypass the launcher flow (no runtime self-heal, no server spawn).
 if (args[0] === "xai" && args[1] === "video") {
   const { run } = require("./src/cli/commands/xaiVideo");
@@ -81,7 +81,7 @@ if (args[0] === "xai" && args[1] === "video") {
   return;
 }
 
-// Self-heal SQLite runtime deps (sql.js + better-sqlite3) into ~/.zenroute/runtime
+// Self-heal SQLite runtime deps (sql.js + better-sqlite3) into ~/.zenrouter/runtime
 // so the server can resolve them via NODE_PATH. Best-effort — sql.js is required,
 // better-sqlite3 is optional. Logs to stderr only on failure.
 try { ensureSqliteRuntime({ silent: true }); } catch {}
@@ -111,9 +111,9 @@ function getDisplayHost() {
   return host === DEFAULT_HOST ? "localhost" : host;
 }
 const MAX_PORT_ATTEMPTS = 10;
-// Identifiers for killAllAppProcesses - only kill zenroute specifically
+// Identifiers for killAllAppProcesses - only kill zenrouter specifically
 const PROCESS_IDENTIFIERS = [
-  'zenroute'  // Only package name - avoid killing other apps
+  'zenrouter'  // Only package name - avoid killing other apps
 ];
 
 // Parse arguments
@@ -189,8 +189,8 @@ function compareVersions(a, b) {
 // Get app data dir (matches app/src/lib/dataDir.js convention)
 function getAppDataDir() {
   return process.platform === "win32"
-    ? path.join(process.env.APPDATA || "", "zenroute")
-    : path.join(os.homedir(), ".zenroute");
+    ? path.join(process.env.APPDATA || "", "zenrouter")
+    : path.join(os.homedir(), ".zenrouter");
 }
 
 // Kill PID from file (best-effort, removes file after)
@@ -247,7 +247,7 @@ function killCloudflaredByAppPort(appPort) {
   return pids;
 }
 
-// Kill all zenroute processes
+// Kill all zenrouter processes
 function killAllAppProcesses(appPort) {
   return new Promise((resolve) => {
     try {
@@ -274,11 +274,11 @@ function killAllAppProcesses(appPort) {
           });
           const lines = output.split("\n").slice(1).filter(l => l.trim());
           lines.forEach(line => {
-            // Whitelist: real node process running zenroute/cli.js, or next-server.
-            // Avoids killing editors/grep/strace/cursor that just have "zenroute" in cmdline.
+            // Whitelist: real node process running zenrouter/cli.js, or next-server.
+            // Avoids killing editors/grep/strace/cursor that just have "zenrouter" in cmdline.
             const cmd = line.toLowerCase();
             const isAppProcess =
-              (cmd.includes("node") && cmd.includes("zenroute") && (cmd.includes("cli.js") || cmd.includes("\\zenroute") || cmd.includes("/zenroute")))
+              (cmd.includes("node") && cmd.includes("zenrouter") && (cmd.includes("cli.js") || cmd.includes("\\zenrouter") || cmd.includes("/zenrouter")))
               || cmd.includes("next-server");
             if (isAppProcess) {
               const match = line.match(/^"(\d+)"/);
@@ -300,11 +300,11 @@ function killAllAppProcesses(appPort) {
           const lines = output.split('\n');
 
           lines.forEach(line => {
-            // Whitelist: real node process running zenroute/cli.js, or next-server.
-            // Avoids killing grep/strace/editors/cursor that incidentally match "zenroute".
+            // Whitelist: real node process running zenrouter/cli.js, or next-server.
+            // Avoids killing grep/strace/editors/cursor that incidentally match "zenrouter".
             const cmd = line.toLowerCase();
             const isAppProcess =
-              (cmd.includes("node") && cmd.includes("zenroute") && (cmd.includes("cli.js") || cmd.includes("/zenroute")))
+              (cmd.includes("node") && cmd.includes("zenrouter") && (cmd.includes("cli.js") || cmd.includes("/zenrouter")))
               || cmd.includes("next-server");
             if (isAppProcess) {
               const parts = line.trim().split(/\s+/);
@@ -789,7 +789,7 @@ function startServer(updatePromise) {
             process.on("SIGHUP", () => {});
 
             console.log(`\n⏳ Switching to tray mode... (icon already visible in menu bar)`);
-            console.log(`🔔 ZenRoute is running in tray (PID: ${process.pid})`);
+            console.log(`🔔 ZenRouter is running in tray (PID: ${process.pid})`);
             console.log(`   Server: http://${displayHost}:${port}`);
             console.log(`\n💡 You can close this terminal. Right-click tray icon to quit.\n`);
 
@@ -808,7 +808,7 @@ function startServer(updatePromise) {
           });
           bgProcess.unref();
 
-          console.log(`🔔 ZenRoute is now running in background (PID: ${bgProcess.pid})`);
+          console.log(`🔔 ZenRouter is now running in background (PID: ${bgProcess.pid})`);
           console.log(`   Server: http://${displayHost}:${port}`);
           console.log(`\n💡 You can close this terminal. Right-click tray icon to quit.\n`);
 
@@ -853,7 +853,7 @@ function startServer(updatePromise) {
     if (restartCount >= MAX_RESTARTS) {
       console.error(`\n⚠️  Server crashed ${MAX_RESTARTS} times. Disabling MIT and restarting...`);
       try {
-        const dbPath = path.join(os.homedir(), process.platform === "win32" ? path.join("AppData", "Roaming", "zenroute", "db.json") : path.join(".zenroute", "db.json"));
+        const dbPath = path.join(os.homedir(), process.platform === "win32" ? path.join("AppData", "Roaming", "zenrouter", "db.json") : path.join(".zenrouter", "db.json"));
         if (fs.existsSync(dbPath)) {
           const db = JSON.parse(fs.readFileSync(dbPath, "utf-8"));
           if (db.settings) db.settings.mitmEnabled = false;

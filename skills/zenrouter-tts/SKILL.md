@@ -1,28 +1,28 @@
 ---
-name: zenroute-tts
-description: Text-to-speech via ZenRoute /v1/audio/speech using OpenAI / ElevenLabs / Deepgram / Edge TTS / Google TTS / Hyperbolic / Inworld voices. Use when the user wants to convert text to speech, generate audio, voiceover, narrate, or read text aloud.
+name: zenrouter-tts
+description: Text-to-speech via ZenRouter /v1/audio/speech using OpenAI / ElevenLabs / Deepgram / Edge TTS / Google TTS / Hyperbolic / Inworld voices. Use when the user wants to convert text to speech, generate audio, voiceover, narrate, or read text aloud.
 ---
 
-# ZenRoute — Text-to-Speech
+# ZenRouter — Text-to-Speech
 
-Requires `ZENROUTE_URL` (and `ZENROUTE_KEY` if auth enabled). See https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute/SKILL.md for setup.
+Requires `ZENROUTER_URL` (and `ZENROUTER_KEY` if auth enabled). See https://raw.githubusercontent.com/ZenRouter/ZenRouter/refs/heads/master/skills/zenrouter/SKILL.md for setup.
 
 ## Discover
 
 ```bash
 # 1) List models
-curl $ZENROUTE_URL/v1/models/tts | jq '.data[].id'
+curl $ZENROUTER_URL/v1/models/tts | jq '.data[].id'
 # 2) Per-model metadata (params, voicesUrl if voice-by-id)
-curl "$ZENROUTE_URL/v1/models/info?id=el/eleven_multilingual_v2"
+curl "$ZENROUTER_URL/v1/models/info?id=el/eleven_multilingual_v2"
 # 3) List voices (elevenlabs, edge-tts, deepgram, inworld, local-device). Optional ?lang=vi
-curl "$ZENROUTE_URL/v1/audio/voices?provider=edge-tts&lang=vi" | jq '.data[].model'
+curl "$ZENROUTER_URL/v1/audio/voices?provider=edge-tts&lang=vi" | jq '.data[].model'
 ```
 
 `model` field in `/v1/audio/speech` = voice ID directly (e.g. `edge-tts/vi-VN-HoaiMyNeural`, `el/<voice_id>`, or `openai/tts-1` model+default voice).
 
 ## Endpoint
 
-`POST $ZENROUTE_URL/v1/audio/speech`
+`POST $ZENROUTER_URL/v1/audio/speech`
 
 | Field | Required | Notes |
 |---|---|---|
@@ -36,8 +36,8 @@ Query `?response_format=mp3` (default, raw bytes) or `?response_format=json` (`{
 Save MP3:
 
 ```bash
-curl -X POST "$ZENROUTE_URL/v1/audio/speech" \
-  -H "Authorization: Bearer $ZENROUTE_KEY" \
+curl -X POST "$ZENROUTER_URL/v1/audio/speech" \
+  -H "Authorization: Bearer $ZENROUTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"openai/tts-1","input":"Hello world"}' \
   --output speech.mp3
@@ -47,9 +47,9 @@ JS (save file):
 
 ```js
 import { writeFile } from "node:fs/promises";
-const r = await fetch(`${process.env.ZENROUTE_URL}/v1/audio/speech`, {
+const r = await fetch(`${process.env.ZENROUTER_URL}/v1/audio/speech`, {
   method: "POST",
-  headers: { "Authorization": `Bearer ${process.env.ZENROUTE_KEY}`, "Content-Type": "application/json" },
+  headers: { "Authorization": `Bearer ${process.env.ZENROUTER_KEY}`, "Content-Type": "application/json" },
   body: JSON.stringify({ model: "el/eleven_multilingual_v2", input: "Xin chào" }),
 });
 await writeFile("speech.mp3", Buffer.from(await r.arrayBuffer()));

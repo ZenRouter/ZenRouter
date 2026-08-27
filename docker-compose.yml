@@ -1,12 +1,12 @@
 services:
-  zenroute:
-    image: joyccn/zenroute:latest
-    container_name: zenroute
+  zenrouter:
+    image: zenrouter/zenrouter:latest
+    container_name: zenrouter
     restart: unless-stopped
     ports:
       - "20128:20128"
     volumes:
-      - zenroute-data:/app/data
+      - zenrouter-data:/app/data
     env_file:
       - .env
     environment:
@@ -26,5 +26,5 @@ services:
       - "8787:8787"
 
 volumes:
-  zenroute-data:
-    name: zenroute-data
+  zenrouter-data:
+    name: zenrouter-data

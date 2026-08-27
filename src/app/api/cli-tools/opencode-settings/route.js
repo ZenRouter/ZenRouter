@@ -48,9 +48,9 @@ const readConfig = async () => {
   }
 };
 
-const hasZenRouteConfig = (config) => {
+const hasZenRouterConfig = (config) => {
   if (!config?.provider) return false;
-  return !!config.provider["zenroute"];
+  return !!config.provider["zenrouter"];
 };
 
 // GET - Check opencode CLI and read current settings
@@ -67,17 +67,17 @@ export async function GET() {
     }
 
     const config = await readConfig();
-    const providerConfig = config?.provider?.["zenroute"];
+    const providerConfig = config?.provider?.["zenrouter"];
     const modelMap = providerConfig?.models || {};
 
     return NextResponse.json({
       installed: true,
       config,
-      hasZenRoute: hasZenRouteConfig(config),
+      hasZenRouter: hasZenRouterConfig(config),
       configPath: getConfigPath(),
         opencode: {
           models: Object.keys(modelMap),
-          activeModel: config?.model?.startsWith("zenroute/") ? config.model.replace(/^zenroute\//, "") : null,
+          activeModel: config?.model?.startsWith("zenrouter/") ? config.model.replace(/^zenrouter\//, "") : null,
           baseURL: providerConfig?.options?.baseURL || null,
         },
     });
@@ -87,7 +87,7 @@ export async function GET() {
   }
 }
 
-// POST - Apply ZenRoute as openai-compatible provider (multi-model support)
+// POST - Apply ZenRouter as openai-compatible provider (multi-model support)
 export async function POST(request) {
   try {
     const { baseUrl, apiKey, model, models, activeModel, subagentModel } = await request.json();
@@ -112,14 +112,14 @@ export async function POST(request) {
     } catch { /* No existing config */ }
 
     const normalizedBaseUrl = baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
-    const keyToUse = apiKey || "sk_zenroute";
+    const keyToUse = apiKey || "sk_zenrouter";
     const effectiveSubagentModel = subagentModel || modelsArray[0];
 
     // Ensure provider object
     if (!config.provider) config.provider = {};
 
-    // Preserve any existing zenroute provider entry and its models
-    const existingProvider = config.provider["zenroute"] || { npm: "@ai-sdk/openai-compatible", options: {}, models: {} };
+    // Preserve any existing zenrouter provider entry and its models
+    const existingProvider = config.provider["zenrouter"] || { npm: "@ai-sdk/openai-compatible", options: {}, models: {} };
 
     // Merge options (overwrite baseURL/apiKey)
     existingProvider.options = {
@@ -138,7 +138,7 @@ export async function POST(request) {
     }
 
     // Save merged provider back
-    config.provider["zenroute"] = existingProvider;
+    config.provider["zenrouter"] = existingProvider;
 
     // Set the active model: prefer explicit activeModel, else first of modelsArray
     // If activeModel is explicitly empty string, clear the model
@@ -147,7 +147,7 @@ export async function POST(request) {
     } else {
       const finalActive = activeModel || modelsArray[0];
       if (finalActive) {
-        config.model = `zenroute/${finalActive}`;
+        config.model = `zenrouter/${finalActive}`;
       }
     }
 
@@ -156,7 +156,7 @@ export async function POST(request) {
     config.agent.explorer = {
       description: "Fast explorer subagent for codebase exploration",
       mode: "subagent",
-      model: `zenroute/${effectiveSubagentModel}`,
+      model: `zenrouter/${effectiveSubagentModel}`,
     };
 
     await fs.writeFile(configPath, JSON.stringify(config, null, 2));
@@ -191,7 +191,7 @@ export async function PATCH(request) {
 
     if (clearActiveModel === true) {
       // Clear active model but keep models in the list
-      if (config.model?.startsWith("zenroute/")) {
+      if (config.model?.startsWith("zenrouter/")) {
         config.model = "";
       }
     }
@@ -208,7 +208,7 @@ export async function PATCH(request) {
   }
 }
 
-// DELETE - Remove ZenRoute provider or specific models from config
+// DELETE - Remove ZenRouter provider or specific models from config
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -227,26 +227,26 @@ export async function DELETE(request) {
     }
 
     // If specific model provided, remove just that model
-    if (modelToRemove && config.provider?.["zenroute"]?.models) {
-      delete config.provider["zenroute"].models[modelToRemove];
+    if (modelToRemove && config.provider?.["zenrouter"]?.models) {
+      delete config.provider["zenrouter"].models[modelToRemove];
       
       // If no models left, remove the provider
-      if (Object.keys(config.provider["zenroute"].models).length === 0) {
-        delete config.provider["zenroute"];
-        if (config.model?.startsWith("zenroute/")) delete config.model;
-      } else if (config.model === `zenroute/${modelToRemove}`) {
+      if (Object.keys(config.provider["zenrouter"].models).length === 0) {
+        delete config.provider["zenrouter"];
+        if (config.model?.startsWith("zenrouter/")) delete config.model;
+      } else if (config.model === `zenrouter/${modelToRemove}`) {
         // If removed model was active, switch to first remaining model
-        const remainingModels = Object.keys(config.provider["zenroute"].models);
-        config.model = `zenroute/${remainingModels[0]}`;
+        const remainingModels = Object.keys(config.provider["zenrouter"].models);
+        config.model = `zenrouter/${remainingModels[0]}`;
       }
     } else {
-      // No specific model - remove entire zenroute provider
-      if (config.provider) delete config.provider["zenroute"];
-      if (config.model?.startsWith("zenroute/")) delete config.model;
+      // No specific model - remove entire zenrouter provider
+      if (config.provider) delete config.provider["zenrouter"];
+      if (config.model?.startsWith("zenrouter/")) delete config.model;
     }
 
     // Remove subagent configuration
-    if (config.agent?.explorer?.model?.startsWith("zenroute/")) {
+    if (config.agent?.explorer?.model?.startsWith("zenrouter/")) {
       delete config.agent.explorer;
       // Clean up empty agent object
       if (Object.keys(config.agent).length === 0) delete config.agent;
@@ -256,7 +256,7 @@ export async function DELETE(request) {
 
     return NextResponse.json({
       success: true,
-      message: modelToRemove ? `Model "${modelToRemove}" removed` : "ZenRoute settings removed from OpenCode",
+      message: modelToRemove ? `Model "${modelToRemove}" removed` : "ZenRouter settings removed from OpenCode",
     });
   } catch (error) {
     console.log("Error resetting opencode settings:", error);

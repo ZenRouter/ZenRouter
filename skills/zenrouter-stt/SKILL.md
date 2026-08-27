@@ -1,25 +1,25 @@
 ---
-name: zenroute-stt
-description: Speech-to-text via ZenRoute /v1/audio/transcriptions using OpenAI Whisper / Groq / Gemini / Deepgram / AssemblyAI / NVIDIA / HuggingFace models. Use when the user wants to transcribe audio, convert speech to text, or get subtitles from audio files.
+name: zenrouter-stt
+description: Speech-to-text via ZenRouter /v1/audio/transcriptions using OpenAI Whisper / Groq / Gemini / Deepgram / AssemblyAI / NVIDIA / HuggingFace models. Use when the user wants to transcribe audio, convert speech to text, or get subtitles from audio files.
 ---
 
-# ZenRoute — Speech-to-Text
+# ZenRouter — Speech-to-Text
 
-Requires `ZENROUTE_URL` (and `ZENROUTE_KEY` if auth enabled). See https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute/SKILL.md for setup.
+Requires `ZENROUTER_URL` (and `ZENROUTER_KEY` if auth enabled). See https://raw.githubusercontent.com/ZenRouter/ZenRouter/refs/heads/master/skills/zenrouter/SKILL.md for setup.
 
 ## Discover
 
 ```bash
-curl $ZENROUTE_URL/v1/models/stt | jq '.data[].id'
+curl $ZENROUTER_URL/v1/models/stt | jq '.data[].id'
 # Per-model params (language, response_format, prompt, temperature support)
-curl "$ZENROUTE_URL/v1/models/info?id=openai/whisper-1"
+curl "$ZENROUTER_URL/v1/models/info?id=openai/whisper-1"
 ```
 
 `model` = STT model ID (e.g. `openai/whisper-1`, `groq/whisper-large-v3`, `deepgram/nova-3`, `gemini/gemini-2.5-flash`).
 
 ## Endpoint
 
-`POST $ZENROUTE_URL/v1/audio/transcriptions` (OpenAI Whisper compatible, `multipart/form-data`)
+`POST $ZENROUTER_URL/v1/audio/transcriptions` (OpenAI Whisper compatible, `multipart/form-data`)
 
 | Field | Required | Notes |
 |---|---|---|
@@ -33,8 +33,8 @@ curl "$ZENROUTE_URL/v1/models/info?id=openai/whisper-1"
 ## Examples
 
 ```bash
-curl -X POST "$ZENROUTE_URL/v1/audio/transcriptions" \
-  -H "Authorization: Bearer $ZENROUTE_KEY" \
+curl -X POST "$ZENROUTER_URL/v1/audio/transcriptions" \
+  -H "Authorization: Bearer $ZENROUTER_KEY" \
   -F "model=openai/whisper-1" \
   -F "file=@audio.mp3" \
   -F "language=vi"
@@ -47,9 +47,9 @@ import { createReadStream } from "node:fs";
 const form = new FormData();
 form.append("model", "groq/whisper-large-v3-turbo");
 form.append("file", new Blob([await (await import("node:fs/promises")).readFile("audio.mp3")]), "audio.mp3");
-const r = await fetch(`${process.env.ZENROUTE_URL}/v1/audio/transcriptions`, {
+const r = await fetch(`${process.env.ZENROUTER_URL}/v1/audio/transcriptions`, {
   method: "POST",
-  headers: { "Authorization": `Bearer ${process.env.ZENROUTE_KEY}` },
+  headers: { "Authorization": `Bearer ${process.env.ZENROUTER_KEY}` },
   body: form,
 });
 const { text } = await r.json();

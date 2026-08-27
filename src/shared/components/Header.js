@@ -73,7 +73,7 @@ const getPageInfo = (pathname) => {
     return {
       title: "Providers",
       description: "Manage your AI provider connections",
-      icon: "dns",
+      icon: "deployed_code",
       breadcrumbs: [],
     };
   if (pathname.includes("/combos"))
@@ -102,13 +102,13 @@ const getPageInfo = (pathname) => {
     return {
       title: "Quota Tracker",
       description: "Track and manage your API quota limits",
-      icon: "data_usage",
+      icon: "donut_small",
       breadcrumbs: [],
     };
   if (pathname.includes("/mitm"))
     return {
       title: "MITM Proxy",
-      description: "Intercept CLI tool traffic and route through ZenRoute",
+      description: "Intercept CLI tool traffic and route through ZenRouter",
       icon: "security",
       breadcrumbs: [],
     };
@@ -116,14 +116,14 @@ const getPageInfo = (pathname) => {
     return {
       title: "Token Saver",
       description: "Compress prompts and outputs to save tokens",
-      icon: "savings",
+      icon: "tune",
       breadcrumbs: [],
     };
   if (pathname.includes("/cli-tools"))
     return {
       title: "CLI Tools",
       description: "Configure CLI tools",
-      icon: "terminal",
+      icon: "code",
       breadcrumbs: [],
     };
   if (pathname.includes("/proxy-pools"))
@@ -136,7 +136,7 @@ const getPageInfo = (pathname) => {
   if (pathname.includes("/skills"))
     return {
       title: "Agent Skills",
-      description: "Copy a link and paste to your AI to use ZenRoute — no install needed",
+      description: "Copy a link and paste to your AI to use ZenRouter — no install needed",
       icon: "extension",
       breadcrumbs: [],
     };
@@ -144,7 +144,7 @@ const getPageInfo = (pathname) => {
     return {
       title: "Endpoint",
       description: "API endpoint configuration",
-      icon: "api",
+      icon: "vpn_key",
       breadcrumbs: [],
     };
   if (pathname.includes("/profile"))
@@ -165,14 +165,14 @@ const getPageInfo = (pathname) => {
     return {
       title: "Console Log",
       description: "Live server console output",
-      icon: "monitor",
+      icon: "terminal",
       breadcrumbs: [],
     };
   if (pathname === "/dashboard")
     return {
       title: "Endpoint",
       description: "API endpoint configuration",
-      icon: "api",
+      icon: "vpn_key",
       breadcrumbs: [],
     };
   return { title: "", description: "", breadcrumbs: [] };

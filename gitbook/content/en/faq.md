@@ -1,12 +1,12 @@
 # Frequently Asked Questions
 
-Common questions about ZenRoute.
+Common questions about ZenRouter.
 
 ---
 
-## What is ZenRoute?
+## What is ZenRouter?
 
-**ZenRoute is an AI model router that maximizes your subscription value and minimizes costs.**
+**ZenRouter is an AI model router that maximizes your subscription value and minimizes costs.**
 
 It intelligently routes requests across multiple AI providers using a 3-tier fallback system:
 1. **Subscription tier** - Maximize Claude Code, Codex, Gemini quotas you already pay for
@@ -23,7 +23,7 @@ It intelligently routes requests across multiple AI providers using a 3-tier fal
 
 ## How does pricing work?
 
-**ZenRoute uses a 3-tier pricing strategy:**
+**ZenRouter uses a 3-tier pricing strategy:**
 
 ### Tier 1: Subscription (Maximize First)
 - **Claude Code** (Pro/Max): $20-100/month - 5-hour + weekly quota
@@ -50,9 +50,9 @@ It intelligently routes requests across multiple AI providers using a 3-tier fal
 
 ---
 
-## Is ZenRoute free?
+## Is ZenRouter free?
 
-**Yes, ZenRoute itself is 100% free and open source.**
+**Yes, ZenRouter itself is 100% free and open source.**
 
 **Free tier providers available:**
 - **Gemini CLI** - 180K completions/month (FREE Google account)
@@ -96,7 +96,7 @@ See [providers documentation](providers/subscription.md) for details.
 
 ## Can I use multiple providers?
 
-**Yes! This is ZenRoute's core feature.**
+**Yes! This is ZenRouter's core feature.**
 
 **Combos allow you to chain multiple providers with automatic fallback:**
 
@@ -129,7 +129,7 @@ See [combos documentation](features/combos.md) for examples.
 
 ## How does quota tracking work?
 
-**ZenRoute tracks quota in real-time for all providers:**
+**ZenRouter tracks quota in real-time for all providers:**
 
 **Features:**
 - **Token consumption** - Input/output tokens per request
@@ -154,13 +154,13 @@ See [quota tracking documentation](features/quota-tracking.md) for details.
 
 ---
 
-## Does ZenRoute work with Cursor?
+## Does ZenRouter work with Cursor?
 
 **Yes, but Cursor requires a cloud endpoint.**
 
 **Problem:** Cursor IDE doesn't support localhost endpoints.
 
-**Solution:** Use ZenRoute cloud deployment:
+**Solution:** Use ZenRouter cloud deployment:
 
 ```
 Cursor Settings → Models → Advanced:
@@ -172,8 +172,8 @@ Cursor Settings → Models → Advanced:
 **Alternative:** Self-host on VPS with public domain:
 ```bash
 # Deploy to VPS
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install && npm run build
 npm start
 
@@ -192,22 +192,22 @@ See [Cursor integration guide](integration/cursor.md) for details.
 
 ---
 
-## Can I self-host ZenRoute?
+## Can I self-host ZenRouter?
 
-**Yes! ZenRoute supports multiple deployment options:**
+**Yes! ZenRouter supports multiple deployment options:**
 
 ### Localhost (Default)
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 → Dashboard: http://localhost:3000
 → API: http://localhost:20128/v1
 ```
 
 ### VPS/Cloud
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install && npm run build
 
 export JWT_SECRET="your-secure-secret"
@@ -219,23 +219,23 @@ npm start
 
 ### Docker
 ```bash
-docker build -t zenroute .
+docker build -t zenrouter .
 docker run -d \
   -p 3000:3000 \
   -e JWT_SECRET="your-secret" \
-  -v zenroute-data:/app/data \
-  zenroute
+  -v zenrouter-data:/app/data \
+  zenrouter
 ```
 
 ### Cloudflare Workers
 ```bash
-cd zenroute/app
+cd zenrouter/app
 npm run deploy:cloudflare
 ```
 
 **Environment variables:**
 - `JWT_SECRET` - **MUST change in production!**
-- `DATA_DIR` - Database storage path (default: `~/.zenroute`)
+- `DATA_DIR` - Database storage path (default: `~/.zenrouter`)
 - `INITIAL_PASSWORD` - Dashboard login (default: `12345678`)
 - `NODE_ENV` - Set to `production` for deploy
 
@@ -245,11 +245,11 @@ See [deployment guide](getting-started/installation.md#deployment) for details.
 
 ## Is my data secure?
 
-**Yes, ZenRoute prioritizes security and privacy:**
+**Yes, ZenRouter prioritizes security and privacy:**
 
 **Local storage:**
-- All data stored locally in `~/.zenroute` (or custom `DATA_DIR`)
-- No data sent to ZenRoute servers
+- All data stored locally in `~/.zenrouter` (or custom `DATA_DIR`)
+- No data sent to ZenRouter servers
 - OAuth tokens encrypted with JWT
 
 **No telemetry:**
@@ -268,31 +268,31 @@ See [deployment guide](getting-started/installation.md#deployment) for details.
 - Enable HTTPS for cloud deployments
 - Rotate API keys regularly
 
-**What ZenRoute stores:**
+**What ZenRouter stores:**
 - Provider OAuth tokens (encrypted)
 - API keys (encrypted)
 - Usage statistics (local only)
 - Combo configurations
 
-**What ZenRoute does NOT store:**
+**What ZenRouter does NOT store:**
 - Your prompts or responses
 - Code you generate
 - Personal information
 
 ---
 
-## How do I update ZenRoute?
+## How do I update ZenRouter?
 
 **Update methods depend on installation type:**
 
 ### Global NPM Install
 ```bash
-npm update -g zenroute
+npm update -g zenrouter
 ```
 
 ### Local Install
 ```bash
-cd zenroute/app
+cd zenrouter/app
 git pull origin main
 npm install
 npm run build
@@ -301,22 +301,22 @@ npm start
 
 ### Docker
 ```bash
-docker pull zenroute:latest
-docker stop zenroute
-docker rm zenroute
+docker pull zenrouter:latest
+docker stop zenrouter
+docker rm zenrouter
 docker run -d \
   -p 3000:3000 \
-  -v zenroute-data:/app/data \
-  zenroute:latest
+  -v zenrouter-data:/app/data \
+  zenrouter:latest
 ```
 
 **Check version:**
 ```bash
-zenroute --version
+zenrouter --version
 ```
 
 **Breaking changes:**
-- Backup `~/.zenroute` before major updates
+- Backup `~/.zenrouter` before major updates
 - Review migration guides for major versions
 
 ---
@@ -328,18 +328,18 @@ zenroute --version
 ### Ways to contribute:
 
 1. **Report bugs:**
-   - [GitHub Issues](https://github.com/joyccn/ZenRoute/issues)
+   - [GitHub Issues](https://github.com/ZenRouter/ZenRouter/issues)
    - Include error logs, steps to reproduce
 
 2. **Request features:**
-   - [GitHub Discussions](https://github.com/joyccn/ZenRoute/discussions)
+   - [GitHub Discussions](https://github.com/ZenRouter/ZenRouter/discussions)
    - Describe use case and benefits
 
 3. **Submit code:**
    ```bash
    # Fork repo
-   git clone https://github.com/YOUR_USERNAME/zenroute.git
-   cd zenroute
+   git clone https://github.com/YOUR_USERNAME/zenrouter.git
+   cd zenrouter
    
    # Create branch
    git checkout -b feature/your-feature
@@ -374,13 +374,13 @@ zenroute --version
 - Update documentation
 - Keep commits atomic and descriptive
 
-See [CONTRIBUTING.md](https://github.com/joyccn/ZenRoute/blob/main/CONTRIBUTING.md) for details.
+See [CONTRIBUTING.md](https://github.com/ZenRouter/ZenRouter/blob/main/CONTRIBUTING.md) for details.
 
 ---
 
 ## Need More Help?
 
-- **Documentation:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
-- **GitHub:** [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **Documentation:** [GitHub Docs](https://github.com/ZenRouter/ZenRouter)
+- **GitHub:** [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues:** [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
 - **Troubleshooting:** [troubleshooting.md](troubleshooting.md)

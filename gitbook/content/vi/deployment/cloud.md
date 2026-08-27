@@ -1,6 +1,6 @@
 # ☁️ Triển khai Cloud
 
-Triển khai ZenRoute trên VPS hoặc Docker để truy cập từ xa và dùng trong production.
+Triển khai ZenRouter trên VPS hoặc Docker để truy cập từ xa và dùng trong production.
 
 ---
 
@@ -16,8 +16,8 @@ Triển khai ZenRoute trên VPS hoặc Docker để truy cập từ xa và dùng
 ### Bước 1: Clone Repository
 
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 ```
 
 ### Bước 2: Cài đặt Dependencies
@@ -39,7 +39,7 @@ Tạo file `.env` hoặc export biến:
 ```bash
 export JWT_SECRET="your-secure-secret-change-this-to-random-string"
 export INITIAL_PASSWORD="your-secure-password"
-export DATA_DIR="/var/lib/zenroute"
+export DATA_DIR="/var/lib/zenrouter"
 export NODE_ENV="production"
 ```
 
@@ -49,15 +49,15 @@ export NODE_ENV="production"
 |----------|---------|-------------|
 | `JWT_SECRET` | Auto-generated | **PHẢI đổi trong production!** Dùng để ký JWT token |
 | `INITIAL_PASSWORD` | `12345678` | Mật khẩu đăng nhập Dashboard |
-| `DATA_DIR` | `~/.zenroute` | Đường dẫn lưu database và data |
+| `DATA_DIR` | `~/.zenrouter` | Đường dẫn lưu database và data |
 | `NODE_ENV` | `development` | Đặt `production` cho deployment |
 | `ENABLE_REQUEST_LOGS` | `false` | Bật debug request/response logs |
 
 ### Bước 5: Tạo Data Directory
 
 ```bash
-sudo mkdir -p /var/lib/zenroute
-sudo chown $USER:$USER /var/lib/zenroute
+sudo mkdir -p /var/lib/zenrouter
+sudo chown $USER:$USER /var/lib/zenrouter
 ```
 
 ### Bước 6: Khởi động Application
@@ -74,8 +74,8 @@ PM2 giữ application chạy và tự khởi động lại khi crash:
 # Install PM2 globally
 npm install -g pm2
 
-# Start ZenRoute with PM2
-pm2 start npm --name zenroute -- start
+# Start ZenRouter with PM2
+pm2 start npm --name zenrouter -- start
 
 # Save PM2 configuration
 pm2 save
@@ -89,13 +89,13 @@ pm2 startup
 
 ```bash
 # View logs
-pm2 logs zenroute
+pm2 logs zenrouter
 
 # Restart application
-pm2 restart zenroute
+pm2 restart zenrouter
 
 # Stop application
-pm2 stop zenroute
+pm2 stop zenrouter
 
 # View status
 pm2 status
@@ -147,17 +147,17 @@ CMD ["npm", "run", "start"]
 
 ```bash
 # Build image
-docker build -t zenroute .
+docker build -t zenrouter .
 
 # Run container
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 3000:3000 \
   -p 20128:20128 \
   -e JWT_SECRET="your-secure-secret-change-this" \
   -e INITIAL_PASSWORD="your-secure-password" \
-  -v zenroute-data:/app/data \
-  zenroute
+  -v zenrouter-data:/app/data \
+  zenrouter
 ```
 
 ### Cách 2: Docker Compose
@@ -168,9 +168,9 @@ Tạo `docker-compose.yml`:
 version: '3.8'
 
 services:
-  zenroute:
+  zenrouter:
     build: .
-    container_name: zenroute
+    container_name: zenrouter
     ports:
       - "3000:3000"
       - "20128:20128"
@@ -180,11 +180,11 @@ services:
       - INITIAL_PASSWORD=your-secure-password
       - DATA_DIR=/app/data
     volumes:
-      - zenroute-data:/app/data
+      - zenrouter-data:/app/data
     restart: unless-stopped
 
 volumes:
-  zenroute-data:
+  zenrouter-data:
 ```
 
 **Chạy với Docker Compose:**
@@ -223,7 +223,7 @@ sudo apt install nginx
 
 ### Bước 2: Cấu hình Nginx
 
-Tạo `/etc/nginx/sites-available/zenroute`:
+Tạo `/etc/nginx/sites-available/zenrouter`:
 
 ```nginx
 server {
@@ -247,7 +247,7 @@ server {
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
 
-    # Proxy to ZenRoute
+    # Proxy to ZenRouter
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -284,7 +284,7 @@ server {
 
 ```bash
 # Create symbolic link
-sudo ln -s /etc/nginx/sites-available/zenroute /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/zenrouter /etc/nginx/sites-enabled/
 
 # Test configuration
 sudo nginx -t
@@ -333,7 +333,7 @@ sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
-# If NOT using reverse proxy, allow ZenRoute ports
+# If NOT using reverse proxy, allow ZenRouter ports
 sudo ufw allow 3000/tcp
 sudo ufw allow 20128/tcp
 
@@ -363,22 +363,22 @@ ssh -L 3000:localhost:3000 user@your-server.com
 # Update system packages
 sudo apt update && sudo apt upgrade -y
 
-# Update ZenRoute
-cd /path/to/zenroute/app
+# Update ZenRouter
+cd /path/to/zenrouter/app
 git pull
 npm install
 npm run build
-pm2 restart zenroute
+pm2 restart zenrouter
 ```
 
 ### 5. Chiến lược Backup
 
 ```bash
 # Backup data directory
-tar -czf zenroute-backup-$(date +%Y%m%d).tar.gz /var/lib/zenroute
+tar -czf zenrouter-backup-$(date +%Y%m%d).tar.gz /var/lib/zenrouter
 
 # Automated daily backup (add to crontab)
-0 2 * * * tar -czf /backups/zenroute-$(date +\%Y\%m\%d).tar.gz /var/lib/zenroute
+0 2 * * * tar -czf /backups/zenrouter-$(date +\%Y\%m\%d).tar.gz /var/lib/zenrouter
 ```
 
 ---
@@ -392,7 +392,7 @@ tar -czf zenroute-backup-$(date +%Y%m%d).tar.gz /var/lib/zenroute
 pm2 status
 
 # View logs
-pm2 logs zenroute --lines 100
+pm2 logs zenrouter --lines 100
 
 # Monitor resources
 pm2 monit
@@ -429,20 +429,20 @@ netstat -tulpn | grep -E '3000|20128'
 
 ```bash
 # Check logs
-pm2 logs zenroute
+pm2 logs zenrouter
 
 # Check if ports are in use
 sudo lsof -i :3000
 sudo lsof -i :20128
 
 # Check environment variables
-pm2 env zenroute
+pm2 env zenrouter
 ```
 
 ### Nginx 502 Bad Gateway
 
 ```bash
-# Check if ZenRoute is running
+# Check if ZenRouter is running
 pm2 status
 
 # Check Nginx error logs
@@ -460,8 +460,8 @@ sudo nginx -t
 
 ```bash
 # Fix data directory permissions
-sudo chown -R $USER:$USER /var/lib/zenroute
-chmod 755 /var/lib/zenroute
+sudo chown -R $USER:$USER /var/lib/zenrouter
+chmod 755 /var/lib/zenrouter
 ```
 
 ---

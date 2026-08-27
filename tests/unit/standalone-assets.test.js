@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { copyStandaloneAssets } from "../../scripts/copy-standalone-assets.mjs";
 
 function createBuildFixture(distDir) {
-  const projectRoot = mkdtempSync(join(tmpdir(), "zenroute-standalone-assets-"));
+  const projectRoot = mkdtempSync(join(tmpdir(), "zenrouter-standalone-assets-"));
   const buildRoot = join(projectRoot, distDir);
   mkdirSync(join(buildRoot, "standalone"), { recursive: true });
   mkdirSync(join(buildRoot, "static", "chunks"), { recursive: true });

@@ -2,16 +2,16 @@ import pkg from "../../../package.json" with { type: "json" };
 
 // App configuration
 export const APP_CONFIG = {
-  name: "ZenRoute",
+  name: "ZenRouter",
   description: "Serene AI Gateway & Intelligent Routing Engine",
   version: pkg.version,
 };
 
 // Updater configuration
 export const UPDATER_CONFIG = {
-  npmPackageName: "zenroute",
-  installCmd: "npm i -g zenroute",
-  installCmdLatest: "npm i -g zenroute@latest --prefer-online",
+  npmPackageName: "zenrouter",
+  installCmd: "npm i -g zenrouter",
+  installCmdLatest: "npm i -g zenrouter@latest --prefer-online",
   shutdownCountdownSec: 3,
   exitDelayMs: 500,
   statusPort: 20129,

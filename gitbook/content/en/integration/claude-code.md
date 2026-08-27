@@ -1,12 +1,12 @@
 # Claude Code Integration
 
-Integrate ZenRoute with Claude Code CLI to route your Anthropic API requests through ZenRoute's intelligent routing system.
+Integrate ZenRouter with Claude Code CLI to route your Anthropic API requests through ZenRouter's intelligent routing system.
 
 ## Prerequisites
 
 - Claude Code CLI installed
-- ZenRoute running locally or cloud endpoint configured
-- API key from ZenRoute dashboard
+- ZenRouter running locally or cloud endpoint configured
+- API key from ZenRouter dashboard
 
 ## Setup
 
@@ -15,7 +15,7 @@ Integrate ZenRoute with Claude Code CLI to route your Anthropic API requests thr
 Set the following environment variables in your shell configuration file (`~/.bashrc`, `~/.zshrc`, or `~/.bash_profile`):
 
 ```bash
-# Base URL for ZenRoute
+# Base URL for ZenRouter
 export ANTHROPIC_BASE_URL="http://localhost:20128/v1"
 
 # Optional: Set default models for aliases
@@ -40,7 +40,7 @@ echo $ANTHROPIC_BASE_URL
 
 ## Model Aliases
 
-Claude Code supports the following model aliases that map to ZenRoute models:
+Claude Code supports the following model aliases that map to ZenRouter models:
 
 | Alias | Model | Environment Variable |
 |-------|-------|---------------------|
@@ -86,7 +86,7 @@ Claude Code stores its configuration in `~/.claude/settings.json`. You can manua
 
 If you encounter connection errors:
 
-1. Verify ZenRoute is running: `curl http://localhost:20128/health`
+1. Verify ZenRouter is running: `curl http://localhost:20128/health`
 2. Check environment variables are set correctly
 3. Ensure no firewall is blocking port 20128
 
@@ -94,16 +94,16 @@ If you encounter connection errors:
 
 If you get "model not found" errors:
 
-1. Verify the model name matches your ZenRoute configuration
-2. Check that the provider connection is active in ZenRoute dashboard
+1. Verify the model name matches your ZenRouter configuration
+2. Check that the provider connection is active in ZenRouter dashboard
 3. Ensure the model is available in your connected providers
 
 ## Cloud Endpoint
 
-To use ZenRoute cloud endpoint instead of localhost:
+To use ZenRouter cloud endpoint instead of localhost:
 
 ```bash
 export ANTHROPIC_BASE_URL="http://localhost:20128"
 ```
 
-Make sure you have configured your API key in the ZenRoute cloud dashboard.
+Make sure you have configured your API key in the ZenRouter cloud dashboard.

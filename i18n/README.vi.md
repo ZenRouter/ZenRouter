@@ -1,22 +1,22 @@
 <div align="center">
-  <img src="../images/zenroute.png?1" alt="Bảng điều khiển ZenRoute" width="800"/>
+  <img src="../images/zenrouter.png?1" alt="Bảng điều khiển ZenRouter" width="800"/>
   
-  # ZenRoute - Free AI Router & Token Saver
+  # ZenRouter - Free AI Router & Token Saver
   
   **Không bao giờ ngừng code. Tiết kiệm 20-40% token với RTK + tự động dự phòng sang các mô hình AI MIỄN PHÍ & giá rẻ.**
   
   **Kết nối tất cả công cụ AI Code (Claude Code, Codex, Cursor, Cline, Copilot, Antigravity...) tới 40+ Nhà cung cấp AI & 100+ Mô hình.**
   
-  [![npm](https://img.shields.io/npm/v/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![Downloads](https://img.shields.io/npm/dm/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![License](https://github.com/joyccn/ZenRoute/blob/main/LICENSE)](https://github.com/joyccn/ZenRoute/blob/main/LICENSE)
+  [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![License](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
   
   [🚀 Bắt đầu nhanh](#-quick-start) • [💡 Tính năng](#-key-features) • [📖 Cài đặt](#-setup-guide)
 </div>
 
 ---
 
-## 🤔 Tại sao chọn ZenRoute?
+## 🤔 Tại sao chọn ZenRouter?
 
 **Ngừng lãng phí tiền bạc, token và không bao giờ lo chạm giới hạn (rate limit):**
 
@@ -26,7 +26,7 @@
 - ❌ Chi phí API đắt đỏ ($20-50/tháng cho từng nhà cung cấp)
 - ❌ Phải chuyển đổi thủ công giữa các nhà cung cấp AI
 
-**ZenRoute giải quyết vấn đề này:**
+**ZenRouter giải quyết vấn đề này:**
 
 - ✅ **RTK Token Saver** - Tự động nén nội dung `tool_result`, tiết kiệm 20-40% token trên mỗi request
 - ✅ **Tối đa hóa gói đăng ký** - Theo dõi hạn mức, tận dụng triệt để trước khi reset
@@ -46,7 +46,7 @@
        │ http://localhost:20128/v1
        ↓
 ┌─────────────────────────────────────────────┐
-│           ZenRoute (Smart Router)            │
+│           ZenRouter (Smart Router)            │
 │  • RTK Token Saver (nén tool_result token) │
 │  • Dịch chuyển định dạng (OpenAI ↔ Claude) │
 │  • Quota tracking (theo dõi hạn mức)       │
@@ -69,8 +69,8 @@ Kết quả: Không bao giờ ngừng code, chi phí tối thiểu + tiết ki�
 **1. Cài đặt toàn cục:**
 
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 ```
 
 🎉 Bảng điều khiển (Dashboard) sẽ tự động mở tại `http://localhost:20128`
@@ -92,7 +92,7 @@ Cài đặt Claude Code/Codex/OpenClaw/Cursor/Cline/Antigravity:
 
 **Phương án khác: chạy từ mã nguồn (repository này):**
 
-Gói kho lưu trữ này là riêng tư (`zenroute-app`), vì vậy việc chạy từ nguồn/Docker là cách phát triển cục bộ mặc định.
+Gói kho lưu trữ này là riêng tư (`zenrouter-app`), vì vậy việc chạy từ nguồn/Docker là cách phát triển cục bộ mặc định.
 
 ```bash
 cp .env.example .env
@@ -118,12 +118,12 @@ URL mặc định:
 
 <div align="center">
   
-### 📺 Hướng dẫn thiết lập hoàn chỉnh - ZenRoute + Claude Code MIỄN PHÍ
+### 📺 Hướng dẫn thiết lập hoàn chỉnh - ZenRouter + Claude Code MIỄN PHÍ
   
-[![Thiết lập ZenRoute + Claude Code](https://img.youtube.com/vi/raEyZPg5xE0/maxresdefault.jpg)](https://www.youtube.com/watch?v=raEyZPg5xE0)
+[![Thiết lập ZenRouter + Claude Code](https://img.youtube.com/vi/raEyZPg5xE0/maxresdefault.jpg)](https://www.youtube.com/watch?v=raEyZPg5xE0)
 
 **🎬 Xem hướng dẫn từng đầy đủ:**
-- ✅ Cài đặt & thiết lập ZenRoute
+- ✅ Cài đặt & thiết lập ZenRouter
 - ✅ Cấu hình Claude Sonnet 4.5 MIỄN PHÍ
 - ✅ Tích hợp Claude Code
 - ✅ Thử nghiệm code trực tiếp
@@ -138,7 +138,7 @@ URL mặc định:
 
 ## 🛠️ Các công cụ CLI được hỗ trợ
 
-ZenRoute hoạt động liền mạch với tất cả các công cụ code AI chính:
+ZenRouter hoạt động liền mạch với tất cả các công cụ code AI chính:
 
 <div align="center">
   <table>
@@ -389,7 +389,7 @@ Combo: "my-coding-stack"
 
 Dịch chuyển liền mạch giữa các định dạng:
 - **OpenAI** ↔ **Claude** ↔ **Gemini** ↔ **OpenAI Responses**
-- Công cụ CLI của bạn gửi định dạng OpenAI → ZenRoute dịch chuyển → Nhà cung cấp nhận định dạng gốc
+- Công cụ CLI của bạn gửi định dạng OpenAI → ZenRouter dịch chuyển → Nhà cung cấp nhận định dạng gốc
 - Hoạt động với mọi công cụ hỗ trợ endpoint OpenAI tùy chỉnh
 
 ### 👥 Hỗ trợ Đa tài khoản
@@ -443,13 +443,13 @@ Dịch chuyển liền mạch giữa các định dạng:
 > **💡AN TRỌNG - Hiểu về Chi phí trên Bảng điều khiển:**
 > 
 > "Chi phí" hiển thị trong Phân tích sử dụng là **chỉ để theo dõi và so sánh**. 
-> Bản thân ZenRoute **không bao giờ thu phí** bạn bất cứ thứ gì. Bạn chỉ trả tiền trực tiếp cho các nhà cung cấp (nếu sử dụng dịch vụ trả phí).
+> Bản thân ZenRouter **không bao giờ thu phí** bạn bất cứ thứ gì. Bạn chỉ trả tiền trực tiếp cho các nhà cung cấp (nếu sử dụng dịch vụ trả phí).
 > 
 > **Ví dụ:** Nếu bảng điều khiển của bạn hiển thị "tổng chi phí $290" trong khi sử dụng các mô hìnhFlow, điều này đại diện cho 
 > số tiền bạn sẽ phải trả nếu sử dụng API trả phí trực tiếp. Chi phí thực tế của bạn = **$0** (iFlow miễn phí không giới hạn).
 > 
 > Hãy coi nó như một "trình theo dõi tiết kiệm" cho thấy bạn đang tiết kiệm được bao nhiêu bằng cách sử dụng các mô hình miễn phí hoặc 
-> định tuyến qua ZenRoute!
+> định tuyến qua ZenRouter!
 
 ### 🌐 Triển khai ở bất cứ đâu
 
@@ -481,15 +481,15 @@ Dịch chuyển liền mạch giữa các định dạng:
 
 ---
 
-### 📊 Hiểu về Chi phí & Thanh toán của ZenRoute
+### 📊 Hiểu về Chi phí & Thanh toán của ZenRouter
 
-**Thực tế Thanh toán ZenRoute:**
+**Thực tế Thanh toán ZenRouter:**
 
-✅ **Phần mềm ZenRoute = MIỄN PHÍ mãi mãi** (mã nguồn mở, không bao giờ thu phí)  
+✅ **Phần mềm ZenRouter = MIỄN PHÍ mãi mãi** (mã nguồn mở, không bao giờ thu phí)  
 ✅ **"Chi phí" trên bảng điều khiển = Chỉ để Hiển thị/Theo dõi** (không phải hóa đơn thực tế)  
  **Bạn trả tiền trực tiếp cho nhà cung cấp** (gói đăng ký hoặc phí API)  
 ✅ **Nhà cung cấp MIỄN PHÍ vẫn MIỄN PHÍ** (iFlow, Kiro, Qwen = $0 không giới hạn)  
-❌ **ZenRoute không bao giờ gửi hóa đơn** hoặc tính phí thẻ của bạn
+❌ **ZenRouter không bao giờ gửi hóa đơn** hoặc tính phí thẻ của bạn
 
 **Cách Hoạt động của Hiển thị Chi phí:**
 
@@ -510,7 +510,7 @@ Kiểm tra Thực tế:
 
 **Quy tắc Thanh toán:**
 - **Nhà cung cấp gói đăng ký** (Claude Code, Codex): Trả tiền trực tiếp cho họ qua website của họ
-- **Nhà cung cấp giá rẻ** (GLM, MiniMax): Trả tiền trực tiếp cho họ, ZenRoute chỉ định tuyến
+- **Nhà cung cấp giá rẻ** (GLM, MiniMax): Trả tiền trực tiếp cho họ, ZenRouter chỉ định tuyến
 - **Nhà cung cấp MIỄN PHÍ** (iFlow, Kiro, Qwen): Thực sự miễn phí mãi mãi, không có phí ẩn
 - **9**: Không bao giờ thu phí bất cứ thứ gì, ever
 
@@ -586,7 +586,7 @@ Truy cập qua: WhatsApp, Telegram, Slack, Discord, iMessage, Signal...
 <details>
 <summary><b>📊 Tại sao bảng điều khiển của tôi hiển thị chi phí cao?</b></summary>
 
-Bảng điều khiển theo dõi mức sử dụng token của bạn và hiển thị **chi phí ước tính** như thể bạn đang sử dụng API trả phí trực tiếp. Đâykhông phải là thanh toán thực tế** - đó là tài liệu tham khảo để cho thấy bạn đang tiết kiệm được bao nhiêu bằng cách sử dụng các mô hình miễn phí hoặc gói đăng ký hiện có thông qua ZenRoute.
+Bảng điều khiển theo dõi mức sử dụng token của bạn và hiển thị **chi phí ước tính** như thể bạn đang sử dụng API trả phí trực tiếp. Đâykhông phải là thanh toán thực tế** - đó là tài liệu tham khảo để cho thấy bạn đang tiết kiệm được bao nhiêu bằng cách sử dụng các mô hình miễn phí hoặc gói đăng ký hiện có thông qua ZenRouter.
 
 **Ví dụ:**
 - **Bảng điều khiển hiển thị:** "Tổng chi phí $290"
@@ -599,16 +599,16 @@ Màn hình chi phí là một "trình theo dõi tiết kiệm" để giúp bạn
 </details>
 
 <details>
-<summary><b>💳 Tôi có bị ZenRoute tính phí không?</b></summary>
+<summary><b>💳 Tôi có bị ZenRouter tính phí không?</b></summary>
 
-**Không.** ZenRoute là phần mềm miễn phí, mã nguồn mở chạy trên máy tính của chính bạn. Nó không bao giờ tính phí bạn bất cứ thứ gì.
+**Không.** ZenRouter là phần mềm miễn phí, mã nguồn mở chạy trên máy tính của chính bạn. Nó không bao giờ tính phí bạn bất cứ thứ gì.
 
 **Bạn chỉ trả tiền:**
 - ✅ **Nhà cung cấp gói đăng ký** (Claude Code $20/tháng, Codex $20-200/tháng) → Trả tiền trực tiếp cho họ trên website của họ
-- ✅ **Nhà cung cấp giá rẻ** (GLM, MiniMax) → Trả tiền trực tiếp cho họ, ZenRoute chỉ định tuyến yêu cầu của bạn
-- ❌ **Bản thân ZenRoute** → **Không bao giờ tính phí bất cứ thứ gì, ever**
+- ✅ **Nhà cung cấp giá rẻ** (GLM, MiniMax) → Trả tiền trực tiếp cho họ, ZenRouter chỉ định tuyến yêu cầu của bạn
+- ❌ **Bản thân ZenRouter** → **Không bao giờ tính phí bất cứ thứ gì, ever**
 
-ZenRoute là một proxy/router cục bộ. Nó không cóẻ tín dụng của bạn, không thể gửi hóa đơn và không có hệ thống thanh toán. Đó là phần mềm hoàn toàn miễn phí.
+ZenRouter là một proxy/router cục bộ. Nó không cóẻ tín dụng của bạn, không thể gửi hóa đơn và không có hệ thống thanh toán. Đó là phần mềm hoàn toàn miễn phí.
 
 </details>
 
@@ -622,9 +622,9 @@ ZenRoute là một proxy/router cục bộ. Nó không cóẻ tín dụng của 
 - **Kiro**: Các mô hình Claude miễn phí không giới hạn qua AWS Builder ID  
 - **Qwen**: Truy cập miễn phí không giới hạn vào các mô hình Qwen qua xác thực thiết bị
 
-ZenRoute chỉ định tuyến yêu cầu của bạn đến họ - không có "cạm bẫy" hay thanh toán trong tương lai. Đó là các dịch vụ thực sự miễn phí, và ZenRoute giúp chúng dễ sử dụng với hỗ trợ dự phòng.
+ZenRouter chỉ định tuyến yêu cầu của bạn đến họ - không có "cạm bẫy" hay thanh toán trong tương lai. Đó là các dịch vụ thực sự miễn phí, và ZenRouter giúp chúng dễ sử dụng với hỗ trợ dự phòng.
 
-**Lưu ý:** số nhà cung cấp gói đăng ký (Antigravity, GitHub Copilot) có thể có các khoảng thời gian dùng thử miễn phí có thể trở thành trả phí sau này, nhưng điều này sẽ được các nhà cung cấp đó thông báo rõ ràng, không phải ZenRoute.
+**Lưu ý:** số nhà cung cấp gói đăng ký (Antigravity, GitHub Copilot) có thể có các khoảng thời gian dùng thử miễn phí có thể trở thành trả phí sau này, nhưng điều này sẽ được các nhà cung cấp đó thông báo rõ ràng, không phải ZenRouter.
 
 </details>
 
@@ -649,7 +649,7 @@ ZenRoute chỉ định tuyến yêu cầu của bạn đến họ - không có "
 
 3. **Sử dụng nhà cung cấp gói đăng ký cuối cùng:**
    - Chỉ khi bạn đã có chúng
-   - ZenRoute giúp tối đa hóa giá trị của chúng thông qua theo dõi hạn mức
+   - ZenRouter giúp tối đa hóa giá trị của chúng thông qua theo dõi hạn mức
 
 **Kết quả:** Hầu hết người dùng có thể hoạt động ở mức $0/tháng chỉ sử dụng các tầng miễn phí!
 
@@ -658,20 +658,20 @@ ZenRoute chỉ định tuyến yêu cầu của bạn đến họ - không có "
 <details>
 <summary><b>📈 Điều gì xảy ra nếu mức sử dụng của tôi đột ngột tăng vọt?</b></summary>
 
-Cơ chế dự phòng thông minh của ZenRoute ngăn chặn các khoản phí bất ngờ:
+Cơ chế dự phòng thông minh của ZenRouter ngăn chặn các khoản phí bất ngờ:
 
 **Kịch bản:** Bạn đang trong giai đoạn code nước rút và vượt qua các hạn mức
 
-**Không có ZenRoute:**
+**Không có ZenRouter:**
 - ❌ Chạm giới hạn tốc độ → Công việc dừng lại → Thất vọng
 - ❌ Hoặc: Vô tình tích lũy hóa đơn API khổng lồ
 
-**Có ZenRoute:**
+**Có ZenRouter:**
 - ✅ Gói đăng ký chạm giới hạn → Tự động dự phòng sang tầng giá rẻ
 - ✅ Tầng giá rẻ trở nên đắt đỏ → Tự động dự phòng sang tầng miễn phí
 - ✅ Không bao giờ ngừng code → Chi phí dự đoán được
 
-**Bạn nắm quyền kiểm soát:** Đặt giới hạn chi tiêu cho mỗi nhà cung cấp trong bảng điều khiển, và ZenRoute sẽ tuân thủ chúng.
+**Bạn nắm quyền kiểm soát:** Đặt giới hạn chi tiêu cho mỗi nhà cung cấp trong bảng điều khiển, và ZenRouter sẽ tuân thủ chúng.
 
 </details>
 
@@ -695,7 +695,7 @@ Các mô hình:
   cc/claude-haiku-4-5-20251001
 ```
 
-**Mẹo Chuyên nghiệp:** Sử dụng Opus cho các tác vụ phức tạp, Sonnet cho tốc độ. ZenRoute theo dõi hạn mức cho mỗi mô hình!
+**Mẹo Chuyên nghiệp:** Sử dụng Opus cho các tác vụ phức tạp, Sonnet cho tốc độ. ZenRouter theo dõi hạn mức cho mỗi mô hình!
 
 ### OpenAI Codex (Plus/Pro)
 
@@ -864,7 +864,7 @@ Chi phí: $0 mãi mãi!
 ```
 Settings → Models → Advanced:
   OpenAI API Base URL: http://localhost:20128/v1
-  OpenAI API Key: [từ bảng điều khiển zenroute]
+  OpenAI API Key: [từ bảng điều khiển zenrouter]
   Model: cc/claude-opus-4-6
 ``Hoặc sử dụng combo: `premium-coding`
 
@@ -875,7 +875,7 @@ Chỉnh sửa `~/.claude/config.json`:
 ```json
 {
   "anthropic_api_base": "http://localhost:20128/v1",
-  "anthropic_api_key": "your-zenroute-api-key"
+  "anthropic_api_key": "your-zenrouter-api-key"
 }
 ```
 
@@ -883,7 +883,7 @@ Chỉnh sửa `~/.claude/config.json`:
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:20128"
-export OPENAI_API_KEY="your-zenroute-api-key"
+export OPENAI_API_KEY="your-zenrouter-api-key"
 
 codex "prompt của bạn"
 ```
@@ -903,15 +903,15 @@ Bảng điều khiển → CLI Tools → OpenClaw → Chọn Mô hình → Áp d
   "agents": {
     "defaults": {
       "model": {
-        "primary": "zenroute/if/glm-4.7"
+        "primary": "zenrouter/if/glm-4.7"
       }
     }
   },
   "models": {
     "providers": {
-      "zenroute": {
+      "zenrouter": {
         "baseUrl": "://127.0.0.1:20128/v1",
-        "apiKey": "sk_zenroute",
+        "apiKey": "sk_zenrouter",
         "api": "openai-completions",
         "models": [
           {
@@ -925,7 +925,7 @@ Bảng điều khiển → CLI Tools → OpenClaw → Chọn Mô hình → Áp d
 }
 ```
 
-> **Lưu ý:** OpenClaw chỉ hoạt động với ZenRoute cục bộ. Sử dụng `127.0.0.1` thay vì `localhost` để tránh các vấn đề phân giải6.
+> **Lưu ý:** OpenClaw chỉ hoạt động với ZenRouter cục bộ. Sử dụng `127.0.0.1` thay vì `localhost` để tránh các vấn đề phân giải6.
 
 ### Cline / Continue / RooCode
 
@@ -945,15 +945,15 @@ Model: cc/claude-opus-4-6
 
 ```bash
 # Clone và cài đặt
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter
 npm install
 npm run build
 
 # Cấu hình
 export JWT="your-secure-secret-change-this"
 export INITIAL_PASSWORD="your-password"
-export DATA_DIR="/var/lib/zenroute"
+export DATA_DIR="/var/lib/zenrouter"
 export PORT="20128"
 export HOSTNAME="0.0.0.0"
 export NODE_ENV="production"
@@ -967,7 +967,7 @@ npm run start
 
 # Hoặc sử dụng PM2
 npm install -g pm2
-pm2 start --name zenroute -- start
+pm2 start --name zenrouter -- start
 pm2 save
 pm2 startup
 ```
@@ -976,28 +976,28 @@ pm2 startup
 
 ```bash
 # Build image (từ gốc kho lưu trữ)
-docker build -t zenroute .
+docker build -t zenrouter .
 
 # Chạy container (lệnh được sử dụng trong thiết lập hiện tại)
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 20128:20128 \
-  --env-file /root/dev/zenroute/.env \
-  -v zenroute-data:/app/data \
-  -v zenroute-usage:/root/.zenroute \
-  zenroute
+  --env-file /root/dev/zenrouter/.env \
+  -v zenrouter-data:/app/data \
+  -v zenrouter-usage:/root/.zenrouter \
+  zenrouter
 ```
 
 Lệnh di động (nếu bạn đã ở gốc kho lưu trữ):
 
 ```bash
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 20128:20128 \
   --env-file ./.env \
-  -v zenroute-data:/app/data \
-  -v zenroute-usage:/root/.zenroute \
-  zenroute
+  -v zenrouter-data:/app/data \
+  -v zenrouter-usage:/root/.zenrouter \
+  zenrouter
 ```
 
 Mặc định container:
@@ -1007,18 +1007,18 @@ Mặc định container:
 Các lệnh hữu ích:
 
 ```bash
-docker logs -f zenroute
- restart zenroute
-docker stop zenroute && docker rm zenroute
+docker logs -f zenrouter
+ restart zenrouter
+docker stop zenrouter && docker rm zenrouter
 ```
 
 ### Biến môi trường
 
 | Biến | Mặc định | Mô tả |
 |----------|---------|-------------|
-| `JWT_SECRET` | Tự động sinh (`~/.zenroute/jwt-secret`) | Bí mật ký JWT cho cookie xác thực bảng điều khiển (đặt để chia sẻ giữa nhiều instance) |
+| `JWT_SECRET` | Tự động sinh (`~/.zenrouter/jwt-secret`) | Bí mật ký JWT cho cookie xác thực bảng điều khiển (đặt để chia sẻ giữa nhiều instance) |
 | `INITIAL_PASSWORD` | `12345678` | Mật khẩu đăng nhập đầu tiên khi không có hash đã lưu tồn tại |
-| `DATA_DIR` | `~/.zenroute` |ị trí cơ sở dữ liệu ứng dụng chính (`db.json`) |
+| `DATA_DIR` | `~/.zenrouter` |ị trí cơ sở dữ liệu ứng dụng chính (`db.json`) |
 | `PORT` | framework default | Cổng dịch vụ (`20128` trong các ví dụ) |
 | `HOSTNAME` | framework default | Bind host (Docker mặc định là `0.0.0.0`) |
 | `NODE_ENV` | runtime default | Đặt `production` để triển khai |
@@ -1042,9 +1042,9 @@ Ghi chú:
 ### Tệp Runtime và Lưu trữ
 
 - Trạng thái ứng dụng chính: `${DATA_DIR}/db.json` (nhà cung cấp, combo, alias, key, cài đặt), được quản lý bởi `src/lib/localDb.js`.
-- Lịch sử sử dụng và log: `~/.zenroute/usage.json` và `~/.zenroute/log.txt`, được quản lý bởi `src/lib/usageDb.js`.
+- Lịch sử sử dụng và log: `~/.zenrouter/usage.json` và `~/.zenrouter/log.txt`, được quản lý bởi `src/lib/usageDb.js`.
 - request/translator tùy chọn: `<repo>/logs/...` khi `ENABLE_REQUEST_LOGS=true`.
-- Lưu trữ sử dụng hiện tại tuân theo logic đường dẫn `~/.zenroute` và độc lập với `DATA_DIR`.
+- Lưu trữ sử dụng hiện tại tuân theo logic đường dẫn `~/.zenrouter` và độc lập với `DATA_DIR`.
 
 </details>
 
@@ -1106,7 +1106,7 @@ Ghi chú:
 - Thêm combo: `cc/claude-opus-4-6 → glm/glm-4.7 → if/kimi-k2-thinking`
 
 **Token OAuth hết hạn**
-- Tự động làm mới bởi ZenRoute
+- Tự động làm mới bởi ZenRouter
 - Nếu sự cố vẫn tiếp diễn: Bảng điều khiển → Nhà cung cấp → Kết nối lại
 
 **Chi phí cao**
@@ -1125,7 +1125,7 @@ Ghi chú:
 **Endpoint đám mây `stream=false` trả về 500 (`Unexpected token 'd'...`)**
 - Nguyên nhân gốc rễ: upstream trả về payload SSE (`data: ...`) trong khi client mong đợi JSON.
 -ải pháp thay thế: sử dụng `stream=true` cho các lệnh gọi trực tiếp đến đám mây.
-- Runtime ZenRoute cục bộ bao gồm dự phòng SSE→JSON cho các lệnh gọi không phát trực tiếp khi upstream trả về `text/event-stream`.
+- Runtime ZenRouter cục bộ bao gồm dự phòng SSE→JSON cho các lệnh gọi không phát trực tiếp khi upstream trả về `text/event-stream`.
 
 **Đám mây báo đã kết nối, nhưng yêu cầu vẫn thất bại với `Invalid API key`**
 - Tạo một key mới từ bảng điều khiển cục bộ (`/api/keys`) và chạy đồng bộ đám mây (`Enable Cloud` sau đó `Sync Now`).
@@ -1252,22 +1252,22 @@ Tài liệu tham khảo kiến trúc đầy đủ: [`docs/ARCHITECTURE.md`](../d
 
 ## 📧 Hỗ trợ
 
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
 
 ---
 
 ## 👥 Người đóng góp
 
-Cảm ơn tất cả những người đã đóng góp giúp ZenRoute tốt hơn!
+Cảm ơn tất cả những người đã đóng góp giúp ZenRouter tốt hơn!
 
-[![Contributors](https://contrib.rocks/image?repo=joyccn/ZenRoute&max=100&columns=20&anon=1)](https://github.com/joyccn/ZenRoute/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=ZenRouter/ZenRouter&max=100&columns=20&anon=1)](https://github.com/ZenRouter/ZenRouter/graphs/contributors)
 
 ---
 
 ## 📊 Star Chart
 
-[![ Chart](https://starchart.cc/joyccn/ZenRoute.svg?variant=adaptive)](https://starchart.cc/joyccn/ZenRoute)
+[![ Chart](https://starchart.cc/ZenRouter/ZenRouter.svg?variant=adaptive)](https://starchart.cc/ZenRouter/ZenRouter)
 
 ### Cách Đóng góp
 
@@ -1277,7 +1277,7 @@ Cảm ơn tất cả những người đã đóng góp giúp ZenRoute tốt hơn
 4. Push lên nhánh (`git push origin feature/amazing-feature`)
 5. Mở một Pull Request
 
-Xem [Pull Requests](https://github.com/joyccn/ZenRoute/pulls) để biết hướng dẫn chi tiết.
+Xem [Pull Requests](https://github.com/ZenRouter/ZenRouter/pulls) để biết hướng dẫn chi tiết.
 
 ---
 

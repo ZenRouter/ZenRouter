@@ -12,8 +12,8 @@ function killMitmByPidFile() {
   try {
     const mitmPidFile = path.join(
       process.platform === "win32"
-        ? path.join(process.env.APPDATA || "", "zenroute")
-        : path.join(os.homedir(), ".zenroute"),
+        ? path.join(process.env.APPDATA || "", "zenrouter")
+        : path.join(os.homedir(), ".zenrouter"),
       "mitm",
       ".mitm.pid"
     );
@@ -37,7 +37,7 @@ function killMitmByPidFile() {
   } catch { /* best effort */ }
 }
 
-// Collect PIDs of all zenroute-related processes (excluding current)
+// Collect PIDs of all zenrouter-related processes (excluding current)
 function collectAppPids() {
   const pids = [];
   const platform = process.platform;
@@ -49,8 +49,8 @@ function collectAppPids() {
       const lines = output.split("\n").slice(1).filter(l => l.trim());
       lines.forEach(line => {
         const lower = line.toLowerCase();
-        // Match anything running from zenroute install dir or wrapper cli.js
-        const isAppProcess = lower.includes("zenroute") ||
+        // Match anything running from zenrouter install dir or wrapper cli.js
+        const isAppProcess = lower.includes("zenrouter") ||
           lower.includes("next-server") ||
           lower.includes("\\bin\\app\\") ||
           lower.includes("/bin/app/") ||
@@ -77,7 +77,7 @@ function collectAppPids() {
     try {
       const output = execSync("ps aux 2>/dev/null", { encoding: "utf8", timeout: KILL_TIMEOUT_MS });
       output.split("\n").forEach(line => {
-        const isAppProcess = line.includes("zenroute") ||
+        const isAppProcess = line.includes("zenrouter") ||
           line.includes("next-server") ||
           line.includes("cloudflared") ||
           line.includes("/bin/app/") ||
@@ -99,9 +99,9 @@ function collectAppPids() {
 function getDataDir() {
   if (process.env.DATA_DIR) return process.env.DATA_DIR;
   if (process.platform === "win32") {
-    return path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "zenroute");
+    return path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "zenrouter");
   }
-  return path.join(os.homedir(), ".zenroute");
+  return path.join(os.homedir(), ".zenrouter");
 }
 
 function resolveBundledUpdaterPath() {
@@ -156,10 +156,10 @@ export async function killAppProcesses() {
   }
 }
 
-// Resolve npx/zenroute binary to relaunch after update (cross-platform)
+// Resolve npx/zenrouter binary to relaunch after update (cross-platform)
 function resolveRelaunchCommand() {
   const isWin = process.platform === "win32";
-  // Prefer `npx zenroute` — works regardless of global bin path changes after npm i -g
+  // Prefer `npx zenrouter` — works regardless of global bin path changes after npm i -g
   const npx = isWin ? "npx.cmd" : "npx";
   return { cmd: npx, args: [UPDATER_CONFIG.npmPackageName] };
 }

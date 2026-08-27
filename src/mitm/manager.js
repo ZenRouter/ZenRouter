@@ -63,7 +63,7 @@ function resolveBundledServerPath() {
 }
 
 // Copy bundled server.js into DATA_DIR so MITM doesn't lock node_modules
-// (prevents EBUSY on `npm i -g zenroute@latest` while MITM is running).
+// (prevents EBUSY on `npm i -g zenrouter@latest` while MITM is running).
 function ensureRuntimeServer(bundledPath) {
   try {
     if (!bundledPath || !fs.existsSync(bundledPath)) return bundledPath;
@@ -95,7 +95,7 @@ function ensureRuntimeServer(bundledPath) {
 
 const SERVER_PATH = ensureRuntimeServer(resolveBundledServerPath());
 const ENCRYPT_ALGO = "aes-256-gcm";
-const ENCRYPT_SALT = "zenroute-mitm-pwd";
+const ENCRYPT_SALT = "zenrouter-mitm-pwd";
 
 function getProcessUsingPort443() {
   try {
@@ -578,7 +578,7 @@ async function startServer(apiKey, sudoPassword, forceKillPort443 = false) {
     log(`[MITM] server.js missing at ${effectiveServerPath} → recopying`);
     effectiveServerPath = ensureRuntimeServer(resolveBundledServerPath());
     if (!effectiveServerPath || !fs.existsSync(effectiveServerPath)) {
-      throw new Error(`MITM server.js not found at ${effectiveServerPath}. Reinstall zenroute.`);
+      throw new Error(`MITM server.js not found at ${effectiveServerPath}. Reinstall zenrouter.`);
     }
   }
   const mitmRouterBase = await resolveMitmRouterBaseUrl();

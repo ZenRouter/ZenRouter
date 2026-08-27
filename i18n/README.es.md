@@ -1,19 +1,19 @@
 <div align="center">
-  <img src="../images/zenroute.png?1" alt="Panel de control de ZenRoute" width="800"/>
+  <img src="../images/zenrouter.png?1" alt="Panel de control de ZenRouter" width="800"/>
   
-  # ZenRoute - Enrutador de IA GRATUITO y ahorrador de tokens
+  # ZenRouter - Enrutador de IA GRATUITO y ahorrador de tokens
   
   **Nunca dejes de programar. Ahorra entre 20-40% de tokens con RTK + reserva automática hacia modelos de IA GRATUITOS y económicos.**
   
   **Conecta todas tus herramientas de código con IA (Claude Code, Cursor, Antigravity, Copilot, Codex, Gemini, OpenCode, Cline, OpenClaw...) a más de 40 proveedores de IA y más de 100 modelos.**
   
-  [![npm](https://img.shields.io/npm/v/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![Downloads](https://img.shields.io/npm/dm/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![Docker Pulls](https://img.shields.io/docker/pulls/joyccn/ZenRoute.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/joyccn/ZenRoute)
-  [![GHCR](https://img.shields.io/badge/GHCR-joyccn%2Fzenroute-blue?logo=github)](https://github.com/joyccn/ZenRoute/pkgs/container/zenroute)
-  [![License](https://img.shields.io/npm/l/zenroute.svg)](https://github.com/joyccn/ZenRoute/blob/main/LICENSE)
+  [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![Docker Pulls](https://img.shields.io/docker/pulls/ZenRouter/ZenRouter.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/ZenRouter/ZenRouter)
+  [![GHCR](https://img.shields.io/badge/GHCR-ZenRouter%2FZenRouter-blue?logo=github)](https://github.com/ZenRouter/ZenRouter/pkgs/container/zenrouter)
+  [![License](https://img.shields.io/npm/l/zenrouter.svg)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
 
-<a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="joyccn%2Fzenroute | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="ZenRouter%2FZenRouter | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 [🚀 Inicio rápido](#-inicio-rápido) • [💡 Características](#-características-principales) • [📖 Configuración](#-guía-de-instalación)
 
@@ -23,7 +23,7 @@
 
 ---
 
-## 🤔 ¿Por qué ZenRoute?
+## 🤔 ¿Por qué ZenRouter?
 
 **Deja de perder dinero, tokens y de chocar contra los límites:**
 
@@ -33,7 +33,7 @@
 - ❌ APIs caras ($20-50/mes por proveedor)
 - ❌ Cambio manual entre proveedores
 
-**ZenRoute resuelve esto:**
+**ZenRouter resuelve esto:**
 
 - ✅ **Ahorrador de tokens RTK** - Comprime automáticamente el contenido de tool_result y ahorra entre 20-40% de tokens por solicitud
 - ✅ **Maximiza las suscripciones** - Realiza el seguimiento de la cuota y usa cada bit antes del restablecimiento
@@ -53,7 +53,7 @@
        │ http://localhost:20128/v1
        ↓
 ┌─────────────────────────────────────────────┐
-│           ZenRoute (Smart Router)            │
+│           ZenRouter (Smart Router)            │
 │  • RTK Token Saver (cut tool_result tokens) │
 │  • Format translation (OpenAI ↔ Claude)     │
 │  • Quota tracking                           │
@@ -76,8 +76,8 @@ Result: Never stop coding, minimal cost + 20-40% token savings via RTK
 **1. Instálalo globalmente:**
 
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 ```
 
 🎉 El panel de control se abre en `http://localhost:20128`
@@ -99,7 +99,7 @@ Ajustes de Claude Code/Codex/OpenClaw/Cursor/Cline:
 
 **Alternativa: ejecutar desde el código fuente (este repositorio):**
 
-El paquete de este repositorio es privado (`zenroute-app`), por lo que ejecutar desde el código fuente/Docker es la ruta de desarrollo local prevista.
+El paquete de este repositorio es privado (`zenrouter-app`), por lo que ejecutar desde el código fuente/Docker es la ruta de desarrollo local prevista.
 
 ```bash
 cp .env.example .env
@@ -129,34 +129,34 @@ URLs por defecto:
   <tr>
   <td align="center" width="320">
   <a href="https://www.youtube.com/watch?v=X69n5Lm06Yw">
-    <img src="https://img.youtube.com/vi/X69n5Lm06Yw/maxresdefault.jpg" alt="Tiết kiệm chi phí LLM với ZenRoute" width="300"/>
+    <img src="https://img.youtube.com/vi/X69n5Lm06Yw/maxresdefault.jpg" alt="Tiết kiệm chi phí LLM với ZenRouter" width="300"/>
   </a><br/>
   <b>🇻🇳 Tiếng Việt</b><br/>
-  <sub>Tiết kiệm chi phí LLM cho OpenClaw với ZenRoute<br/>by <a href="https://www.youtube.com/c/M%C3%ACAIblog">Mì AI</a></sub>
+  <sub>Tiết kiệm chi phí LLM cho OpenClaw với ZenRouter<br/>by <a href="https://www.youtube.com/c/M%C3%ACAIblog">Mì AI</a></sub>
 </td>
 <td align="center" width="320">
       <a href="https://youtu.be/VQAw612S27Y">
-        <img src="https://img.youtube.com/vi/VQAw612S27Y/maxresdefault.jpg" alt="ZenRoute + Claude Code FREE Unlimited Setup" width="300"/>
+        <img src="https://img.youtube.com/vi/VQAw612S27Y/maxresdefault.jpg" alt="ZenRouter + Claude Code FREE Unlimited Setup" width="300"/>
       </a><br/>
       <b>🇵🇰 اردو / हिन्दी</b><br/>
-      <sub>ZenRoute + Claude Code FREE Unlimited Setup<br/>by <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
+      <sub>ZenRouter + Claude Code FREE Unlimited Setup<br/>by <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
     </td>
     <td align="center" width="320">
       <a href="https://www.youtube.com/watch?v=raEyZPg5xE0">
-        <img src="https://img.youtube.com/vi/raEyZPg5xE0/maxresdefault.jpg" alt="ZenRoute Setup Tutorial" width="300"/>
+        <img src="https://img.youtube.com/vi/raEyZPg5xE0/maxresdefault.jpg" alt="ZenRouter Setup Tutorial" width="300"/>
       </a><br/>
       <b>🇺🇸 English</b><br/>
-      <sub>ZenRoute + Claude Code FREE Setup<br/>by <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
+      <sub>ZenRouter + Claude Code FREE Setup<br/>by <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
     </td>
     
   </tr>
   <tr>
   <td align="center" width="320">
       <a href="https://youtu.be/3dF5GIYMrcQ?si=bAyfyiHbARJQAHj_">
-        <img src="https://img.youtube.com/vi/3dF5GIYMrcQ/hqdefault.jpg" alt="ZenRoute Setup Tutorial" width="300"/>
+        <img src="https://img.youtube.com/vi/3dF5GIYMrcQ/hqdefault.jpg" alt="ZenRouter Setup Tutorial" width="300"/>
       </a><br/>
       <b>🇺🇸 English</b><br/>
-      <sub>ZenRoute + Claude Code FREE Setup<br/>by <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
+      <sub>ZenRouter + Claude Code FREE Setup<br/>by <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
     </td>
     <td align="center" width="320">
       <a href="https://www.youtube.com/watch?v=o3qYCyjrFYg">
@@ -170,7 +170,7 @@ URLs por defecto:
         <img src="https://img.youtube.com/vi/Ttpc26m39Dw/maxresdefault.jpg" alt="Claude CLI Free Setup" width="300"/>
       </a><br/>
       <b>🇺🇸 English</b><br/>
-      <sub>Claude CLI Free Setup with ZenRoute 🚀<br/>by <a href="https://www.youtube.com/@CodeVerseSoban">CodeVerse Soban</a></sub>
+      <sub>Claude CLI Free Setup with ZenRouter 🚀<br/>by <a href="https://www.youtube.com/@CodeVerseSoban">CodeVerse Soban</a></sub>
     </td>
     
   </tr>
@@ -180,7 +180,7 @@ URLs por defecto:
         <img src="https://img.youtube.com/vi/G-5A_D5Pm6Y/maxresdefault.jpg" alt="Cài đặt OpenClaw Free A-Z" width="300"/>
       </a><br/>
       <b>🇻🇳 Tiếng Việt</b><br/>
-      <sub>Cài Đặt OpenClaw Free Từ A-Z + ZenRoute<br/>by <a href="https://www.youtube.com/@maigia">Mai Gia</a></sub>
+      <sub>Cài Đặt OpenClaw Free Từ A-Z + ZenRouter<br/>by <a href="https://www.youtube.com/@maigia">Mai Gia</a></sub>
     </td>
     <td align="center" width="320">
       <a href="https://www.youtube.com/watch?v=JXmg8_gccgE">
@@ -194,7 +194,7 @@ URLs por defecto:
         <img src="https://img.youtube.com/vi/CkVZZUSTXAI/mqdefault.jpg" alt="Claude CLI Free Setup" width="300"/>
       </a><br/>
       <b>🇮🇩 Indonesia</b><br/>
-      <sub>Koding 24 Jam Anti Rate Limit! Hemat Token AI 65% | Tutorial Quick Setup ZenRoute 🚀<br/>by <a href="https://www.youtube.com/@krisswuh">Krisswuh</a></sub>
+      <sub>Koding 24 Jam Anti Rate Limit! Hemat Token AI 65% | Tutorial Quick Setup ZenRouter 🚀<br/>by <a href="https://www.youtube.com/@krisswuh">Krisswuh</a></sub>
     </td>
     
   </tr>
@@ -202,10 +202,10 @@ URLs por defecto:
   <tr>
   <td align="center" width="320">
       <a href="https://www.youtube.com/watch?v=TXGv4eofe1I">
-        <img src="https://img.youtube.com/vi/TXGv4eofe1I/mqdefault.jpg" alt="Cara Deploy ZenRoute di Hugging Face GRATIS Non-Stop! | Alternatif VPS RAM 16GB" width="300"/>
+        <img src="https://img.youtube.com/vi/TXGv4eofe1I/mqdefault.jpg" alt="Cara Deploy ZenRouter di Hugging Face GRATIS Non-Stop! | Alternatif VPS RAM 16GB" width="300"/>
       </a><br/>
       <b>🇮🇩 Indonesia</b><br/>
-      <sub>Cara Deploy ZenRoute di Hugging Face GRATIS Non-Stop! | Alternatif VPS RAM 16GB<br/>by <a href="https://www.youtube.com/@krisswuh">Krisswuh</a></sub>
+      <sub>Cara Deploy ZenRouter di Hugging Face GRATIS Non-Stop! | Alternatif VPS RAM 16GB<br/>by <a href="https://www.youtube.com/@krisswuh">Krisswuh</a></sub>
     </td>
   </tr>
 
@@ -213,13 +213,13 @@ URLs por defecto:
 
 </div>
 
-> 🎬 **¿Has hecho un video sobre ZenRoute?** Envía una [Pull Request](https://github.com/joyccn/ZenRoute/pulls) añadiendo tu video a esta sección — ¡lo fusionaremos!
+> 🎬 **¿Has hecho un video sobre ZenRouter?** Envía una [Pull Request](https://github.com/ZenRouter/ZenRouter/pulls) añadiendo tu video a esta sección — ¡lo fusionaremos!
 
 ---
 
 ## 🛠️ Herramientas CLI compatibles
 
-ZenRoute funciona a la perfección con todas las principales herramientas de código con IA:
+ZenRouter funciona a la perfección con todas las principales herramientas de código con IA:
 
 <div align="center">
   <table>
@@ -468,10 +468,10 @@ Con RTK:    se envían 28K tokens al LLM   (40% ahorrado · mismo contexto · mi
 
 ### 🧠 Ahorrador de tokens Headroom
 
-Headroom es opcional y se ejecuta por separado. ZenRoute llama al endpoint local `/v1/compress` de Headroom y luego mantiene el enrutamiento, la reserva, la autenticación y el seguimiento de uso normales:
+Headroom es opcional y se ejecuta por separado. ZenRouter llama al endpoint local `/v1/compress` de Headroom y luego mantiene el enrutamiento, la reserva, la autenticación y el seguimiento de uso normales:
 
 ```
-Client → ZenRoute → Headroom /v1/compress → ZenRoute → provider
+Client → ZenRouter → Headroom /v1/compress → ZenRouter → provider
 ```
 
 Configuración local:
@@ -493,7 +493,7 @@ http://headroom:8787
 http://host.docker.internal:8787
 ```
 
-Si Headroom está caído o devuelve un error, ZenRoute falla de forma segura y envía la solicitud original.
+Si Headroom está caído o devuelve un error, ZenRouter falla de forma segura y envía la solicitud original.
 
 ### 🐴 Ponytail (Dev sénior perezoso)
 
@@ -535,7 +535,7 @@ Combo: "my-coding-stack"
 Traducción fluida entre formatos:
 
 - **OpenAI** ↔ **Claude** ↔ **Gemini** ↔ **Cursor** ↔ **Kiro** ↔ **Vertex** ↔ **Antigravity** ↔ **Ollama** ↔ **OpenAI Responses**
-- Tu herramienta CLI envía el formato OpenAI → ZenRoute lo traduce → El proveedor recibe el formato nativo
+- Tu herramienta CLI envía el formato OpenAI → ZenRouter lo traduce → El proveedor recibe el formato nativo
 - Funciona con cualquier herramienta que admita endpoints OpenAI personalizados
 
 ### 👥 Compatibilidad con varias cuentas
@@ -589,13 +589,13 @@ Traducción fluida entre formatos:
 > **💡 IMPORTANTE - Comprender los costes del panel de control:**
 >
 > El "coste" que se muestra en Analítica de uso es **solo para seguimiento y comparación**.
-> ZenRoute por sí mismo **nunca te cobra** nada. Solo pagas a los proveedores directamente (si usas servicios de pago).
+> ZenRouter por sí mismo **nunca te cobra** nada. Solo pagas a los proveedores directamente (si usas servicios de pago).
 >
 > **Ejemplo:** Si tu panel muestra "coste total de $290" mientras usas modelos iFlow, esto representa
 > lo que habrías pagado usando APIs de pago directamente. Tu coste real = **$0** (iFlow es gratis e ilimitado).
 >
 > ¡Piénsalo como un "rastreador de ahorros" que muestra cuánto estás ahorrando al usar modelos gratuitos o
-> enrutar a través de ZenRoute!
+> enrutar a través de ZenRouter!
 
 ### 🌐 Implementa en cualquier lugar
 
@@ -628,15 +628,15 @@ Traducción fluida entre formatos:
 
 ---
 
-### 📊 Cómo entender los costes y la facturación de ZenRoute
+### 📊 Cómo entender los costes y la facturación de ZenRouter
 
-**Realidad de la facturación de ZenRoute:**
+**Realidad de la facturación de ZenRouter:**
 
-✅ **El software de ZenRoute = GRATUITO para siempre** (código abierto, nunca cobra)  
+✅ **El software de ZenRouter = GRATUITO para siempre** (código abierto, nunca cobra)  
 ✅ **Los "costes" del panel = Solo visualización/seguimiento** (no son facturas reales)  
 ✅ **Pagas a los proveedores directamente** (suscripciones o tarifas de API)  
 ✅ **Los proveedores GRATUITOS siguen siendo GRATUITOS** (iFlow, Kiro, Qwen = $0 ilimitado)  
-❌ **ZenRoute nunca envía facturas** ni carga tu tarjeta
+❌ **ZenRouter nunca envía facturas** ni carga tu tarjeta
 
 **Cómo funciona la visualización de costes:**
 
@@ -659,9 +659,9 @@ Comprobación de la realidad:
 **Reglas de pago:**
 
 - **Proveedores de suscripción** (Claude Code, Codex): Págales directamente a través de sus sitios web
-- **Proveedores económicos** (GLM, MiniMax): Págales directamente, ZenRoute solo enruta
+- **Proveedores económicos** (GLM, MiniMax): Págales directamente, ZenRouter solo enruta
 - **Proveedores GRATUITOS** (iFlow, Kiro, Qwen): Realmente gratuitos para siempre, sin cargos ocultos
-- **ZenRoute**: Nunca cobra nada, jamás
+- **ZenRouter**: Nunca cobra nada, jamás
 
 ---
 
@@ -740,7 +740,7 @@ Acceso mediante: WhatsApp, Telegram, Slack, Discord, iMessage, Signal...
 <details>
 <summary><b>📊 ¿Por qué mi panel muestra costes elevados?</b></summary>
 
-El panel realiza el seguimiento de tu uso de tokens y muestra **costes estimados** como si estuvieras usando APIs de pago directamente. Esto **no es facturación real** — es una referencia para mostrar cuánto estás ahorrando al usar modelos gratuitos o suscripciones existentes a través de ZenRoute.
+El panel realiza el seguimiento de tu uso de tokens y muestra **costes estimados** como si estuvieras usando APIs de pago directamente. Esto **no es facturación real** — es una referencia para mostrar cuánto estás ahorrando al usar modelos gratuitos o suscripciones existentes a través de ZenRouter.
 
 **Ejemplo:**
 
@@ -754,17 +754,17 @@ La visualización de costes es un "rastreador de ahorros" que te ayuda a compren
 </details>
 
 <details>
-<summary><b>💳 ¿ZenRoute me cobrará algo?</b></summary>
+<summary><b>💳 ¿ZenRouter me cobrará algo?</b></summary>
 
-**No.** ZenRoute es un software gratuito y de código abierto que se ejecuta en tu propio ordenador. Nunca te cobra nada.
+**No.** ZenRouter es un software gratuito y de código abierto que se ejecuta en tu propio ordenador. Nunca te cobra nada.
 
 **Solo pagas:**
 
 - ✅ **Proveedores de suscripción** (Claude Code $20/mes, Codex $20-200/mes) → Págales directamente en sus sitios web
-- ✅ **Proveedores económicos** (GLM, MiniMax) → Págales directamente, ZenRoute solo enruta tus solicitudes
-- ❌ **El propio ZenRoute** → **Nunca cobra nada, jamás**
+- ✅ **Proveedores económicos** (GLM, MiniMax) → Págales directamente, ZenRouter solo enruta tus solicitudes
+- ❌ **El propio ZenRouter** → **Nunca cobra nada, jamás**
 
-ZenRoute es un proxy/enrutador local. No tiene tu tarjeta de crédito, no puede enviar facturas y no tiene sistema de facturación. Es software totalmente gratuito.
+ZenRouter es un proxy/enrutador local. No tiene tu tarjeta de crédito, no puede enviar facturas y no tiene sistema de facturación. Es software totalmente gratuito.
 
 </details>
 
@@ -779,7 +779,7 @@ Estos son servicios gratuitos ofrecidos por esas respectivas empresas:
 - **OpenCode Free**: Proxy de paso sin autenticación, modelos obtenidos automáticamente de `opencode.ai/zen/v1/models`
 - **Vertex AI**: $300 de crédito gratuito para cuentas nuevas de Google Cloud (90 días)
 
-ZenRoute solo enruta tus solicitudes hacia ellos — no hay "trampa" ni facturación futura. Son servicios realmente gratuitos y ZenRoute los hace fáciles de usar con soporte de reserva.
+ZenRouter solo enruta tus solicitudes hacia ellos — no hay "trampa" ni facturación futura. Son servicios realmente gratuitos y ZenRouter los hace fáciles de usar con soporte de reserva.
 
 **Niveles gratuitos suspendidos (ya no recomendados):**
 
@@ -814,7 +814,7 @@ ZenRoute solo enruta tus solicitudes hacia ellos — no hay "trampa" ni facturac
 
 3. **Usa los proveedores de suscripción al final:**
    - Solo si ya los tienes
-   - ZenRoute te ayuda a maximizar su valor mediante el seguimiento de cuota
+   - ZenRouter te ayuda a maximizar su valor mediante el seguimiento de cuota
 
 **Resultado:** ¡La mayoría de los usuarios pueden operar con $0/mes usando solo niveles gratuitos!
 
@@ -823,22 +823,22 @@ ZenRoute solo enruta tus solicitudes hacia ellos — no hay "trampa" ni facturac
 <details>
 <summary><b>📈 ¿Qué pasa si mi uso se dispara de repente?</b></summary>
 
-La reserva inteligente de ZenRoute evita cargos sorpresa:
+La reserva inteligente de ZenRouter evita cargos sorpresa:
 
 **Escenario:** Estás en un sprint de programación y agotas tus cuotas
 
-**Sin ZenRoute:**
+**Sin ZenRouter:**
 
 - ❌ Chocas contra el límite de velocidad → El trabajo se detiene → Frustración
 - ❌ O: Acumulas accidentalmente facturas enormes de API
 
-**Con ZenRoute:**
+**Con ZenRouter:**
 
 - ✅ La suscripción alcanza su límite → Reserva automática al nivel económico
 - ✅ El nivel económico se vuelve caro → Reserva automática al nivel gratuito
 - ✅ Nunca dejas de programar → Costes predecibles
 
-**Tú tienes el control:** Establece límites de gasto por proveedor en el panel y ZenRoute los respeta.
+**Tú tienes el control:** Establece límites de gasto por proveedor en el panel y ZenRouter los respeta.
 
 </details>
 
@@ -863,7 +863,7 @@ Modelos:
   cc/claude-haiku-4-5-20251001
 ```
 
-**Consejo profesional:** Usa Opus para tareas complejas y Sonnet para velocidad. ¡ZenRoute realiza el seguimiento de la cuota por modelo!
+**Consejo profesional:** Usa Opus para tareas complejas y Sonnet para velocidad. ¡ZenRouter realiza el seguimiento de la cuota por modelo!
 
 ### OpenAI Codex (Plus/Pro)
 
@@ -1044,7 +1044,7 @@ Coste: $0 para siempre (+ 20-40% de ahorro de tokens vía RTK)!
 ```
 Settings → Models → Advanced:
   OpenAI API Base URL: http://localhost:20128/v1
-  OpenAI API Key: [desde el panel de zenroute]
+  OpenAI API Key: [desde el panel de zenrouter]
   Model: cc/claude-opus-4-7
 ```
 
@@ -1057,7 +1057,7 @@ Edita `~/.claude/config.json`:
 ```json
 {
   "anthropic_api_base": "http://localhost:20128/v1",
-  "anthropic_api_key": "tu-clave-api-de-zenroute"
+  "anthropic_api_key": "tu-clave-api-de-zenrouter"
 }
 ```
 
@@ -1065,7 +1065,7 @@ Edita `~/.claude/config.json`:
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:20128"
-export OPENAI_API_KEY="tu-clave-api-de-zenroute"
+export OPENAI_API_KEY="tu-clave-api-de-zenrouter"
 
 codex "tu prompt"
 ```
@@ -1085,15 +1085,15 @@ Panel de control → CLI Tools → OpenClaw → Selecciona el modelo → Aplicar
   "agents": {
     "defaults": {
       "model": {
-        "primary": "zenroute/kr/claude-sonnet-4.5"
+        "primary": "zenrouter/kr/claude-sonnet-4.5"
       }
     }
   },
   "models": {
     "providers": {
-      "zenroute": {
+      "zenrouter": {
         "baseUrl": "http://127.0.0.1:20128/v1",
-        "apiKey": "sk_zenroute",
+        "apiKey": "sk_zenrouter",
         "api": "openai-completions",
         "models": [
           {
@@ -1107,7 +1107,7 @@ Panel de control → CLI Tools → OpenClaw → Selecciona el modelo → Aplicar
 }
 ```
 
-> **Nota:** OpenClaw solo funciona con ZenRoute local. Usa `127.0.0.1` en lugar de `localhost` para evitar problemas de resolución IPv6.
+> **Nota:** OpenClaw solo funciona con ZenRouter local. Usa `127.0.0.1` en lugar de `localhost` para evitar problemas de resolución IPv6.
 
 ### Cline / Continue / RooCode
 
@@ -1127,15 +1127,15 @@ Model: cc/claude-opus-4-7
 
 ```bash
 # Clona e instala
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter
 npm install
 npm run build
 
 # Configura
 export JWT_SECRET="tu-secreto-seguro-cámbialo"
 export INITIAL_PASSWORD="tu-contraseña"
-export DATA_DIR="/var/lib/zenroute"
+export DATA_DIR="/var/lib/zenrouter"
 export PORT="20128"
 export HOSTNAME="0.0.0.0"
 export NODE_ENV="production"
@@ -1149,7 +1149,7 @@ npm run start
 
 # O usa PM2
 npm install -g pm2
-pm2 start npm --name zenroute -- start
+pm2 start npm --name zenrouter -- start
 pm2 save
 pm2 startup
 ```
@@ -1158,18 +1158,18 @@ pm2 startup
 
 Imágenes publicadas (multi-plataforma `linux/amd64` + `linux/arm64`):
 
-- Docker Hub: [`joyccn/ZenRoute`](https://hub.docker.com/r/joyccn/ZenRoute)
-- GHCR: [`ghcr.io/joyccn/ZenRoute`](https://github.com/joyccn/ZenRoute/pkgs/container/zenroute)
+- Docker Hub: [`ZenRouter/ZenRouter`](https://hub.docker.com/r/ZenRouter/ZenRouter)
+- GHCR: [`ghcr.io/ZenRouter/ZenRouter`](https://github.com/ZenRouter/ZenRouter/pkgs/container/zenrouter)
 
 **Inicio rápido (usa la imagen publicada):**
 
 ```bash
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 20128:20128 \
-  -v "$HOME/.zenroute:/app/data" \
+  -v "$HOME/.zenrouter:/app/data" \
   -e DATA_DIR=/app/data \
-  joyccn/ZenRoute:latest
+  ZenRouter/ZenRouter:latest
 ```
 
 → Abre http://localhost:20128
@@ -1177,11 +1177,11 @@ docker run -d \
 **Compilar desde el código fuente (dev):**
 
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
-docker build -t zenroute .
-docker run -d --name zenroute -p 20128:20128 \
-  -v "$HOME/.zenroute:/app/data" -e DATA_DIR=/app/data zenroute
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
+docker build -t zenrouter .
+docker run -d --name zenrouter -p 20128:20128 \
+  -v "$HOME/.zenrouter:/app/data" -e DATA_DIR=/app/data zenrouter
 ```
 
 **Valores por defecto del contenedor:**
@@ -1192,21 +1192,21 @@ docker run -d --name zenroute -p 20128:20128 \
 **Comandos útiles:**
 
 ```bash
-docker logs -f zenroute
-docker restart zenroute
-docker stop zenroute && docker rm zenroute
-docker pull joyccn/ZenRoute:latest   # actualiza a la última versión
+docker logs -f zenrouter
+docker restart zenrouter
+docker stop zenrouter && docker rm zenrouter
+docker pull ZenRouter/ZenRouter:latest   # actualiza a la última versión
 ```
 
-**Persistencia de datos:** `$HOME/.zenroute/db/data.sqlite` en el host ↔ `/app/data/db/data.sqlite` en el contenedor.
+**Persistencia de datos:** `$HOME/.zenrouter/db/data.sqlite` en el host ↔ `/app/data/db/data.sqlite` en el contenedor.
 
 ### Variables de entorno
 
 | Variable                                             | Por defecto                                | Descripción                                                                          |
 | ---------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `JWT_SECRET`                                         | Generado automáticamente (`~/.zenroute/jwt-secret`) | Secreto de firma JWT para la cookie de autenticación del panel (sobreescríbelo para compartir entre instancias) |
+| `JWT_SECRET`                                         | Generado automáticamente (`~/.zenrouter/jwt-secret`) | Secreto de firma JWT para la cookie de autenticación del panel (sobreescríbelo para compartir entre instancias) |
 | `INITIAL_PASSWORD`                                   | `12345678`                                   | Contraseña del primer inicio de sesión cuando no existe un hash guardado             |
-| `DATA_DIR`                                           | `~/.zenroute`                               | Ubicación principal de datos de la app (SQLite en `$DATA_DIR/db/data.sqlite`)        |
+| `DATA_DIR`                                           | `~/.zenrouter`                               | Ubicación principal de datos de la app (SQLite en `$DATA_DIR/db/data.sqlite`)        |
 | `PORT`                                               | por defecto del framework                  | Puerto del servicio (`20128` en los ejemplos)                                        |
 | `HOSTNAME`                                           | por defecto del framework                  | Host de enlace (Docker usa `0.0.0.0` por defecto)                                    |
 | `NODE_ENV`                                           | por defecto del runtime                    | Establece `production` para el despliegue                                            |
@@ -1234,7 +1234,7 @@ Notas:
 - Estado principal de la app: `${DATA_DIR}/db/data.sqlite` (SQLite — proveedores, combos, alias, claves, ajustes, historial de uso)
 - Copias de seguridad automáticas: `${DATA_DIR}/db/backups/`
 - Registros opcionales de solicitudes/translator: `<repo>/logs/...` cuando `ENABLE_REQUEST_LOGS=true`
-- Tanto `${DATA_DIR}` como `~/.zenroute` resuelven a la misma ubicación en un contenedor de Docker — el enlace simbólico `/root/.zenroute -> /app/data` se crea en tiempo de compilación.
+- Tanto `${DATA_DIR}` como `~/.zenrouter` resuelven a la misma ubicación en un contenedor de Docker — el enlace simbólico `/root/.zenrouter -> /app/data` se crea en tiempo de compilación.
 
 </details>
 
@@ -1331,7 +1331,7 @@ Notas:
 
 **Token OAuth caducado**
 
-- ZenRoute lo renueva automáticamente
+- ZenRouter lo renueva automáticamente
 - Si los problemas persisten: Panel de control → Provider → Reconectar
 
 **Costes elevados**
@@ -1396,22 +1396,22 @@ Authorization: Bearer tu-clave-api
 
 ## 📧 Soporte
 
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Problemas**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Problemas**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
 
 ---
 
 ## 👥 Colaboradores
 
-¡Gracias a todos los colaboradores que ayudaron a mejorar ZenRoute!
+¡Gracias a todos los colaboradores que ayudaron a mejorar ZenRouter!
 
-[![Contributors](https://contrib.rocks/image?repo=joyccn/ZenRoute&max=150&columns=15&anon=1&v=20260309)](https://github.com/joyccn/ZenRoute/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=ZenRouter/ZenRouter&max=150&columns=15&anon=1&v=20260309)](https://github.com/ZenRouter/ZenRouter/graphs/contributors)
 
 ---
 
 ## 📊 Gráfico de estrellas
 
-[![Star Chart](https://starchart.cc/joyccn/ZenRoute.svg?variant=adaptive)](https://starchart.cc/joyccn/ZenRoute)
+[![Star Chart](https://starchart.cc/ZenRouter/ZenRouter.svg?variant=adaptive)](https://starchart.cc/ZenRouter/ZenRouter)
 
 
 ---
@@ -1421,11 +1421,11 @@ Authorization: Bearer tu-clave-api
 Construido sobre los hombros de gigantes:
 
 - **[CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI)** — implementación original en Go que inspiró este port a JavaScript.
-- **[RTK](https://github.com/rtk-ai/rtk)** ![Stars](https://img.shields.io/github/stars/rtk-ai/rtk?style=flat&color=yellow) — ahorrador de tokens en Rust. ZenRoute porta su pipeline de compresión a JS → **−20-40% de tokens de entrada** en cada solicitud.
-- **[Caveman](https://github.com/JuliusBrussee/caveman)** ![Stars](https://img.shields.io/github/stars/JuliusBrussee/caveman?style=flat&color=yellow) por **[@JuliusBrussee](https://github.com/JuliusBrussee)** — viral _"why use many token when few token do trick"_. ZenRoute adapta su prompt → **−65% de tokens de salida**.
-- **[Ponytail](https://github.com/DietrichGebert/ponytail)** ![Stars](https://img.shields.io/github/stars/DietrichGebert/ponytail?style=flat&color=yellow) por **[@DietrichGebert](https://github.com/DietrichGebert)** — habilidad del _"dev sénior perezoso"_. ZenRoute inyecta su jerarquía primero-YAGNI → **menos tokens, menos código, diffs más cortos**.
+- **[RTK](https://github.com/rtk-ai/rtk)** ![Stars](https://img.shields.io/github/stars/rtk-ai/rtk?style=flat&color=yellow) — ahorrador de tokens en Rust. ZenRouter porta su pipeline de compresión a JS → **−20-40% de tokens de entrada** en cada solicitud.
+- **[Caveman](https://github.com/JuliusBrussee/caveman)** ![Stars](https://img.shields.io/github/stars/JuliusBrussee/caveman?style=flat&color=yellow) por **[@JuliusBrussee](https://github.com/JuliusBrussee)** — viral _"why use many token when few token do trick"_. ZenRouter adapta su prompt → **−65% de tokens de salida**.
+- **[Ponytail](https://github.com/DietrichGebert/ponytail)** ![Stars](https://img.shields.io/github/stars/DietrichGebert/ponytail?style=flat&color=yellow) por **[@DietrichGebert](https://github.com/DietrichGebert)** — habilidad del _"dev sénior perezoso"_. ZenRouter inyecta su jerarquía primero-YAGNI → **menos tokens, menos código, diffs más cortos**.
 
-Un enorme agradecimiento a estos autores — sin su trabajo, las funciones de ahorro de tokens de ZenRoute no existirían. ¡Dales una ⭐ en GitHub!
+Un enorme agradecimiento a estos autores — sin su trabajo, las funciones de ahorro de tokens de ZenRouter no existirían. ¡Dales una ⭐ en GitHub!
 
 ---
 

@@ -3,7 +3,7 @@ import { isLocalRequest } from "../../src/dashboardGuard.js";
 
 beforeAll(() => {
   // Peer-token must match what custom-server.js stamps at boot.
-  process.env.ZENROUTE_PEER_TOKEN = "fingerprint";
+  process.env.ZENROUTER_PEER_TOKEN = "fingerprint";
   process.env.NINEROUTER_PEER_TOKEN = "fingerprint";
 });
 

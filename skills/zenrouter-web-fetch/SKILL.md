@@ -1,25 +1,25 @@
 ---
-name: zenroute-web-fetch
-description: Fetch URL → markdown / text / HTML via ZenRoute /v1/web/fetch using Firecrawl / Jina Reader / Tavily Extract / Exa Contents. Use when the user wants to scrape a webpage, extract URL content, read article, or convert a URL to markdown.
+name: zenrouter-web-fetch
+description: Fetch URL → markdown / text / HTML via ZenRouter /v1/web/fetch using Firecrawl / Jina Reader / Tavily Extract / Exa Contents. Use when the user wants to scrape a webpage, extract URL content, read article, or convert a URL to markdown.
 ---
 
-# ZenRoute — Web Fetch
+# ZenRouter — Web Fetch
 
-Requires `ZENROUTE_URL` (and `ZENROUTE_KEY` if auth enabled). See https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute/SKILL.md for setup.
+Requires `ZENROUTER_URL` (and `ZENROUTER_KEY` if auth enabled). See https://raw.githubusercontent.com/ZenRouter/ZenRouter/refs/heads/master/skills/zenrouter/SKILL.md for setup.
 
 ## Discover
 
 ```bash
-curl $ZENROUTE_URL/v1/models/web | jq '.data[] | select(.kind=="webFetch") | .id'
+curl $ZENROUTER_URL/v1/models/web | jq '.data[] | select(.kind=="webFetch") | .id'
 # Per-provider params
-curl "$ZENROUTE_URL/v1/models/info?id=firecrawl/fetch"
+curl "$ZENROUTER_URL/v1/models/info?id=firecrawl/fetch"
 ```
 
 IDs end in `/fetch` (e.g. `firecrawl/fetch`, `jina/fetch`). `fetch-combo` chains providers with auto-fallback.
 
 ## Endpoint
 
-`POST $ZENROUTE_URL/v1/web/fetch`
+`POST $ZENROUTER_URL/v1/web/fetch`
 
 | Field | Required | Notes |
 |---|---|---|
@@ -32,32 +32,32 @@ IDs end in `/fetch` (e.g. `firecrawl/fetch`, `jina/fetch`). `fetch-combo` chains
 
 ### Jina Reader
 ```bash
-curl -X POST $ZENROUTE_URL/v1/web/fetch \
-  -H "Authorization: Bearer $ZENROUTE_KEY" \
+curl -X POST $ZENROUTER_URL/v1/web/fetch \
+  -H "Authorization: Bearer $ZENROUTER_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"jina-reader","url":"https://zenroute.com","format":"markdown"}'
+  -d '{"model":"jina-reader","url":"https://zenrouter.com","format":"markdown"}'
 ```
 
 ### Exa
 ```bash
-curl -X POST $ZENROUTE_URL/v1/web/fetch \
-  -H "Authorization: Bearer $ZENROUTE_KEY" \
+curl -X POST $ZENROUTER_URL/v1/web/fetch \
+  -H "Authorization: Bearer $ZENROUTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"exa","url":"https://example.com","format":"markdown","max_characters":0}'
 ```
 
 ### Firecrawl
 ```bash
-curl -X POST $ZENROUTE_URL/v1/web/fetch \
-  -H "Authorization: Bearer $ZENROUTE_KEY" \
+curl -X POST $ZENROUTER_URL/v1/web/fetch \
+  -H "Authorization: Bearer $ZENROUTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"firecrawl","url":"https://example.com","format":"markdown","max_characters":0}'
 ```
 
 ### Tavily
 ```bash
-curl -X POST $ZENROUTE_URL/v1/web/fetch \
-  -H "Authorization: Bearer $ZENROUTE_KEY" \
+curl -X POST $ZENROUTER_URL/v1/web/fetch \
+  -H "Authorization: Bearer $ZENROUTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"tavily","url":"https://example.com","format":"markdown","max_characters":0}'
 ```
@@ -66,9 +66,9 @@ curl -X POST $ZENROUTE_URL/v1/web/fetch \
 JS:
 
 ```js
-const r = await fetch(`${process.env.ZENROUTE_URL}/v1/web/fetch`, {
+const r = await fetch(`${process.env.ZENROUTER_URL}/v1/web/fetch`, {
   method: "POST",
-  headers: { "Authorization": `Bearer ${process.env.ZENROUTE_KEY}`, "Content-Type": "application/json" },
+  headers: { "Authorization": `Bearer ${process.env.ZENROUTER_KEY}`, "Content-Type": "application/json" },
   body: JSON.stringify({ model: "fetch-combo", url: "https://example.com", format: "markdown", max_characters: 5000 }),
 });
 const { data } = await r.json();

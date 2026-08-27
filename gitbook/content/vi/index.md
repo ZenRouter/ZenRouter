@@ -1,14 +1,14 @@
-# Chào mừng đến với ZenRoute
+# Chào mừng đến với ZenRouter
 
 **Dùng Claude, Codex, Gemini MIỄN PHÍ • Lựa chọn siêu rẻ từ $0.20/1M tokens**
 
-ZenRoute là bộ định tuyến mô hình AI giúp tối đa hóa giá trị subscription và giảm chi phí thông qua định tuyến thông minh và fallback tự động.
+ZenRouter là bộ định tuyến mô hình AI giúp tối đa hóa giá trị subscription và giảm chi phí thông qua định tuyến thông minh và fallback tự động.
 
 ---
 
-## ZenRoute là gì?
+## ZenRouter là gì?
 
-ZenRoute là một proxy thông minh nằm giữa các công cụ lập trình của bạn (Cursor, Cline, Claude Desktop) và các nhà cung cấp AI. Nó tự động định tuyến request đến model tốt nhất hiện có dựa trên quota, chi phí và tính khả dụng.
+ZenRouter là một proxy thông minh nằm giữa các công cụ lập trình của bạn (Cursor, Cline, Claude Desktop) và các nhà cung cấp AI. Nó tự động định tuyến request đến model tốt nhất hiện có dựa trên quota, chi phí và tính khả dụng.
 
 **Đừng lãng phí tiền:**
 - ❌ Quota subscription hết hạn mỗi tháng mà không dùng đến
@@ -66,7 +66,7 @@ Tổng: $5.20/tháng so với $2000 trên ChatGPT API!
 
 ---
 
-## Tại sao chọn ZenRoute?
+## Tại sao chọn ZenRouter?
 
 ### Tối đa hóa Subscription
 
@@ -105,10 +105,10 @@ Bắt đầu trong 2 phút:
 
 ```bash
 # Install globally
-npm install -g zenroute
+npm install -g zenrouter
 
 # Start (dashboard opens automatically)
-zenroute
+zenrouter
 ```
 
 🎉 **Dashboard mở** → Kết nối provider → Bắt đầu code!

@@ -1,23 +1,23 @@
 ---
-name: zenroute-image
-description: Generate images via ZenRoute /v1/images/generations using OpenAI / Gemini Imagen / DALL-E / FLUX / MiniMax / SDWebUI / ComfyUI / Codex models. Use when the user wants to create, generate, draw, or render an image, picture, or text-to-image (txt2img).
+name: zenrouter-image
+description: Generate images via ZenRouter /v1/images/generations using OpenAI / Gemini Imagen / DALL-E / FLUX / MiniMax / SDWebUI / ComfyUI / Codex models. Use when the user wants to create, generate, draw, or render an image, picture, or text-to-image (txt2img).
 ---
 
-# ZenRoute — Image Generation
+# ZenRouter — Image Generation
 
-Requires `ZENROUTE_URL` (and `ZENROUTE_KEY` if auth enabled). See https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute/SKILL.md for setup.
+Requires `ZENROUTER_URL` (and `ZENROUTER_KEY` if auth enabled). See https://raw.githubusercontent.com/ZenRouter/ZenRouter/refs/heads/master/skills/zenrouter/SKILL.md for setup.
 
 ## Discover
 
 ```bash
-curl $ZENROUTE_URL/v1/models/image | jq '.data[].id'
+curl $ZENROUTER_URL/v1/models/image | jq '.data[].id'
 # Per-model params/options (size enum, quality enum, capabilities like edit)
-curl "$ZENROUTE_URL/v1/models/info?id=openai/dall-e-3"
+curl "$ZENROUTER_URL/v1/models/info?id=openai/dall-e-3"
 ```
 
 ## Endpoint
 
-`POST $ZENROUTE_URL/v1/images/generations`
+`POST $ZENROUTER_URL/v1/images/generations`
 
 | Field | Required | Notes |
 |---|---|---|
@@ -35,8 +35,8 @@ Add query `?response_format=binary` to receive raw image bytes (handy for saving
 Save to file (binary):
 
 ```bash
-curl -X POST "$ZENROUTE_URL/v1/images/generations?response_format=binary" \
-  -H "Authorization: Bearer $ZENROUTE_KEY" \
+curl -X POST "$ZENROUTER_URL/v1/images/generations?response_format=binary" \
+  -H "Authorization: Bearer $ZENROUTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"gemini/gemini-3-pro-image-preview","prompt":"watercolor mountains at sunrise","size":"1024x1024"}' \
   --output out.png
@@ -45,9 +45,9 @@ curl -X POST "$ZENROUTE_URL/v1/images/generations?response_format=binary" \
 JS (URL response):
 
 ```js
-const r = await fetch(`${process.env.ZENROUTE_URL}/v1/images/generations`, {
+const r = await fetch(`${process.env.ZENROUTER_URL}/v1/images/generations`, {
   method: "POST",
-  headers: { "Authorization": `Bearer ${process.env.ZENROUTE_KEY}`, "Content-Type": "application/json" },
+  headers: { "Authorization": `Bearer ${process.env.ZENROUTER_KEY}`, "Content-Type": "application/json" },
   body: JSON.stringify({ model: "gemini/gemini-3-pro-image-preview", prompt: "neon city", size: "1024x1024" }),
 });
 const { data } = await r.json();

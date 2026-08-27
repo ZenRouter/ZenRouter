@@ -53,8 +53,8 @@ function generateRootCA() {
   cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 10);
 
   const attrs = [
-    { name: "commonName", value: "ZenRoute MITM Root CA" },
-    { name: "organizationName", value: "ZenRoute" },
+    { name: "commonName", value: "ZenRouter MITM Root CA" },
+    { name: "organizationName", value: "ZenRouter" },
     { name: "countryName", value: "US" }
   ];
 

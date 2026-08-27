@@ -1,13 +1,13 @@
 # Tích hợp Continue VSCode Extension
 
-Tích hợp ZenRoute với extension Continue để mang trợ lý AI trực tiếp vào Visual Studio Code.
+Tích hợp ZenRouter với extension Continue để mang trợ lý AI trực tiếp vào Visual Studio Code.
 
 ## Yêu cầu
 
 - Visual Studio Code đã cài đặt
 - Extension Continue đã cài đặt từ VSCode marketplace
-- ZenRoute API key từ [dashboard](http://localhost:20128/dashboard)
-- ZenRoute đang chạy (cục bộ hoặc cloud)
+- ZenRouter API key từ [dashboard](http://localhost:20128/dashboard)
+- ZenRouter đang chạy (cục bộ hoặc cloud)
 
 ## Các bước Cấu hình
 
@@ -18,7 +18,7 @@ Tích hợp ZenRoute với extension Continue để mang trợ lý AI trực ti�
 3. Gõ "Continue: Open Config" và chọn
 4. Mở `~/.continue/config.json`
 
-### 2. Thêm Cấu hình Model ZenRoute
+### 2. Thêm Cấu hình Model ZenRouter
 
 Thêm cấu hình sau vào `config.json`:
 
@@ -27,7 +27,7 @@ Thêm cấu hình sau vào `config.json`:
 {
   "models": [
     {
-      "title": "ZenRoute - Claude Opus",
+      "title": "ZenRouter - Claude Opus",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key-from-dashboard",
@@ -42,28 +42,28 @@ Thêm cấu hình sau vào `config.json`:
 {
   "models": [
     {
-      "title": "ZenRoute - Claude Opus (Best)",
+      "title": "ZenRouter - Claude Opus (Best)",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - Claude Sonnet (Balanced)",
+      "title": "ZenRouter - Claude Sonnet (Balanced)",
       "provider": "openai",
       "model": "cc/claude-sonnet-4-20250514",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - DeepSeek Chat (Code)",
+      "title": "ZenRouter - DeepSeek Chat (Code)",
       "provider": "openai",
       "model": "cx/deepseek-chat",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - Claude Haiku (Fast)",
+      "title": "ZenRouter - Claude Haiku (Fast)",
       "provider": "openai",
       "model": "cc/claude-haiku-4-20250514",
       "apiKey": "your-api-key-from-dashboard",
@@ -73,7 +73,7 @@ Thêm cấu hình sau vào `config.json`:
 }
 ```
 
-**Cho Cloud ZenRoute:**
+**Cho Cloud ZenRouter:**
 Thay `apiBase` bằng:
 ```json
 "apiBase": "http://localhost:20128/v1"
@@ -89,7 +89,7 @@ Thay `apiBase` bằng:
 
 1. Mở sidebar Continue (click icon Continue trong panel trái)
 2. Click dropdown chọn model ở trên cùng
-3. Chọn model ZenRoute ưa thích
+3. Chọn model ZenRouter ưa thích
 
 ## Model có sẵn
 
@@ -139,7 +139,7 @@ Thêm system prompt tùy chỉnh cho hành vi cụ thể:
 {
   "models": [
     {
-      "title": "ZenRoute - Code Expert",
+      "title": "ZenRouter - Code Expert",
       "provider": "openai",
       "model": "cx/deepseek-chat",
       "apiKey": "your-api-key",
@@ -158,7 +158,7 @@ Thêm system prompt tùy chỉnh cho hành vi cụ thể:
 {
   "models": [
     {
-      "title": "ZenRoute - Creative Writer",
+      "title": "ZenRouter - Creative Writer",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key",
@@ -204,13 +204,13 @@ Cấu hình context Continue gửi đến model:
 ## Troubleshooting
 
 ### Model không phản hồi
-- Kiểm tra ZenRoute đang chạy: `curl http://localhost:20128/health`
+- Kiểm tra ZenRouter đang chạy: `curl http://localhost:20128/health`
 - Xác minh API key trong config.json
 - Kiểm tra VSCode Developer Console để xem lỗi: `Help` → `Toggle Developer Tools`
 
 ### Chọn sai Model
 - Click dropdown model trong sidebar Continue
-- Chọn đúng model ZenRoute
+- Chọn đúng model ZenRouter
 - Tên model phải khớp chính xác (case-sensitive)
 
 ### Cấu hình không Load
@@ -221,7 +221,7 @@ Cấu hình context Continue gửi đến model:
 ### Hiệu năng Chậm
 - Chuyển sang model nhanh hơn (haiku, flash)
 - Giảm context size trong contextProviders
-- Kiểm tra độ trễ network đến ZenRoute
+- Kiểm tra độ trễ network đến ZenRouter
 
 ## Best Practices
 

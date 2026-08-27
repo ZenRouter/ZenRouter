@@ -13,7 +13,7 @@ export default function PasswordOnboardingModal() {
 
   useEffect(() => {
     // Check if user already dismissed the prompt in this browser session
-    const dismissed = sessionStorage.getItem("zenroute_pwd_onboarding_dismissed");
+    const dismissed = sessionStorage.getItem("zenrouter_pwd_onboarding_dismissed");
     if (dismissed) {
       setLoading(false);
       return;
@@ -36,12 +36,12 @@ export default function PasswordOnboardingModal() {
   }, []);
 
   const handleDismiss = () => {
-    sessionStorage.setItem("zenroute_pwd_onboarding_dismissed", "true");
+    sessionStorage.setItem("zenrouter_pwd_onboarding_dismissed", "true");
     setIsOpen(false);
   };
 
   const handleGoToSettings = () => {
-    sessionStorage.setItem("zenroute_pwd_onboarding_dismissed", "true");
+    sessionStorage.setItem("zenrouter_pwd_onboarding_dismissed", "true");
     setIsOpen(false);
     router.push("/dashboard/profile#password");
   };
@@ -65,7 +65,7 @@ export default function PasswordOnboardingModal() {
         <div className="p-6 sm:p-8 flex flex-col items-center text-center">
           {/* Logo Badge */}
           <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-surface-2 border border-border p-3 mb-5 shadow-[var(--shadow-warm)]">
-            <Image src="/icons/logo.svg" alt="ZenRoute" width={38} height={38} className="w-full h-full object-contain" />
+            <Image src="/icons/logo.svg" alt="ZenRouter" width={38} height={38} className="w-full h-full object-contain" />
           </div>
 
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-accent-sun/15 text-accent-sun border border-accent-sun/25 mb-3">
@@ -74,7 +74,7 @@ export default function PasswordOnboardingModal() {
           </span>
 
           <h2 className="text-2xl font-bold tracking-tight text-text-main mb-2">
-            Welcome to ZenRoute!
+            Welcome to ZenRouter!
           </h2>
 
           <p className="text-sm text-text-muted leading-relaxed mb-6">

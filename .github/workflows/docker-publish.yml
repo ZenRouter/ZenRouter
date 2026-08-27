@@ -8,7 +8,7 @@ on:
 
 env:
   GHCR_IMAGE: ghcr.io/${{ github.repository }}
-  DOCKERHUB_IMAGE: joyccn/zenroute
+  DOCKERHUB_IMAGE: zenrouter/zenrouter
 
 jobs:
   build-and-push:
@@ -65,6 +65,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: joyccn/zenroute
+          repository: zenrouter/zenrouter
           readme-filepath: ./DOCKER_README.md
-          short-description: "🌿 ZenRoute: Serene AI Gateway & Intelligent Multi-Provider Routing Engine"
+          short-description: "🌿 ZenRouter: Serene AI Gateway & Intelligent Multi-Provider Routing Engine"

@@ -1,12 +1,12 @@
 # Roo AIアシスタント統合
 
-ZenRouteをRoo AIアシスタントと統合し、統一インターフェイスから複数のAIモデルにアクセスします。
+ZenRouterをRoo AIアシスタントと統合し、統一インターフェイスから複数のAIモデルにアクセスします。
 
 ## 前提条件
 
 - Roo AIアシスタントがインストール済み
-- [ダッシュボード](http://localhost:20128/dashboard)からのZenRoute APIキー
-- ZenRouteが動作中 (ローカルまたはクラウド)
+- [ダッシュボード](http://localhost:20128/dashboard)からのZenRouter APIキー
+- ZenRouterが動作中 (ローカルまたはクラウド)
 
 ## 設定手順
 
@@ -20,13 +20,13 @@ Roo AIアシスタントを起動し、設定パネルを開きます。
 2. プロバイダータイプとして **Ollama** を選択
 3. 以下の設定を行う:
 
-**ローカルZenRoute用:**
+**ローカルZenRouter用:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
 ```
 
-**クラウドZenRoute用:**
+**クラウドZenRouter用:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
@@ -34,7 +34,7 @@ API Key: your-api-key-from-dashboard
 
 ### 3. モデルを選択
 
-利用可能なZenRouteモデルから選択:
+利用可能なZenRouterモデルから選択:
 
 **Claudeモデル:**
 - `cc/claude-opus-4-5-20251101` - 最も高性能
@@ -54,7 +54,7 @@ API Key: your-api-key-from-dashboard
 統合を確認するためにテストメッセージを送信:
 
 ```
-Hello! Can you confirm you're connected through ZenRoute?
+Hello! Can you confirm you're connected through ZenRouter?
 ```
 
 ## 使用例
@@ -87,19 +87,19 @@ Model: cx/deepseek-reasoner
 ## トラブルシューティング
 
 ### 接続失敗
-- ZenRouteが動作中か確認: `curl http://localhost:20128/health`
+- ZenRouterが動作中か確認: `curl http://localhost:20128/health`
 - APIキーが正しいか確認
 - Base URLに `/v1` サフィックスが含まれていることを確認
 
 ### モデルが利用不可
 - モデル名が正確に一致するか確認 (大文字小文字を区別)
-- ZenRouteプランでモデルが有効か確認
+- ZenRouterプランでモデルが有効か確認
 - リストから別のモデルを試す
 
 ### 応答が遅い
 - より高速なモデルへ切替 (haiku、flash)
 - ネットワーク接続を確認
-- 問題についてZenRouteログをモニター
+- 問題についてZenRouterログをモニター
 
 ## 高度な設定
 

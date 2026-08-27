@@ -2,11 +2,11 @@
 set -e
 
 # ==============================================================================
-# 🌿 ZenRoute Official Installer
-# https://github.com/joyccn/ZenRoute
+# 🌿 ZenRouter Official Installer
+# https://github.com/ZenRouter/ZenRouter
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/joyccn/ZenRoute/master/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/ZenRouter/ZenRouter/master/install.sh | bash
 # ==============================================================================
 
 # ANSI Color Codes
@@ -28,7 +28,7 @@ echo "  / /_/  __/ / / / _, _/ /_/ / /_/ / /_/  __/ "
 echo " /____|___/_/ /_/_/ |_|\____/\__,_/\__/\___/  "
 echo -e "${RESET}"
 echo -e "${CORAL}${BOLD} 🌿 Serene AI Gateway & Intelligent Routing Engine${RESET}"
-echo -e "${GRAY} https://github.com/joyccn/ZenRoute${RESET}"
+echo -e "${GRAY} https://github.com/ZenRouter/ZenRouter${RESET}"
 echo ""
 
 # Detect OS & Architecture
@@ -72,7 +72,7 @@ fi
 # If neither Node (>=18) nor Bun is found, attempt automatic helper or guidance
 if [ "$HAS_NODE" = false ] && [ "$HAS_BUN" = false ]; then
   echo ""
-  echo -e "${YELLOW}==> Node.js (>= 18.0.0) or Bun is required to run ZenRoute.${RESET}"
+  echo -e "${YELLOW}==> Node.js (>= 18.0.0) or Bun is required to run ZenRouter.${RESET}"
   echo -e "Would you like to install Node.js now?"
   
   if command -v brew >/dev/null 2>&1; then
@@ -96,33 +96,33 @@ if [ "$HAS_NODE" = false ] && [ "$HAS_BUN" = false ]; then
   fi
 fi
 
-# Install ZenRoute CLI globally
+# Install ZenRouter CLI globally
 echo ""
-echo -e "${CYAN}==>${RESET} Installing ${BOLD}zenroute${RESET} CLI..."
+echo -e "${CYAN}==>${RESET} Installing ${BOLD}zenrouter${RESET} CLI..."
 
 INSTALL_SUCCESS=false
 
 if command -v npm >/dev/null 2>&1; then
-  echo -e "${GRAY}Running: npm install -g zenroute${RESET}"
-  if npm install -g zenroute --silent >/dev/null 2>&1; then
+  echo -e "${GRAY}Running: npm install -g zenrouter${RESET}"
+  if npm install -g zenrouter --silent >/dev/null 2>&1; then
     INSTALL_SUCCESS=true
   else
     # Try with sudo if EACCES / permission denied
     echo -e "${YELLOW}Global npm directory requires elevated permissions. Retrying with sudo...${RESET}"
-    if sudo npm install -g zenroute; then
+    if sudo npm install -g zenrouter; then
       INSTALL_SUCCESS=true
     fi
   fi
 elif command -v bun >/dev/null 2>&1; then
-  echo -e "${GRAY}Running: bun add -g zenroute${RESET}"
-  if bun add -g zenroute; then
+  echo -e "${GRAY}Running: bun add -g zenrouter${RESET}"
+  if bun add -g zenrouter; then
     INSTALL_SUCCESS=true
   fi
 fi
 
 # Fallback: Local binary clone if npm is unavailable
 if [ "$INSTALL_SUCCESS" = false ]; then
-  INSTALL_DIR="$HOME/.zenroute/app"
+  INSTALL_DIR="$HOME/.zenrouter/app"
   BIN_DIR="$HOME/.local/bin"
   mkdir -p "$INSTALL_DIR" "$BIN_DIR"
   echo -e "${CYAN}==>${RESET} Installing standalone clone to ${INSTALL_DIR}..."
@@ -131,13 +131,13 @@ if [ "$INSTALL_SUCCESS" = false ]; then
     if [ -d "$INSTALL_DIR/.git" ]; then
       git -C "$INSTALL_DIR" pull --quiet
     else
-      git clone --depth 1 https://github.com/joyccn/ZenRoute.git "$INSTALL_DIR"
+      git clone --depth 1 https://github.com/ZenRouter/ZenRouter.git "$INSTALL_DIR"
     fi
     cd "$INSTALL_DIR"
     npm install --silent --production
     npm run build --silent
-    ln -sf "$INSTALL_DIR/cli/cli.js" "$BIN_DIR/zenroute"
-    chmod +x "$BIN_DIR/zenroute"
+    ln -sf "$INSTALL_DIR/cli/cli.js" "$BIN_DIR/zenrouter"
+    chmod +x "$BIN_DIR/zenrouter"
     export PATH="$BIN_DIR:$PATH"
     INSTALL_SUCCESS=true
   fi
@@ -145,20 +145,20 @@ fi
 
 # Verify Installation
 echo ""
-if command -v zenroute >/dev/null 2>&1; then
-  INSTALLED_VER=$(zenroute --version 2>/dev/null || echo "latest")
-  echo -e "${GREEN}${BOLD}✓ ZenRoute successfully installed! (${INSTALLED_VER})${RESET}"
+if command -v zenrouter >/dev/null 2>&1; then
+  INSTALLED_VER=$(zenrouter --version 2>/dev/null || echo "latest")
+  echo -e "${GREEN}${BOLD}✓ ZenRouter successfully installed! (${INSTALLED_VER})${RESET}"
 else
-  echo -e "${GREEN}${BOLD}✓ ZenRoute installation completed!${RESET}"
+  echo -e "${GREEN}${BOLD}✓ ZenRouter installation completed!${RESET}"
 fi
 
 # Print Success and Next Steps
 echo ""
 echo -e "${BLUE}─────────────────────────────────────────────────────────────${RESET}"
-echo -e "${BOLD}🚀 Get Started with ZenRoute:${RESET}"
+echo -e "${BOLD}🚀 Get Started with ZenRouter:${RESET}"
 echo ""
-echo -e "  1. Start the ZenRoute gateway:"
-echo -e "     ${GREEN}${BOLD}zenroute${RESET}"
+echo -e "  1. Start the ZenRouter gateway:"
+echo -e "     ${GREEN}${BOLD}zenrouter${RESET}"
 echo ""
 echo -e "  2. Access the interactive web dashboard:"
 echo -e "     ${CYAN}${BOLD}http://localhost:20128${RESET}"
@@ -168,8 +168,8 @@ echo -e "     ${GRAY}OpenAI Base URL:${RESET}    ${BOLD}http://localhost:20128/v
 echo -e "     ${GRAY}Anthropic Base URL:${RESET} ${BOLD}http://localhost:20128/v1${RESET}"
 echo ""
 echo -e "  4. Manage Background Service:"
-echo -e "     ${GRAY}zenroute start   # Run in background${RESET}"
-echo -e "     ${GRAY}zenroute stop    # Stop background daemon${RESET}"
-echo -e "     ${GRAY}zenroute status  # Check gateway health${RESET}"
+echo -e "     ${GRAY}zenrouter start   # Run in background${RESET}"
+echo -e "     ${GRAY}zenrouter stop    # Stop background daemon${RESET}"
+echo -e "     ${GRAY}zenrouter status  # Check gateway health${RESET}"
 echo -e "${BLUE}─────────────────────────────────────────────────────────────${RESET}"
 echo ""

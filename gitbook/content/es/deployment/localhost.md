@@ -1,15 +1,15 @@
 # 🏠 Despliegue en localhost
 
-Ejecuta ZenRoute en tu máquina local para desarrollo y uso personal.
+Ejecuta ZenRouter en tu máquina local para desarrollo y uso personal.
 
 ---
 
 ## 📦 Instalación
 
-Instala ZenRoute globalmente vía npm:
+Instala ZenRouter globalmente vía npm:
 
 ```bash
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
 **Requisitos:**
@@ -20,10 +20,10 @@ npm install -g zenroute
 
 ## 🚀 Iniciar el servidor
 
-Inicia ZenRoute con un solo comando:
+Inicia ZenRouter con un solo comando:
 
 ```bash
-zenroute
+zenrouter
 ```
 
 El dashboard se abrirá automáticamente en tu navegador en `http://localhost:3000`
@@ -31,7 +31,7 @@ El dashboard se abrirá automáticamente en tu navegador en `http://localhost:30
 **Configuración por defecto:**
 - **Dashboard**: `http://localhost:3000`
 - **API Endpoint**: `http://localhost:20128/v1`
-- **Directorio de datos**: `~/.zenroute`
+- **Directorio de datos**: `~/.zenrouter`
 
 ---
 
@@ -42,7 +42,7 @@ El dashboard se abrirá automáticamente en tu navegador en `http://localhost:30
 Establece un directorio de datos personalizado usando una variable de entorno:
 
 ```bash
-DATA_DIR=/path/to/data zenroute
+DATA_DIR=/path/to/data zenrouter
 ```
 
 ### Puerto personalizado
@@ -53,10 +53,10 @@ El puerto de API (20128) y el puerto del dashboard (3000) están configurados en
 
 ## 🛑 Detener el servidor
 
-Presiona `Ctrl+C` en la terminal donde ZenRoute se está ejecutando.
+Presiona `Ctrl+C` en la terminal donde ZenRouter se está ejecutando.
 
 ```bash
-# En la terminal ejecutando zenroute
+# En la terminal ejecutando zenrouter
 ^C  # Presiona Ctrl+C
 ```
 
@@ -69,25 +69,25 @@ El servidor se apagará correctamente y guardará todos los datos.
 Simplemente ejecuta el comando de inicio nuevamente:
 
 ```bash
-zenroute
+zenrouter
 ```
 
 Todas tus configuraciones, API keys y combos se preservan en el directorio de datos.
 
 ---
 
-## 📊 Actualizar ZenRoute
+## 📊 Actualizar ZenRouter
 
 Actualiza a la última versión:
 
 ```bash
-npm update -g zenroute
+npm update -g zenrouter
 ```
 
 Verifica tu versión actual:
 
 ```bash
-npm list -g zenroute
+npm list -g zenrouter
 ```
 
 ---
@@ -113,7 +113,7 @@ Si encuentras errores de permisos durante la instalación:
 
 ```bash
 # Usar sudo (no recomendado)
-sudo npm install -g zenroute
+sudo npm install -g zenrouter
 
 # O corregir los permisos de npm (recomendado)
 mkdir ~/.npm-global
@@ -128,10 +128,10 @@ Si el directorio de datos no es accesible:
 
 ```bash
 # Verificar permisos
-ls -la ~/.zenroute
+ls -la ~/.zenrouter
 
 # Corregir permisos
-chmod 755 ~/.zenroute
+chmod 755 ~/.zenrouter
 ```
 
 ---
@@ -139,7 +139,7 @@ chmod 755 ~/.zenroute
 ## 📁 Estructura del directorio de datos
 
 ```
-~/.zenroute/
+~/.zenrouter/
 ├── db.json           # Main database (providers, combos, settings)
 ├── logs/             # Application logs
 └── cache/            # Temporary cache files
@@ -149,10 +149,10 @@ chmod 755 ~/.zenroute
 
 ```bash
 # Respaldo
-cp -r ~/.zenroute ~/.zenroute.backup
+cp -r ~/.zenrouter ~/.zenrouter.backup
 
 # Restaurar
-cp -r ~/.zenroute.backup ~/.zenroute
+cp -r ~/.zenrouter.backup ~/.zenrouter
 ```
 
 ---

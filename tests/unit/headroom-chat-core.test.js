@@ -300,7 +300,7 @@ describe("handleChatCore Headroom diagnostics", () => {
         body: {},
         headers: {
           accept: "application/json",
-          "x-zenroute-token-saver": "off",
+          "x-zenrouter-token-saver": "off",
         },
       },
     });

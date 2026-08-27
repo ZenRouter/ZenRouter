@@ -1,14 +1,14 @@
-# 欢迎使用 ZenRoute
+# 欢迎使用 ZenRouter
 
 **免费使用 Claude、Codex、Gemini • 超低价替代方案,每 1M token 仅需 $0.20**
 
-ZenRoute 是一款 AI 模型路由工具,通过智能路由和自动回退机制,最大化你的订阅价值并最小化成本。
+ZenRouter 是一款 AI 模型路由工具,通过智能路由和自动回退机制,最大化你的订阅价值并最小化成本。
 
 ---
 
-## 什么是 ZenRoute?
+## 什么是 ZenRouter?
 
-ZenRoute 是一款智能代理,位于你的编码工具(Cursor、Cline、Claude Desktop)与 AI 提供商之间。它会根据配额、成本和可用性,自动将请求路由到最合适的模型。
+ZenRouter 是一款智能代理,位于你的编码工具(Cursor、Cline、Claude Desktop)与 AI 提供商之间。它会根据配额、成本和可用性,自动将请求路由到最合适的模型。
 
 **告别浪费:**
 - ❌ 订阅配额每月未用完就过期
@@ -66,7 +66,7 @@ ZenRoute 是一款智能代理,位于你的编码工具(Cursor、Cline、Claude 
 
 ---
 
-## 为什么选择 ZenRoute?
+## 为什么选择 ZenRouter?
 
 ### 最大化订阅价值
 
@@ -105,10 +105,10 @@ ZenRoute 是一款智能代理,位于你的编码工具(Cursor、Cline、Claude 
 
 ```bash
 # 全局安装
-npm install -g zenroute
+npm install -g zenrouter
 
 # 启动(仪表盘自动打开)
-zenroute
+zenrouter
 ```
 
 🎉 **仪表盘自动打开** → 连接提供商 → 开始编码!

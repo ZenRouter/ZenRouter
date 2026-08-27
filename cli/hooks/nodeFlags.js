@@ -2,8 +2,8 @@ const DEFAULT_MAX_OLD_SPACE_MB = 6144;
 const HEAP_FLAG_PATTERN = /(^|\s)--max[-_]old[-_]space[-_]size(=|\s|$)/;
 
 function resolveHeapFlags(env = process.env) {
-  const varName = env.ZENROUTE_MAX_OLD_SPACE_SIZE !== undefined
-    ? "ZENROUTE_MAX_OLD_SPACE_SIZE"
+  const varName = env.ZENROUTER_MAX_OLD_SPACE_SIZE !== undefined
+    ? "ZENROUTER_MAX_OLD_SPACE_SIZE"
     : env.NINEROUTER_MAX_OLD_SPACE_SIZE !== undefined
       ? "NINEROUTER_MAX_OLD_SPACE_SIZE"
       : null;
@@ -16,7 +16,7 @@ function resolveHeapFlags(env = process.env) {
       return [`--max-old-space-size=${megabytes}`];
     }
     console.warn(
-      `[zenroute] ignoring ${varName}="${explicit}": expected a positive integer (MB) or 0`,
+      `[zenrouter] ignoring ${varName}="${explicit}": expected a positive integer (MB) or 0`,
     );
   }
 

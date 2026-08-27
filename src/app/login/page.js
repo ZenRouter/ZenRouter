@@ -161,10 +161,10 @@ export default function LoginPage() {
         {/* Brand Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-surface border border-border p-3 mb-4 shadow-[var(--shadow-warm)] hover:scale-105 transition-transform duration-300">
-            <img src="/icons/logo.svg" alt="ZenRoute" className="w-full h-full object-contain" />
+            <img src="/icons/logo.svg" alt="ZenRouter" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-text-main mb-1.5 flex items-center justify-center gap-2">
-            ZenRoute
+            ZenRouter
             <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">Gateway</span>
           </h1>
           <p className="text-sm text-text-muted max-w-xs mx-auto">
@@ -255,7 +255,7 @@ export default function LoginPage() {
                   )}
                   {resetHint && (
                     <p className="text-xs text-text-muted bg-surface-2 p-2 rounded-lg border border-border">
-                      Forgot password? Open <code className="bg-surface px-1 py-0.5 rounded text-brand-600 dark:text-brand-400 font-mono">zenroute</code> CLI → <b>Settings</b> → <b>Reset Password to Default</b>.
+                      Forgot password? Open <code className="bg-surface px-1 py-0.5 rounded text-brand-600 dark:text-brand-400 font-mono">zenrouter</code> CLI → <b>Settings</b> → <b>Reset Password to Default</b>.
                     </p>
                   )}
                 </div>

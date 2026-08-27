@@ -31,7 +31,7 @@ Free tier providers are your **fallback** when subscription and cheap quota exha
 **Step 1: Connect via Dashboard**
 
 ```bash
-zenroute
+zenrouter
 # Dashboard → Providers → Connect iFlow
 ```
 
@@ -91,7 +91,7 @@ Model: if/kimi-k2-thinking
 **Step 1: Connect via Dashboard**
 
 ```bash
-zenroute
+zenrouter
 # Dashboard → Providers → Connect Qwen
 ```
 
@@ -144,7 +144,7 @@ Model: qw/qwen3-coder-plus
 **Step 1: Connect via Dashboard**
 
 ```bash
-zenroute
+zenrouter
 # Dashboard → Providers → Connect Kiro
 ```
 
@@ -200,7 +200,7 @@ Model: kr/claude-sonnet-4.5
 ```
 Settings → Models → Advanced:
   OpenAI API Base URL: http://localhost:20128/v1
-  OpenAI API Key: [from zenroute dashboard]
+  OpenAI API Key: [from zenrouter dashboard]
   Model: if/kimi-k2-thinking
 ```
 
@@ -376,13 +376,13 @@ Perfect for:
 100M × $20/1M = $2,000/month
 ```
 
-**Option 2: ZenRoute Free Tier Only**
+**Option 2: ZenRouter Free Tier Only**
 ```
 100M via free tier = $0/month
 Savings: $2,000/month (100%)
 ```
 
-**Option 3: ZenRoute Complete Strategy**
+**Option 3: ZenRouter Complete Strategy**
 ```
 60M via Gemini CLI (FREE): $0
 30M via Claude Code (subscription): $0 extra

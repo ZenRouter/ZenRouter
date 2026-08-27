@@ -1,6 +1,6 @@
 # トラブルシューティング
 
-ZenRoute利用時の一般的な問題と解決策。
+ZenRouter利用時の一般的な問題と解決策。
 
 ---
 
@@ -78,7 +78,7 @@ ZenRoute利用時の一般的な問題と解決策。
 **解決策:**
 
 1. **自動更新(デフォルト):**
-   ZenRouteは自動的にトークンを更新します。30秒待ってから再試行。
+   ZenRouterは自動的にトークンを更新します。30秒待ってから再試行。
 
 2. **手動で再接続:**
    ```
@@ -135,15 +135,15 @@ ZenRoute利用時の一般的な問題と解決策。
 **問題:** 「ECONNREFUSED」または「Cannot connect to localhost:20128」。
 
 **原因:**
-- ZenRouteが起動していない
+- ZenRouterが起動していない
 - ポート20128がブロックされている
 - ファイアウォールが接続をブロック
 
 **解決策:**
 
-1. **ZenRouteを起動:**
+1. **ZenRouterを起動:**
    ```bash
-   zenroute
+   zenrouter
    ```
    ダッシュボードがhttp://localhost:3000で開くはず
 
@@ -175,15 +175,15 @@ ZenRoute利用時の一般的な問題と解決策。
 
 **原因:**
 - ポート3000がすでに使用中
-- ZenRouteがクラッシュした
+- ZenRouterがクラッシュした
 - ブラウザキャッシュの問題
 
 **解決策:**
 
-1. **ZenRouteが実行中か確認:**
+1. **ZenRouterが実行中か確認:**
    ```bash
    # プロセスを確認
-   ps aux | grep zenroute
+   ps aux | grep zenrouter
    
    # ポート3000を確認
    lsof -i :3000
@@ -199,13 +199,13 @@ ZenRoute利用時の一般的な問題と解決策。
    taskkill /PID <PID> /F
    ```
 
-3. **ZenRouteを再起動:**
+3. **ZenRouterを再起動:**
    ```bash
    # 停止
-   pkill -f zenroute
+   pkill -f zenrouter
    
    # 起動
-   zenroute
+   zenrouter
    ```
 
 4. **ブラウザキャッシュをクリア:**
@@ -346,6 +346,6 @@ ZenRoute利用時の一般的な問題と解決策。
 
 ## さらにヘルプが必要?
 
-- **GitHub Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
-- **ドキュメント:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
+- **GitHub Issues:** [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
+- **ドキュメント:** [GitHub Docs](https://github.com/ZenRouter/ZenRouter)
 - **FAQ:** [faq.md](faq.md)

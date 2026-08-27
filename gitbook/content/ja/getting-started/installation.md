@@ -1,6 +1,6 @@
 # インストール
 
-トラブルシューティングのヒント付きのZenRoute詳細インストールガイド。
+トラブルシューティングのヒント付きのZenRouter詳細インストールガイド。
 
 ---
 
@@ -31,37 +31,37 @@ npm --version
 
 ### 方法1: グローバルインストール (推奨)
 
-どこからでも使用できるようにZenRouteをグローバルインストール:
+どこからでも使用できるようにZenRouterをグローバルインストール:
 
 ```bash
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
-**ZenRouteを起動:**
+**ZenRouterを起動:**
 
 ```bash
-zenroute
+zenrouter
 ```
 
 **利点:**
 - ✅ どのディレクトリからでも実行
-- ✅ シンプルなコマンド: `zenroute`
-- ✅ `npm update -g zenroute` で自動更新
+- ✅ シンプルなコマンド: `zenrouter`
+- ✅ `npm update -g zenrouter` で自動更新
 
 ### 方法2: ローカルインストール
 
 特定のプロジェクトにインストール:
 
 ```bash
-mkdir my-zenroute
-cd my-zenroute
-npm install zenroute
+mkdir my-zenrouter
+cd my-zenrouter
+npm install zenrouter
 ```
 
-**ZenRouteを起動:**
+**ZenRouterを起動:**
 
 ```bash
-npx zenroute
+npx zenrouter
 ```
 
 **利点:**
@@ -74,8 +74,8 @@ npx zenroute
 GitHubからクローンしてビルド:
 
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install
 npm run build
 npm start
@@ -93,13 +93,13 @@ npm start
 ### サーバーを起動
 
 ```bash
-zenroute
+zenrouter
 ```
 
 **何が起こるか:**
 1. サーバーが `http://localhost:20128` で起動
 2. ダッシュボードが自動的にブラウザで開く
-3. `~/.zenroute` にデータディレクトリが作成される
+3. `~/.zenrouter` にデータディレクトリが作成される
 4. APIキーが自動生成される
 
 ### ダッシュボードログイン
@@ -193,7 +193,7 @@ export JWT_SECRET="your-secure-secret-change-this"
 export INITIAL_PASSWORD="your-password"
 
 # ストレージ
-export DATA_DIR="~/.zenroute"
+export DATA_DIR="~/.zenrouter"
 
 # サーバー
 export PORT="20128"
@@ -205,11 +205,11 @@ export ENABLE_REQUEST_LOGS="false"
 
 ### データディレクトリ
 
-**デフォルトの場所:** `~/.zenroute`
+**デフォルトの場所:** `~/.zenrouter`
 
 **内容:**
 ```
-~/.zenroute/
+~/.zenrouter/
   ├── db.json           # データベース (プロバイダー、コンボ、使用量)
   ├── api-keys.json     # APIキー
   └── logs/             # リクエストログ (有効化されている場合)
@@ -219,7 +219,7 @@ export ENABLE_REQUEST_LOGS="false"
 
 ```bash
 export DATA_DIR="/custom/path"
-zenroute
+zenrouter
 ```
 
 ### ポート設定
@@ -230,13 +230,13 @@ zenroute
 
 ```bash
 export PORT="3000"
-zenroute
+zenrouter
 ```
 
 **またはコマンドラインで:**
 
 ```bash
-zenroute --port 3000
+zenrouter --port 3000
 ```
 
 ---
@@ -263,14 +263,14 @@ kill -9 <PID>
 **解決策2: 別のポートを使用**
 
 ```bash
-zenroute --port 3000
+zenrouter --port 3000
 ```
 
 ### Permission Denied
 
 **エラー:**
 ```
-Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/zenroute'
+Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/zenrouter'
 ```
 
 **解決策: sudoを使用 (非推奨) またはnpm権限を修正**
@@ -283,7 +283,7 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 
 # 再度インストール
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
 ### Node.jsバージョンが古すぎる
@@ -345,23 +345,23 @@ Dashboard → Provider → Disconnect → Reconnect
 
 ### 高メモリ使用量
 
-**問題:** ZenRouteがRAMを使いすぎている
+**問題:** ZenRouterがRAMを使いすぎている
 
 **解決策: サーバーを再起動**
 
 ```bash
 # 停止
-pkill -f zenroute
+pkill -f zenrouter
 
 # 起動
-zenroute
+zenrouter
 ```
 
 **または自動再起動にPM2を使用:**
 
 ```bash
 npm install -g pm2
-pm2 start zenroute --name zenroute
+pm2 start zenrouter --name zenrouter
 pm2 save
 ```
 
@@ -372,8 +372,8 @@ pm2 save
 ### ローカル開発
 
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 ```
 
 **ユースケース:** 個人コーディング、テスト
@@ -382,7 +382,7 @@ zenroute
 
 ```bash
 # インストール
-npm install -g zenroute
+npm install -g zenrouter
 
 # 設定
 export JWT_SECRET="your-secure-secret"
@@ -391,7 +391,7 @@ export NODE_ENV="production"
 
 # PM2で起動
 npm install -g pm2
-pm2 start zenroute --name zenroute
+pm2 start zenrouter --name zenrouter
 pm2 save
 pm2 startup
 ```
@@ -401,15 +401,15 @@ pm2 startup
 ### Docker
 
 ```bash
-docker pull zenroute/zenroute:latest
+docker pull zenrouter/zenrouter:latest
 
 docker run -d \
   -p 20128:20128 \
   -e JWT_SECRET="your-secure-secret" \
   -e INITIAL_PASSWORD="your-password" \
-  -v zenroute-data:/root/.zenroute \
-  --name zenroute \
-  zenroute/zenroute:latest
+  -v zenrouter-data:/root/.zenrouter \
+  --name zenrouter \
+  zenrouter/zenrouter:latest
 ```
 
 **ユースケース:** コンテナデプロイ、Kubernetes
@@ -444,13 +444,13 @@ server {
 ### グローバルインストールを削除
 
 ```bash
-npm uninstall -g zenroute
+npm uninstall -g zenrouter
 ```
 
 ### データディレクトリを削除
 
 ```bash
-rm -rf ~/.zenroute
+rm -rf ~/.zenrouter
 ```
 
 ### 設定を削除
@@ -458,7 +458,7 @@ rm -rf ~/.zenroute
 ```bash
 # シェル設定から環境変数を削除
 nano ~/.bashrc  # または ~/.zshrc
-# zenroute関連のエクスポートを削除
+# zenrouter関連のエクスポートを削除
 ```
 
 ---
@@ -473,6 +473,6 @@ nano ~/.bashrc  # または ~/.zshrc
 
 ## ヘルプが必要?
 
-- **ウェブサイト**: [GitHub](https://github.com/joyccn/ZenRoute)
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **ウェブサイト**: [GitHub](https://github.com/ZenRouter/ZenRouter)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)

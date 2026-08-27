@@ -1,6 +1,6 @@
 # Docker
 
-Run ZenRoute in a container. Published image: [`joyccn/ZenRoute`](https://hub.docker.com/r/joyccn/ZenRoute) — multi-platform `linux/amd64` + `linux/arm64`.
+Run ZenRouter in a container. Published image: [`ZenRouter/ZenRouter`](https://hub.docker.com/r/ZenRouter/ZenRouter) — multi-platform `linux/amd64` + `linux/arm64`.
 
 ---
 
@@ -11,10 +11,10 @@ Run ZenRoute in a container. Published image: [`joyccn/ZenRoute`](https://hub.do
 ```bash
 docker run -d \
   -p 20128:20128 \
-  -v "$HOME/.zenroute:/app/data" \
+  -v "$HOME/.zenrouter:/app/data" \
   -e DATA_DIR=/app/data \
-  --name zenroute \
-  joyccn/ZenRoute:latest
+  --name zenrouter \
+  ZenRouter/ZenRouter:latest
 ```
 
 App listens on port `20128`. Open: http://localhost:20128
@@ -22,20 +22,20 @@ App listens on port `20128`. Open: http://localhost:20128
 ## Manage container
 
 ```bash
-docker logs -f zenroute        # view logs
-docker stop zenroute           # stop
-docker start zenroute          # start again
-docker rm -f zenroute          # remove
+docker logs -f zenrouter        # view logs
+docker stop zenrouter           # stop
+docker start zenrouter          # start again
+docker rm -f zenrouter          # remove
 ```
 
 ## Data persistence
 
 ```bash
--v "$HOME/.zenroute:/app/data" \
+-v "$HOME/.zenrouter:/app/data" \
 -e DATA_DIR=/app/data
 ```
 
-Without `DATA_DIR`, the app falls back to `~/.zenroute/` (macOS/Linux) or `%APPDATA%\zenroute\` (Windows). In the container, `DATA_DIR=/app/data` makes the bind mount work.
+Without `DATA_DIR`, the app falls back to `~/.zenrouter/` (macOS/Linux) or `%APPDATA%\zenrouter\` (Windows). In the container, `DATA_DIR=/app/data` makes the bind mount work.
 
 Data layout under `$DATA_DIR/`:
 
@@ -47,7 +47,7 @@ $DATA_DIR/
 └── ...                   # certs, logs, runtime configs
 ```
 
-Host path: `$HOME/.zenroute/db/data.sqlite`
+Host path: `$HOME/.zenrouter/db/data.sqlite`
 Container path: `/app/data/db/data.sqlite`
 
 ## Optional env vars
@@ -55,27 +55,27 @@ Container path: `/app/data/db/data.sqlite`
 ```bash
 docker run -d \
   -p 20128:20128 \
-  -v "$HOME/.zenroute:/app/data" \
+  -v "$HOME/.zenrouter:/app/data" \
   -e DATA_DIR=/app/data \
   -e PORT=20128 \
   -e HOSTNAME=0.0.0.0 \
   -e DEBUG=true \
-  --name zenroute \
-  joyccn/ZenRoute:latest
+  --name zenrouter \
+  ZenRouter/ZenRouter:latest
 ```
 
 ## Optional Headroom sidecar
 
-The ZenRoute image does not bundle Python or Headroom. To use Headroom in Docker, run it as a separate service and point ZenRoute at that proxy:
+The ZenRouter image does not bundle Python or Headroom. To use Headroom in Docker, run it as a separate service and point ZenRouter at that proxy:
 
 ```yaml
 services:
-  zenroute:
-    image: joyccn/ZenRoute:latest
+  zenrouter:
+    image: ZenRouter/ZenRouter:latest
     ports:
       - "20128:20128"
     volumes:
-      - "$HOME/.zenroute:/app/data"
+      - "$HOME/.zenrouter:/app/data"
     environment:
       DATA_DIR: /app/data
       HEADROOM_URL: http://headroom:8787
@@ -95,8 +95,8 @@ If Headroom runs on the Docker host instead of as a sidecar, use `http://host.do
 ## Update to latest
 
 ```bash
-docker pull joyccn/ZenRoute:latest
-docker rm -f zenroute
+docker pull ZenRouter/ZenRouter:latest
+docker rm -f zenrouter
 # re-run the quick start command
 ```
 
@@ -107,19 +107,19 @@ docker rm -f zenroute
 ## Build image locally (test)
 
 ```bash
-cd app && docker build -t zenroute .
+cd app && docker build -t zenrouter .
 
 docker run --rm -p 20128:20128 \
-  -v "$HOME/.zenroute:/app/data" \
+  -v "$HOME/.zenrouter:/app/data" \
   -e DATA_DIR=/app/data \
-  zenroute
+  zenrouter
 ```
 
 ## Publish (automatic via CI)
 
 Push a git tag `v*` → GitHub Actions builds multi-platform (amd64+arm64) and pushes to:
-- `ghcr.io/joyccn/ZenRoute:v{version}` + `:latest`
-- `joyccn/ZenRoute:v{version}` + `:latest`
+- `ghcr.io/ZenRouter/ZenRouter:v{version}` + `:latest`
+- `ZenRouter/ZenRouter:v{version}` + `:latest`
 
 ```bash
 # Use scripts/release.js (recommended)

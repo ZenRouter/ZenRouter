@@ -46,10 +46,10 @@ const readSettings = async () => {
   }
 };
 
-// Check if settings has ZenRoute customModels
-const hasZenRouteConfig = (settings) => {
+// Check if settings has ZenRouter customModels
+const hasZenRouterConfig = (settings) => {
   if (!settings || !settings.customModels) return false;
-  return settings.customModels.some(m => m.id?.startsWith("custom:ZenRoute"));
+  return settings.customModels.some(m => m.id?.startsWith("custom:ZenRouter"));
 };
 
 // GET - Check droid CLI and read current settings
@@ -70,7 +70,7 @@ export async function GET() {
     return NextResponse.json({
       installed: true,
       settings,
-      hasZenRoute: hasZenRouteConfig(settings),
+      hasZenRouter: hasZenRouterConfig(settings),
       settingsPath: getDroidSettingsPath(),
     });
   } catch (error) {
@@ -79,7 +79,7 @@ export async function GET() {
   }
 }
 
-// POST - Update ZenRoute customModels (merge with existing settings)
+// POST - Update ZenRouter customModels (merge with existing settings)
 // Accepts either `model` (string, legacy single-model) or `models` (array of strings, multi-model)
 // Also accepts `activeModel` to set which model is active/primary
 export async function POST(request) {
@@ -111,8 +111,8 @@ export async function POST(request) {
       settings.customModels = [];
     }
 
-    // Remove all existing ZenRoute configs
-    settings.customModels = settings.customModels.filter(m => !m.id?.startsWith("custom:ZenRoute"));
+    // Remove all existing ZenRouter configs
+    settings.customModels = settings.customModels.filter(m => !m.id?.startsWith("custom:ZenRouter"));
 
     // Normalize baseUrl to ensure /v1 suffix
     const normalizedBaseUrl = baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
@@ -137,7 +137,7 @@ export async function POST(request) {
       if (!m || typeof m !== "string") continue;
       settings.customModels.push({
         model: m,
-        id: `custom:ZenRoute-${i}`,
+        id: `custom:ZenRouter-${i}`,
         index: i,
         baseUrl: normalizedBaseUrl,
         apiKey: keyToUse,
@@ -171,7 +171,7 @@ export async function POST(request) {
   }
 }
 
-// DELETE - Remove ZenRoute customModels only (keep other settings)
+// DELETE - Remove ZenRouter customModels only (keep other settings)
 export async function DELETE() {
   try {
     const settingsPath = getDroidSettingsPath();
@@ -191,9 +191,9 @@ export async function DELETE() {
       throw error;
     }
 
-    // Remove ZenRoute customModels
+    // Remove ZenRouter customModels
     if (settings.customModels) {
-      settings.customModels = settings.customModels.filter(m => !m.id?.startsWith("custom:ZenRoute"));
+      settings.customModels = settings.customModels.filter(m => !m.id?.startsWith("custom:ZenRouter"));
       
       // Remove customModels array if empty
       if (settings.customModels.length === 0) {
@@ -206,7 +206,7 @@ export async function DELETE() {
 
     return NextResponse.json({
       success: true,
-      message: "ZenRoute settings removed successfully",
+      message: "ZenRouter settings removed successfully",
     });
   } catch (error) {
     console.log("Error resetting droid settings:", error);

@@ -1,13 +1,13 @@
 # Continue VSCode Extension Integration
 
-Integrate ZenRoute with Continue extension to bring AI assistance directly into Visual Studio Code.
+Integrate ZenRouter with Continue extension to bring AI assistance directly into Visual Studio Code.
 
 ## Prerequisites
 
 - Visual Studio Code installed
 - Continue extension installed from VSCode marketplace
-- ZenRoute API key from [dashboard](http://localhost:20128/dashboard)
-- ZenRoute running (local or cloud)
+- ZenRouter API key from [dashboard](http://localhost:20128/dashboard)
+- ZenRouter running (local or cloud)
 
 ## Configuration Steps
 
@@ -18,7 +18,7 @@ Integrate ZenRoute with Continue extension to bring AI assistance directly into 
 3. Type "Continue: Open Config" and select it
 4. This opens `~/.continue/config.json`
 
-### 2. Add ZenRoute Model Configuration
+### 2. Add ZenRouter Model Configuration
 
 Add the following configuration to your `config.json`:
 
@@ -27,7 +27,7 @@ Add the following configuration to your `config.json`:
 {
   "models": [
     {
-      "title": "ZenRoute - Claude Opus",
+      "title": "ZenRouter - Claude Opus",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key-from-dashboard",
@@ -42,28 +42,28 @@ Add the following configuration to your `config.json`:
 {
   "models": [
     {
-      "title": "ZenRoute - Claude Opus (Best)",
+      "title": "ZenRouter - Claude Opus (Best)",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - Claude Sonnet (Balanced)",
+      "title": "ZenRouter - Claude Sonnet (Balanced)",
       "provider": "openai",
       "model": "cc/claude-sonnet-4-20250514",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - DeepSeek Chat (Code)",
+      "title": "ZenRouter - DeepSeek Chat (Code)",
       "provider": "openai",
       "model": "cx/deepseek-chat",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - Claude Haiku (Fast)",
+      "title": "ZenRouter - Claude Haiku (Fast)",
       "provider": "openai",
       "model": "cc/claude-haiku-4-20250514",
       "apiKey": "your-api-key-from-dashboard",
@@ -73,7 +73,7 @@ Add the following configuration to your `config.json`:
 }
 ```
 
-**For Cloud ZenRoute:**
+**For Cloud ZenRouter:**
 Replace `apiBase` with:
 ```json
 "apiBase": "http://localhost:20128/v1"
@@ -89,7 +89,7 @@ Replace `apiBase` with:
 
 1. Open Continue sidebar (click Continue icon in left panel)
 2. Click model selector dropdown at the top
-3. Choose your preferred ZenRoute model
+3. Choose your preferred ZenRouter model
 
 ## Available Models
 
@@ -139,7 +139,7 @@ Add custom system prompts for specific behaviors:
 {
   "models": [
     {
-      "title": "ZenRoute - Code Expert",
+      "title": "ZenRouter - Code Expert",
       "provider": "openai",
       "model": "cx/deepseek-chat",
       "apiKey": "your-api-key",
@@ -158,7 +158,7 @@ Adjust model behavior with parameters:
 {
   "models": [
     {
-      "title": "ZenRoute - Creative Writer",
+      "title": "ZenRouter - Creative Writer",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key",
@@ -204,13 +204,13 @@ Configure what context Continue sends to the model:
 ## Troubleshooting
 
 ### Model Not Responding
-- Check ZenRoute is running: `curl http://localhost:20128/health`
+- Check ZenRouter is running: `curl http://localhost:20128/health`
 - Verify API key in config.json
 - Check VSCode Developer Console for errors: `Help` → `Toggle Developer Tools`
 
 ### Wrong Model Selected
 - Click model dropdown in Continue sidebar
-- Select correct ZenRoute model
+- Select correct ZenRouter model
 - Model name must match exactly (case-sensitive)
 
 ### Configuration Not Loading
@@ -221,7 +221,7 @@ Configure what context Continue sends to the model:
 ### Slow Performance
 - Switch to faster models (haiku, flash)
 - Reduce context size in contextProviders
-- Check network latency to ZenRoute
+- Check network latency to ZenRouter
 
 ## Best Practices
 

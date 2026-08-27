@@ -1,10 +1,10 @@
 # その他ツール統合
 
-ZenRouteはOpenAI API形式をサポートする任意のツールと互換性があります。このガイドでは、様々なツールやカスタムアプリケーション向けの汎用統合パターンを説明します。
+ZenRouterはOpenAI API形式をサポートする任意のツールと互換性があります。このガイドでは、様々なツールやカスタムアプリケーション向けの汎用統合パターンを説明します。
 
 ## 概要
 
-ZenRouteはOpenAI互換APIエンドポイントを提供し、以下と動作します:
+ZenRouterはOpenAI互換APIエンドポイントを提供し、以下と動作します:
 - カスタムスクリプトとアプリケーション
 - APIクライアントとテストツール
 - CLIツールとユーティリティ
@@ -13,20 +13,20 @@ ZenRouteはOpenAI互換APIエンドポイントを提供し、以下と動作し
 
 ## 汎用セットアップパターン
 
-任意のOpenAI互換ツールは以下の設定でZenRouteに接続できます:
+任意のOpenAI互換ツールは以下の設定でZenRouterに接続できます:
 
-**ローカルZenRoute:**
+**ローカルZenRouter:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
-Model: 任意のZenRouteモデル (cc/*, cx/*, glm/*など)
+Model: 任意のZenRouterモデル (cc/*, cx/*, glm/*など)
 ```
 
-**クラウドZenRoute:**
+**クラウドZenRouter:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
-Model: 任意のZenRouteモデル (cc/*, cx/*, glm/*など)
+Model: 任意のZenRouterモデル (cc/*, cx/*, glm/*など)
 ```
 
 ## 利用可能なモデル
@@ -318,9 +318,9 @@ def chat_with_retry(prompt, max_retries=3):
 
 ### 接続の問題
 
-**問題:** ZenRouteに接続できない
+**問題:** ZenRouterに接続できない
 ```bash
-# ZenRouteが動作中か確認
+# ZenRouterが動作中か確認
 curl http://localhost:20128/health
 
 # 期待されるレスポンス:
@@ -328,7 +328,7 @@ curl http://localhost:20128/health
 ```
 
 **解決策:**
-- ZenRouteが動作中か確認
+- ZenRouterが動作中か確認
 - ポート20128がブロックされていないか確認
 - 正しいbase URLを確認 (`/v1`を含む)
 
@@ -366,7 +366,7 @@ Error: Request timed out after 30s
 **解決策:**
 - クライアント設定でタイムアウトを増やす
 - 時間制約のあるタスクには高速モデルを使用
-- ZenRouteへのネットワーク接続を確認
+- ZenRouterへのネットワーク接続を確認
 
 ### レート制限
 

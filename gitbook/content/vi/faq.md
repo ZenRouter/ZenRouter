@@ -1,12 +1,12 @@
 # Câu hỏi thường gặp
 
-Những câu hỏi phổ biến về ZenRoute.
+Những câu hỏi phổ biến về ZenRouter.
 
 ---
 
-## ZenRoute là gì?
+## ZenRouter là gì?
 
-**ZenRoute là bộ định tuyến mô hình AI giúp tối đa hóa giá trị subscription và giảm chi phí.**
+**ZenRouter là bộ định tuyến mô hình AI giúp tối đa hóa giá trị subscription và giảm chi phí.**
 
 Nó định tuyến request thông minh qua nhiều provider AI bằng hệ thống fallback 3 tầng:
 1. **Tầng Subscription** - Tối đa quota Claude Code, Codex, Gemini bạn đang trả tiền
@@ -23,7 +23,7 @@ Nó định tuyến request thông minh qua nhiều provider AI bằng hệ th�
 
 ## Pricing hoạt động thế nào?
 
-**ZenRoute dùng chiến lược pricing 3 tầng:**
+**ZenRouter dùng chiến lược pricing 3 tầng:**
 
 ### Tier 1: Subscription (Dùng đầu tiên)
 - **Claude Code** (Pro/Max): $20-100/tháng - Quota 5 giờ + hàng tuần
@@ -50,9 +50,9 @@ Nó định tuyến request thông minh qua nhiều provider AI bằng hệ th�
 
 ---
 
-## ZenRoute có miễn phí không?
+## ZenRouter có miễn phí không?
 
-**Có, ZenRoute hoàn toàn miễn phí và mã nguồn mở 100%.**
+**Có, ZenRouter hoàn toàn miễn phí và mã nguồn mở 100%.**
 
 **Provider free tier có sẵn:**
 - **Gemini CLI** - 180K completions/tháng (MIỄN PHÍ tài khoản Google)
@@ -96,7 +96,7 @@ Xem [tài liệu providers](providers/subscription.md) để biết chi tiết.
 
 ## Tôi có thể dùng nhiều provider không?
 
-**Có! Đây là tính năng cốt lõi của ZenRoute.**
+**Có! Đây là tính năng cốt lõi của ZenRouter.**
 
 **Combo cho phép bạn nối nhiều provider với fallback tự động:**
 
@@ -129,7 +129,7 @@ Xem [tài liệu combos](features/combos.md) để biết ví dụ.
 
 ## Quota tracking hoạt động thế nào?
 
-**ZenRoute theo dõi quota thời gian thực cho tất cả provider:**
+**ZenRouter theo dõi quota thời gian thực cho tất cả provider:**
 
 **Tính năng:**
 - **Token consumption** - Tokens input/output mỗi request
@@ -154,13 +154,13 @@ Xem [tài liệu quota tracking](features/quota-tracking.md) để biết chi ti
 
 ---
 
-## ZenRoute có hoạt động với Cursor không?
+## ZenRouter có hoạt động với Cursor không?
 
 **Có, nhưng Cursor yêu cầu endpoint cloud.**
 
 **Vấn đề:** Cursor IDE không hỗ trợ endpoint localhost.
 
-**Giải pháp:** Dùng ZenRoute cloud deployment:
+**Giải pháp:** Dùng ZenRouter cloud deployment:
 
 ```
 Cursor Settings → Models → Advanced:
@@ -172,8 +172,8 @@ Cursor Settings → Models → Advanced:
 **Thay thế:** Self-host trên VPS với domain công khai:
 ```bash
 # Deploy to VPS
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install && npm run build
 npm start
 
@@ -192,22 +192,22 @@ Xem [hướng dẫn tích hợp Cursor](integration/cursor.md) để biết chi 
 
 ---
 
-## Tôi có thể self-host ZenRoute không?
+## Tôi có thể self-host ZenRouter không?
 
-**Có! ZenRoute hỗ trợ nhiều tùy chọn deployment:**
+**Có! ZenRouter hỗ trợ nhiều tùy chọn deployment:**
 
 ### Localhost (Mặc định)
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 → Dashboard: http://localhost:3000
 → API: http://localhost:20128/v1
 ```
 
 ### VPS/Cloud
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install && npm run build
 
 export JWT_SECRET="your-secure-secret"
@@ -219,23 +219,23 @@ npm start
 
 ### Docker
 ```bash
-docker build -t zenroute .
+docker build -t zenrouter .
 docker run -d \
   -p 3000:3000 \
   -e JWT_SECRET="your-secret" \
-  -v zenroute-data:/app/data \
-  zenroute
+  -v zenrouter-data:/app/data \
+  zenrouter
 ```
 
 ### Cloudflare Workers
 ```bash
-cd zenroute/app
+cd zenrouter/app
 npm run deploy:cloudflare
 ```
 
 **Biến môi trường:**
 - `JWT_SECRET` - **PHẢI đổi trong production!**
-- `DATA_DIR` - Đường dẫn lưu database (mặc định: `~/.zenroute`)
+- `DATA_DIR` - Đường dẫn lưu database (mặc định: `~/.zenrouter`)
 - `INITIAL_PASSWORD` - Đăng nhập Dashboard (mặc định: `12345678`)
 - `NODE_ENV` - Đặt `production` để deploy
 
@@ -245,11 +245,11 @@ Xem [hướng dẫn deployment](getting-started/installation.md#deployment) đ�
 
 ## Dữ liệu của tôi có an toàn không?
 
-**Có, ZenRoute ưu tiên bảo mật và quyền riêng tư:**
+**Có, ZenRouter ưu tiên bảo mật và quyền riêng tư:**
 
 **Local storage:**
-- Mọi dữ liệu lưu cục bộ tại `~/.zenroute` (hoặc `DATA_DIR` tùy chỉnh)
-- Không gửi data đến server ZenRoute
+- Mọi dữ liệu lưu cục bộ tại `~/.zenrouter` (hoặc `DATA_DIR` tùy chỉnh)
+- Không gửi data đến server ZenRouter
 - OAuth tokens mã hóa bằng JWT
 
 **Không telemetry:**
@@ -268,31 +268,31 @@ Xem [hướng dẫn deployment](getting-started/installation.md#deployment) đ�
 - Bật HTTPS cho cloud deployment
 - Xoay API key định kỳ
 
-**ZenRoute lưu gì:**
+**ZenRouter lưu gì:**
 - Tokens OAuth của provider (mã hóa)
 - API keys (mã hóa)
 - Thống kê sử dụng (chỉ cục bộ)
 - Cấu hình combo
 
-**ZenRoute KHÔNG lưu:**
+**ZenRouter KHÔNG lưu:**
 - Prompts hoặc responses của bạn
 - Code bạn tạo
 - Thông tin cá nhân
 
 ---
 
-## Làm thế nào để cập nhật ZenRoute?
+## Làm thế nào để cập nhật ZenRouter?
 
 **Phương thức cập nhật phụ thuộc loại cài đặt:**
 
 ### Global NPM Install
 ```bash
-npm update -g zenroute
+npm update -g zenrouter
 ```
 
 ### Local Install
 ```bash
-cd zenroute/app
+cd zenrouter/app
 git pull origin main
 npm install
 npm run build
@@ -301,22 +301,22 @@ npm start
 
 ### Docker
 ```bash
-docker pull zenroute:latest
-docker stop zenroute
-docker rm zenroute
+docker pull zenrouter:latest
+docker stop zenrouter
+docker rm zenrouter
 docker run -d \
   -p 3000:3000 \
-  -v zenroute-data:/app/data \
-  zenroute:latest
+  -v zenrouter-data:/app/data \
+  zenrouter:latest
 ```
 
 **Kiểm tra version:**
 ```bash
-zenroute --version
+zenrouter --version
 ```
 
 **Breaking changes:**
-- Backup `~/.zenroute` trước khi update lớn
+- Backup `~/.zenrouter` trước khi update lớn
 - Xem hướng dẫn migration cho major version
 
 ---
@@ -328,18 +328,18 @@ zenroute --version
 ### Các cách đóng góp:
 
 1. **Report bugs:**
-   - [GitHub Issues](https://github.com/joyccn/ZenRoute/issues)
+   - [GitHub Issues](https://github.com/ZenRouter/ZenRouter/issues)
    - Bao gồm error logs, các bước reproduce
 
 2. **Request features:**
-   - [GitHub Discussions](https://github.com/joyccn/ZenRoute/discussions)
+   - [GitHub Discussions](https://github.com/ZenRouter/ZenRouter/discussions)
    - Mô tả use case và lợi ích
 
 3. **Submit code:**
    ```bash
    # Fork repo
-   git clone https://github.com/YOUR_USERNAME/zenroute.git
-   cd zenroute
+   git clone https://github.com/YOUR_USERNAME/zenrouter.git
+   cd zenrouter
    
    # Create branch
    git checkout -b feature/your-feature
@@ -374,13 +374,13 @@ zenroute --version
 - Cập nhật tài liệu
 - Giữ commit nhỏ gọn và mô tả rõ ràng
 
-Xem [CONTRIBUTING.md](https://github.com/joyccn/ZenRoute/blob/main/CONTRIBUTING.md) để biết chi tiết.
+Xem [CONTRIBUTING.md](https://github.com/ZenRouter/ZenRouter/blob/main/CONTRIBUTING.md) để biết chi tiết.
 
 ---
 
 ## Cần trợ giúp thêm?
 
-- **Documentation:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
-- **GitHub:** [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **Documentation:** [GitHub Docs](https://github.com/ZenRouter/ZenRouter)
+- **GitHub:** [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues:** [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
 - **Troubleshooting:** [troubleshooting.md](troubleshooting.md)

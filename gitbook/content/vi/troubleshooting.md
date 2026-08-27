@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Các vấn đề và giải pháp phổ biến khi dùng ZenRoute.
+Các vấn đề và giải pháp phổ biến khi dùng ZenRouter.
 
 ---
 
@@ -78,7 +78,7 @@ Các vấn đề và giải pháp phổ biến khi dùng ZenRoute.
 **Giải pháp:**
 
 1. **Auto-refresh (mặc định):**
-   ZenRoute tự refresh tokens. Đợi 30 giây rồi thử lại.
+   ZenRouter tự refresh tokens. Đợi 30 giây rồi thử lại.
 
 2. **Kết nối lại thủ công:**
    ```
@@ -135,15 +135,15 @@ Các vấn đề và giải pháp phổ biến khi dùng ZenRoute.
 **Vấn đề:** Lỗi "ECONNREFUSED" hoặc "Cannot connect to localhost:20128".
 
 **Nguyên nhân:**
-- ZenRoute không chạy
+- ZenRouter không chạy
 - Port 20128 bị chặn
 - Firewall chặn kết nối
 
 **Giải pháp:**
 
-1. **Khởi động ZenRoute:**
+1. **Khởi động ZenRouter:**
    ```bash
-   zenroute
+   zenrouter
    ```
    Dashboard sẽ mở tại http://localhost:3000
 
@@ -175,15 +175,15 @@ Các vấn đề và giải pháp phổ biến khi dùng ZenRoute.
 
 **Nguyên nhân:**
 - Port 3000 đã được dùng
-- ZenRoute bị crash
+- ZenRouter bị crash
 - Vấn đề cache browser
 
 **Giải pháp:**
 
-1. **Kiểm tra ZenRoute có chạy không:**
+1. **Kiểm tra ZenRouter có chạy không:**
    ```bash
    # Check process
-   ps aux | grep zenroute
+   ps aux | grep zenrouter
    
    # Check port 3000
    lsof -i :3000
@@ -199,13 +199,13 @@ Các vấn đề và giải pháp phổ biến khi dùng ZenRoute.
    taskkill /PID <PID> /F
    ```
 
-3. **Khởi động lại ZenRoute:**
+3. **Khởi động lại ZenRouter:**
    ```bash
    # Stop
-   pkill -f zenroute
+   pkill -f zenrouter
    
    # Start
-   zenroute
+   zenrouter
    ```
 
 4. **Xóa cache browser:**
@@ -346,6 +346,6 @@ Các vấn đề và giải pháp phổ biến khi dùng ZenRoute.
 
 ## Cần trợ giúp thêm?
 
-- **GitHub Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
-- **Documentation:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
+- **GitHub Issues:** [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
+- **Documentation:** [GitHub Docs](https://github.com/ZenRouter/ZenRouter)
 - **FAQ:** [faq.md](faq.md)

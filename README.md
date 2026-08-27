@@ -1,6 +1,6 @@
 <div align="center">
 
-# ZenRoute
+# ZenRouter
 
 **Serene AI Gateway & Intelligent Routing Engine**
 
@@ -8,10 +8,9 @@
 
 <br/>
 
-[![npm version](https://img.shields.io/npm/v/zenroute.svg?color=4B72A4&label=npm)](https://www.npmjs.com/package/zenroute)
-[![npm downloads](https://img.shields.io/npm/dm/zenroute.svg?color=4B72A4&label=downloads)](https://www.npmjs.com/package/zenroute)
-[![Docker Pulls](https://img.shields.io/docker/pulls/joyccn/ZenRoute.svg?color=4B72A4&label=docker%20pulls)](https://hub.docker.com/r/joyccn/ZenRoute)
-[![GitHub stars](https://img.shields.io/github/stars/joyccn/ZenRoute?style=social)](https://github.com/joyccn/ZenRoute)
+[![npm version](https://img.shields.io/npm/v/zenrouter.svg?color=4B72A4&label=npm)](https://www.npmjs.com/package/zenrouter)
+[![npm downloads](https://img.shields.io/npm/dm/zenrouter.svg?color=4B72A4&label=downloads)](https://www.npmjs.com/package/zenrouter)
+[![GitHub stars](https://img.shields.io/github/stars/ZenRouter/ZenRouter?style=social)](https://github.com/ZenRouter/ZenRouter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/Node.js-%3E%3D18-green)](https://nodejs.org)
 [![Bun](https://img.shields.io/badge/Bun-%3E%3D1.1-black)](https://bun.sh)
@@ -27,7 +26,7 @@
   </tr>
   <tr>
     <td align="right"><b>Learn</b></td>
-    <td align="center"><a href="#why-zenroute">Why ZenRoute</a></td>
+    <td align="center"><a href="#why-zenrouter">Why ZenRouter</a></td>
     <td align="center"><a href="#architecture--engineering-highlights">Architecture</a></td>
     <td align="center"><a href="#3-layer-resilience">Resilience</a></td>
   </tr>
@@ -51,10 +50,10 @@
 
 ### ⚡ One-Line Automated Install (Recommended)
 
-Install ZenRoute instantly via the official install script:
+Install ZenRouter instantly via the official install script:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/joyccn/ZenRoute/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ZenRouter/ZenRouter/master/install.sh | bash
 ```
 
 ---
@@ -63,10 +62,10 @@ curl -fsSL https://raw.githubusercontent.com/joyccn/ZenRoute/master/install.sh |
 
 ```bash
 # Install globally
-npm install -g zenroute
+npm install -g zenrouter
 
 # Start the gateway
-zenroute
+zenrouter
 ```
 
 The gateway dashboard will open automatically at **`http://localhost:20128/dashboard`** with the API available at **`http://localhost:20128/v1`**.
@@ -77,32 +76,32 @@ The gateway dashboard will open automatically at **`http://localhost:20128/dashb
 
 ```bash
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 20128:20128 \
-  -v "$HOME/.zenroute:/app/data" \
+  -v "$HOME/.zenrouter:/app/data" \
   -e DATA_DIR=/app/data \
   --restart unless-stopped \
-  joyccn/zenroute:latest
+  zenrouter/zenrouter:latest
 ```
 
 Or with `docker-compose.yml`:
 
 ```yaml
 services:
-  zenroute:
-    image: joyccn/zenroute:latest
-    container_name: zenroute
+  zenrouter:
+    image: zenrouter/zenrouter:latest
+    container_name: zenrouter
     restart: unless-stopped
     ports:
       - "20128:20128"
     volumes:
-      - zenroute-data:/app/data
+      - zenrouter-data:/app/data
     environment:
       DATA_DIR: /app/data
       PORT: "20128"
 
 volumes:
-  zenroute-data:
+  zenrouter-data:
 ```
 
 ---
@@ -111,8 +110,8 @@ volumes:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/joyccn/ZenRoute.git zenroute
-cd zenroute
+git clone https://github.com/ZenRouter/ZenRouter.git zenrouter
+cd zenrouter
 
 # 2. Setup configuration
 cp .env.example .env
@@ -132,7 +131,7 @@ bun run dev:bun
 
 ## Zero-Config Usage
 
-ZenRoute works out-of-the-box. Free providers (such as OpenCode Free and Kiro) can be used immediately without requiring external API keys:
+ZenRouter works out-of-the-box. Free providers (such as OpenCode Free and Kiro) can be used immediately without requiring external API keys:
 
 ```bash
 # Test direct completion via OpenAI-compatible endpoint
@@ -158,7 +157,7 @@ curl http://localhost:20128/v1/chat/completions \
                                │ OpenAI/Anthropic Wire Format
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    ZenRoute Smart Gateway                   │
+│                    ZenRouter Smart Gateway                  │
 │                                                             │
 │  ├─ Hardened Loopback Auth (x-zen-peer-token verification)  │
 │  ├─ Ported RTK Engine (20-60% context compression)          │
@@ -186,7 +185,7 @@ curl http://localhost:20128/v1/chat/completions \
 - Custom HTTP server generates an ephemeral 48-character hex peer token (`x-zen-peer-token`) at boot.
 - Derives client IP directly from the TCP socket to prevent `X-Forwarded-For` spoofing on loopback endpoints.
 - Built-in SSRF protection with asynchronous DNS-pinning and private CIDR blocklist filters.
-- Local SQLite database stored securely at `~/.zenroute/db/data.sqlite`.
+- Local SQLite database stored securely at `~/.zenrouter/db/data.sqlite`.
 
 ### 4. Zero-Leak SSE Streaming Engine
 - Decoupled SSE/NDJSON streaming parser with duplicate token-delta prevention.
@@ -196,7 +195,7 @@ curl http://localhost:20128/v1/chat/completions \
 
 ## 3-Layer Resilience
 
-ZenRoute employs three distinct self-healing layers to ensure continuous availability:
+ZenRouter employs three distinct self-healing layers to ensure continuous availability:
 
 ```
 [Request Failed]
@@ -212,14 +211,14 @@ ZenRoute employs three distinct self-healing layers to ensure continuous availab
 ```
 
 1. **Layer 1: Provider Circuit Breaker** — Automatically trips when a provider encounters repeated upstream 5xx errors or network timeouts, immediately failing over to the next candidate in the active combo.
-2. **Layer 2: Key & Account Cooldown** — When an account hits a 429 rate limit, ZenRoute places only that specific key into cooldown (honoring `Retry-After`) and routes subsequent traffic to sibling keys in the pool.
+2. **Layer 2: Key & Account Cooldown** — When an account hits a 429 rate limit, ZenRouter places only that specific key into cooldown (honoring `Retry-After`) and routes subsequent traffic to sibling keys in the pool.
 3. **Layer 3: Model-Level Lockout** — Isolates failures to specific model IDs without disabling entire provider credentials.
 
 ---
 
 ## Smart Combos & Routing Strategies
 
-A **Combo** is a prioritized group of models that ZenRoute routes across automatically. If a provider reaches quota or errors, ZenRoute seamlessly advances to the next healthy model.
+A **Combo** is a prioritized group of models that ZenRouter routes across automatically. If a provider reaches quota or errors, ZenRouter seamlessly advances to the next healthy model.
 
 | Strategy | Description | Best For |
 | :--- | :--- | :--- |
@@ -234,13 +233,13 @@ A **Combo** is a prioritized group of models that ZenRoute routes across automat
 
 ## CLI Tools & Coding Agents
 
-ZenRoute seamlessly connects to any tool that supports OpenAI-compatible or Anthropic-compatible APIs:
+ZenRouter seamlessly connects to any tool that supports OpenAI-compatible or Anthropic-compatible APIs:
 
 ### Claude Code
 
 ```bash
 export ANTHROPIC_BASE_URL="http://localhost:20128"
-export ANTHROPIC_API_KEY="sk-zenroute" # or your dashboard key
+export ANTHROPIC_API_KEY="sk-zenrouter" # or your dashboard key
 claude
 ```
 
@@ -248,28 +247,28 @@ claude
 
 Configure the API settings in your editor:
 - **Base URL / Endpoint:** `http://localhost:20128/v1`
-- **API Key:** `sk-zenroute` (or copy from Dashboard → Keys)
+- **API Key:** `sk-zenrouter` (or copy from Dashboard → Keys)
 - **Model:** `auto` (or provider-specific model IDs like `claude-3-7-sonnet`, `gpt-4o`, `deepseek-chat`)
 
 ### Codex CLI
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:20128/v1"
-export OPENAI_API_KEY="sk-zenroute"
+export OPENAI_API_KEY="sk-zenrouter"
 codex
 ```
 
 ### Aider
 
 ```bash
-aider --openai-api-base http://localhost:20128/v1 --openai-api-key sk-zenroute --model openai/gpt-4o
+aider --openai-api-base http://localhost:20128/v1 --openai-api-key sk-zenrouter --model openai/gpt-4o
 ```
 
 ---
 
 ## Supported Providers & Models
 
-ZenRoute connects to over 40 AI providers and hundreds of models across multiple categories:
+ZenRouter connects to over 40 AI providers and hundreds of models across multiple categories:
 
 - **Frontier Models:** Anthropic Claude (Opus / Sonnet / Haiku), OpenAI (GPT-4o, o1, o3-mini, GPT-5), Google Gemini (2.5 Pro / Flash).
 - **Open Weights & Fast Inference:** DeepSeek (V3, R1), Groq, Together AI, Mistral AI, Cerebras, Sambanova, Fireworks.
@@ -280,23 +279,23 @@ ZenRoute connects to over 40 AI providers and hundreds of models across multiple
 
 ## Agent Skills
 
-ZenRoute provides standard AI Agent Skills ready to index and consume directly from your agentic workflows:
+ZenRouter provides standard AI Agent Skills ready to index and consume directly from your agentic workflows:
 
 ```bash
-export ZENROUTE_URL="http://localhost:20128"
-export ZENROUTE_KEY="sk-zenroute"
+export ZENROUTER_URL="http://localhost:20128"
+export ZENROUTER_KEY="sk-zenrouter"
 ```
 
 | Skill | Endpoint | Description |
 | :--- | :--- | :--- |
-| `zenroute` | `/` | Entry skill with setup guide and capability catalog index. |
-| `zenroute-chat` | `/v1/chat/completions` | Chat and code generation with streaming SSE. |
-| `zenroute-image` | `/v1/images/generations` | Image generation across DALL-E, FLUX, Imagen, etc. |
-| `zenroute-tts` | `/v1/audio/speech` | Text-to-speech with multi-provider voice options. |
-| `zenroute-stt` | `/v1/audio/transcriptions` | Audio transcription via Whisper and Groq STT. |
-| `zenroute-embeddings` | `/v1/embeddings` | Vector generation for semantic search and RAG. |
-| `zenroute-web-search` | `/v1/search` | Web search aggregation (Tavily, Exa, Brave, SearXNG). |
-| `zenroute-web-fetch` | `/v1/web/fetch` | Web content scraping to markdown and clean HTML. |
+| `zenrouter` | `/` | Entry skill with setup guide and capability catalog index. |
+| `zenrouter-chat` | `/v1/chat/completions` | Chat and code generation with streaming SSE. |
+| `zenrouter-image` | `/v1/images/generations` | Image generation across DALL-E, FLUX, Imagen, etc. |
+| `zenrouter-tts` | `/v1/audio/speech` | Text-to-speech with multi-provider voice options. |
+| `zenrouter-stt` | `/v1/audio/transcriptions` | Audio transcription via Whisper and Groq STT. |
+| `zenrouter-embeddings` | `/v1/embeddings` | Vector generation for semantic search and RAG. |
+| `zenrouter-web-search` | `/v1/search` | Web search aggregation (Tavily, Exa, Brave, SearXNG). |
+| `zenrouter-web-fetch` | `/v1/web/fetch` | Web content scraping to markdown and clean HTML. |
 
 Skill specifications are located in [`skills/`](skills/).
 
@@ -304,7 +303,7 @@ Skill specifications are located in [`skills/`](skills/).
 
 ## Testing & Verification
 
-ZenRoute includes a test suite covering unit, integration, and security scenarios:
+ZenRouter includes a test suite covering unit, integration, and security scenarios:
 
 ```bash
 # Run the complete test suite
@@ -323,12 +322,12 @@ Key environment variables configurable via `.env`:
 | Variable | Default | Purpose |
 | :--- | :--- | :--- |
 | `PORT` | `20128` | HTTP gateway port. |
-| `DATA_DIR` | `~/.zenroute` | Database and persistent configuration directory. |
+| `DATA_DIR` | `~/.zenrouter` | Database and persistent configuration directory. |
 | `JWT_SECRET` | *(auto-generated)* | Signing secret for web dashboard session cookies. |
 | `INITIAL_PASSWORD` | *(prompted on first boot)* | Initial dashboard admin password. |
 | `REQUIRE_API_KEY` | `false` | When true, requires API keys for all remote `/v1` requests. |
 | `HTTP_PROXY` / `ALL_PROXY` | `""` | Optional outbound proxy for upstream API requests. |
-| `ZENROUTE_MAX_OLD_SPACE_SIZE` | `6144` | V8 memory heap size limit in megabytes. |
+| `ZENROUTER_MAX_OLD_SPACE_SIZE` | `6144` | V8 memory heap size limit in megabytes. |
 
 ---
 

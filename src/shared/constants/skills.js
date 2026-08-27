@@ -1,7 +1,7 @@
 // Agent Skills metadata — single source of truth for /dashboard/skills page.
 // Each skill = 1 raw GitHub URL the user copies and pastes to any AI agent.
 
-const REPO = "joyccn/ZenRoute";
+const REPO = "ZenRouter/ZenRouter";
 const BRANCH = "master";
 const SKILL_PATH = "skills";
 
@@ -11,57 +11,57 @@ export const SKILLS_BLOB_BASE = `https://github.com/${REPO}/blob/${BRANCH}/${SKI
 
 export const SKILLS = [
   {
-    id: "zenroute",
-    name: "ZenRoute (Entry)",
+    id: "zenrouter",
+    name: "ZenRouter (Entry)",
     description: "Setup + index of all capabilities. Start here — covers base URL, auth, model discovery, and links to every capability skill.",
     endpoint: null,
     icon: "alt_route",
     isEntry: true,
   },
   {
-    id: "zenroute-chat",
+    id: "zenrouter-chat",
     name: "Chat",
     description: "Chat / code-gen via OpenAI or Anthropic format with streaming.",
     endpoint: "/v1/chat/completions",
     icon: "chat",
   },
   {
-    id: "zenroute-image",
+    id: "zenrouter-image",
     name: "Image Generation",
     description: "Text-to-image via DALL-E, Imagen, FLUX, MiniMax, SDWebUI…",
     endpoint: "/v1/images/generations",
     icon: "image",
   },
   {
-    id: "zenroute-tts",
+    id: "zenrouter-tts",
     name: "Text-to-Speech",
     description: "OpenAI / ElevenLabs / Edge / Google / Deepgram voices.",
     endpoint: "/v1/audio/speech",
     icon: "record_voice_over",
   },
   {
-    id: "zenroute-stt",
+    id: "zenrouter-stt",
     name: "Speech-to-Text",
     description: "Transcribe audio via OpenAI Whisper, Groq, Gemini, Deepgram, AssemblyAI…",
     endpoint: "/v1/audio/transcriptions",
     icon: "mic",
   },
   {
-    id: "zenroute-embeddings",
+    id: "zenrouter-embeddings",
     name: "Embeddings",
     description: "Vectors for RAG / semantic search via OpenAI, Gemini, Mistral…",
     endpoint: "/v1/embeddings",
     icon: "scatter_plot",
   },
   {
-    id: "zenroute-web-search",
+    id: "zenrouter-web-search",
     name: "Web Search",
     description: "Tavily / Exa / Brave / Serper / SearXNG / Google PSE / You.com.",
     endpoint: "/v1/search",
     icon: "search",
   },
   {
-    id: "zenroute-web-fetch",
+    id: "zenrouter-web-fetch",
     name: "Web Fetch",
     description: "URL → markdown / text / HTML via Firecrawl, Jina, Tavily, Exa.",
     endpoint: "/v1/web/fetch",

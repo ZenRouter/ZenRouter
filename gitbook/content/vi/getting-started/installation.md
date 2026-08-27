@@ -1,6 +1,6 @@
 # Cài đặt
 
-Hướng dẫn cài đặt chi tiết cho ZenRoute với mẹo troubleshooting.
+Hướng dẫn cài đặt chi tiết cho ZenRouter với mẹo troubleshooting.
 
 ---
 
@@ -31,37 +31,37 @@ npm --version
 
 ### Cách 1: Cài Global (Khuyên dùng)
 
-Cài ZenRoute toàn cục để dùng ở bất kỳ đâu:
+Cài ZenRouter toàn cục để dùng ở bất kỳ đâu:
 
 ```bash
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
-**Khởi động ZenRoute:**
+**Khởi động ZenRouter:**
 
 ```bash
-zenroute
+zenrouter
 ```
 
 **Lợi ích:**
 - ✅ Chạy từ mọi thư mục
-- ✅ Lệnh đơn giản: `zenroute`
-- ✅ Auto-update với `npm update -g zenroute`
+- ✅ Lệnh đơn giản: `zenrouter`
+- ✅ Auto-update với `npm update -g zenrouter`
 
 ### Cách 2: Cài Local
 
 Cài trong project cụ thể:
 
 ```bash
-mkdir my-zenroute
-cd my-zenroute
-npm install zenroute
+mkdir my-zenrouter
+cd my-zenrouter
+npm install zenrouter
 ```
 
-**Khởi động ZenRoute:**
+**Khởi động ZenRouter:**
 
 ```bash
-npx zenroute
+npx zenrouter
 ```
 
 **Lợi ích:**
@@ -74,8 +74,8 @@ npx zenroute
 Clone và build từ GitHub:
 
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install
 npm run build
 npm start
@@ -93,13 +93,13 @@ npm start
 ### Khởi động Server
 
 ```bash
-zenroute
+zenrouter
 ```
 
 **Điều gì xảy ra:**
 1. Server khởi động tại `http://localhost:20128`
 2. Dashboard tự động mở trong browser
-3. Data directory được tạo tại `~/.zenroute`
+3. Data directory được tạo tại `~/.zenrouter`
 4. API key được tạo tự động
 
 ### Đăng nhập Dashboard
@@ -193,7 +193,7 @@ export JWT_SECRET="your-secure-secret-change-this"
 export INITIAL_PASSWORD="your-password"
 
 # Storage
-export DATA_DIR="~/.zenroute"
+export DATA_DIR="~/.zenrouter"
 
 # Server
 export PORT="20128"
@@ -205,11 +205,11 @@ export ENABLE_REQUEST_LOGS="false"
 
 ### Data Directory
 
-**Vị trí mặc định:** `~/.zenroute`
+**Vị trí mặc định:** `~/.zenrouter`
 
 **Nội dung:**
 ```
-~/.zenroute/
+~/.zenrouter/
   ├── db.json           # Database (providers, combos, usage)
   ├── api-keys.json     # API keys
   └── logs/             # Request logs (if enabled)
@@ -219,7 +219,7 @@ export ENABLE_REQUEST_LOGS="false"
 
 ```bash
 export DATA_DIR="/custom/path"
-zenroute
+zenrouter
 ```
 
 ### Cấu hình Port
@@ -230,13 +230,13 @@ zenroute
 
 ```bash
 export PORT="3000"
-zenroute
+zenrouter
 ```
 
 **Hoặc dùng command line:**
 
 ```bash
-zenroute --port 3000
+zenrouter --port 3000
 ```
 
 ---
@@ -263,14 +263,14 @@ kill -9 <PID>
 **Giải pháp 2: Dùng port khác**
 
 ```bash
-zenroute --port 3000
+zenrouter --port 3000
 ```
 
 ### Permission Denied
 
 **Lỗi:**
 ```
-Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/zenroute'
+Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/zenrouter'
 ```
 
 **Giải pháp: Dùng sudo (không khuyến nghị) hoặc fix npm permissions**
@@ -283,7 +283,7 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 
 # Then install again
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
 ### Node.js Phiên bản quá cũ
@@ -345,23 +345,23 @@ Dashboard → Provider → Disconnect → Reconnect
 
 ### Sử dụng RAM cao
 
-**Vấn đề:** ZenRoute dùng quá nhiều RAM
+**Vấn đề:** ZenRouter dùng quá nhiều RAM
 
 **Giải pháp: Khởi động lại server**
 
 ```bash
 # Stop
-pkill -f zenroute
+pkill -f zenrouter
 
 # Start
-zenroute
+zenrouter
 ```
 
 **Hoặc dùng PM2 để auto-restart:**
 
 ```bash
 npm install -g pm2
-pm2 start zenroute --name zenroute
+pm2 start zenrouter --name zenrouter
 pm2 save
 ```
 
@@ -372,8 +372,8 @@ pm2 save
 ### Phát triển cục bộ
 
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 ```
 
 **Use case:** Code cá nhân, testing
@@ -382,7 +382,7 @@ zenroute
 
 ```bash
 # Install
-npm install -g zenroute
+npm install -g zenrouter
 
 # Configure
 export JWT_SECRET="your-secure-secret"
@@ -391,7 +391,7 @@ export NODE_ENV="production"
 
 # Start with PM2
 npm install -g pm2
-pm2 start zenroute --name zenroute
+pm2 start zenrouter --name zenrouter
 pm2 save
 pm2 startup
 ```
@@ -401,15 +401,15 @@ pm2 startup
 ### Docker
 
 ```bash
-docker pull zenroute/zenroute:latest
+docker pull zenrouter/zenrouter:latest
 
 docker run -d \
   -p 20128:20128 \
   -e JWT_SECRET="your-secure-secret" \
   -e INITIAL_PASSWORD="your-password" \
-  -v zenroute-data:/root/.zenroute \
-  --name zenroute \
-  zenroute/zenroute:latest
+  -v zenrouter-data:/root/.zenrouter \
+  --name zenrouter \
+  zenrouter/zenrouter:latest
 ```
 
 **Use case:** Containerized deployment, Kubernetes
@@ -444,13 +444,13 @@ server {
 ### Gỡ Global Installation
 
 ```bash
-npm uninstall -g zenroute
+npm uninstall -g zenrouter
 ```
 
 ### Xóa Data Directory
 
 ```bash
-rm -rf ~/.zenroute
+rm -rf ~/.zenrouter
 ```
 
 ### Xóa Cấu hình
@@ -458,7 +458,7 @@ rm -rf ~/.zenroute
 ```bash
 # Remove environment variables from shell config
 nano ~/.bashrc  # or ~/.zshrc
-# Delete zenroute-related exports
+# Delete zenrouter-related exports
 ```
 
 ---
@@ -473,6 +473,6 @@ nano ~/.bashrc  # or ~/.zshrc
 
 ## Cần trợ giúp?
 
-- **Website**: [GitHub](https://github.com/joyccn/ZenRoute)
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **Website**: [GitHub](https://github.com/ZenRouter/ZenRouter)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)

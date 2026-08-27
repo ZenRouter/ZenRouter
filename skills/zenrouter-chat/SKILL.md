@@ -1,23 +1,23 @@
 ---
-name: zenroute-chat
-description: Chat / code generation via ZenRoute using OpenAI /v1/chat/completions or Anthropic /v1/messages format with streaming + auto-fallback combos. Use when the user wants to ask an LLM, generate code, summarize text, or run prompts through ZenRoute.
+name: zenrouter-chat
+description: Chat / code generation via ZenRouter using OpenAI /v1/chat/completions or Anthropic /v1/messages format with streaming + auto-fallback combos. Use when the user wants to ask an LLM, generate code, summarize text, or run prompts through ZenRouter.
 ---
 
-# ZenRoute — Chat
+# ZenRouter — Chat
 
-Requires `ZENROUTE_URL` (and `ZENROUTE_KEY` if auth enabled). See https://raw.githubusercontent.com/joyccn/ZenRoute/refs/heads/master/skills/zenroute/SKILL.md for setup.
+Requires `ZENROUTER_URL` (and `ZENROUTER_KEY` if auth enabled). See https://raw.githubusercontent.com/ZenRouter/ZenRouter/refs/heads/master/skills/zenrouter/SKILL.md for setup.
 
 ## Endpoints
 
-- `POST $ZENROUTE_URL/v1/chat/completions` — OpenAI format
-- `POST $ZENROUTE_URL/v1/messages` — Anthropic format
+- `POST $ZENROUTER_URL/v1/chat/completions` — OpenAI format
+- `POST $ZENROUTER_URL/v1/messages` — Anthropic format
 
 ## Discover
 
 ```bash
-curl $ZENROUTE_URL/v1/models | jq '.data[].id'
+curl $ZENROUTER_URL/v1/models | jq '.data[].id'
 # Per-model metadata (contextWindow, params)
-curl "$ZENROUTE_URL/v1/models/info?id=openai/gpt-4o"
+curl "$ZENROUTER_URL/v1/models/info?id=openai/gpt-4o"
 ```
 
 Combos (e.g. `vip`, `mycodex`) auto-fallback through multiple providers.
@@ -25,8 +25,8 @@ Combos (e.g. `vip`, `mycodex`) auto-fallback through multiple providers.
 ## OpenAI format
 
 ```bash
-curl -X POST $ZENROUTE_URL/v1/chat/completions \
-  -H "Authorization: Bearer $ZENROUTE_KEY" \
+curl -X POST $ZENROUTER_URL/v1/chat/completions \
+  -H "Authorization: Bearer $ZENROUTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"openai/gpt-5","messages":[{"role":"user","content":"Hi"}],"stream":false}'
 ```
@@ -35,7 +35,7 @@ JS (OpenAI SDK):
 
 ```js
 import OpenAI from "openai";
-const client = new OpenAI({ baseURL: `${process.env.ZENROUTE_URL}/v1`, apiKey: process.env.ZENROUTE_KEY });
+const client = new OpenAI({ baseURL: `${process.env.ZENROUTER_URL}/v1`, apiKey: process.env.ZENROUTER_KEY });
 const res = await client.chat.completions.create({
   model: "openai/gpt-5",
   messages: [{ role: "user", content: "Hi" }],
@@ -47,8 +47,8 @@ for await (const chunk of res) process.stdout.write(chunk.choices[0]?.delta?.con
 ## Anthropic format
 
 ```bash
-curl -X POST $ZENROUTE_URL/v1/messages \
-  -H "Authorization: Bearer $ZENROUTE_KEY" \
+curl -X POST $ZENROUTER_URL/v1/messages \
+  -H "Authorization: Bearer $ZENROUTER_KEY" \
   -H "anthropic-version: 2023-06-01" \
   -H "Content-Type: application/json" \
   -d '{"model":"cc/claude-opus-4-7","max_tokens":1024,"messages":[{"role":"user","content":"Hi"}]}'

@@ -1,7 +1,7 @@
 import https from "https";
 import { APP_CONFIG } from "@/shared/constants/config.js";
 
-const NPM_PACKAGE_NAME = "zenroute";
+const NPM_PACKAGE_NAME = "zenrouter";
 const VERSION_CACHE_TTL_MS = 3600000; // cache npm latest lookup for 1h
 
 // Survive hot reload; one cache per process

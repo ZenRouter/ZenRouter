@@ -1,13 +1,13 @@
 # Continue VSCode 扩展集成
 
-将 ZenRoute 与 Continue 扩展集成,直接在 Visual Studio Code 中获得 AI 协助。
+将 ZenRouter 与 Continue 扩展集成,直接在 Visual Studio Code 中获得 AI 协助。
 
 ## 前置要求
 
 - 已安装 Visual Studio Code
 - 从 VSCode 市场安装了 Continue 扩展
-- 来自 [仪表盘](http://localhost:20128/dashboard) 的 ZenRoute API key
-- ZenRoute 正在运行(本地或云端)
+- 来自 [仪表盘](http://localhost:20128/dashboard) 的 ZenRouter API key
+- ZenRouter 正在运行(本地或云端)
 
 ## 配置步骤
 
@@ -18,7 +18,7 @@
 3. 输入 "Continue: Open Config" 并选择
 4. 这会打开 `~/.continue/config.json`
 
-### 2. 添加 ZenRoute 模型配置
+### 2. 添加 ZenRouter 模型配置
 
 将以下配置添加到 `config.json`:
 
@@ -27,7 +27,7 @@
 {
   "models": [
     {
-      "title": "ZenRoute - Claude Opus",
+      "title": "ZenRouter - Claude Opus",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key-from-dashboard",
@@ -42,28 +42,28 @@
 {
   "models": [
     {
-      "title": "ZenRoute - Claude Opus (Best)",
+      "title": "ZenRouter - Claude Opus (Best)",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - Claude Sonnet (Balanced)",
+      "title": "ZenRouter - Claude Sonnet (Balanced)",
       "provider": "openai",
       "model": "cc/claude-sonnet-4-20250514",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - DeepSeek Chat (Code)",
+      "title": "ZenRouter - DeepSeek Chat (Code)",
       "provider": "openai",
       "model": "cx/deepseek-chat",
       "apiKey": "your-api-key-from-dashboard",
       "apiBase": "http://localhost:20128/v1"
     },
     {
-      "title": "ZenRoute - Claude Haiku (Fast)",
+      "title": "ZenRouter - Claude Haiku (Fast)",
       "provider": "openai",
       "model": "cc/claude-haiku-4-20250514",
       "apiKey": "your-api-key-from-dashboard",
@@ -73,7 +73,7 @@
 }
 ```
 
-**云端 ZenRoute:**
+**云端 ZenRouter:**
 将 `apiBase` 替换为:
 ```json
 "apiBase": "http://localhost:20128/v1"
@@ -89,7 +89,7 @@
 
 1. 打开 Continue 侧边栏(点击左侧 Continue 图标)
 2. 点击顶部模型选择下拉菜单
-3. 选择你偏好的 ZenRoute 模型
+3. 选择你偏好的 ZenRouter 模型
 
 ## 可用模型
 
@@ -139,7 +139,7 @@
 {
   "models": [
     {
-      "title": "ZenRoute - Code Expert",
+      "title": "ZenRouter - Code Expert",
       "provider": "openai",
       "model": "cx/deepseek-chat",
       "apiKey": "your-api-key",
@@ -158,7 +158,7 @@
 {
   "models": [
     {
-      "title": "ZenRoute - Creative Writer",
+      "title": "ZenRouter - Creative Writer",
       "provider": "openai",
       "model": "cc/claude-opus-4-5-20251101",
       "apiKey": "your-api-key",
@@ -204,13 +204,13 @@
 ## 故障排除
 
 ### 模型无响应
-- 确认 ZenRoute 正在运行:`curl http://localhost:20128/health`
+- 确认 ZenRouter 正在运行:`curl http://localhost:20128/health`
 - 检查 config.json 中的 API key
 - 查看 VSCode 开发者控制台错误:`Help` → `Toggle Developer Tools`
 
 ### 选错模型
 - 点击 Continue 侧边栏的模型下拉菜单
-- 选择正确的 ZenRoute 模型
+- 选择正确的 ZenRouter 模型
 - 模型名必须完全匹配(大小写敏感)
 
 ### 配置未加载
@@ -221,7 +221,7 @@
 ### 性能缓慢
 - 切换到更快的模型(haiku、flash)
 - 在 contextProviders 中减少上下文大小
-- 检查到 ZenRoute 的网络延迟
+- 检查到 ZenRouter 的网络延迟
 
 ## 最佳实践
 

@@ -1,17 +1,17 @@
 # Cursor Integration
 
-Integrate ZenRoute with Cursor IDE to route your AI requests through ZenRoute's intelligent routing system.
+Integrate ZenRouter with Cursor IDE to route your AI requests through ZenRouter's intelligent routing system.
 
 ## Prerequisites
 
 - Cursor IDE installed
 - Cursor Pro account (required for custom API endpoints)
-- ZenRoute cloud endpoint configured
-- API key from ZenRoute dashboard
+- ZenRouter cloud endpoint configured
+- API key from ZenRouter dashboard
 
 ## ⚠️ Important Notes
 
-> **Cloud Endpoint Required**: Cursor routes requests through its own server and does not support localhost endpoints. You must use the ZenRoute cloud endpoint: `http://localhost:20128`
+> **Cloud Endpoint Required**: Cursor routes requests through its own server and does not support localhost endpoints. You must use the ZenRouter cloud endpoint: `http://localhost:20128`
 
 > **Cursor Pro Required**: This feature requires a Cursor Pro account to use custom API endpoints.
 
@@ -30,7 +30,7 @@ Integrate ZenRoute with Cursor IDE to route your AI requests through ZenRoute's 
 
 ### 3. Configure Base URL
 
-Set the base URL to ZenRoute cloud endpoint:
+Set the base URL to ZenRouter cloud endpoint:
 
 ```
 http://localhost:20128
@@ -43,22 +43,22 @@ http://localhost:20128
 
 ### 4. Add API Key
 
-1. In the **API Key** field, enter your ZenRoute API key
-2. You can find your API key in the ZenRoute dashboard under **Settings → API Keys**
+1. In the **API Key** field, enter your ZenRouter API key
+2. You can find your API key in the ZenRouter dashboard under **Settings → API Keys**
 3. Click **Save**
 
 ### 5. Add Custom Model
 
 1. Click **View All Models** button
 2. Click **Add Custom Model**
-3. Enter the model name from your ZenRoute configuration (e.g., `gpt-4`, `claude-opus-4-5`, etc.)
+3. Enter the model name from your ZenRouter configuration (e.g., `gpt-4`, `claude-opus-4-5`, etc.)
 4. Click **Add**
 
 ### 6. Select Model
 
 1. In the Cursor chat interface, click the model selector dropdown
 2. Choose your custom model from the list
-3. Start using ZenRoute with Cursor!
+3. Start using ZenRouter with Cursor!
 
 ## Configuration Example
 
@@ -67,13 +67,13 @@ Your Cursor settings should look like this:
 ```
 OpenAI API: ✓ Enabled
 Base URL: http://localhost:20128
-API Key: sk-zenroute-xxxxxxxxxxxxx
+API Key: sk-zenrouter-xxxxxxxxxxxxx
 Custom Models: gpt-4, claude-opus-4-5, gemini-2.0-flash
 ```
 
 ## Available Models
 
-You can use any model configured in your ZenRoute dashboard. Common examples:
+You can use any model configured in your ZenRouter dashboard. Common examples:
 
 | Model Name | Provider | Description |
 |------------|----------|-------------|
@@ -89,35 +89,35 @@ You can use any model configured in your ZenRoute dashboard. Common examples:
 
 1. Open Cursor chat (Cmd/Ctrl + L)
 2. Select your model from the dropdown
-3. Start chatting with AI through ZenRoute
+3. Start chatting with AI through ZenRouter
 
 ### Inline Code Generation
 
 1. Select code in your editor
 2. Press Cmd/Ctrl + K
 3. Enter your prompt
-4. Cursor will use ZenRoute to generate code
+4. Cursor will use ZenRouter to generate code
 
 ### Code Explanation
 
 1. Select code in your editor
 2. Press Cmd/Ctrl + L
 3. Ask "Explain this code"
-4. Get AI-powered explanations through ZenRoute
+4. Get AI-powered explanations through ZenRouter
 
 ## Troubleshooting
 
 ### "Invalid API Key" Error
 
-1. Verify your API key in ZenRoute dashboard
-2. Make sure you copied the entire key including the `sk-zenroute-` prefix
+1. Verify your API key in ZenRouter dashboard
+2. Make sure you copied the entire key including the `sk-zenrouter-` prefix
 3. Check that the API key has not expired
 4. Try regenerating a new API key
 
 ### "Model Not Found" Error
 
-1. Verify the model name matches exactly with your ZenRoute configuration
-2. Check that the provider connection is active in ZenRoute dashboard
+1. Verify the model name matches exactly with your ZenRouter configuration
+2. Check that the provider connection is active in ZenRouter dashboard
 3. Ensure the model is available in your connected providers
 4. Try using the full model name (e.g., `openai/gpt-4` instead of `gpt-4`)
 
@@ -125,25 +125,25 @@ You can use any model configured in your ZenRoute dashboard. Common examples:
 
 1. Verify you are using the cloud endpoint: `http://localhost:20128`
 2. Check your internet connection
-3. Ensure ZenRoute cloud service is operational
+3. Ensure ZenRouter cloud service is operational
 4. Try disabling VPN or proxy if enabled
 
 ### Localhost Not Working
 
-> **Remember**: Cursor does not support localhost endpoints. You must use the cloud endpoint `http://localhost:20128`. If you need to use a local ZenRoute instance, consider using a tunneling service like ngrok to expose your local endpoint.
+> **Remember**: Cursor does not support localhost endpoints. You must use the cloud endpoint `http://localhost:20128`. If you need to use a local ZenRouter instance, consider using a tunneling service like ngrok to expose your local endpoint.
 
 ## Cloud Endpoint Setup
 
-If you're running ZenRoute locally and want to use it with Cursor:
+If you're running ZenRouter locally and want to use it with Cursor:
 
-1. Enable cloud endpoint in ZenRoute settings
-2. Configure your cloud endpoint URL in ZenRoute dashboard
+1. Enable cloud endpoint in ZenRouter settings
+2. Configure your cloud endpoint URL in ZenRouter dashboard
 3. Use the cloud URL in Cursor settings
-4. Ensure your local ZenRoute instance is accessible from the internet
+4. Ensure your local ZenRouter instance is accessible from the internet
 
 ## Best Practices
 
-1. **Use Model Aliases**: Create short aliases for frequently used models in ZenRoute
-2. **Monitor Usage**: Check ZenRoute dashboard for usage statistics and costs
+1. **Use Model Aliases**: Create short aliases for frequently used models in ZenRouter
+2. **Monitor Usage**: Check ZenRouter dashboard for usage statistics and costs
 3. **Rotate API Keys**: Regularly rotate your API keys for security
 4. **Test Models**: Try different models to find the best one for your use case

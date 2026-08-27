@@ -49,13 +49,13 @@ export default function FlowAnimation() {
 
   return (
     <div className="mt-16 w-full max-w-4xl relative h-[360px] hidden md:flex items-center justify-center animate-[float_6s_ease-in-out_infinite]">
-      {/* ZenRoute Hub - Center */}
-      <div className="relative z-20 w-32 h-32 rounded-full bg-[#141b24] border-2 border-[#4B72A4] shadow-[0_0_40px_rgba(75,114,164,0.35)] flex flex-col items-center justify-center gap-1.5 group cursor-pointer hover:scale-105 transition-transform duration-500">
+      {/* ZenRouter Hub - Center */}
+      <div className="relative z-20 w-32 h-32 rounded-full bg-[#141414] border-2 border-white/15 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center gap-1.5 group cursor-pointer hover:scale-105 transition-transform duration-500">
         <div className="w-9 h-9 flex items-center justify-center">
-          <Image src="/icons/logo.svg" alt="ZenRoute Hub" width={32} height={32} className="w-full h-full object-contain" />
+          <Image src="/icons/logo.svg" alt="ZenRouter Hub" width={32} height={32} className="w-full h-full object-contain" />
         </div>
         <span className="text-xs font-bold text-white tracking-wider uppercase">
-          ZenRoute
+          ZenRouter
         </span>
         <div className="absolute inset-0 rounded-full border border-[#4B72A4]/40 animate-ping opacity-25"></div>
       </div>
@@ -80,7 +80,7 @@ export default function FlowAnimation() {
         ))}
       </div>
 
-      {/* SVG Lines from CLI to ZenRoute */}
+      {/* SVG Lines from CLI to ZenRouter */}
       <svg
         className="absolute inset-0 w-full h-full z-10 pointer-events-none stroke-blue-700/60"
         xmlns="http://www.w3.org/2000/svg"
@@ -115,7 +115,7 @@ export default function FlowAnimation() {
         ></path>
       </svg>
 
-      {/* SVG Lines from ZenRoute to Providers */}
+      {/* SVG Lines from ZenRouter to Providers */}
       <svg
         className="absolute inset-0 w-full h-full z-10 pointer-events-none"
         xmlns="http://www.w3.org/2000/svg"

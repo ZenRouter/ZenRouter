@@ -1,15 +1,15 @@
 <div align="center">
-  <img src="../images/zenroute.png?1" alt="ZenRoute Dashboard" width="800"/>
+  <img src="../images/zenrouter.png?1" alt="ZenRouter Dashboard" width="800"/>
 
-  # ZenRoute - Router AI Gratis
+  # ZenRouter - Router AI Gratis
 
   **Jangan berhenti ngoding. Otomatis dialihkan ke model AI gratis & murah dengan smart fallback.**
 
   **Hubungkan semua tool AI coding (Claude Code, Cursor, Antigravity, Copilot, Codex, Gemini, OpenCode, Cline, OpenClaw...) ke 40+ provider AI dan 100+ model.**
 
-  [![npm](https://img.shields.io/npm/v/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![Downloads](https://img.shields.io/npm/dm/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![License](https://img.shields.io/npm/l/zenroute.svg)](https://github.com/joyccn/ZenRoute/blob/main/LICENSE)
+  [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![License](https://img.shields.io/npm/l/zenrouter.svg)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
 
   [🚀 Mulai Cepat](#-mulai-cepat) • [💡 Fitur](#-fitur-utama) • [📖 Setup](#-panduan-setup)
 
@@ -18,7 +18,7 @@
 
 ---
 
-## 🤔 Kenapa ZenRoute?
+## 🤔 Kenapa ZenRouter?
 
 **Berhenti buang-buang uang dan terhambat limit:**
 
@@ -27,7 +27,7 @@
 - ❌ API mahal ($20–50/bulan per provider)
 - ❌ Harus gonta-ganti provider secara manual
 
-**ZenRoute menyelesaikan itu semua:**
+**ZenRouter menyelesaikan itu semua:**
 
 - ✅ **Maksimalkan langganan** - lacak kuota dan habiskan sebelum reset
 - ✅ **Fallback otomatis** - langganan → murah → gratis, tanpa downtime
@@ -46,7 +46,7 @@
        │ http://localhost:20128/v1
        ↓
 ┌─────────────────────────────────────────┐
-│         ZenRoute (Smart Router)          │
+│         ZenRouter (Smart Router)          │
 │  • Konversi format (OpenAI ↔ Claude)    │
 │  • Pelacakan kuota                      │
 │  • Refresh token otomatis               │
@@ -68,8 +68,8 @@ Hasil: ngoding tanpa berhenti, biaya minimum
 **1. Install secara global:**
 
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 ```
 
 🎉 Dashboard terbuka di `http://localhost:20128`
@@ -91,7 +91,7 @@ Konfigurasi Claude Code/Codex/Gemini CLI/OpenClaw/Cursor/Cline:
 
 **Alternatif: jalankan dari source (repo ini):**
 
-Paket repo ini bersifat privat (`zenroute-app`), jadi menjalankan dari source/Docker adalah jalur yang diharapkan untuk pengembangan lokal.
+Paket repo ini bersifat privat (`zenrouter-app`), jadi menjalankan dari source/Docker adalah jalur yang diharapkan untuk pengembangan lokal.
 
 ```bash
 cp .env.example .env
@@ -116,12 +116,12 @@ URL default:
 
 <div align="center">
 
-### 📺 Panduan Setup Lengkap - ZenRoute + Claude Code Gratis
+### 📺 Panduan Setup Lengkap - ZenRouter + Claude Code Gratis
 
-[![ZenRoute + Claude Code Setup](https://img.youtube.com/vi/raEyZPg5xE0/maxresdefault.jpg)](https://www.youtube.com/watch?v=raEyZPg5xE0)
+[![ZenRouter + Claude Code Setup](https://img.youtube.com/vi/raEyZPg5xE0/maxresdefault.jpg)](https://www.youtube.com/watch?v=raEyZPg5xE0)
 
 **🎬 Tonton tutorial langkah demi langkah:**
-- ✅ Install dan setup ZenRoute
+- ✅ Install dan setup ZenRouter
 - ✅ Konfigurasi Claude Sonnet 4.5 gratis
 - ✅ Integrasi dengan Claude Code
 - ✅ Demo live coding
@@ -136,7 +136,7 @@ URL default:
 
 ## 🛠️ Tool CLI yang Didukung
 
-ZenRoute bekerja mulus dengan semua tool AI coding utama:
+ZenRouter bekerja mulus dengan semua tool AI coding utama:
 
 <div align="center">
   <table>
@@ -387,7 +387,7 @@ Combo: "my-coding-stack"
 
 Konversi mulus antar format:
 - **OpenAI** ↔ **Claude** ↔ **Gemini** ↔ **OpenAI Responses**
-- Tool CLI mengirim dalam format OpenAI → ZenRoute mengonversi → provider menerima dalam format nativenya
+- Tool CLI mengirim dalam format OpenAI → ZenRouter mengonversi → provider menerima dalam format nativenya
 - Bekerja dengan semua tool yang mendukung custom OpenAI endpoint
 
 ### 👥 Dukungan Multi-akun
@@ -441,12 +441,12 @@ Konversi mulus antar format:
 > **💡 PENTING - tentang biaya di dashboard:**
 >
 > "Biaya" yang ditampilkan pada analitik penggunaan **hanya untuk pelacakan dan perbandingan**.
-> ZenRoute sendiri **tidak menagih apa pun**. Kamu hanya membayar langsung ke provider jika memakai layanan berbayar.
+> ZenRouter sendiri **tidak menagih apa pun**. Kamu hanya membayar langsung ke provider jika memakai layanan berbayar.
 >
 > **Contoh:** jika dashboard menampilkan "Total biaya $290" untuk pemakaian model iFlow,
 > itu adalah jumlah yang seharusnya kamu bayar bila memakai API berbayar secara langsung. Biaya sebenarnya = **$0** (iFlow gratis tanpa batas).
 >
-> Anggap saja ini "pelacak penghematan" yang menunjukkan berapa banyak yang kamu hemat lewat model gratis dan routing ZenRoute!
+> Anggap saja ini "pelacak penghematan" yang menunjukkan berapa banyak yang kamu hemat lewat model gratis dan routing ZenRouter!
 
 ### 🌐 Deploy di Mana Saja
 
@@ -478,15 +478,15 @@ Konversi mulus antar format:
 
 ---
 
-### 📊 Tentang Biaya dan Penagihan ZenRoute
+### 📊 Tentang Biaya dan Penagihan ZenRouter
 
-**Fakta soal penagihan ZenRoute:**
+**Fakta soal penagihan ZenRouter:**
 
-✅ **Software ZenRoute = gratis selamanya** (open source, tanpa tagihan)
+✅ **Software ZenRouter = gratis selamanya** (open source, tanpa tagihan)
 ✅ **"Biaya" di dashboard = tampilan/pelacakan saja** (bukan tagihan sungguhan)
 ✅ **Pembayaran langsung ke provider** (langganan atau biaya API)
 ✅ **Provider gratis tetap gratis** (iFlow, Kiro, Qwen = $0 unlimited)
-❌ **ZenRoute tidak mengirim invoice** atau menagih kartumu
+❌ **ZenRouter tidak mengirim invoice** atau menagih kartumu
 
 **Cara kerja tampilan biaya:**
 
@@ -507,9 +507,9 @@ Kenyataannya:
 
 **Aturan pembayaran:**
 - **Provider langganan** (Claude Code, Codex): bayar langsung di website masing-masing
-- **Provider murah** (GLM, MiniMax): bayar langsung, ZenRoute hanya melakukan routing
+- **Provider murah** (GLM, MiniMax): bayar langsung, ZenRouter hanya melakukan routing
 - **Provider gratis** (iFlow, Kiro, Qwen): benar-benar gratis selamanya, tanpa biaya tersembunyi
-- **ZenRoute**: tidak menagih apa pun
+- **ZenRouter**: tidak menagih apa pun
 
 ---
 
@@ -584,7 +584,7 @@ Cara akses: WhatsApp, Telegram, Slack, Discord, iMessage, Signal...
 <details>
 <summary><b>📊 Kenapa dashboard menampilkan biaya yang besar?</b></summary>
 
-Dashboard melacak pemakaian token dan menampilkan **estimasi biaya** seandainya kamu memakai API berbayar secara langsung. Ini **bukan tagihan nyata**, melainkan acuan untuk melihat berapa banyak yang kamu hemat dengan memakai model gratis atau langganan yang sudah ada lewat ZenRoute.
+Dashboard melacak pemakaian token dan menampilkan **estimasi biaya** seandainya kamu memakai API berbayar secara langsung. Ini **bukan tagihan nyata**, melainkan acuan untuk melihat berapa banyak yang kamu hemat dengan memakai model gratis atau langganan yang sudah ada lewat ZenRouter.
 
 **Contoh:**
 - **Tampilan dashboard:** "Total biaya $290"
@@ -597,16 +597,16 @@ Tampilan biaya adalah "pelacak penghematan" untuk memahami pola pemakaian dan pe
 </details>
 
 <details>
-<summary><b>💳 Apakah ZenRoute menagih saya?</b></summary>
+<summary><b>💳 Apakah ZenRouter menagih saya?</b></summary>
 
-**Tidak.** ZenRoute adalah software open source gratis yang berjalan di komputermu sendiri. Tidak ada penagihan sama sekali.
+**Tidak.** ZenRouter adalah software open source gratis yang berjalan di komputermu sendiri. Tidak ada penagihan sama sekali.
 
 **Kamu membayar ke:**
 - ✅ **Provider langganan** (Claude Code $20/bulan, Codex $20-200/bulan) → bayar langsung di website masing-masing
-- ✅ **Provider murah** (GLM, MiniMax) → bayar langsung, ZenRoute hanya me-routing request
-- ❌ **ZenRoute sendiri** → **tidak menagih apa pun**
+- ✅ **Provider murah** (GLM, MiniMax) → bayar langsung, ZenRouter hanya me-routing request
+- ❌ **ZenRouter sendiri** → **tidak menagih apa pun**
 
-ZenRoute adalah proxy/router lokal. Ia tidak menyimpan informasi kartu kredit, tidak bisa mengirim invoice, dan tidak punya sistem penagihan. Sepenuhnya software gratis.
+ZenRouter adalah proxy/router lokal. Ia tidak menyimpan informasi kartu kredit, tidak bisa mengirim invoice, dan tidak punya sistem penagihan. Sepenuhnya software gratis.
 
 </details>
 
@@ -620,9 +620,9 @@ Ini adalah layanan gratis yang disediakan masing-masing perusahaan:
 - **Kiro**: model Claude gratis unlimited via AWS Builder ID
 - **Qwen**: akses gratis unlimited ke model Qwen via device authentication
 
-ZenRoute hanya me-routing request — tidak ada "jebakan" atau tagihan di kemudian hari. Layanannya memang gratis, dan ZenRoute membuatnya lebih mudah dipakai dengan dukungan fallback.
+ZenRouter hanya me-routing request — tidak ada "jebakan" atau tagihan di kemudian hari. Layanannya memang gratis, dan ZenRouter membuatnya lebih mudah dipakai dengan dukungan fallback.
 
-**Catatan:** beberapa provider langganan (Antigravity, GitHub Copilot) punya masa preview gratis dan bisa jadi berbayar nanti, tetapi hal itu diumumkan secara jelas oleh provider tersebut, bukan oleh ZenRoute.
+**Catatan:** beberapa provider langganan (Antigravity, GitHub Copilot) punya masa preview gratis dan bisa jadi berbayar nanti, tetapi hal itu diumumkan secara jelas oleh provider tersebut, bukan oleh ZenRouter.
 
 </details>
 
@@ -647,7 +647,7 @@ ZenRoute hanya me-routing request — tidak ada "jebakan" atau tagihan di kemudi
 
 3. **Gunakan provider langganan paling akhir:**
    - Hanya jika kamu memang sudah punya
-   - ZenRoute memaksimalkan nilainya lewat pelacakan kuota
+   - ZenRouter memaksimalkan nilainya lewat pelacakan kuota
 
 **Hasil:** sebagian besar pengguna bisa jalan dengan $0/bulan hanya dengan tier gratis!
 
@@ -656,20 +656,20 @@ ZenRoute hanya me-routing request — tidak ada "jebakan" atau tagihan di kemudi
 <details>
 <summary><b>📈 Bagaimana kalau pemakaian tiba-tiba melonjak?</b></summary>
 
-Smart fallback ZenRoute mencegah tagihan tak terduga:
+Smart fallback ZenRouter mencegah tagihan tak terduga:
 
 **Skenario:** kuota habis di tengah sprint coding
 
-**Tanpa ZenRoute:**
+**Tanpa ZenRouter:**
 - ❌ Kena rate limit → kerja berhenti → frustrasi
 - ❌ Atau: tagihan API mahal tanpa disengaja
 
-**Dengan ZenRoute:**
+**Dengan ZenRouter:**
 - ✅ Langganan mencapai batas → otomatis fallback ke tier murah
 - ✅ Tier murah jadi mahal → otomatis fallback ke tier gratis
 - ✅ Ngoding tidak berhenti → biaya tetap terprediksi
 
-**Kamu yang pegang kendali:** atur batas pengeluaran per provider di dashboard, dan ZenRoute akan mematuhinya.
+**Kamu yang pegang kendali:** atur batas pengeluaran per provider di dashboard, dan ZenRouter akan mematuhinya.
 
 </details>
 
@@ -693,7 +693,7 @@ Model:
   cc/claude-haiku-4-5-20251001
 ```
 
-**Tips pro:** pakai Opus untuk tugas kompleks, Sonnet kalau mengutamakan kecepatan. ZenRoute melacak kuota per model!
+**Tips pro:** pakai Opus untuk tugas kompleks, Sonnet kalau mengutamakan kecepatan. ZenRouter melacak kuota per model!
 
 ### OpenAI Codex (Plus/Pro)
 
@@ -871,12 +871,12 @@ Biaya bulanan: $0
 
 ```bash
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 20128:20128 \
-  -v zenroute-data:/app/data \
+  -v zenrouter-data:/app/data \
   -e PORT=20128 \
   -e BASE_URL=http://localhost:20128 \
-  ghcr.io/joyccn/ZenRoute:latest
+  ghcr.io/ZenRouter/ZenRouter:latest
 ```
 
 Dashboard: `http://localhost:20128/dashboard`
@@ -887,8 +887,8 @@ Dashboard: `http://localhost:20128/dashboard`
 <summary><b>VPS / Cloud</b></summary>
 
 ```bash
-npm install -g zenroute
-PORT=20128 HOSTNAME=0.0.0.0 BASE_URL=https://your-domain.com zenroute
+npm install -g zenrouter
+PORT=20128 HOSTNAME=0.0.0.0 BASE_URL=https://your-domain.com zenrouter
 ```
 
 Disarankan menaruhnya di belakang reverse proxy (Nginx/Caddy) dengan HTTPS, dan membatasi akses hanya untuk dirimu sendiri.
@@ -938,14 +938,14 @@ Kontribusi sangat diterima!
 
 ## 📄 Lisensi
 
-MIT License — lihat [LICENSE](https://github.com/joyccn/ZenRoute/blob/main/LICENSE) untuk detailnya.
+MIT License — lihat [LICENSE](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE) untuk detailnya.
 
 ---
 
 <div align="center">
 
-**Kalau ZenRoute membantumu, kasih ⭐ di [GitHub](https://github.com/joyccn/ZenRoute)!**
+**Kalau ZenRouter membantumu, kasih ⭐ di [GitHub](https://github.com/ZenRouter/ZenRouter)!**
 
-[📦 npm](https://www.npmjs.com/package/zenroute) • [🐛 Laporkan Bug](https://github.com/joyccn/ZenRoute/issues)
+[📦 npm](https://www.npmjs.com/package/zenrouter) • [🐛 Laporkan Bug](https://github.com/ZenRouter/ZenRouter/issues)
 
 </div>

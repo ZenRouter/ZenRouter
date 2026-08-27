@@ -221,7 +221,7 @@ export function buildKimiHeaders(deviceId) {
     : `kimi-${Date.now()}`;
 
   return {
-    "X-Msh-Platform": "zenroute",
+    "X-Msh-Platform": "zenrouter",
     "X-Msh-Version": getAppPackageVersion(),
     "X-Msh-Device-Name": deviceName,
     "X-Msh-Device-Model": deviceModel,

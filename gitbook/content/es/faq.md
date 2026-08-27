@@ -1,12 +1,12 @@
 # Preguntas frecuentes
 
-Preguntas comunes sobre ZenRoute.
+Preguntas comunes sobre ZenRouter.
 
 ---
 
-## ¿Qué es ZenRoute?
+## ¿Qué es ZenRouter?
 
-**ZenRoute es un router de modelos de IA que maximiza el valor de tu suscripción y minimiza los costos.**
+**ZenRouter es un router de modelos de IA que maximiza el valor de tu suscripción y minimiza los costos.**
 
 Enruta inteligentemente las solicitudes a través de múltiples proveedores de IA usando un sistema de fallback de 3 niveles:
 1. **Nivel de suscripción** - Maximiza las cuotas de Claude Code, Codex, Gemini que ya pagas
@@ -23,7 +23,7 @@ Enruta inteligentemente las solicitudes a través de múltiples proveedores de I
 
 ## ¿Cómo funciona el precio?
 
-**ZenRoute usa una estrategia de precios de 3 niveles:**
+**ZenRouter usa una estrategia de precios de 3 niveles:**
 
 ### Nivel 1: Suscripción (Maximiza primero)
 - **Claude Code** (Pro/Max): $20-100/mes - Cuota de 5 horas + semanal
@@ -50,9 +50,9 @@ Enruta inteligentemente las solicitudes a través de múltiples proveedores de I
 
 ---
 
-## ¿ZenRoute es gratis?
+## ¿ZenRouter es gratis?
 
-**Sí, ZenRoute en sí es 100% gratis y open source.**
+**Sí, ZenRouter en sí es 100% gratis y open source.**
 
 **Proveedores de nivel gratis disponibles:**
 - **Gemini CLI** - 180K completados/mes (cuenta Google GRATIS)
@@ -96,7 +96,7 @@ Consulta la [documentación de proveedores](providers/subscription.md) para más
 
 ## ¿Puedo usar múltiples proveedores?
 
-**¡Sí! Esta es la característica principal de ZenRoute.**
+**¡Sí! Esta es la característica principal de ZenRouter.**
 
 **Los combos te permiten encadenar múltiples proveedores con fallback automático:**
 
@@ -129,7 +129,7 @@ Consulta la [documentación de combos](features/combos.md) para ejemplos.
 
 ## ¿Cómo funciona el seguimiento de cuota?
 
-**ZenRoute rastrea la cuota en tiempo real para todos los proveedores:**
+**ZenRouter rastrea la cuota en tiempo real para todos los proveedores:**
 
 **Características:**
 - **Consumo de tokens** - Tokens de entrada/salida por solicitud
@@ -154,13 +154,13 @@ Consulta la [documentación de seguimiento de cuota](features/quota-tracking.md)
 
 ---
 
-## ¿ZenRoute funciona con Cursor?
+## ¿ZenRouter funciona con Cursor?
 
 **Sí, pero Cursor requiere un endpoint en la nube.**
 
 **Problema:** Cursor IDE no soporta endpoints en localhost.
 
-**Solución:** Usa el despliegue en la nube de ZenRoute:
+**Solución:** Usa el despliegue en la nube de ZenRouter:
 
 ```
 Cursor Settings → Models → Advanced:
@@ -172,8 +172,8 @@ Cursor Settings → Models → Advanced:
 **Alternativa:** Auto-hospéda en VPS con dominio público:
 ```bash
 # Despliega en VPS
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install && npm run build
 npm start
 
@@ -192,22 +192,22 @@ Consulta la [guía de integración de Cursor](integration/cursor.md) para detall
 
 ---
 
-## ¿Puedo auto-hospedar ZenRoute?
+## ¿Puedo auto-hospedar ZenRouter?
 
-**¡Sí! ZenRoute soporta múltiples opciones de despliegue:**
+**¡Sí! ZenRouter soporta múltiples opciones de despliegue:**
 
 ### Localhost (Por defecto)
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 → Dashboard: http://localhost:3000
 → API: http://localhost:20128/v1
 ```
 
 ### VPS/Cloud
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install && npm run build
 
 export JWT_SECRET="your-secure-secret"
@@ -219,23 +219,23 @@ npm start
 
 ### Docker
 ```bash
-docker build -t zenroute .
+docker build -t zenrouter .
 docker run -d \
   -p 3000:3000 \
   -e JWT_SECRET="your-secret" \
-  -v zenroute-data:/app/data \
-  zenroute
+  -v zenrouter-data:/app/data \
+  zenrouter
 ```
 
 ### Cloudflare Workers
 ```bash
-cd zenroute/app
+cd zenrouter/app
 npm run deploy:cloudflare
 ```
 
 **Variables de entorno:**
 - `JWT_SECRET` - **¡DEBE cambiarse en producción!**
-- `DATA_DIR` - Ruta de almacenamiento de la base de datos (por defecto: `~/.zenroute`)
+- `DATA_DIR` - Ruta de almacenamiento de la base de datos (por defecto: `~/.zenrouter`)
 - `INITIAL_PASSWORD` - Login del dashboard (por defecto: `12345678`)
 - `NODE_ENV` - Establece en `production` para desplegar
 
@@ -245,11 +245,11 @@ Consulta la [guía de despliegue](getting-started/installation.md#deployment) pa
 
 ## ¿Mis datos están seguros?
 
-**Sí, ZenRoute prioriza la seguridad y privacidad:**
+**Sí, ZenRouter prioriza la seguridad y privacidad:**
 
 **Almacenamiento local:**
-- Todos los datos se almacenan localmente en `~/.zenroute` (o `DATA_DIR` personalizado)
-- No se envían datos a los servidores de ZenRoute
+- Todos los datos se almacenan localmente en `~/.zenrouter` (o `DATA_DIR` personalizado)
+- No se envían datos a los servidores de ZenRouter
 - Tokens OAuth cifrados con JWT
 
 **Sin telemetría:**
@@ -268,31 +268,31 @@ Consulta la [guía de despliegue](getting-started/installation.md#deployment) pa
 - Habilita HTTPS para despliegues en la nube
 - Rota las API keys regularmente
 
-**Lo que ZenRoute almacena:**
+**Lo que ZenRouter almacena:**
 - Tokens OAuth de proveedores (cifrados)
 - API keys (cifradas)
 - Estadísticas de uso (solo locales)
 - Configuraciones de combos
 
-**Lo que ZenRoute NO almacena:**
+**Lo que ZenRouter NO almacena:**
 - Tus prompts o respuestas
 - El código que generas
 - Información personal
 
 ---
 
-## ¿Cómo actualizo ZenRoute?
+## ¿Cómo actualizo ZenRouter?
 
 **Los métodos de actualización dependen del tipo de instalación:**
 
 ### Instalación global NPM
 ```bash
-npm update -g zenroute
+npm update -g zenrouter
 ```
 
 ### Instalación local
 ```bash
-cd zenroute/app
+cd zenrouter/app
 git pull origin main
 npm install
 npm run build
@@ -301,22 +301,22 @@ npm start
 
 ### Docker
 ```bash
-docker pull zenroute:latest
-docker stop zenroute
-docker rm zenroute
+docker pull zenrouter:latest
+docker stop zenrouter
+docker rm zenrouter
 docker run -d \
   -p 3000:3000 \
-  -v zenroute-data:/app/data \
-  zenroute:latest
+  -v zenrouter-data:/app/data \
+  zenrouter:latest
 ```
 
 **Verificar versión:**
 ```bash
-zenroute --version
+zenrouter --version
 ```
 
 **Cambios disruptivos:**
-- Respalda `~/.zenroute` antes de actualizaciones mayores
+- Respalda `~/.zenrouter` antes de actualizaciones mayores
 - Revisa las guías de migración para versiones mayores
 
 ---
@@ -328,18 +328,18 @@ zenroute --version
 ### Formas de contribuir:
 
 1. **Reportar bugs:**
-   - [GitHub Issues](https://github.com/joyccn/ZenRoute/issues)
+   - [GitHub Issues](https://github.com/ZenRouter/ZenRouter/issues)
    - Incluye logs de error, pasos para reproducir
 
 2. **Solicitar características:**
-   - [GitHub Discussions](https://github.com/joyccn/ZenRoute/discussions)
+   - [GitHub Discussions](https://github.com/ZenRouter/ZenRouter/discussions)
    - Describe el caso de uso y los beneficios
 
 3. **Enviar código:**
    ```bash
    # Fork del repo
-   git clone https://github.com/YOUR_USERNAME/zenroute.git
-   cd zenroute
+   git clone https://github.com/YOUR_USERNAME/zenrouter.git
+   cd zenrouter
    
    # Crea una rama
    git checkout -b feature/your-feature
@@ -374,13 +374,13 @@ zenroute --version
 - Actualiza la documentación
 - Mantén los commits atómicos y descriptivos
 
-Consulta [CONTRIBUTING.md](https://github.com/joyccn/ZenRoute/blob/main/CONTRIBUTING.md) para detalles.
+Consulta [CONTRIBUTING.md](https://github.com/ZenRouter/ZenRouter/blob/main/CONTRIBUTING.md) para detalles.
 
 ---
 
 ## ¿Necesitas más ayuda?
 
-- **Documentación:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
-- **GitHub:** [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **Documentación:** [GitHub Docs](https://github.com/ZenRouter/ZenRouter)
+- **GitHub:** [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues:** [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
 - **Troubleshooting:** [troubleshooting.md](troubleshooting.md)

@@ -1,7 +1,7 @@
 export default function manifest() {
   return {
-    name: 'ZenRoute - Serene AI Gateway & Intelligent Routing Engine',
-    short_name: 'ZenRoute',
+    name: 'ZenRouter - Serene AI Gateway & Intelligent Routing Engine',
+    short_name: 'ZenRouter',
     description: 'Serene AI Gateway & Intelligent Routing Engine. Cultivate, prune, and route all your AI models from a single unified gateway.',
     start_url: '/',
     display: 'standalone',

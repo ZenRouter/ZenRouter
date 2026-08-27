@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const APP_NAME = "zenroute";
+const APP_NAME = "zenrouter";
 
 function defaultDir() {
   if (process.platform === "win32") {

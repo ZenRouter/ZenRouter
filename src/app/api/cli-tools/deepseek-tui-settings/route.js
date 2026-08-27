@@ -9,7 +9,7 @@ import os from "os";
 
 const execAsync = promisify(exec);
 
-const PROVIDER_NAME = "zenroute";
+const PROVIDER_NAME = "zenrouter";
 
 const getDeepSeekDir = () => path.join(os.homedir(), ".deepseek");
 const getDeepSeekConfigPath = () => path.join(getDeepSeekDir(), "config.toml");
@@ -51,8 +51,8 @@ const parseToml = (content) => {
     return result;
 };
 
-// Build TOML config for ZenRoute (openai provider mode)
-const buildZenRouteConfig = (baseUrl, apiKey, model) => {
+// Build TOML config for ZenRouter (openai provider mode)
+const buildZenRouterConfig = (baseUrl, apiKey, model) => {
     const normalizedBaseUrl = baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
     return `provider = "openai"
 
@@ -92,8 +92,8 @@ const readConfigToml = async () => {
     }
 };
 
-// Detect ZenRoute by checking if provider is "openai" and base_url points to localhost/127.0.0.1
-const hasZenRouteConfig = (config) => {
+// Detect ZenRouter by checking if provider is "openai" and base_url points to localhost/127.0.0.1
+const hasZenRouterConfig = (config) => {
     if (!config) return false;
     const provider = config.provider;
     if (provider !== "openai") return false;
@@ -113,7 +113,7 @@ export async function GET() {
         return NextResponse.json({
             installed: true,
             settings: config,
-            hasZenRoute: hasZenRouteConfig(config),
+            hasZenRouter: hasZenRouterConfig(config),
             configPath: getDeepSeekConfigPath(),
         });
     } catch (error) {
@@ -132,7 +132,7 @@ export async function POST(request) {
         const dir = getDeepSeekDir();
         await fs.mkdir(dir, { recursive: true });
 
-        const newConfig = buildZenRouteConfig(baseUrl, apiKey || "sk_zenroute", model);
+        const newConfig = buildZenRouterConfig(baseUrl, apiKey || "sk_zenrouter", model);
         await fs.writeFile(getDeepSeekConfigPath(), newConfig);
 
         return NextResponse.json({

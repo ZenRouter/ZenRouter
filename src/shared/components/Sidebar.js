@@ -18,15 +18,15 @@ const VISIBLE_MEDIA_KINDS = ["embedding", "image", "video", "tts", "stt"];
 const COMBINED_WEB_ITEM = { id: "web", label: "Web Fetch & Search", icon: "travel_explore", href: "/dashboard/media-providers/web" };
 
 const navItems = [
-  { href: "/dashboard/endpoint", label: "Endpoint & Key", icon: "api" },
-  { href: "/dashboard/providers", label: "Providers", icon: "dns" },
+  { href: "/dashboard/endpoint", label: "Endpoint & Key", icon: "vpn_key" },
+  { href: "/dashboard/providers", label: "Providers", icon: "deployed_code" },
   // { href: "/dashboard/basic-chat", label: "Basic Chat", icon: "chat" }, // Hidden
   { href: "/dashboard/combos", label: "Combo & Vision Adapter", icon: "layers" },
   { href: "/dashboard/usage", label: "Usage", icon: "bar_chart" },
-  { href: "/dashboard/quota", label: "Quota Tracker", icon: "data_usage" },
-  { href: "/dashboard/token-saver", label: "Token Saver", icon: "savings" },
+  { href: "/dashboard/quota", label: "Quota Tracker", icon: "donut_small" },
+  { href: "/dashboard/token-saver", label: "Token Saver", icon: "tune" },
   // { href: "/dashboard/pxpipe", label: "PXPIPE", icon: "image" },
-  { href: "/dashboard/cli-tools", label: "CLI Tools", icon: "terminal" },
+  { href: "/dashboard/cli-tools", label: "CLI Tools", icon: "code" },
 ];
 
 const debugItems = [
@@ -120,7 +120,7 @@ export default function Sidebar({ onClose }) {
         <div className="px-6 py-4 flex flex-col gap-2">
           <Link href="/dashboard" className="flex items-center gap-3 group">
             <div className="flex items-center justify-center size-9 rounded-[10px] bg-surface-2 border border-border p-1.5 shadow-[var(--shadow-warm)] group-hover:scale-105 transition-transform">
-              <Image src="/icons/logo.svg" alt="ZenRoute Logo" width={24} height={24} className="w-full h-full object-contain" />
+              <Image src="/icons/logo.svg" alt="ZenRouter Logo" width={24} height={24} className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
               <h1 className="text-lg font-semibold tracking-tight text-text-main">
@@ -165,19 +165,19 @@ export default function Sidebar({ onClose }) {
               className={cn(
                 "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                 isActive(item.href)
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/10 text-primary font-medium"
                   : "text-text-muted hover:bg-surface-2 hover:text-text-main"
               )}
             >
               <span
                 className={cn(
-                  "material-symbols-outlined text-[18px]",
-                  isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
+                  "material-symbols-outlined text-[19px] transition-colors",
+                  isActive(item.href) ? "text-primary" : "group-hover:text-primary"
                 )}
               >
                 {item.icon}
               </span>
-              <span className="text-[13px] font-medium">{item.label}</span>
+              <span className="text-[13px]">{item.label}</span>
             </Link>
           ))}
 
@@ -193,12 +193,12 @@ export default function Sidebar({ onClose }) {
               className={cn(
                 "w-full flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                 pathname.startsWith("/dashboard/media-providers")
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/10 text-primary font-medium"
                   : "text-text-muted hover:bg-surface-2 hover:text-text-main"
               )}
             >
-              <span className="material-symbols-outlined text-[18px]">perm_media</span>
-              <span className="text-[13px] font-medium flex-1 text-left">Media Providers</span>
+              <span className={cn("material-symbols-outlined text-[19px] transition-colors", pathname.startsWith("/dashboard/media-providers") ? "text-primary" : "group-hover:text-primary")}>perm_media</span>
+              <span className="text-[13px] flex-1 text-left">Media Providers</span>
               <span className="material-symbols-outlined text-[14px] transition-transform" style={{ transform: mediaOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
                 expand_more
               </span>
@@ -213,7 +213,7 @@ export default function Sidebar({ onClose }) {
                     className={cn(
                       "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
                       pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
-                        ? "bg-primary/10 text-primary"
+                        ? "bg-primary/10 text-primary font-medium"
                         : "text-text-muted hover:bg-surface-2 hover:text-text-main"
                     )}
                   >
@@ -228,7 +228,7 @@ export default function Sidebar({ onClose }) {
                   className={cn(
                     "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
                     pathname.startsWith(COMBINED_WEB_ITEM.href)
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-primary font-medium"
                       : "text-text-muted hover:bg-surface-2 hover:text-text-main"
                   )}
                 >
@@ -246,19 +246,19 @@ export default function Sidebar({ onClose }) {
                 className={cn(
                   "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                   isActive(item.href)
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-primary/10 text-primary font-medium"
                     : "text-text-muted hover:bg-surface-2 hover:text-text-main"
                 )}
               >
                 <span
                   className={cn(
-                    "material-symbols-outlined text-[18px]",
-                    isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
+                    "material-symbols-outlined text-[19px] transition-colors",
+                    isActive(item.href) ? "text-primary" : "group-hover:text-primary"
                   )}
                 >
                   {item.icon}
                 </span>
-                <span className="text-[13px] font-medium">{item.label}</span>
+                <span className="text-[13px]">{item.label}</span>
               </Link>
             ))}
 
@@ -273,19 +273,19 @@ export default function Sidebar({ onClose }) {
                   className={cn(
                     "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                     isActive(item.href)
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-primary font-medium"
                       : "text-text-muted hover:bg-surface-2 hover:text-text-main"
                   )}
                 >
                   <span
                     className={cn(
-                      "material-symbols-outlined text-[18px]",
-                      isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
+                      "material-symbols-outlined text-[19px] transition-colors",
+                      isActive(item.href) ? "text-primary" : "group-hover:text-primary"
                     )}
                   >
                     {item.icon}
                   </span>
-                  <span className="text-[13px] font-medium">{item.label}</span>
+                  <span className="text-[13px]">{item.label}</span>
                 </Link>
               ) : null;
             })}
@@ -297,19 +297,19 @@ export default function Sidebar({ onClose }) {
               className={cn(
                 "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                 isActive("/dashboard/profile")
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/10 text-primary font-medium"
                   : "text-text-muted hover:bg-surface-2 hover:text-text-main"
               )}
             >
               <span
                 className={cn(
-                  "material-symbols-outlined text-[18px]",
-                  isActive("/dashboard/profile") ? "fill-1" : "group-hover:text-primary transition-colors"
+                  "material-symbols-outlined text-[19px] transition-colors",
+                  isActive("/dashboard/profile") ? "text-primary" : "group-hover:text-primary"
                 )}
               >
                 settings
               </span>
-              <span className="text-[13px] font-medium">Settings</span>
+              <span className="text-[13px]">Settings</span>
             </Link>
           </div>
         </nav>
@@ -321,7 +321,7 @@ export default function Sidebar({ onClose }) {
         isOpen={showUpdateModal}
         onClose={() => setShowUpdateModal(false)}
         onConfirm={handleUpdate}
-        title="Update ZenRoute"
+        title="Update ZenRouter"
         message={`Show install command for v${updateInfo?.latestVersion || ""}? You can copy it and shutdown to install manually.`}
         confirmText="Show Command"
         cancelText="Cancel"
@@ -372,7 +372,7 @@ function ManualUpdatePanel({ latestVersion, installCmd, copied, onCopyAndShutdow
           <span className="material-symbols-outlined text-[24px]">content_copy</span>
         </div>
         <div>
-          <h2 className="text-lg font-semibold">Update ZenRoute{latestVersion ? ` to v${latestVersion}` : ""}</h2>
+          <h2 className="text-lg font-semibold">Update ZenRouter{latestVersion ? ` to v${latestVersion}` : ""}</h2>
           <p className="text-xs text-white/60">
             {isDisconnected
               ? "Server stopped. Paste the command into a terminal to install."
@@ -391,7 +391,7 @@ function ManualUpdatePanel({ latestVersion, installCmd, copied, onCopyAndShutdow
       <ol className="text-xs text-white/70 space-y-1 list-decimal list-inside mb-4">
         <li>Click <strong>Copy & Shutdown</strong> below.</li>
         <li>Paste the command into your terminal and press Enter.</li>
-        <li>Run <code className="px-1 rounded bg-white/10 text-green-400">zenroute</code> again after install.</li>
+        <li>Run <code className="px-1 rounded bg-white/10 text-green-400">zenrouter</code> again after install.</li>
       </ol>
 
       {isDisconnected ? (

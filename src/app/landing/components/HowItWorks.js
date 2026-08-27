@@ -5,7 +5,7 @@ export default function HowItWorks() {
     <section className="py-24 border-y border-[#232f42] bg-[#141b24]/40" id="how-it-works">
       <div className="max-w-7xl mx-auto px-6">
         <div className="mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">How ZenRoute Works</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">How ZenRouter Works</h2>
           <p className="text-gray-400 max-w-xl text-lg">
             Traffic flows serenely from your local editor or terminal through our intelligent routing and token-saving engine to the optimal provider.
           </p>
@@ -28,13 +28,13 @@ export default function HowItWorks() {
             </div>
           </div>
 
-          {/* Step 2: ZenRoute Hub */}
+          {/* Step 2: ZenRouter Hub */}
           <div className="flex flex-col gap-6 relative group md:items-center md:text-center">
             <div className="w-24 h-24 rounded-2xl bg-[#10151f] border-2 border-[#5D87B8] flex items-center justify-center shadow-[0_0_30px_rgba(93,135,184,0.25)] z-10 mx-auto">
               <span className="material-symbols-outlined text-4xl text-[#5D87B8] animate-pulse">alt_route</span>
             </div>
             <div>
-              <h3 className="text-xl font-bold mb-2 text-[#7b9fc8]">2. ZenRoute Engine</h3>
+              <h3 className="text-xl font-bold mb-2 text-[#7b9fc8]">2. ZenRouter Engine</h3>
               <p className="text-sm text-gray-400">
                 RTK token-killer cuts redundant noise (-40%), validates health, and switches routes seamlessly on quota exhaustion.
               </p>

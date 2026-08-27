@@ -101,13 +101,13 @@ export async function GET() {
     }
 
     const settings = await readSettings();
-    const hasZenRoute = !!(settings?.env?.ANTHROPIC_BASE_URL);
+    const hasZenRouter = !!(settings?.env?.ANTHROPIC_BASE_URL);
     const claudeJson = await readClaudeJson();
 
     return NextResponse.json({
       installed: true,
       settings: settings,
-      hasZenRoute: hasZenRoute,
+      hasZenRouter: hasZenRouter,
       exaMcpEnabled: !!claudeJson?.mcpServers?.exa,
       settingsPath: getClaudeSettingsPath(),
     });

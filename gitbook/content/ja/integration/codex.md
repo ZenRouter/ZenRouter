@@ -1,12 +1,12 @@
 # OpenAI Codex CLI統合
 
-ZenRouteをOpenAI Codex CLIと統合し、OpenAI APIリクエストをZenRouteのインテリジェントルーティングシステム経由でルーティングします。
+ZenRouterをOpenAI Codex CLIと統合し、OpenAI APIリクエストをZenRouterのインテリジェントルーティングシステム経由でルーティングします。
 
 ## 前提条件
 
 - OpenAI Codex CLIがインストール済み
-- ZenRouteがローカルで動作中、またはクラウドエンドポイントが設定済み
-- ZenRouteダッシュボードからのAPIキー
+- ZenRouterがローカルで動作中、またはクラウドエンドポイントが設定済み
+- ZenRouterダッシュボードからのAPIキー
 
 ## セットアップ
 
@@ -15,11 +15,11 @@ ZenRouteをOpenAI Codex CLIと統合し、OpenAI APIリクエストをZenRoute�
 シェル設定ファイル (`~/.bashrc`、`~/.zshrc`、または `~/.bash_profile`) で以下の環境変数を設定:
 
 ```bash
-# ZenRoute用Base URL
+# ZenRouter用Base URL
 export OPENAI_BASE_URL="http://localhost:20128/v1"
 
-# ZenRouteダッシュボードからのAPIキー
-export OPENAI_API_KEY="your-zenroute-api-key"
+# ZenRouterダッシュボードからのAPIキー
+export OPENAI_API_KEY="your-zenrouter-api-key"
 ```
 
 ### 2. シェル設定をリロード
@@ -39,7 +39,7 @@ echo $OPENAI_API_KEY
 
 ## 利用可能なモデル
 
-ZenRouteは以下のCodexモデルを提供します:
+ZenRouterは以下のCodexモデルを提供します:
 
 | モデルID | 説明 |
 |----------|-------------|
@@ -77,7 +77,7 @@ codex --model cx/gpt-5.1-codex-max "Explain what this code does: $(cat myfile.js
 ```json
 {
   "baseUrl": "http://localhost:20128/v1",
-  "apiKey": "your-zenroute-api-key",
+  "apiKey": "your-zenrouter-api-key",
   "defaultModel": "cx/gpt-5.2-codex"
 }
 ```
@@ -88,7 +88,7 @@ codex --model cx/gpt-5.1-codex-max "Explain what this code does: $(cat myfile.js
 
 認証エラーが発生した場合:
 
-1. ZenRouteダッシュボードでAPIキーが正しいか確認
+1. ZenRouterダッシュボードでAPIキーが正しいか確認
 2. `OPENAI_API_KEY` 環境変数が設定されているか確認
 3. APIキーが期限切れでないか確認
 
@@ -96,7 +96,7 @@ codex --model cx/gpt-5.1-codex-max "Explain what this code does: $(cat myfile.js
 
 接続エラーが発生した場合:
 
-1. ZenRouteが動作中か確認: `curl http://localhost:20128/health`
+1. ZenRouterが動作中か確認: `curl http://localhost:20128/health`
 2. 環境変数が正しく設定されているか確認
 3. ファイアウォールがポート20128をブロックしていないか確認
 
@@ -104,19 +104,19 @@ codex --model cx/gpt-5.1-codex-max "Explain what this code does: $(cat myfile.js
 
 「model not available」エラーが発生した場合:
 
-1. モデル名がZenRoute設定と一致するか確認
-2. ZenRouteダッシュボードでOpenAIプロバイダー接続がアクティブか確認
+1. モデル名がZenRouter設定と一致するか確認
+2. ZenRouterダッシュボードでOpenAIプロバイダー接続がアクティブか確認
 3. 接続されたプロバイダーでモデルが利用可能か確認
 
 ## クラウドエンドポイント
 
-localhostの代わりにZenRouteクラウドエンドポイントを使用するには:
+localhostの代わりにZenRouterクラウドエンドポイントを使用するには:
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:20128"
 ```
 
-ZenRouteクラウドダッシュボードでAPIキーが設定されていることを確認してください。
+ZenRouterクラウドダッシュボードでAPIキーが設定されていることを確認してください。
 
 ## 高度な設定
 

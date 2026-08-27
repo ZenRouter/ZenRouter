@@ -1,6 +1,6 @@
 # Bắt đầu
 
-Khởi chạy ZenRoute trong 5 phút và bắt đầu định tuyến các request AI một cách thông minh.
+Khởi chạy ZenRouter trong 5 phút và bắt đầu định tuyến các request AI một cách thông minh.
 
 ---
 
@@ -9,7 +9,7 @@ Khởi chạy ZenRoute trong 5 phút và bắt đầu định tuyến các reque
 ### 1. Cài đặt
 
 ```bash
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
 **Yêu cầu:** Node.js 20+ ([Chi tiết cài đặt](getting-started/installation.md))
@@ -17,7 +17,7 @@ npm install -g zenroute
 ### 2. Khởi chạy
 
 ```bash
-zenroute
+zenrouter
 ```
 
 🎉 **Dashboard tự động mở** tại `http://localhost:20128`
@@ -43,7 +43,7 @@ Dashboard → Providers → Connect [Provider]
 **Ví dụ: Claude Code**
 1. Click "Connect Claude Code"
 2. Đăng nhập tài khoản Claude
-3. Cho phép ZenRoute
+3. Cho phép ZenRouter
 4. ✅ Xong! Dùng model: `cc/claude-opus-4-5-20251101`
 
 #### Cách B: API Key (Cheap Provider)
@@ -83,14 +83,14 @@ Dashboard → Providers → Connect [Free Provider]
 
 ## 4. Dùng trong CLI Tools
 
-Trỏ công cụ code của bạn tới ZenRoute:
+Trỏ công cụ code của bạn tới ZenRouter:
 
 ### Cursor IDE
 
 ```
 Settings → Models → Advanced:
   OpenAI API Base URL: http://localhost:20128/v1
-  OpenAI API Key: [from zenroute dashboard]
+  OpenAI API Key: [from zenrouter dashboard]
   Model: cc/claude-opus-4-5-20251101
 ```
 
@@ -101,7 +101,7 @@ Sửa `~/.claude/config.json`:
 ```json
 {
   "anthropic_api_base": "http://localhost:20128/v1",
-  "anthropic_api_key": "your-zenroute-api-key"
+  "anthropic_api_key": "your-zenrouter-api-key"
 }
 ```
 
@@ -118,7 +118,7 @@ Model: cc/claude-opus-4-5-20251101
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:20128"
-export OPENAI_API_KEY="your-zenroute-api-key"
+export OPENAI_API_KEY="your-zenrouter-api-key"
 
 codex "your prompt"
 ```
@@ -242,6 +242,6 @@ Daily routine:
 
 ## Cần trợ giúp?
 
-- **Website**: [GitHub](https://github.com/joyccn/ZenRoute)
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **Website**: [GitHub](https://github.com/ZenRouter/ZenRouter)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)

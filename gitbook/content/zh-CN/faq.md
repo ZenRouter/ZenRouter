@@ -1,12 +1,12 @@
 # 常见问题
 
-关于 ZenRoute 的常见问题。
+关于 ZenRouter 的常见问题。
 
 ---
 
-## 什么是 ZenRoute?
+## 什么是 ZenRouter?
 
-**ZenRoute 是一款 AI 模型路由工具,能够最大化你的订阅价值并最小化成本。**
+**ZenRouter 是一款 AI 模型路由工具,能够最大化你的订阅价值并最小化成本。**
 
 它使用 3 层回退系统在多个 AI 提供商之间智能路由请求:
 1. **订阅层** - 充分利用你已付费的 Claude Code、Codex、Gemini 配额
@@ -23,7 +23,7 @@
 
 ## 价格是如何计算的?
 
-**ZenRoute 采用三层定价策略:**
+**ZenRouter 采用三层定价策略:**
 
 ### 第 1 层:订阅(优先使用)
 - **Claude Code**(Pro/Max):$20-100/月 - 5 小时 + 每周配额
@@ -50,9 +50,9 @@
 
 ---
 
-## ZenRoute 是免费的吗?
+## ZenRouter 是免费的吗?
 
-**是的,ZenRoute 本身 100% 免费且开源。**
+**是的,ZenRouter 本身 100% 免费且开源。**
 
 **可用的免费层提供商:**
 - **Gemini CLI** - 每月 180K 次补全(免费 Google 账户)
@@ -96,7 +96,7 @@
 
 ## 可以同时使用多个提供商吗?
 
-**可以!这正是 ZenRoute 的核心功能。**
+**可以!这正是 ZenRouter 的核心功能。**
 
 **通过组合(Combos),你可以把多个提供商串联起来实现自动回退:**
 
@@ -129,7 +129,7 @@
 
 ## 配额跟踪是如何工作的?
 
-**ZenRoute 为所有提供商提供实时配额跟踪:**
+**ZenRouter 为所有提供商提供实时配额跟踪:**
 
 **功能:**
 - **Token 消耗** - 每次请求的输入/输出 tokens
@@ -154,13 +154,13 @@
 
 ---
 
-## ZenRoute 能配合 Cursor 使用吗?
+## ZenRouter 能配合 Cursor 使用吗?
 
 **可以,但 Cursor 需要使用云端 endpoint。**
 
 **问题:** Cursor IDE 不支持 localhost endpoint。
 
-**解决方案:** 使用 ZenRoute 云端部署:
+**解决方案:** 使用 ZenRouter 云端部署:
 
 ```
 Cursor Settings → Models → Advanced:
@@ -172,8 +172,8 @@ Cursor Settings → Models → Advanced:
 **替代方案:** 在 VPS 上自托管,使用公开域名:
 ```bash
 # 部署到 VPS
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install && npm run build
 npm start
 
@@ -192,22 +192,22 @@ npm start
 
 ---
 
-## 可以自托管 ZenRoute 吗?
+## 可以自托管 ZenRouter 吗?
 
-**可以!ZenRoute 支持多种部署方式:**
+**可以!ZenRouter 支持多种部署方式:**
 
 ### Localhost(默认)
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 → 仪表盘: http://localhost:3000
 → API: http://localhost:20128/v1
 ```
 
 ### VPS/云
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install && npm run build
 
 export JWT_SECRET="your-secure-secret"
@@ -219,23 +219,23 @@ npm start
 
 ### Docker
 ```bash
-docker build -t zenroute .
+docker build -t zenrouter .
 docker run -d \
   -p 3000:3000 \
   -e JWT_SECRET="your-secret" \
-  -v zenroute-data:/app/data \
-  zenroute
+  -v zenrouter-data:/app/data \
+  zenrouter
 ```
 
 ### Cloudflare Workers
 ```bash
-cd zenroute/app
+cd zenrouter/app
 npm run deploy:cloudflare
 ```
 
 **环境变量:**
 - `JWT_SECRET` - **生产环境必须修改!**
-- `DATA_DIR` - 数据库存储路径(默认:`~/.zenroute`)
+- `DATA_DIR` - 数据库存储路径(默认:`~/.zenrouter`)
 - `INITIAL_PASSWORD` - 仪表盘登录(默认:`12345678`)
 - `NODE_ENV` - 部署时设为 `production`
 
@@ -245,11 +245,11 @@ npm run deploy:cloudflare
 
 ## 我的数据安全吗?
 
-**是的,ZenRoute 优先考虑安全和隐私:**
+**是的,ZenRouter 优先考虑安全和隐私:**
 
 **本地存储:**
-- 所有数据存储在本地 `~/.zenroute`(或自定义 `DATA_DIR`)
-- 不会发送数据到 ZenRoute 服务器
+- 所有数据存储在本地 `~/.zenrouter`(或自定义 `DATA_DIR`)
+- 不会发送数据到 ZenRouter 服务器
 - OAuth tokens 使用 JWT 加密
 
 **无遥测:**
@@ -268,31 +268,31 @@ npm run deploy:cloudflare
 - 云端部署启用 HTTPS
 - 定期轮换 API keys
 
-**ZenRoute 存储的内容:**
+**ZenRouter 存储的内容:**
 - 提供商 OAuth tokens(加密)
 - API keys(加密)
 - 使用统计(仅本地)
 - 组合配置
 
-**ZenRoute 不存储的内容:**
+**ZenRouter 不存储的内容:**
 - 你的 prompt 或响应
 - 你生成的代码
 - 个人信息
 
 ---
 
-## 如何更新 ZenRoute?
+## 如何更新 ZenRouter?
 
 **更新方式取决于安装类型:**
 
 ### 全局 NPM 安装
 ```bash
-npm update -g zenroute
+npm update -g zenrouter
 ```
 
 ### 本地安装
 ```bash
-cd zenroute/app
+cd zenrouter/app
 git pull origin main
 npm install
 npm run build
@@ -301,22 +301,22 @@ npm start
 
 ### Docker
 ```bash
-docker pull zenroute:latest
-docker stop zenroute
-docker rm zenroute
+docker pull zenrouter:latest
+docker stop zenrouter
+docker rm zenrouter
 docker run -d \
   -p 3000:3000 \
-  -v zenroute-data:/app/data \
-  zenroute:latest
+  -v zenrouter-data:/app/data \
+  zenrouter:latest
 ```
 
 **查看版本:**
 ```bash
-zenroute --version
+zenrouter --version
 ```
 
 **破坏性变更:**
-- 大版本更新前备份 `~/.zenroute`
+- 大版本更新前备份 `~/.zenrouter`
 - 阅读大版本的迁移指南
 
 ---
@@ -328,18 +328,18 @@ zenroute --version
 ### 贡献方式:
 
 1. **报告 bug:**
-   - [GitHub Issues](https://github.com/joyccn/ZenRoute/issues)
+   - [GitHub Issues](https://github.com/ZenRouter/ZenRouter/issues)
    - 附上错误日志、复现步骤
 
 2. **功能请求:**
-   - [GitHub Discussions](https://github.com/joyccn/ZenRoute/discussions)
+   - [GitHub Discussions](https://github.com/ZenRouter/ZenRouter/discussions)
    - 描述使用场景和价值
 
 3. **提交代码:**
    ```bash
    # Fork 仓库
-   git clone https://github.com/YOUR_USERNAME/zenroute.git
-   cd zenroute
+   git clone https://github.com/YOUR_USERNAME/zenrouter.git
+   cd zenrouter
    
    # 创建分支
    git checkout -b feature/your-feature
@@ -374,13 +374,13 @@ zenroute --version
 - 更新文档
 - 提交保持原子化、描述清晰
 
-详情见 [CONTRIBUTING.md](https://github.com/joyccn/ZenRoute/blob/main/CONTRIBUTING.md)。
+详情见 [CONTRIBUTING.md](https://github.com/ZenRouter/ZenRouter/blob/main/CONTRIBUTING.md)。
 
 ---
 
 ## 需要更多帮助?
 
-- **文档:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
-- **GitHub:** [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **文档:** [GitHub Docs](https://github.com/ZenRouter/ZenRouter)
+- **GitHub:** [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues:** [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
 - **故障排除:** [troubleshooting.md](troubleshooting.md)

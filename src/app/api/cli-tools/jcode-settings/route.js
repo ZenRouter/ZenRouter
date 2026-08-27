@@ -15,7 +15,7 @@ const getConfigPath = () => path.join(getJcodeConfigDir(), "config.toml");
 
 const getProviderEnvPath = () => {
   const configDir = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
-  return path.join(configDir, "jcode", "provider-zenroute.env");
+  return path.join(configDir, "jcode", "provider-zenrouter.env");
 };
 
 const checkJcodeInstalled = async () => {
@@ -44,12 +44,12 @@ const readConfig = async () => {
   }
 };
 
-const hasZenRouteConfig = (config) => {
+const hasZenRouterConfig = (config) => {
   if (!config || !config.providers) return false;
 
   const providers = config.providers;
 
-  if (providers["zenroute"]) return true;
+  if (providers["zenrouter"]) return true;
 
   for (const [name, provider] of Object.entries(providers)) {
     if (provider.base_url && provider.base_url.includes("localhost:20128")) {
@@ -118,12 +118,12 @@ export async function GET() {
   }
 
   const config = await readConfig();
-  const hasZenRoute = hasZenRouteConfig(config);
+  const hasZenRouter = hasZenRouterConfig(config);
 
   return NextResponse.json({
     installed: true,
     config,
-    hasZenRoute,
+    hasZenRouter,
     configPath: getConfigPath(),
   });
 }
@@ -149,12 +149,12 @@ export async function POST(request) {
       config.providers = {};
     }
 
-    config.providers["zenroute"] = {
+    config.providers["zenrouter"] = {
       type: "openai-compatible",
       base_url: normalizedBaseUrl,
       auth: "bearer",
-      api_key_env: "JCODE_ZENROUTE_API_KEY",
-      env_file: "provider-zenroute.env",
+      api_key_env: "JCODE_ZENROUTER_API_KEY",
+      env_file: "provider-zenrouter.env",
       default_model: models && models.length > 0 ? models[0] : "cc/claude-opus-4-7",
       requires_api_key: true,
     };
@@ -169,12 +169,12 @@ export async function POST(request) {
     await fs.mkdir(jcodeConfigDir, { recursive: true });
 
     const env = await readProviderEnv();
-    env.JCODE_ZENROUTE_API_KEY = apiKey;
+    env.JCODE_ZENROUTER_API_KEY = apiKey;
     await writeProviderEnv(env);
 
     return NextResponse.json({
       success: true,
-      message: "jcode configured successfully. Use: jcode --provider-profile zenroute",
+      message: "jcode configured successfully. Use: jcode --provider-profile zenrouter",
       configPath: getConfigPath(),
     });
   } catch (error) {
@@ -194,17 +194,17 @@ export async function DELETE() {
       return NextResponse.json({ success: true, message: "No configuration to remove" });
     }
 
-    delete config.providers["zenroute"];
+    delete config.providers["zenrouter"];
 
     await writeConfig(config);
 
     const env = await readProviderEnv();
-    delete env.JCODE_ZENROUTE_API_KEY;
+    delete env.JCODE_ZENROUTER_API_KEY;
     await writeProviderEnv(env);
 
     return NextResponse.json({
       success: true,
-      message: "zenroute configuration removed from jcode",
+      message: "zenrouter configuration removed from jcode",
     });
   } catch (error) {
     console.error("Error removing jcode configuration:", error);

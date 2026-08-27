@@ -15,7 +15,7 @@ export default async function LangHomePage({ params }) {
   const { lang } = await params;
   if (!isValidLang(lang)) notFound();
 
-  const content = loadContent(lang, "index") || "# ZenRoute Documentation\n\nContent coming soon...";
+  const content = loadContent(lang, "index") || "# ZenRouter Documentation\n\nContent coming soon...";
   const headings = extractHeadings(content);
 
   return (

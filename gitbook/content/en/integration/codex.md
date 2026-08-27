@@ -1,12 +1,12 @@
 # OpenAI Codex CLI Integration
 
-Integrate ZenRoute with OpenAI Codex CLI to route your OpenAI API requests through ZenRoute's intelligent routing system.
+Integrate ZenRouter with OpenAI Codex CLI to route your OpenAI API requests through ZenRouter's intelligent routing system.
 
 ## Prerequisites
 
 - OpenAI Codex CLI installed
-- ZenRoute running locally or cloud endpoint configured
-- API key from ZenRoute dashboard
+- ZenRouter running locally or cloud endpoint configured
+- API key from ZenRouter dashboard
 
 ## Setup
 
@@ -15,11 +15,11 @@ Integrate ZenRoute with OpenAI Codex CLI to route your OpenAI API requests throu
 Set the following environment variables in your shell configuration file (`~/.bashrc`, `~/.zshrc`, or `~/.bash_profile`):
 
 ```bash
-# Base URL for ZenRoute
+# Base URL for ZenRouter
 export OPENAI_BASE_URL="http://localhost:20128/v1"
 
-# API Key from ZenRoute dashboard
-export OPENAI_API_KEY="your-zenroute-api-key"
+# API Key from ZenRouter dashboard
+export OPENAI_API_KEY="your-zenrouter-api-key"
 ```
 
 ### 2. Reload Shell Configuration
@@ -39,7 +39,7 @@ echo $OPENAI_API_KEY
 
 ## Available Models
 
-ZenRoute provides the following Codex models:
+ZenRouter provides the following Codex models:
 
 | Model ID | Description |
 |----------|-------------|
@@ -77,7 +77,7 @@ You can also configure Codex CLI using a configuration file. Create or edit `~/.
 ```json
 {
   "baseUrl": "http://localhost:20128/v1",
-  "apiKey": "your-zenroute-api-key",
+  "apiKey": "your-zenrouter-api-key",
   "defaultModel": "cx/gpt-5.2-codex"
 }
 ```
@@ -88,7 +88,7 @@ You can also configure Codex CLI using a configuration file. Create or edit `~/.
 
 If you encounter authentication errors:
 
-1. Verify your API key is correct in ZenRoute dashboard
+1. Verify your API key is correct in ZenRouter dashboard
 2. Check that `OPENAI_API_KEY` environment variable is set
 3. Ensure the API key has not expired
 
@@ -96,7 +96,7 @@ If you encounter authentication errors:
 
 If you encounter connection errors:
 
-1. Verify ZenRoute is running: `curl http://localhost:20128/health`
+1. Verify ZenRouter is running: `curl http://localhost:20128/health`
 2. Check environment variables are set correctly
 3. Ensure no firewall is blocking port 20128
 
@@ -104,19 +104,19 @@ If you encounter connection errors:
 
 If you get "model not available" errors:
 
-1. Verify the model name matches your ZenRoute configuration
-2. Check that the OpenAI provider connection is active in ZenRoute dashboard
+1. Verify the model name matches your ZenRouter configuration
+2. Check that the OpenAI provider connection is active in ZenRouter dashboard
 3. Ensure the model is available in your connected providers
 
 ## Cloud Endpoint
 
-To use ZenRoute cloud endpoint instead of localhost:
+To use ZenRouter cloud endpoint instead of localhost:
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:20128"
 ```
 
-Make sure you have configured your API key in the ZenRoute cloud dashboard.
+Make sure you have configured your API key in the ZenRouter cloud dashboard.
 
 ## Advanced Configuration
 

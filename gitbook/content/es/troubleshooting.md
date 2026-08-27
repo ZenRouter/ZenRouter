@@ -1,6 +1,6 @@
 # Solución de problemas
 
-Problemas comunes y soluciones al usar ZenRoute.
+Problemas comunes y soluciones al usar ZenRouter.
 
 ---
 
@@ -78,7 +78,7 @@ Problemas comunes y soluciones al usar ZenRoute.
 **Soluciones:**
 
 1. **Refresh automático (por defecto):**
-   ZenRoute refresca automáticamente los tokens. Espera 30 segundos y reintenta.
+   ZenRouter refresca automáticamente los tokens. Espera 30 segundos y reintenta.
 
 2. **Reconexión manual:**
    ```
@@ -135,15 +135,15 @@ Problemas comunes y soluciones al usar ZenRoute.
 **Problema:** "ECONNREFUSED" o "Cannot connect to localhost:20128".
 
 **Causas:**
-- ZenRoute no está ejecutándose
+- ZenRouter no está ejecutándose
 - Puerto 20128 bloqueado
 - Firewall bloqueando la conexión
 
 **Soluciones:**
 
-1. **Inicia ZenRoute:**
+1. **Inicia ZenRouter:**
    ```bash
-   zenroute
+   zenrouter
    ```
    El dashboard debe abrir en http://localhost:3000
 
@@ -175,15 +175,15 @@ Problemas comunes y soluciones al usar ZenRoute.
 
 **Causas:**
 - Puerto 3000 ya en uso
-- ZenRoute crasheó
+- ZenRouter crasheó
 - Problemas de caché del navegador
 
 **Soluciones:**
 
-1. **Verifica si ZenRoute está ejecutándose:**
+1. **Verifica si ZenRouter está ejecutándose:**
    ```bash
    # Verifica el proceso
-   ps aux | grep zenroute
+   ps aux | grep zenrouter
    
    # Verifica el puerto 3000
    lsof -i :3000
@@ -199,13 +199,13 @@ Problemas comunes y soluciones al usar ZenRoute.
    taskkill /PID <PID> /F
    ```
 
-3. **Reinicia ZenRoute:**
+3. **Reinicia ZenRouter:**
    ```bash
    # Detener
-   pkill -f zenroute
+   pkill -f zenrouter
    
    # Iniciar
-   zenroute
+   zenrouter
    ```
 
 4. **Limpia la caché del navegador:**
@@ -346,6 +346,6 @@ Problemas comunes y soluciones al usar ZenRoute.
 
 ## ¿Necesitas más ayuda?
 
-- **GitHub Issues:** [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
-- **Documentación:** [GitHub Docs](https://github.com/joyccn/ZenRoute)
+- **GitHub Issues:** [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
+- **Documentación:** [GitHub Docs](https://github.com/ZenRouter/ZenRouter)
 - **FAQ:** [faq.md](faq.md)

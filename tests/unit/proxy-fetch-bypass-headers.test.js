@@ -16,7 +16,7 @@ import https from "node:https";
 
 const HOST = "127.0.0.1";
 
-// Throwaway self-signed cert (CN=zenroute-test-localhost) generated for this
+// Throwaway self-signed cert (CN=zenrouter-test-localhost) generated for this
 // fixture only. Accepted solely because the suite sets
 // NODE_TLS_REJECT_UNAUTHORIZED=0; never use these files anywhere else.
 const TEST_TLS_KEY = `-----BEGIN PRIVATE KEY-----

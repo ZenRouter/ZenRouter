@@ -1,6 +1,6 @@
 # 入门指南
 
-5 分钟启动 ZenRoute,开始智能路由 AI 请求。
+5 分钟启动 ZenRouter,开始智能路由 AI 请求。
 
 ---
 
@@ -9,7 +9,7 @@
 ### 1. 安装
 
 ```bash
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
 **要求:** Node.js 20+([安装详情](getting-started/installation.md))
@@ -17,7 +17,7 @@ npm install -g zenroute
 ### 2. 启动
 
 ```bash
-zenroute
+zenrouter
 ```
 
 🎉 **仪表盘自动打开** 地址为 `http://localhost:20128`
@@ -43,7 +43,7 @@ zenroute
 **示例:Claude Code**
 1. 点击 "Connect Claude Code"
 2. 用你的 Claude 账户登录
-3. 授权 ZenRoute
+3. 授权 ZenRouter
 4. ✅ 完成!使用模型:`cc/claude-opus-4-5-20251101`
 
 #### 方式 B:API Key(低价提供商)
@@ -83,14 +83,14 @@ zenroute
 
 ## 4. 在 CLI 工具中使用
 
-将你的编码工具指向 ZenRoute:
+将你的编码工具指向 ZenRouter:
 
 ### Cursor IDE
 
 ```
 Settings → Models → Advanced:
   OpenAI API Base URL: http://localhost:20128/v1
-  OpenAI API Key: [从 zenroute 仪表盘获取]
+  OpenAI API Key: [从 zenrouter 仪表盘获取]
   Model: cc/claude-opus-4-5-20251101
 ```
 
@@ -101,7 +101,7 @@ Settings → Models → Advanced:
 ```json
 {
   "anthropic_api_base": "http://localhost:20128/v1",
-  "anthropic_api_key": "your-zenroute-api-key"
+  "anthropic_api_key": "your-zenrouter-api-key"
 }
 ```
 
@@ -118,7 +118,7 @@ Model: cc/claude-opus-4-5-20251101
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:20128"
-export OPENAI_API_KEY="your-zenroute-api-key"
+export OPENAI_API_KEY="your-zenrouter-api-key"
 
 codex "your prompt"
 ```
@@ -242,6 +242,6 @@ CLI 中使用: premium-coding
 
 ## 需要帮助?
 
-- **网站**: [GitHub](https://github.com/joyccn/ZenRoute)
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **网站**: [GitHub](https://github.com/ZenRouter/ZenRouter)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)

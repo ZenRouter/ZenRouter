@@ -11,9 +11,9 @@ export default function HeroSection() {
 
       <div className="relative z-10 max-w-4xl w-full text-center flex flex-col items-center gap-8">
         {/* Version badge */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#233044] bg-[#141b24]/70 px-3.5 py-1.5 text-xs font-medium text-[#b0c6df]">
-          <span className="flex h-2 w-2 rounded-full bg-[#E85D3F] animate-pulse"></span>
-          ZenRoute Engine • Free & Unlimited AI Gateway
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#141414]/90 px-3.5 py-1.5 text-xs font-medium text-gray-300">
+          <span className="flex h-2 w-2 rounded-full bg-[#FF3B1D] animate-pulse"></span>
+          ZenRouter Engine • Free &amp; Unlimited AI Gateway
         </div>
 
         {/* Main heading */}
@@ -37,7 +37,7 @@ export default function HeroSection() {
             Open Dashboard
           </button>
           <a
-            href="https://github.com/joyccn/ZenRoute"
+            href="https://github.com/ZenRouter/ZenRouter"
             target="_blank"
             rel="noopener noreferrer"
             className="h-12 px-8 rounded-lg border border-[#233044] bg-[#141b24] hover:bg-[#1e293b] text-white text-base font-medium transition-all flex items-center gap-2"

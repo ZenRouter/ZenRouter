@@ -1,9 +1,9 @@
 นี่คือเอกสารแปลภาษาไทยของไฟล์ Markdown ต้นฉบับ โดยรักษาโครงสร้างและซินแท็กซ์ทางเทคนิคทั้งหมดไว้เหมือนเดิม
 
 <div align="center">
-  <img src="../images/zenroute.png?1" alt="แดชบอร์ด ZenRoute" width="800"/>
+  <img src="../images/zenrouter.png?1" alt="แดชบอร์ด ZenRouter" width="800"/>
   
-  # ZenRoute - Free AI Router
+  # ZenRouter - Free AI Router
   
   **ไม่ต้องหยุดเขียนโค้ด ประหยัดโทเค็น 20-40% ด้วย RTK + สลับอัตโนมัติไปยังโมเดล AI ฟรีและราคาถูก**
   
@@ -13,15 +13,15 @@
     <img src="../public/providers/openclaw.png" alt="OpenClaw" width="80"/>
   </p>
   
-  [![npm](https://img.shields.io/npm/v/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![Downloads](https://img.shields.io/npm/dm/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![License](https://img.shields.io/npm/l/zenroute.svg)](https://github.com/joyccn/ZenRoute/blob/main/LICENSE)
+  [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![License](https://img.shields.io/npm/l/zenrouter.svg)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
   
 </div>
 
 ---
 
-## 🤔 ทำไมต้อง ZenRoute?
+## 🤔 ทำไมต้อง ZenRouter?
 
 **หยุดเสียเงินและเจอขีดจำกัด:**
 
@@ -30,7 +30,7 @@
 - ❌ ค่า API แพง ($20-50/เดือน ต่อผู้ให้บริการแต่ละราย)
 - ❌ ต้องสลับผู้ให้บริการด้วยตนเอง
 
-**ZenRoute แก้ปัญหาเหล่านี้:**
+**ZenRouter แก้ปัญหาเหล่านี้:**
 
 - ✅ **ประหยัดโทเค็น RTK** - บีบอัดผลลัพธ์จากเครื่องมือ (`git diff`, `grep`, `ls`...) ก่อนส่งให้ LLM
 - ✅ **เพิ่มประสิทธิภาพสมาชิก** - ติดตามโควตา ใช้ทุกบิตก่อนรีเซ็ต
@@ -50,7 +50,7 @@
        │ http://localhost:20128/v1
        ↓
 ┌─────────────────────────────────────────────┐
-│           ZenRoute (Smart Router)            │
+│           ZenRouter (Smart Router)            │
 │  • RTK Token Saver (ตัดโทเค็น tool_result) │
 │  • แปลงรูปแบบ (OpenAI ↔ Claude)           │
 │  • ติดตามโควตา                              │
@@ -73,8 +73,8 @@
 **1. ติดตั้งแบบ Global:**
 
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 ```
 
 🎉 เปิดแดชบอร์ดที่ `http://localhost:20128`
@@ -96,7 +96,7 @@ zenroute
 
 **วิธีอื่น: รันจากซอร์สโค้ด (เก็บรักษาไว้ใน repo นี้):**
 
-Repo นี้เป็น private package (`zenroute-app`) ดังนั้นการรันจากซอร์ส/Docker คือเส้นทางพัฒนาท้องถิ่นที่คาดไว้
+Repo นี้เป็น private package (`zenrouter-app`) ดังนั้นการรันจากซอร์ส/Docker คือเส้นทางพัฒนาท้องถิ่นที่คาดไว้
 
 ```bash
 cp .env.example .env
@@ -119,7 +119,7 @@ URL ค่าเริ่มต้น:
 
 ## 🛠️ เครื่องมือ CLI ที่รองรับ
 
-ZenRoute ทำงานได้อย่างราบรื่นกับเครื่องมือเขียนโค้ด AI ทุกประเภท:
+ZenRouter ทำงานได้อย่างราบรื่นกับเครื่องมือเขียนโค้ด AI ทุกประเภท:
 
 <div align="center">
   <table>
@@ -364,10 +364,10 @@ ZenRoute ทำงานได้อย่างราบรื่นกับ�
 
 ### 🧠 Headroom Token Saver
 
-Headroom เป็นตัวเลือกและทำงานแยกกัน ZenRoute เรียก endpoint `/v1/compress` ของ Headroom จากนั้นยังคงเลือกเส้นทาง, fallback, auth และติดตามการใช้งานตามปกติ:
+Headroom เป็นตัวเลือกและทำงานแยกกัน ZenRouter เรียก endpoint `/v1/compress` ของ Headroom จากนั้นยังคงเลือกเส้นทาง, fallback, auth และติดตามการใช้งานตามปกติ:
 
 ```
-Client → ZenRoute → Headroom /v1/compress → ZenRoute → provider
+Client → ZenRouter → Headroom /v1/compress → ZenRouter → provider
 ```
 
 ตั้งค่าท้องถิ่น:
@@ -386,7 +386,7 @@ headroom proxy --port 8787
 http://host.docker.internal:8787
 ```
 
-ถ้า Headroom ดับหรือคืน error, ZenRoute จะ fail open และส่งคำขอต้นฉบับ
+ถ้า Headroom ดับหรือคืน error, ZenRouter จะ fail open และส่งคำขอต้นฉบับ
 
 ### 🐴 Ponytail (Lazy Senior Dev)
 
@@ -427,7 +427,7 @@ Combo: "my-coding-stack"
 
 แปลงรูปแบบได้อย่างราบรื่น:
 - **OpenAI** ↔ **Claude** ↔ **Gemini** ↔ **Cursor** ↔ **Kiro** ↔ **Vertex** ↔ **Antigravity** ↔ **Ollama** ↔ **OpenAI Responses**
-- เครื่องมือ CLI ของคุณส่งรูปแบบ OpenAI → ZenRoute แปลง → ผู้ให้บริการได้รับรูปแบบต้นฉบับ
+- เครื่องมือ CLI ของคุณส่งรูปแบบ OpenAI → ZenRouter แปลง → ผู้ให้บริการได้รับรูปแบบต้นฉบับ
 - ใช้ได้กับเครื่องมือใดก็ได้ที่รองรับ custom OpenAI endpoints
 
 ### 👥 รองรับหลายบัญชี
@@ -568,16 +568,16 @@ Combo: "openclaw-free"
 ## ❓ คำถามที่พบบ่อย
 
 <details>
-<summary><b>💳 ZenRoute เก็บเงินฉันหรือไม่?</b></summary>
+<summary><b>💳 ZenRouter เก็บเงินฉันหรือไม่?</b></summary>
 
-**ไม่.** ZenRoute เป็นซอฟต์แวร์ฟรีแบบ open source ที่ทำงานบนเครื่องของคุณเอง มันไม่มีวันเรียกเก็บเงินจากคุณ
+**ไม่.** ZenRouter เป็นซอฟต์แวร์ฟรีแบบ open source ที่ทำงานบนเครื่องของคุณเอง มันไม่มีวันเรียกเก็บเงินจากคุณ
 
 **คุณจ่ายเงินเฉพาะ:**
 - ✅ **ผู้ให้บริการสมาชิก** (Claude Code $20/เดือน, Codex $20-200/เดือน) → จ่ายตรงให้พวกเขาบนเว็บไซต์ของพวกเขา
-- ✅ **ผู้ให้บริการราคาถูก** (GLM, MiniMax) → จ่ายตรงให้พวกเขา, ZenRoute แค่เลือกเส้นทางคำขอของคุณ
-- ❌ **ตัว ZenRoute เอง** → **ไม่มีวันเรียกเก็บเงินใดๆ ทั้งสิ้น**
+- ✅ **ผู้ให้บริการราคาถูก** (GLM, MiniMax) → จ่ายตรงให้พวกเขา, ZenRouter แค่เลือกเส้นทางคำขอของคุณ
+- ❌ **ตัว ZenRouter เอง** → **ไม่มีวันเรียกเก็บเงินใดๆ ทั้งสิ้น**
 
-ZenRoute เป็น proxy/router ท้องถิ่น มันไม่มีบัตรเครดิตของคุณ, ไม่สามารถส่งใบแจ้งหนี้ได้ และไม่มีระบบชำระเงิน เป็นซอฟต์แวร์ฟรีทั้งหมด
+ZenRouter เป็น proxy/router ท้องถิ่น มันไม่มีบัตรเครดิตของคุณ, ไม่สามารถส่งใบแจ้งหนี้ได้ และไม่มีระบบชำระเงิน เป็นซอฟต์แวร์ฟรีทั้งหมด
 
 </details>
 
@@ -591,7 +591,7 @@ ZenRoute เป็น proxy/router ท้องถิ่น มันไม่�
 - **OpenCode Free**: ไม่ต้องยืนยันตัวตน, ดึงโมเดลอัตโนมัติ
 - **Vertex AI**: $300 เครดิตฟรีสำหรับ Gemini 3 Pro
 
-ZenRoute แค่เลือกเส้นทางคำขอของคุณไปหาพวกเขา — ไม่มี "กับดัก" หรือการเรียกเก็บเงินในอนาคต เป็นบริการที่ฟรีจริงๆ และ ZenRoute ทำให้ใช้งานง่ายด้วยการรองรับ fallback
+ZenRouter แค่เลือกเส้นทางคำขอของคุณไปหาพวกเขา — ไม่มี "กับดัก" หรือการเรียกเก็บเงินในอนาคต เป็นบริการที่ฟรีจริงๆ และ ZenRouter ทำให้ใช้งานง่ายด้วยการรองรับ fallback
 
 </details>
 
@@ -615,7 +615,7 @@ ZenRoute แค่เลือกเส้นทางคำขอของค�
    **ค่าใช้จ่ายเพิ่มเติม:** จ่ายเฉพาะที่ใช้
 
 3. **ใช้ผู้ให้บริการสมาชิก** ก็ต่อเมื่อมีอยู่แล้ว:
-   - ZenRoute ช่วยเพิ่มประสิทธิภาพมูลค่าของพวกเขาผ่านการติดตามโควตา
+   - ZenRouter ช่วยเพิ่มประสิทธิภาพมูลค่าของพวกเขาผ่านการติดตามโควตา
 
 **ผลลัพธ์:** ผู้ใช้ส่วนใหญ่สามารถทำงานที่ $0/เดือน โดยใช้เฉพาะชั้นฟรี!
 
@@ -634,7 +634,7 @@ ZenRoute แค่เลือกเส้นทางคำขอของค�
 - เพิ่ม combo: `cc/claude-opus-4-6 → glm/glm-5.1 → kr/claude-sonnet-4.5`
 
 **OAuth Token หมดอายุ**
-- รีเฟรชอัตโนมัติโดย ZenRoute
+- รีเฟรชอัตโนมัติโดย ZenRouter
 - ถ้าปัญหายังคงอยู่: แดชบอร์ด → ผู้ให้บริการ → เชื่อมต่อใหม่
 
 **ค่าใช้จ่ายสูง**
@@ -697,16 +697,16 @@ Authorization: Bearer your-api-key
 
 ## 📧 สนับสนุน
 
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
 
 ---
 
 ## 👥 ผู้มีส่วนร่วม
 
-ขอขอบคุณผู้มีส่วนร่วมทุกคนที่ช่วยทำให้ ZenRoute ดียิ่งขึ้น!
+ขอขอบคุณผู้มีส่วนร่วมทุกคนที่ช่วยทำให้ ZenRouter ดียิ่งขึ้น!
 
-[![Contributors](https://contrib.rocks/image?repo=joyccn/ZenRoute&max=150&columns=15&anon=1)](https://github.com/joyccn/ZenRoute/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=ZenRouter/ZenRouter&max=150&columns=15&anon=1)](https://github.com/ZenRouter/ZenRouter/graphs/contributors)
 
 ---
 

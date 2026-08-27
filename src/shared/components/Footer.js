@@ -29,7 +29,7 @@ export default function Footer() {
           <div className="col-span-2 lg:col-span-2">
             <div className="flex items-center gap-2.5 mb-6">
               <div className="size-7 rounded-lg bg-surface-2 border border-border p-1 flex items-center justify-center">
-                <img src="/icons/logo.svg" alt="ZenRoute" className="w-full h-full object-contain" />
+                <img src="/icons/logo.svg" alt="ZenRouter" className="w-full h-full object-contain" />
               </div>
               <span className="text-xl font-bold text-text-main">
                 {APP_CONFIG.name}

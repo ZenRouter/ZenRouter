@@ -1,17 +1,17 @@
 # Integración con Cursor
 
-Integra ZenRoute con Cursor IDE para enrutar tus solicitudes de IA a través del sistema de enrutamiento inteligente de ZenRoute.
+Integra ZenRouter con Cursor IDE para enrutar tus solicitudes de IA a través del sistema de enrutamiento inteligente de ZenRouter.
 
 ## Requisitos previos
 
 - Cursor IDE instalado
 - Cuenta Cursor Pro (requerida para endpoints de API personalizados)
-- Endpoint en la nube de ZenRoute configurado
-- API key del dashboard de ZenRoute
+- Endpoint en la nube de ZenRouter configurado
+- API key del dashboard de ZenRouter
 
 ## ⚠️ Notas importantes
 
-> **Endpoint en la nube requerido**: Cursor enruta solicitudes a través de su propio servidor y no soporta endpoints localhost. Debes usar el endpoint en la nube de ZenRoute: `http://localhost:20128`
+> **Endpoint en la nube requerido**: Cursor enruta solicitudes a través de su propio servidor y no soporta endpoints localhost. Debes usar el endpoint en la nube de ZenRouter: `http://localhost:20128`
 
 > **Cursor Pro requerido**: Esta característica requiere una cuenta Cursor Pro para usar endpoints de API personalizados.
 
@@ -30,7 +30,7 @@ Integra ZenRoute con Cursor IDE para enrutar tus solicitudes de IA a través del
 
 ### 3. Configurar Base URL
 
-Establece la URL base al endpoint en la nube de ZenRoute:
+Establece la URL base al endpoint en la nube de ZenRouter:
 
 ```
 http://localhost:20128
@@ -43,22 +43,22 @@ http://localhost:20128
 
 ### 4. Agregar API Key
 
-1. En el campo **API Key**, ingresa tu API key de ZenRoute
-2. Puedes encontrar tu API key en el dashboard de ZenRoute en **Settings → API Keys**
+1. En el campo **API Key**, ingresa tu API key de ZenRouter
+2. Puedes encontrar tu API key en el dashboard de ZenRouter en **Settings → API Keys**
 3. Clic en **Save**
 
 ### 5. Agregar modelo personalizado
 
 1. Clic en el botón **View All Models**
 2. Clic en **Add Custom Model**
-3. Ingresa el nombre del modelo desde tu configuración de ZenRoute (ej. `gpt-4`, `claude-opus-4-5`, etc.)
+3. Ingresa el nombre del modelo desde tu configuración de ZenRouter (ej. `gpt-4`, `claude-opus-4-5`, etc.)
 4. Clic en **Add**
 
 ### 6. Seleccionar modelo
 
 1. En la interfaz de chat de Cursor, clic en el dropdown selector de modelo
 2. Elige tu modelo personalizado de la lista
-3. ¡Empieza a usar ZenRoute con Cursor!
+3. ¡Empieza a usar ZenRouter con Cursor!
 
 ## Ejemplo de configuración
 
@@ -67,13 +67,13 @@ Tu configuración de Cursor debería verse así:
 ```
 OpenAI API: ✓ Enabled
 Base URL: http://localhost:20128
-API Key: sk-zenroute-xxxxxxxxxxxxx
+API Key: sk-zenrouter-xxxxxxxxxxxxx
 Custom Models: gpt-4, claude-opus-4-5, gemini-2.0-flash
 ```
 
 ## Modelos disponibles
 
-Puedes usar cualquier modelo configurado en tu dashboard de ZenRoute. Ejemplos comunes:
+Puedes usar cualquier modelo configurado en tu dashboard de ZenRouter. Ejemplos comunes:
 
 | Nombre del modelo | Proveedor | Descripción |
 |------------|----------|-------------|
@@ -89,35 +89,35 @@ Puedes usar cualquier modelo configurado en tu dashboard de ZenRoute. Ejemplos c
 
 1. Abre el chat de Cursor (Cmd/Ctrl + L)
 2. Selecciona tu modelo del dropdown
-3. Comienza a chatear con IA a través de ZenRoute
+3. Comienza a chatear con IA a través de ZenRouter
 
 ### Generación de código inline
 
 1. Selecciona código en tu editor
 2. Presiona Cmd/Ctrl + K
 3. Ingresa tu prompt
-4. Cursor usará ZenRoute para generar código
+4. Cursor usará ZenRouter para generar código
 
 ### Explicación de código
 
 1. Selecciona código en tu editor
 2. Presiona Cmd/Ctrl + L
 3. Pregunta "Explain this code"
-4. Obtén explicaciones potenciadas por IA a través de ZenRoute
+4. Obtén explicaciones potenciadas por IA a través de ZenRouter
 
 ## Solución de problemas
 
 ### Error "Invalid API Key"
 
-1. Verifica tu API key en el dashboard de ZenRoute
-2. Asegúrate de haber copiado la key completa incluyendo el prefijo `sk-zenroute-`
+1. Verifica tu API key en el dashboard de ZenRouter
+2. Asegúrate de haber copiado la key completa incluyendo el prefijo `sk-zenrouter-`
 3. Verifica que la API key no haya expirado
 4. Intenta regenerar una nueva API key
 
 ### Error "Model Not Found"
 
-1. Verifica que el nombre del modelo coincida exactamente con tu configuración de ZenRoute
-2. Verifica que la conexión del proveedor esté activa en el dashboard de ZenRoute
+1. Verifica que el nombre del modelo coincida exactamente con tu configuración de ZenRouter
+2. Verifica que la conexión del proveedor esté activa en el dashboard de ZenRouter
 3. Asegúrate de que el modelo esté disponible en tus proveedores conectados
 4. Intenta usar el nombre completo del modelo (ej. `openai/gpt-4` en lugar de `gpt-4`)
 
@@ -125,25 +125,25 @@ Puedes usar cualquier modelo configurado en tu dashboard de ZenRoute. Ejemplos c
 
 1. Verifica que estés usando el endpoint en la nube: `http://localhost:20128`
 2. Verifica tu conexión a internet
-3. Asegúrate de que el servicio en la nube de ZenRoute esté operativo
+3. Asegúrate de que el servicio en la nube de ZenRouter esté operativo
 4. Intenta deshabilitar VPN o proxy si está habilitado
 
 ### Localhost no funciona
 
-> **Recuerda**: Cursor no soporta endpoints localhost. Debes usar el endpoint en la nube `http://localhost:20128`. Si necesitas usar una instancia local de ZenRoute, considera usar un servicio de tunneling como ngrok para exponer tu endpoint local.
+> **Recuerda**: Cursor no soporta endpoints localhost. Debes usar el endpoint en la nube `http://localhost:20128`. Si necesitas usar una instancia local de ZenRouter, considera usar un servicio de tunneling como ngrok para exponer tu endpoint local.
 
 ## Configuración del endpoint en la nube
 
-Si estás ejecutando ZenRoute localmente y quieres usarlo con Cursor:
+Si estás ejecutando ZenRouter localmente y quieres usarlo con Cursor:
 
-1. Habilita el endpoint en la nube en la configuración de ZenRoute
-2. Configura tu URL del endpoint en la nube en el dashboard de ZenRoute
+1. Habilita el endpoint en la nube en la configuración de ZenRouter
+2. Configura tu URL del endpoint en la nube en el dashboard de ZenRouter
 3. Usa la URL en la nube en la configuración de Cursor
-4. Asegúrate de que tu instancia local de ZenRoute sea accesible desde internet
+4. Asegúrate de que tu instancia local de ZenRouter sea accesible desde internet
 
 ## Mejores prácticas
 
-1. **Usa aliases de modelos**: Crea aliases cortos para modelos usados con frecuencia en ZenRoute
-2. **Monitorea el uso**: Revisa el dashboard de ZenRoute para estadísticas de uso y costos
+1. **Usa aliases de modelos**: Crea aliases cortos para modelos usados con frecuencia en ZenRouter
+2. **Monitorea el uso**: Revisa el dashboard de ZenRouter para estadísticas de uso y costos
 3. **Rota las API Keys**: Rota tus API keys regularmente por seguridad
 4. **Prueba modelos**: Prueba diferentes modelos para encontrar el mejor para tu caso de uso

@@ -74,10 +74,10 @@ const readConfig = async () => {
   }
 };
 
-// Check if config has ZenRoute settings
-const hasZenRouteConfig = (config) => {
+// Check if config has ZenRouter settings
+const hasZenRouterConfig = (config) => {
   if (!config) return false;
-  return config.includes("model_provider = \"zenroute\"") || config.includes("[model_providers.zenroute]");
+  return config.includes("model_provider = \"zenrouter\"") || config.includes("[model_providers.zenrouter]");
 };
 
 // GET - Check codex CLI and read current settings
@@ -98,7 +98,7 @@ export async function GET() {
     return NextResponse.json({
       installed: true,
       config,
-      hasZenRoute: hasZenRouteConfig(config),
+      hasZenRouter: hasZenRouterConfig(config),
       configPath: getCodexConfigPath(),
     });
   } catch (error) {
@@ -107,7 +107,7 @@ export async function GET() {
   }
 }
 
-// POST - Update ZenRoute settings (merge with existing config)
+// POST - Update ZenRouter settings (merge with existing config)
 export async function POST(request) {
   try {
     const { baseUrl, apiKey, model, subagentModel } = await request.json();
@@ -128,15 +128,15 @@ export async function POST(request) {
     const existingConfig = await readExistingConfig(configPath, (raw) => parsedToWritable(parseTOML(raw)));
     const parsed = existingConfig ?? {};
 
-    // Update only ZenRoute related fields (api_key goes to auth.json, not config.toml)
+    // Update only ZenRouter related fields (api_key goes to auth.json, not config.toml)
     parsed.model = model;
-    parsed.model_provider = "zenroute";
+    parsed.model_provider = "zenrouter";
 
-    // Update or create zenroute provider section (no api_key - Codex reads from auth.json)
+    // Update or create zenrouter provider section (no api_key - Codex reads from auth.json)
     // Ensure /v1 suffix is added only once
     const normalizedBaseUrl = baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
-    setNestedSection(parsed, "model_providers.zenroute", {
-      name: "ZenRoute",
+    setNestedSection(parsed, "model_providers.zenrouter", {
+      name: "ZenRouter",
       base_url: normalizedBaseUrl,
       wire_api: "responses",
     });
@@ -179,7 +179,7 @@ export async function POST(request) {
   }
 }
 
-// DELETE - Remove ZenRoute settings only (keep other settings)
+// DELETE - Remove ZenRouter settings only (keep other settings)
 export async function DELETE() {
   try {
     const configPath = getCodexConfigPath();
@@ -199,14 +199,14 @@ export async function DELETE() {
       throw error;
     }
 
-    // Remove ZenRoute related root fields only if they point to zenroute
-    if (parsed.model_provider === "zenroute") {
+    // Remove ZenRouter related root fields only if they point to zenrouter
+    if (parsed.model_provider === "zenrouter") {
       delete parsed.model;
       delete parsed.model_provider;
     }
 
-    // Remove zenroute provider section
-    deleteNestedSection(parsed, "model_providers.zenroute");
+    // Remove zenrouter provider section
+    deleteNestedSection(parsed, "model_providers.zenrouter");
 
     // Remove subagent configuration
     deleteNestedSection(parsed, "agents.subagent");
@@ -233,7 +233,7 @@ export async function DELETE() {
 
     return NextResponse.json({
       success: true,
-      message: "ZenRoute settings removed successfully",
+      message: "ZenRouter settings removed successfully",
     });
   } catch (error) {
     console.log("Error resetting codex settings:", error);

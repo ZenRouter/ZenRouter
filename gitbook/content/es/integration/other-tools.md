@@ -1,10 +1,10 @@
 # Integración con otras herramientas
 
-ZenRoute es compatible con cualquier herramienta que soporte el formato de API de OpenAI. Esta guía cubre patrones de integración genéricos para varias herramientas y aplicaciones personalizadas.
+ZenRouter es compatible con cualquier herramienta que soporte el formato de API de OpenAI. Esta guía cubre patrones de integración genéricos para varias herramientas y aplicaciones personalizadas.
 
 ## Resumen
 
-ZenRoute proporciona un endpoint de API compatible con OpenAI que funciona con:
+ZenRouter proporciona un endpoint de API compatible con OpenAI que funciona con:
 - Scripts y aplicaciones personalizadas
 - Clientes de API y herramientas de testing
 - Herramientas CLI y utilidades
@@ -13,20 +13,20 @@ ZenRoute proporciona un endpoint de API compatible con OpenAI que funciona con:
 
 ## Patrón de configuración genérico
 
-Cualquier herramienta compatible con OpenAI puede conectarse a ZenRoute usando estas configuraciones:
+Cualquier herramienta compatible con OpenAI puede conectarse a ZenRouter usando estas configuraciones:
 
-**ZenRoute local:**
+**ZenRouter local:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
-Model: cualquier modelo de ZenRoute (cc/*, cx/*, glm/*, etc.)
+Model: cualquier modelo de ZenRouter (cc/*, cx/*, glm/*, etc.)
 ```
 
-**ZenRoute en la nube:**
+**ZenRouter en la nube:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
-Model: cualquier modelo de ZenRoute (cc/*, cx/*, glm/*, etc.)
+Model: cualquier modelo de ZenRouter (cc/*, cx/*, glm/*, etc.)
 ```
 
 ## Modelos disponibles
@@ -318,9 +318,9 @@ def chat_with_retry(prompt, max_retries=3):
 
 ### Problemas de conexión
 
-**Problema:** No se puede conectar a ZenRoute
+**Problema:** No se puede conectar a ZenRouter
 ```bash
-# Verifica si ZenRoute está corriendo
+# Verifica si ZenRouter está corriendo
 curl http://localhost:20128/health
 
 # Respuesta esperada:
@@ -328,7 +328,7 @@ curl http://localhost:20128/health
 ```
 
 **Solución:**
-- Verifica que ZenRoute esté corriendo
+- Verifica que ZenRouter esté corriendo
 - Verifica que el puerto 20128 no esté bloqueado
 - Asegúrate de tener la URL base correcta (incluir `/v1`)
 
@@ -366,7 +366,7 @@ Error: Request timed out after 30s
 **Solución:**
 - Aumenta el timeout en la configuración del cliente
 - Usa modelos más rápidos para tareas sensibles al tiempo
-- Verifica la conexión de red a ZenRoute
+- Verifica la conexión de red a ZenRouter
 
 ### Rate limiting
 

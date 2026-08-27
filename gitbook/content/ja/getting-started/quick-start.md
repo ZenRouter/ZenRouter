@@ -1,6 +1,6 @@
 # はじめに
 
-ZenRouteを5分で起動し、AIリクエストをインテリジェントにルーティングし始めましょう。
+ZenRouterを5分で起動し、AIリクエストをインテリジェントにルーティングし始めましょう。
 
 ---
 
@@ -9,7 +9,7 @@ ZenRouteを5分で起動し、AIリクエストをインテリジェントにル
 ### 1. インストール
 
 ```bash
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
 **要件:** Node.js 20+ ([インストール詳細](getting-started/installation.md))
@@ -17,7 +17,7 @@ npm install -g zenroute
 ### 2. 起動
 
 ```bash
-zenroute
+zenrouter
 ```
 
 🎉 **ダッシュボードが自動的に開きます** (`http://localhost:20128`)
@@ -43,7 +43,7 @@ Dashboard → Providers → Connect [Provider]
 **例: Claude Code**
 1. 「Connect Claude Code」をクリック
 2. Claudeアカウントでログイン
-3. ZenRouteを認可
+3. ZenRouterを認可
 4. ✅ 完了! モデルを使用: `cc/claude-opus-4-5-20251101`
 
 #### オプションB: APIキー(低価格プロバイダー)
@@ -83,14 +83,14 @@ Dashboard → Providers → Connect [Free Provider]
 
 ## 4. CLIツールで使用
 
-コーディングツールをZenRouteに向けます:
+コーディングツールをZenRouterに向けます:
 
 ### Cursor IDE
 
 ```
 Settings → Models → Advanced:
   OpenAI API Base URL: http://localhost:20128/v1
-  OpenAI API Key: [zenrouteダッシュボードから取得]
+  OpenAI API Key: [zenrouterダッシュボードから取得]
   Model: cc/claude-opus-4-5-20251101
 ```
 
@@ -101,7 +101,7 @@ Settings → Models → Advanced:
 ```json
 {
   "anthropic_api_base": "http://localhost:20128/v1",
-  "anthropic_api_key": "your-zenroute-api-key"
+  "anthropic_api_key": "your-zenrouter-api-key"
 }
 ```
 
@@ -118,7 +118,7 @@ Model: cc/claude-opus-4-5-20251101
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:20128"
-export OPENAI_API_KEY="your-zenroute-api-key"
+export OPENAI_API_KEY="your-zenrouter-api-key"
 
 codex "your prompt"
 ```
@@ -242,6 +242,6 @@ CLIで使用: premium-coding
 
 ## ヘルプが必要?
 
-- **ウェブサイト**: [GitHub](https://github.com/joyccn/ZenRoute)
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **ウェブサイト**: [GitHub](https://github.com/ZenRouter/ZenRouter)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)

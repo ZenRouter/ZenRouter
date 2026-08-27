@@ -8,7 +8,7 @@ export default function Navigation() {
   const router = useRouter();
 
   return (
-    <nav className="fixed top-0 z-50 w-full bg-[#10151f]/85 backdrop-blur-md border-b border-[#232f42]">
+    <nav className="fixed top-0 z-50 w-full bg-[#141414]/90 backdrop-blur-md border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <button
@@ -17,18 +17,18 @@ export default function Navigation() {
           onClick={() => router.push("/")}
           aria-label="Navigate to home"
         >
-          <div className="size-8 rounded-lg bg-[#192230] border border-[#2d3b50] flex items-center justify-center p-1.5 shadow-sm">
-            <Image src="/icons/logo.svg" alt="ZenRoute Logo" width={22} height={22} className="w-full h-full object-contain" />
+          <div className="size-8 rounded-lg bg-[#1f1f1f] border border-white/10 flex items-center justify-center p-1.5 shadow-sm">
+            <Image src="/icons/logo.svg" alt="ZenRouter Logo" width={22} height={22} className="w-full h-full object-contain" />
           </div>
-          <h2 className="text-white text-xl font-bold tracking-tight">ZenRoute</h2>
+          <h2 className="text-white text-xl font-bold tracking-tight">ZenRouter</h2>
         </button>
 
         {/* Desktop menu */}
         <div className="hidden md:flex items-center gap-8">
           <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#features">Features</a>
           <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#how-it-works">How it Works</a>
-          <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/joyccn/ZenRoute#readme" target="_blank" rel="noopener noreferrer">Docs</a>
-          <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors flex items-center gap-1" href="https://github.com/joyccn/ZenRoute" target="_blank" rel="noopener noreferrer">
+          <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/ZenRouter/ZenRouter#readme" target="_blank" rel="noopener noreferrer">Docs</a>
+          <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors flex items-center gap-1" href="https://github.com/ZenRouter/ZenRouter" target="_blank" rel="noopener noreferrer">
             GitHub <span className="material-symbols-outlined text-[14px]">open_in_new</span>
           </a>
         </div>
@@ -56,8 +56,8 @@ export default function Navigation() {
           <div className="flex flex-col gap-4 p-6">
             <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#features" onClick={() => setMobileMenuOpen(false)}>Features</a>
             <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>How it Works</a>
-            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/joyccn/ZenRoute#readme" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>Docs</a>
-            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/joyccn/ZenRoute" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>GitHub</a>
+            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/ZenRouter/ZenRouter#readme" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>Docs</a>
+            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/ZenRouter/ZenRouter" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>GitHub</a>
             <button
               onClick={() => {
                 setMobileMenuOpen(false);

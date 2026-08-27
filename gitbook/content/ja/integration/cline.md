@@ -1,13 +1,13 @@
 # Cline統合
 
-ZenRouteをCline VSCode拡張機能と統合し、AIリクエストをZenRouteのインテリジェントルーティングシステム経由でルーティングします。
+ZenRouterをCline VSCode拡張機能と統合し、AIリクエストをZenRouterのインテリジェントルーティングシステム経由でルーティングします。
 
 ## 前提条件
 
 - Visual Studio Codeがインストール済み
 - VSCodeマーケットプレイスからCline拡張機能がインストール済み
-- ZenRouteがローカルで動作中、またはクラウドエンドポイントが設定済み
-- ZenRouteダッシュボードからのAPIキー
+- ZenRouterがローカルで動作中、またはクラウドエンドポイントが設定済み
+- ZenRouterダッシュボードからのAPIキー
 
 ## セットアップ
 
@@ -25,33 +25,33 @@ ZenRouteをCline VSCode拡張機能と統合し、AIリクエストをZenRoute�
 
 ### 3. Base URLを設定
 
-Base URLをZenRouteエンドポイントに設定:
+Base URLをZenRouterエンドポイントに設定:
 
-**ローカルZenRoute用:**
+**ローカルZenRouter用:**
 ```
 http://localhost:20128/v1
 ```
 
-**クラウドZenRoute用:**
+**クラウドZenRouter用:**
 ```
 http://localhost:20128
 ```
 
 **手順:**
-1. **Base URL** フィールドにZenRouteエンドポイントを入力
+1. **Base URL** フィールドにZenRouterエンドポイントを入力
 2. 末尾に `/v1` を必ず含める
 
 ### 4. APIキーを追加
 
-1. **API Key** フィールドにZenRoute APIキーを入力
-2. APIキーはZenRouteダッシュボードの **Settings → API Keys** で確認できます
-3. キーは `sk-zenroute-` で始まります
+1. **API Key** フィールドにZenRouter APIキーを入力
+2. APIキーはZenRouterダッシュボードの **Settings → API Keys** で確認できます
+3. キーは `sk-zenrouter-` で始まります
 
 ### 5. モデルを選択
 
 1. **Model** ドロップダウンで、次のいずれかを実行:
    - 利用可能なモデルから選択 (Clineが自動検出した場合)
-   - ZenRoute設定からモデル名を手動で入力
+   - ZenRouter設定からモデル名を手動で入力
 
 2. 一般的なモデル名:
    - `gpt-4`
@@ -71,13 +71,13 @@ Cline設定は次のようになります:
 ```
 API Provider: Ollama
 Base URL: http://localhost:20128/v1
-API Key: sk-zenroute-xxxxxxxxxxxxx
+API Key: sk-zenrouter-xxxxxxxxxxxxx
 Model: gpt-4
 ```
 
 ## 利用可能なモデル
 
-ZenRouteダッシュボードで設定されたモデルを使用できます。一般的な例:
+ZenRouterダッシュボードで設定されたモデルを使用できます。一般的な例:
 
 | モデル名 | プロバイダー | 説明 |
 |------------|----------|-------------|
@@ -94,64 +94,64 @@ ZenRouteダッシュボードで設定されたモデルを使用できます。
 1. VSCodeでClineパネルを開く
 2. チャット入力にメッセージを入力
 3. Enterを押して送信
-4. ClineはZenRouteを使用してリクエストを処理
+4. ClineはZenRouterを使用してリクエストを処理
 
 ### コード生成
 
 1. Clineにコード生成を依頼: 「Create a React component for a login form」
-2. ClineはZenRouteを使用してコードを生成
+2. ClineはZenRouterを使用してコードを生成
 3. 生成されたコードを確認して受け入れる
 
 ### コード説明
 
 1. エディタでコードを選択
 2. Clineに質問: 「Explain this code」
-3. ZenRoute経由でAIによる説明を取得
+3. ZenRouter経由でAIによる説明を取得
 
 ### ファイル操作
 
 1. Clineにファイルの作成、変更、削除を依頼
-2. ClineはZenRouteを使用してコンテキストを理解し変更を加える
+2. ClineはZenRouterを使用してコンテキストを理解し変更を加える
 3. 受け入れる前に変更を確認
 
 ## トラブルシューティング
 
 ### 「Connection Failed」エラー
 
-1. ZenRouteが動作中か確認: `curl http://localhost:20128/health`
+1. ZenRouterが動作中か確認: `curl http://localhost:20128/health`
 2. Base URLが正しく、`/v1` を含むことを確認
 3. ファイアウォールがポート20128をブロックしていないか確認
 4. VSCodeを再起動してみる
 
 ### 「Invalid API Key」エラー
 
-1. ZenRouteダッシュボードでAPIキーを確認
-2. `sk-zenroute-` プレフィックスを含むキー全体をコピーしたか確認
+1. ZenRouterダッシュボードでAPIキーを確認
+2. `sk-zenrouter-` プレフィックスを含むキー全体をコピーしたか確認
 3. APIキーが期限切れでないか確認
 4. 新しいAPIキーを再生成してみる
 
 ### 「Model Not Found」エラー
 
-1. モデル名がZenRoute設定と正確に一致するか確認
-2. ZenRouteダッシュボードでプロバイダー接続がアクティブか確認
+1. モデル名がZenRouter設定と正確に一致するか確認
+2. ZenRouterダッシュボードでプロバイダー接続がアクティブか確認
 3. 接続されたプロバイダーでモデルが利用可能か確認
 4. フルモデル名を使用してみる (例: `gpt-4` の代わりに `openai/gpt-4`)
 
 ### Clineが応答しない
 
 1. エラーメッセージについてCline出力パネルを確認
-2. ZenRouteインスタンスが動作中で正常か確認
+2. ZenRouterインスタンスが動作中で正常か確認
 3. VSCodeウィンドウをリロードしてみる (Cmd/Ctrl + Shift + P → 「Reload Window」)
-4. エラーについてZenRouteログを確認
+4. エラーについてZenRouterログを確認
 
 ## 高度な設定
 
 ### クラウドエンドポイントを使用
 
-localhostの代わりにZenRouteクラウドエンドポイントを使用:
+localhostの代わりにZenRouterクラウドエンドポイントを使用:
 
 1. Cline設定で、Base URLを設定: `http://localhost:20128`
-2. ZenRouteクラウドダッシュボードでAPIキーが設定されていることを確認
+2. ZenRouterクラウドダッシュボードでAPIキーが設定されていることを確認
 3. クラウドエンドポイントがアクティブでアクセス可能か確認
 
 ### 複数のモデル
@@ -173,16 +173,16 @@ localhostの代わりにZenRouteクラウドエンドポイントを使用:
 ## ベストプラクティス
 
 1. **適切なモデルを使用**: シンプルなタスクには高速モデル (HaikuやFlash) を、複雑なタスクには強力なモデル (OpusやGPT-4) を選択
-2. **使用量をモニター**: ZenRouteダッシュボードで使用統計とコストを確認
+2. **使用量をモニター**: ZenRouterダッシュボードで使用統計とコストを確認
 3. **コンテキスト管理**: トークン使用量を減らすため、会話を焦点を絞ったものに保つ
 4. **モデル切替**: タスクの複雑さに基づいてモデルを切り替え、コストとパフォーマンスを最適化
 5. **APIキーセキュリティ**: APIキーをバージョン管理にコミットしない
 
-## ZenRoute機能との統合
+## ZenRouter機能との統合
 
 ### モデルルーティング
 
-ZenRouteは以下に基づいて最適な利用可能なプロバイダーにリクエストを自動的にルーティング:
+ZenRouterは以下に基づいて最適な利用可能なプロバイダーにリクエストを自動的にルーティング:
 - モデル可用性
 - プロバイダーヘルスステータス
 - コスト最適化
@@ -190,11 +190,11 @@ ZenRouteは以下に基づいて最適な利用可能なプロバイダーにリ
 
 ### フォールバックサポート
 
-プロバイダーが失敗した場合、ZenRouteは自動的にダッシュボードで設定された代替プロバイダーにフォールバックします。
+プロバイダーが失敗した場合、ZenRouterは自動的にダッシュボードで設定された代替プロバイダーにフォールバックします。
 
 ### 使用量トラッキング
 
-ZenRouteダッシュボード経由でCline使用量をモニター:
+ZenRouterダッシュボード経由でCline使用量をモニター:
 - 総リクエスト数
 - トークン使用量
 - モデルごとのコスト

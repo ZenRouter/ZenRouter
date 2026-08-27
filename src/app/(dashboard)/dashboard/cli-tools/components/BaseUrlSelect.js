@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { UPDATER_CONFIG } from "@/shared/constants/config";
 
-const STORAGE_KEY = "zenroute.cliToolEndpointPresets";
+const STORAGE_KEY = "zenrouter.cliToolEndpointPresets";
 const CUSTOM_VALUE = "__custom__";
 const SAVE_VALUE = "__save__";
 

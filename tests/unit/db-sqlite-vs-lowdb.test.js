@@ -10,7 +10,7 @@ let tempDir;
 let sqliteDb;
 
 beforeAll(async () => {
-  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "zenroute-db-compare-"));
+  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "zenrouter-db-compare-"));
   process.env.DATA_DIR = tempDir;
   vi.resetModules();
   sqliteDb = await import("@/lib/db/index.js");

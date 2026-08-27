@@ -1,6 +1,6 @@
 # 安装
 
-ZenRoute 的详细安装指南,附故障排除技巧。
+ZenRouter 的详细安装指南,附故障排除技巧。
 
 ---
 
@@ -34,34 +34,34 @@ npm --version
 全局安装,任何位置都能使用:
 
 ```bash
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
-**启动 ZenRoute:**
+**启动 ZenRouter:**
 
 ```bash
-zenroute
+zenrouter
 ```
 
 **优势:**
 - ✅ 任意目录均可运行
-- ✅ 命令简单:`zenroute`
-- ✅ 通过 `npm update -g zenroute` 自动更新
+- ✅ 命令简单:`zenrouter`
+- ✅ 通过 `npm update -g zenrouter` 自动更新
 
 ### 方式 2:本地安装
 
 在特定项目中安装:
 
 ```bash
-mkdir my-zenroute
-cd my-zenroute
-npm install zenroute
+mkdir my-zenrouter
+cd my-zenrouter
+npm install zenrouter
 ```
 
-**启动 ZenRoute:**
+**启动 ZenRouter:**
 
 ```bash
-npx zenroute
+npx zenrouter
 ```
 
 **优势:**
@@ -74,8 +74,8 @@ npx zenroute
 从 GitHub 克隆并构建:
 
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 npm install
 npm run build
 npm start
@@ -93,13 +93,13 @@ npm start
 ### 启动服务器
 
 ```bash
-zenroute
+zenrouter
 ```
 
 **发生了什么:**
 1. 服务器启动在 `http://localhost:20128`
 2. 仪表盘在浏览器中自动打开
-3. 数据目录创建在 `~/.zenroute`
+3. 数据目录创建在 `~/.zenrouter`
 4. API key 自动生成
 
 ### 仪表盘登录
@@ -193,7 +193,7 @@ export JWT_SECRET="your-secure-secret-change-this"
 export INITIAL_PASSWORD="your-password"
 
 # Storage
-export DATA_DIR="~/.zenroute"
+export DATA_DIR="~/.zenrouter"
 
 # Server
 export PORT="20128"
@@ -205,11 +205,11 @@ export ENABLE_REQUEST_LOGS="false"
 
 ### 数据目录
 
-**默认位置:** `~/.zenroute`
+**默认位置:** `~/.zenrouter`
 
 **内容:**
 ```
-~/.zenroute/
+~/.zenrouter/
   ├── db.json           # 数据库(提供商、组合、使用)
   ├── api-keys.json     # API keys
   └── logs/             # 请求日志(若启用)
@@ -219,7 +219,7 @@ export ENABLE_REQUEST_LOGS="false"
 
 ```bash
 export DATA_DIR="/custom/path"
-zenroute
+zenrouter
 ```
 
 ### 端口配置
@@ -230,13 +230,13 @@ zenroute
 
 ```bash
 export PORT="3000"
-zenroute
+zenrouter
 ```
 
 **或用命令行:**
 
 ```bash
-zenroute --port 3000
+zenrouter --port 3000
 ```
 
 ---
@@ -263,14 +263,14 @@ kill -9 <PID>
 **方案 2:使用其他端口**
 
 ```bash
-zenroute --port 3000
+zenrouter --port 3000
 ```
 
 ### 权限被拒绝
 
 **错误:**
 ```
-Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/zenroute'
+Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/zenrouter'
 ```
 
 **方案:使用 sudo(不推荐)或修复 npm 权限**
@@ -283,7 +283,7 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 
 # 然后重新安装
-npm install -g zenroute
+npm install -g zenrouter
 ```
 
 ### Node.js 版本过低
@@ -345,23 +345,23 @@ ping google.com
 
 ### 内存占用过高
 
-**问题:** ZenRoute 占用过多 RAM
+**问题:** ZenRouter 占用过多 RAM
 
 **方案:重启服务器**
 
 ```bash
 # 停止
-pkill -f zenroute
+pkill -f zenrouter
 
 # 启动
-zenroute
+zenrouter
 ```
 
 **或用 PM2 自动重启:**
 
 ```bash
 npm install -g pm2
-pm2 start zenroute --name zenroute
+pm2 start zenrouter --name zenrouter
 pm2 save
 ```
 
@@ -372,8 +372,8 @@ pm2 save
 ### 本地开发
 
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 ```
 
 **适用场景:** 个人编码、测试
@@ -382,7 +382,7 @@ zenroute
 
 ```bash
 # 安装
-npm install -g zenroute
+npm install -g zenrouter
 
 # 配置
 export JWT_SECRET="your-secure-secret"
@@ -391,7 +391,7 @@ export NODE_ENV="production"
 
 # 用 PM2 启动
 npm install -g pm2
-pm2 start zenroute --name zenroute
+pm2 start zenrouter --name zenrouter
 pm2 save
 pm2 startup
 ```
@@ -401,15 +401,15 @@ pm2 startup
 ### Docker
 
 ```bash
-docker pull zenroute/zenroute:latest
+docker pull zenrouter/zenrouter:latest
 
 docker run -d \
   -p 20128:20128 \
   -e JWT_SECRET="your-secure-secret" \
   -e INITIAL_PASSWORD="your-password" \
-  -v zenroute-data:/root/.zenroute \
-  --name zenroute \
-  zenroute/zenroute:latest
+  -v zenrouter-data:/root/.zenrouter \
+  --name zenrouter \
+  zenrouter/zenrouter:latest
 ```
 
 **适用场景:** 容器化部署、Kubernetes
@@ -444,13 +444,13 @@ server {
 ### 移除全局安装
 
 ```bash
-npm uninstall -g zenroute
+npm uninstall -g zenrouter
 ```
 
 ### 移除数据目录
 
 ```bash
-rm -rf ~/.zenroute
+rm -rf ~/.zenrouter
 ```
 
 ### 移除配置
@@ -458,7 +458,7 @@ rm -rf ~/.zenroute
 ```bash
 # 从 shell 配置中移除环境变量
 nano ~/.bashrc  # 或 ~/.zshrc
-# 删除 zenroute 相关的 export
+# 删除 zenrouter 相关的 export
 ```
 
 ---
@@ -473,6 +473,6 @@ nano ~/.bashrc  # 或 ~/.zshrc
 
 ## 需要帮助?
 
-- **网站**: [GitHub](https://github.com/joyccn/ZenRoute)
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **网站**: [GitHub](https://github.com/ZenRouter/ZenRouter)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)

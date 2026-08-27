@@ -1,6 +1,6 @@
 # ☁️ 云端部署
 
-将 ZenRoute 部署到 VPS 或 Docker,实现远程访问和生产使用。
+将 ZenRouter 部署到 VPS 或 Docker,实现远程访问和生产使用。
 
 ---
 
@@ -16,8 +16,8 @@
 ### 步骤 1:克隆仓库
 
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
 ```
 
 ### 步骤 2:安装依赖
@@ -39,7 +39,7 @@ npm run build
 ```bash
 export JWT_SECRET="your-secure-secret-change-this-to-random-string"
 export INITIAL_PASSWORD="your-secure-password"
-export DATA_DIR="/var/lib/zenroute"
+export DATA_DIR="/var/lib/zenrouter"
 export NODE_ENV="production"
 ```
 
@@ -49,15 +49,15 @@ export NODE_ENV="production"
 |----------|---------|-------------|
 | `JWT_SECRET` | 自动生成 | **生产环境必须修改!** 用于 JWT token 签名 |
 | `INITIAL_PASSWORD` | `12345678` | 仪表盘登录密码 |
-| `DATA_DIR` | `~/.zenroute` | 数据库与数据存储路径 |
+| `DATA_DIR` | `~/.zenrouter` | 数据库与数据存储路径 |
 | `NODE_ENV` | `development` | 部署时设为 `production` |
 | `ENABLE_REQUEST_LOGS` | `false` | 启用 debug 请求/响应日志 |
 
 ### 步骤 5:创建数据目录
 
 ```bash
-sudo mkdir -p /var/lib/zenroute
-sudo chown $USER:$USER /var/lib/zenroute
+sudo mkdir -p /var/lib/zenrouter
+sudo chown $USER:$USER /var/lib/zenrouter
 ```
 
 ### 步骤 6:启动应用
@@ -74,8 +74,8 @@ PM2 让应用持续运行,崩溃时自动重启:
 # 全局安装 PM2
 npm install -g pm2
 
-# 用 PM2 启动 ZenRoute
-pm2 start npm --name zenroute -- start
+# 用 PM2 启动 ZenRouter
+pm2 start npm --name zenrouter -- start
 
 # 保存 PM2 配置
 pm2 save
@@ -89,13 +89,13 @@ pm2 startup
 
 ```bash
 # 查看日志
-pm2 logs zenroute
+pm2 logs zenrouter
 
 # 重启应用
-pm2 restart zenroute
+pm2 restart zenrouter
 
 # 停止应用
-pm2 stop zenroute
+pm2 stop zenrouter
 
 # 查看状态
 pm2 status
@@ -147,17 +147,17 @@ CMD ["npm", "run", "start"]
 
 ```bash
 # 构建镜像
-docker build -t zenroute .
+docker build -t zenrouter .
 
 # 运行容器
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 3000:3000 \
   -p 20128:20128 \
   -e JWT_SECRET="your-secure-secret-change-this" \
   -e INITIAL_PASSWORD="your-secure-password" \
-  -v zenroute-data:/app/data \
-  zenroute
+  -v zenrouter-data:/app/data \
+  zenrouter
 ```
 
 ### 方式 2:Docker Compose
@@ -168,9 +168,9 @@ docker run -d \
 version: '3.8'
 
 services:
-  zenroute:
+  zenrouter:
     build: .
-    container_name: zenroute
+    container_name: zenrouter
     ports:
       - "3000:3000"
       - "20128:20128"
@@ -180,11 +180,11 @@ services:
       - INITIAL_PASSWORD=your-secure-password
       - DATA_DIR=/app/data
     volumes:
-      - zenroute-data:/app/data
+      - zenrouter-data:/app/data
     restart: unless-stopped
 
 volumes:
-  zenroute-data:
+  zenrouter-data:
 ```
 
 **使用 Docker Compose 运行:**
@@ -223,7 +223,7 @@ sudo apt install nginx
 
 ### 步骤 2:配置 Nginx
 
-创建 `/etc/nginx/sites-available/zenroute`:
+创建 `/etc/nginx/sites-available/zenrouter`:
 
 ```nginx
 server {
@@ -247,7 +247,7 @@ server {
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
 
-    # Proxy to ZenRoute
+    # Proxy to ZenRouter
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -284,7 +284,7 @@ server {
 
 ```bash
 # 创建软链接
-sudo ln -s /etc/nginx/sites-available/zenroute /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/zenrouter /etc/nginx/sites-enabled/
 
 # 测试配置
 sudo nginx -t
@@ -333,7 +333,7 @@ sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
-# 若不使用反向代理,放开 ZenRoute 端口
+# 若不使用反向代理,放开 ZenRouter 端口
 sudo ufw allow 3000/tcp
 sudo ufw allow 20128/tcp
 
@@ -363,22 +363,22 @@ ssh -L 3000:localhost:3000 user@your-server.com
 # 更新系统包
 sudo apt update && sudo apt upgrade -y
 
-# 更新 ZenRoute
-cd /path/to/zenroute/app
+# 更新 ZenRouter
+cd /path/to/zenrouter/app
 git pull
 npm install
 npm run build
-pm2 restart zenroute
+pm2 restart zenrouter
 ```
 
 ### 5. 备份策略
 
 ```bash
 # 备份数据目录
-tar -czf zenroute-backup-$(date +%Y%m%d).tar.gz /var/lib/zenroute
+tar -czf zenrouter-backup-$(date +%Y%m%d).tar.gz /var/lib/zenrouter
 
 # 每日自动备份(加入 crontab)
-0 2 * * * tar -czf /backups/zenroute-$(date +\%Y\%m\%d).tar.gz /var/lib/zenroute
+0 2 * * * tar -czf /backups/zenrouter-$(date +\%Y\%m\%d).tar.gz /var/lib/zenrouter
 ```
 
 ---
@@ -392,7 +392,7 @@ tar -czf zenroute-backup-$(date +%Y%m%d).tar.gz /var/lib/zenroute
 pm2 status
 
 # 查看日志
-pm2 logs zenroute --lines 100
+pm2 logs zenrouter --lines 100
 
 # 监控资源
 pm2 monit
@@ -429,20 +429,20 @@ netstat -tulpn | grep -E '3000|20128'
 
 ```bash
 # 查看日志
-pm2 logs zenroute
+pm2 logs zenrouter
 
 # 检查端口是否被占用
 sudo lsof -i :3000
 sudo lsof -i :20128
 
 # 检查环境变量
-pm2 env zenroute
+pm2 env zenrouter
 ```
 
 ### Nginx 502 Bad Gateway
 
 ```bash
-# 检查 ZenRoute 是否运行
+# 检查 ZenRouter 是否运行
 pm2 status
 
 # 查看 Nginx 错误日志
@@ -460,8 +460,8 @@ sudo nginx -t
 
 ```bash
 # 修复数据目录权限
-sudo chown -R $USER:$USER /var/lib/zenroute
-chmod 755 /var/lib/zenroute
+sudo chown -R $USER:$USER /var/lib/zenrouter
+chmod 755 /var/lib/zenrouter
 ```
 
 ---

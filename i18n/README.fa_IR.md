@@ -1,19 +1,19 @@
 <div align="center">
-  <img src="./images/zenroute.png?1" alt="داشبورد ZenRoute" width="800"/>
+  <img src="./images/zenrouter.png?1" alt="داشبورد ZenRouter" width="800"/>
   
-  # ZenRoute - مسیریاب رایگان هوش مصنوعی و ذخیره‌ساز توکن
+  # ZenRouter - مسیریاب رایگان هوش مصنوعی و ذخیره‌ساز توکن
   
   **هرگز کدنویسی را متوقف نکنید. با RTK بین ۲۰ تا ۴۰٪ در توکن‌ها صرفه‌جویی کنید + بازگشت خودکار به مدل‌های رایگان و ارزان هوش مصنوعی.**
   
   **همه ابزارهای کدنویسی مبتنی بر هوش مصنوعی (Claude Code، Cursor، Antigravity، Copilot، Codex، Gemini، OpenCode، Cline، OpenClaw...) را به بیش از ۴۰ ارائه‌دهنده و ۱۰۰+ مدل متصل کنید.**
   
-  [![npm](https://img.shields.io/npm/v/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![Downloads](https://img.shields.io/npm/dm/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![Docker Pulls](https://img.shields.io/docker/pulls/joyccn/ZenRoute.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/joyccn/ZenRoute)
-  [![GHCR](https://img.shields.io/badge/GHCR-joyccn%2Fzenroute-blue?logo=github)](https://github.com/joyccn/ZenRoute/pkgs/container/zenroute)
-  [![License](https://img.shields.io/npm/l/zenroute.svg)](https://github.com/joyccn/ZenRoute/blob/main/LICENSE)
+  [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![Docker Pulls](https://img.shields.io/docker/pulls/ZenRouter/ZenRouter.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/ZenRouter/ZenRouter)
+  [![GHCR](https://img.shields.io/badge/GHCR-ZenRouter%2FZenRouter-blue?logo=github)](https://github.com/ZenRouter/ZenRouter/pkgs/container/zenrouter)
+  [![License](https://img.shields.io/npm/l/zenrouter.svg)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
 
-<a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="joyccn%2Fzenroute | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="ZenRouter%2FZenRouter | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 
 [🇻🇳 Tiếng Việt](./i18n/README.vi.md) • [🇨🇳 中文](./i18n/README.zh-CN.md) • [🇯🇵 日本語](./i18n/README.ja-JP.md) • [🇷🇺 Русский](./i18n/README.ru.md) • [🇮🇷 فارسی](./i18n/README.fa_IR.md)
@@ -22,7 +22,7 @@
 
 ---
 
-## 🤔 چرا ZenRoute؟
+## 🤔 چرا ZenRouter؟
 
 **هدررفت پول، توکن و برخورد با محدودیت‌ها را متوقف کنید:**
 
@@ -32,7 +32,7 @@
 - ❌ APIهای گران قیمت (۲۰ تا ۵۰ دلار در ماه برای هر ارائه‌دهنده)
 - ❌ جابجایی دستی بین ارائه‌دهندگان
 
-**ZenRoute این مشکلات را حل می‌کند:**
+**ZenRouter این مشکلات را حل می‌کند:**
 
 - ✅ **ذخیره‌ساز توکن RTK** - فشرده‌سازی خودکار محتوای tool_result، صرفه‌جویی ۲۰ تا ۴۰٪ توکن در هر درخواست
 - ✅ **حداکثر استفاده از اشتراک‌ها** - پیگیری سهمیه، استفاده از هر ذره قبل از بازنشانی
@@ -52,7 +52,7 @@
        │ http://localhost:20128/v1
        ↓
 ┌─────────────────────────────────────────────┐
-│           ZenRoute (مسیریاب هوشمند)          │
+│           ZenRouter (مسیریاب هوشمند)          │
 │  • ذخیره‌ساز توکن RTK (کاهش توکن‌های tool_result) │
 │  • ترجمه قالب (OpenAI ↔ Claude)             │
 │  • پیگیری سهمیه                             │
@@ -75,8 +75,8 @@
 **۱. نصب سراسری:**
 
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 ```
 
 🎉 داشبورد در آدرس `http://localhost:20128` باز می‌شود
@@ -98,7 +98,7 @@ zenroute
 
 **روش جایگزین: اجرا از سورس (این مخزن):**
 
-بسته این مخزن خصوصی است (`zenroute-app`)، بنابراین اجرا از سورس/داکر مسیر معمول توسعه محلی است.
+بسته این مخزن خصوصی است (`zenrouter-app`)، بنابراین اجرا از سورس/داکر مسیر معمول توسعه محلی است.
 
 ```bash
 cp .env.example .env
@@ -128,34 +128,34 @@ PORT=20128 HOSTNAME=0.0.0.0 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run 
   <tr>
   <td align="center" width="320">
   <a href="https://www.youtube.com/watch?v=X69n5Lm06Yw">
-    <img src="https://img.youtube.com/vi/X69n5Lm06Yw/maxresdefault.jpg" alt="صرفه‌جویی در هزینه LLM با ZenRoute" width="300"/>
+    <img src="https://img.youtube.com/vi/X69n5Lm06Yw/maxresdefault.jpg" alt="صرفه‌جویی در هزینه LLM با ZenRouter" width="300"/>
   </a><br/>
   <b>🇻🇳 ویتنامی</b><br/>
-  <sub>صرفه‌جویی در هزینه LLM برای OpenClaw با ZenRoute<br/>توسط <a href="https://www.youtube.com/c/M%C3%ACAIblog">Mì AI</a></sub>
+  <sub>صرفه‌جویی در هزینه LLM برای OpenClaw با ZenRouter<br/>توسط <a href="https://www.youtube.com/c/M%C3%ACAIblog">Mì AI</a></sub>
 </td>
 <td align="center" width="320">
       <a href="https://youtu.be/VQAw612S27Y">
-        <img src="https://img.youtube.com/vi/VQAw612S27Y/maxresdefault.jpg" alt="راه‌اندازی نامحدود رایگان ZenRoute + Claude Code" width="300"/>
+        <img src="https://img.youtube.com/vi/VQAw612S27Y/maxresdefault.jpg" alt="راه‌اندازی نامحدود رایگان ZenRouter + Claude Code" width="300"/>
       </a><br/>
       <b>🇵🇰 اردو / हिन्दी</b><br/>
-      <sub>راه‌اندازی نامحدود رایگان ZenRoute + Claude Code<br/>توسط <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
+      <sub>راه‌اندازی نامحدود رایگان ZenRouter + Claude Code<br/>توسط <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
     </td>
     <td align="center" width="320">
       <a href="https://www.youtube.com/watch?v=raEyZPg5xE0">
-        <img src="https://img.youtube.com/vi/raEyZPg5xE0/maxresdefault.jpg" alt="آموزش راه‌اندازی ZenRoute" width="300"/>
+        <img src="https://img.youtube.com/vi/raEyZPg5xE0/maxresdefault.jpg" alt="آموزش راه‌اندازی ZenRouter" width="300"/>
       </a><br/>
       <b>🇺🇸 انگلیسی</b><br/>
-      <sub>راه‌اندازی رایگان ZenRoute + Claude Code<br/>توسط <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
+      <sub>راه‌اندازی رایگان ZenRouter + Claude Code<br/>توسط <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
     </td>
     
   </tr>
   <tr>
   <td align="center" width="320">
       <a href="https://youtu.be/3dF5GIYMrcQ?si=bAyfyiHbARJQAHj_">
-        <img src="https://img.youtube.com/vi/3dF5GIYMrcQ/hqdefault.jpg" alt="آموزش راه‌اندازی ZenRoute" width="300"/>
+        <img src="https://img.youtube.com/vi/3dF5GIYMrcQ/hqdefault.jpg" alt="آموزش راه‌اندازی ZenRouter" width="300"/>
       </a><br/>
       <b>🇺🇸 انگلیسی</b><br/>
-      <sub>راه‌اندازی رایگان ZenRoute + Claude Code<br/>توسط <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
+      <sub>راه‌اندازی رایگان ZenRouter + Claude Code<br/>توسط <a href="https://www.youtube.com/@BuildAIWithHamid">Build AI With Hamid</a></sub>
     </td>
     <td align="center" width="320">
       <a href="https://www.youtube.com/watch?v=o3qYCyjrFYg">
@@ -169,7 +169,7 @@ PORT=20128 HOSTNAME=0.0.0.0 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run 
         <img src="https://img.youtube.com/vi/Ttpc26m39Dw/maxresdefault.jpg" alt="راه‌اندازی رایگان Claude CLI" width="300"/>
       </a><br/>
       <b>🇺🇸 انگلیسی</b><br/>
-      <sub>راه‌اندازی رایگان Claude CLI با ZenRoute 🚀<br/>توسط <a href="https://www.youtube.com/@CodeVerseSoban">CodeVerse Soban</a></sub>
+      <sub>راه‌اندازی رایگان Claude CLI با ZenRouter 🚀<br/>توسط <a href="https://www.youtube.com/@CodeVerseSoban">CodeVerse Soban</a></sub>
     </td>
     
   </tr>
@@ -179,7 +179,7 @@ PORT=20128 HOSTNAME=0.0.0.0 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run 
         <img src="https://img.youtube.com/vi/G-5A_D5Pm6Y/maxresdefault.jpg" alt="نصب کامل OpenClaw رایگان" width="300"/>
       </a><br/>
       <b>🇻🇳 ویتنامی</b><br/>
-      <sub>نصب کامل OpenClaw رایگان از صفر تا صد + ZenRoute<br/>توسط <a href="https://www.youtube.com/@maigia">Mai Gia</a></sub>
+      <sub>نصب کامل OpenClaw رایگان از صفر تا صد + ZenRouter<br/>توسط <a href="https://www.youtube.com/@maigia">Mai Gia</a></sub>
     </td>
     <td align="center" width="320">
       <a href="https://www.youtube.com/watch?v=JXmg8_gccgE">
@@ -193,7 +193,7 @@ PORT=20128 HOSTNAME=0.0.0.0 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run 
         <img src="https://img.youtube.com/vi/CkVZZUSTXAI/mqdefault.jpg" alt="راه‌اندازی رایگان Claude CLI" width="300"/>
       </a><br/>
       <b>🇮🇩 اندونزیایی</b><br/>
-      <sub>کدنویسی ۲۴ ساعته بدون محدودیت نرخ! صرفه‌جویی ۶۵٪ توکن هوش مصنوعی | آموزش راه‌اندازی سریع ZenRoute 🚀<br/>توسط <a href="https://www.youtube.com/@krisswuh">Krisswuh</a></sub>
+      <sub>کدنویسی ۲۴ ساعته بدون محدودیت نرخ! صرفه‌جویی ۶۵٪ توکن هوش مصنوعی | آموزش راه‌اندازی سریع ZenRouter 🚀<br/>توسط <a href="https://www.youtube.com/@krisswuh">Krisswuh</a></sub>
     </td>
     
   </tr>
@@ -201,10 +201,10 @@ PORT=20128 HOSTNAME=0.0.0.0 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run 
   <tr>
   <td align="center" width="320">
       <a href="https://www.youtube.com/watch?v=TXGv4eofe1I">
-        <img src="https://img.youtube.com/vi/TXGv4eofe1I/mqdefault.jpg" alt="روش استقرار ZenRoute در Hugging Face رایگان و همیشه روشن! | جایگزین VPS با ۱۶ گیگابایت رم" width="300"/>
+        <img src="https://img.youtube.com/vi/TXGv4eofe1I/mqdefault.jpg" alt="روش استقرار ZenRouter در Hugging Face رایگان و همیشه روشن! | جایگزین VPS با ۱۶ گیگابایت رم" width="300"/>
       </a><br/>
       <b>🇮🇩 اندونزیایی</b><br/>
-      <sub>روش استقرار ZenRoute در Hugging Face رایگان و همیشه روشن! | جایگزین VPS با ۱۶ گیگابایت رم<br/>توسط <a href="https://www.youtube.com/@krisswuh">Krisswuh</a></sub>
+      <sub>روش استقرار ZenRouter در Hugging Face رایگان و همیشه روشن! | جایگزین VPS با ۱۶ گیگابایت رم<br/>توسط <a href="https://www.youtube.com/@krisswuh">Krisswuh</a></sub>
     </td>
   </tr>
 
@@ -212,13 +212,13 @@ PORT=20128 HOSTNAME=0.0.0.0 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run 
 
 </div>
 
-> 🎬 **درباره ZenRoute ویدیو ساخته‌اید؟** یک [درخواست Pull](https://github.com/joyccn/ZenRoute/pulls) برای افزودن ویدیوی خود به این بخش ارسال کنید — ما آن را ادغام خواهیم کرد!
+> 🎬 **درباره ZenRouter ویدیو ساخته‌اید؟** یک [درخواست Pull](https://github.com/ZenRouter/ZenRouter/pulls) برای افزودن ویدیوی خود به این بخش ارسال کنید — ما آن را ادغام خواهیم کرد!
 
 ---
 
 ## 🛠️ ابزارهای خط فرمان پشتیبانی شده
 
-ZenRoute به‌طور یکپارچه با تمام ابزارهای اصلی کدنویسی هوش مصنوعی کار می‌کند:
+ZenRouter به‌طور یکپارچه با تمام ابزارهای اصلی کدنویسی هوش مصنوعی کار می‌کند:
 
 <div align="center">
   <table>
@@ -467,10 +467,10 @@ ZenRoute به‌طور یکپارچه با تمام ابزارهای اصلی ک
 
 ### 🧠 ذخیره‌ساز توکن Headroom
 
-Headroom اختیاری است و به‌طور جداگانه اجرا می‌شود. ZenRoute نقطه پایانی محلی `/v1/compress` Headroom را فراخوانی کرده، سپس مسیریابی معمولی، بازگشت، احراز هویت و پیگیری مصرف را ادامه می‌دهد:
+Headroom اختیاری است و به‌طور جداگانه اجرا می‌شود. ZenRouter نقطه پایانی محلی `/v1/compress` Headroom را فراخوانی کرده، سپس مسیریابی معمولی، بازگشت، احراز هویت و پیگیری مصرف را ادامه می‌دهد:
 
 ```
-کلاینت → ZenRoute → Headroom /v1/compress → ZenRoute → ارائه‌دهنده
+کلاینت → ZenRouter → Headroom /v1/compress → ZenRouter → ارائه‌دهنده
 ```
 
 راه‌اندازی محلی:
@@ -492,7 +492,7 @@ http://headroom:8787
 http://host.docker.internal:8787
 ```
 
-اگر Headroom از کار بیفتد یا خطا برگرداند، ZenRoute به‌حالت بازگشت باز می‌شود و درخواست اصلی را ارسال می‌کند.
+اگر Headroom از کار بیفتد یا خطا برگرداند، ZenRouter به‌حالت بازگشت باز می‌شود و درخواست اصلی را ارسال می‌کند.
 
 ### 🐴 دم‌اسب (توسعه‌دهنده ارشد تنبل)
 
@@ -534,7 +534,7 @@ http://host.docker.internal:8787
 ترجمه یکپارچه بین قالب‌ها:
 
 - **OpenAI** ↔ **Claude** ↔ **Gemini** ↔ **Cursor** ↔ **Kiro** ↔ **Vertex** ↔ **Antigravity** ↔ **Ollama** ↔ **OpenAI Responses**
-- ابزار خط فرمان شما قالب OpenAI ارسال می‌کند → ZenRoute ترجمه می‌کند → ارائه‌دهنده قالب بومی دریافت می‌کند
+- ابزار خط فرمان شما قالب OpenAI ارسال می‌کند → ZenRouter ترجمه می‌کند → ارائه‌دهنده قالب بومی دریافت می‌کند
 - با هر ابزاری که از نقاط پایانی سفارشی OpenAI پشتیبانی می‌کند کار می‌کند
 
 ### 👥 پشتیبانی از چند حساب
@@ -588,11 +588,11 @@ http://host.docker.internal:8787
 > **💡 مهم - درک هزینه‌های داشبورد:**
 >
 > "هزینه" نمایش داده شده در تحلیل استفاده **فقط برای پیگیری و مقایسه** است.
-> خود ZenRoute **هرگز از شما هزینه‌ای دریافت نمی‌کند**. شما فقط مستقیماً به ارائه‌دهندگان هزینه می‌پردازید (در صورت استفاده از خدمات پولی).
+> خود ZenRouter **هرگز از شما هزینه‌ای دریافت نمی‌کند**. شما فقط مستقیماً به ارائه‌دهندگان هزینه می‌پردازید (در صورت استفاده از خدمات پولی).
 >
 > **مثال:** اگر داشبورد شما "۲۹۰ دلار هزینه کل" را هنگام استفاده از مدل‌های iFlow نشان می‌دهد، این مبلغ چیزی است که در صورت استفاده مستقیم از APIهای پولی پرداخت می‌کردید. هزینه واقعی شما = **۰ دلار** (iFlow رایگان نامحدود است).
 >
-> به آن به عنوان "ردیاب پس‌انداز" فکر کنید که نشان می‌دهد با استفاده از مدل‌های رایگان یا مسیریابی از طریق ZenRoute چقدر صرفه‌جویی می‌کنید!
+> به آن به عنوان "ردیاب پس‌انداز" فکر کنید که نشان می‌دهد با استفاده از مدل‌های رایگان یا مسیریابی از طریق ZenRouter چقدر صرفه‌جویی می‌کنید!
 
 ### 🌐 استقرار در هر جا
 
@@ -625,15 +625,15 @@ http://host.docker.internal:8787
 
 ---
 
-### 📊 درک هزینه‌ها و صورتحساب ZenRoute
+### 📊 درک هزینه‌ها و صورتحساب ZenRouter
 
-**واقعیت صورتحساب ZenRoute:**
+**واقعیت صورتحساب ZenRouter:**
 
-✅ **نرم‌افزار ZenRoute = رایگان برای همیشه** (منبع باز، هرگز هزینه‌ای دریافت نمی‌کند)  
+✅ **نرم‌افزار ZenRouter = رایگان برای همیشه** (منبع باز، هرگز هزینه‌ای دریافت نمی‌کند)  
 ✅ **"هزینه‌های" داشبورد = فقط نمایش/پیگیری** (صورتحساب واقعی نیستند)  
 ✅ **شما مستقیماً به ارائه‌دهندگان هزینه می‌پردازید** (اشتراک‌ها یا هزینه‌های API)  
 ✅ **ارائه‌دهندگان رایگان واقعاً رایگان هستند** (iFlow، Kiro، Qwen = ۰ دلار نامحدود)  
-❌ **ZenRoute هرگز صورتحساب ارسال نمی‌کند** یا کارت شما را شارژ نمی‌کند
+❌ **ZenRouter هرگز صورتحساب ارسال نمی‌کند** یا کارت شما را شارژ نمی‌کند
 
 **نحوه عملکرد نمایش هزینه:**
 
@@ -656,9 +656,9 @@ http://host.docker.internal:8787
 **قوانین پرداخت:**
 
 - **ارائه‌دهندگان اشتراک** (Claude Code، Codex): مستقیماً از طریق وب‌سایت‌هایشان به آنها پرداخت کنید
-- **ارائه‌دهندگان ارزان** (GLM، MiniMax): مستقیماً به آنها پرداخت کنید، ZenRoute فقط مسیریابی می‌کند
+- **ارائه‌دهندگان ارزان** (GLM، MiniMax): مستقیماً به آنها پرداخت کنید، ZenRouter فقط مسیریابی می‌کند
 - **ارائه‌دهندگان رایگان** (iFlow، Kiro، Qwen): واقعاً برای همیشه رایگان، بدون هزینه پنهان
-- **ZenRoute**: هرگز هیچ هزینه‌ای دریافت نمی‌کند، همیشه
+- **ZenRouter**: هرگز هیچ هزینه‌ای دریافت نمی‌کند، همیشه
 
 ---
 
@@ -737,7 +737,7 @@ http://host.docker.internal:8787
 <details>
 <summary><b>📊 چرا داشبورد من هزینه‌های بالا نشان می‌دهد؟</b></summary>
 
-داشبورد مصرف توکن شما را پیگیری کرده و **هزینه‌های تخمینی** را نشان می‌دهد گویی مستقیماً از APIهای پولی استفاده می‌کنید. این **صورتحساب واقعی نیست** - این یک مرجع برای نشان دادن میزان پس‌انداز شما با استفاده از مدل‌های رایگان یا اشتراک‌های موجود از طریق ZenRoute است.
+داشبورد مصرف توکن شما را پیگیری کرده و **هزینه‌های تخمینی** را نشان می‌دهد گویی مستقیماً از APIهای پولی استفاده می‌کنید. این **صورتحساب واقعی نیست** - این یک مرجع برای نشان دادن میزان پس‌انداز شما با استفاده از مدل‌های رایگان یا اشتراک‌های موجود از طریق ZenRouter است.
 
 **مثال:**
 
@@ -751,17 +751,17 @@ http://host.docker.internal:8787
 </details>
 
 <details>
-<summary><b>💳 آیا توسط ZenRoute شارژ می‌شوم؟</b></summary>
+<summary><b>💳 آیا توسط ZenRouter شارژ می‌شوم؟</b></summary>
 
-**خیر.** ZenRoute نرم‌افزاری رایگان و منبع باز است که روی رایانه خودتان اجرا می‌شود. هرگز از شما هزینه‌ای دریافت نمی‌کند.
+**خیر.** ZenRouter نرم‌افزاری رایگان و منبع باز است که روی رایانه خودتان اجرا می‌شود. هرگز از شما هزینه‌ای دریافت نمی‌کند.
 
 **شما فقط پرداخت می‌کنید:**
 
 - ✅ **ارائه‌دهندگان اشتراک** (Claude Code ۲۰ دلار/ماه، Codex ۲۰-۲۰۰ دلار/ماه) → مستقیماً در وب‌سایت‌هایشان به آنها پرداخت کنید
-- ✅ **ارائه‌دهندگان ارزان** (GLM، MiniMax) → مستقیماً به آنها پرداخت کنید، ZenRoute فقط درخواست‌های شما را مسیریابی می‌کند
-- ❌ **خود ZenRoute** → **هرگز هیچ هزینه‌ای دریافت نمی‌کند، همیشه**
+- ✅ **ارائه‌دهندگان ارزان** (GLM، MiniMax) → مستقیماً به آنها پرداخت کنید، ZenRouter فقط درخواست‌های شما را مسیریابی می‌کند
+- ❌ **خود ZenRouter** → **هرگز هیچ هزینه‌ای دریافت نمی‌کند، همیشه**
 
-ZenRoute یک پروکسی/مسیریاب محلی است. کارت اعتباری شما را ندارد، نمی‌تواند صورتحساب ارسال کند و سیستم صورتحساب ندارد. این نرم‌افزار کاملاً رایگان است.
+ZenRouter یک پروکسی/مسیریاب محلی است. کارت اعتباری شما را ندارد، نمی‌تواند صورتحساب ارسال کند و سیستم صورتحساب ندارد. این نرم‌افزار کاملاً رایگان است.
 
 </details>
 
@@ -776,7 +776,7 @@ ZenRoute یک پروکسی/مسیریاب محلی است. کارت اعتبار
 - **OpenCode Free**: پروکسی عبوری بدون احراز هویت، مدل‌ها به‌طور خودکار از `opencode.ai/zen/v1/models` دریافت می‌شوند
 - **Vertex AI**: ۳۰۰ دلار اعتبار رایگان برای حساب‌های جدید Google Cloud (۹۰ روز)
 
-ZenRoute فقط درخواست‌های شما را به آنها مسیریابی می‌کند - هیچ "دام" یا صورتحساب آینده‌ای وجود ندارد. آنها واقعاً خدمات رایگان هستند و ZenRoute استفاده از آنها را با پشتیبانی از بازگشت آسان می‌کند.
+ZenRouter فقط درخواست‌های شما را به آنها مسیریابی می‌کند - هیچ "دام" یا صورتحساب آینده‌ای وجود ندارد. آنها واقعاً خدمات رایگان هستند و ZenRouter استفاده از آنها را با پشتیبانی از بازگشت آسان می‌کند.
 
 **لایه‌های رایگان متوقف شده (دیگر توصیه نمی‌شوند):**
 
@@ -811,7 +811,7 @@ ZenRoute فقط درخواست‌های شما را به آنها مسیریاب
 
 ۳. **از ارائه‌دهندگان اشتراک در آخر استفاده کنید:**
    - فقط در صورتی که از قبل آنها را دارید
-   - ZenRoute با پیگیری سهمیه به حداکثر رساندن ارزش آنها کمک می‌کند
+   - ZenRouter با پیگیری سهمیه به حداکثر رساندن ارزش آنها کمک می‌کند
 
 **نتیجه:** اکثر کاربران می‌توانند با استفاده فقط از لایه‌های رایگان با ۰ دلار/ماه کار کنند!
 
@@ -820,22 +820,22 @@ ZenRoute فقط درخواست‌های شما را به آنها مسیریاب
 <details>
 <summary><b>📈 اگر مصرف من ناگهان افزایش یابد چه؟</b></summary>
 
-بازگشت هوشمند ZenRoute از هزینه‌های غافلگیرکننده جلوگیری می‌کند:
+بازگشت هوشمند ZenRouter از هزینه‌های غافلگیرکننده جلوگیری می‌کند:
 
 **سناریو:** شما در یک ماراتن کدنویسی هستید و سهمیه‌های خود را تمام می‌کنید
 
-**بدون ZenRoute:**
+**بدون ZenRouter:**
 
 - ❌ برخورد با محدودیت نرخ → کار متوقف می‌شود → ناامیدی
 - ❌ یا: به‌طور تصادفی صورت‌حساب‌های عظیم API جمع می‌کنید
 
-**با ZenRoute:**
+**با ZenRouter:**
 
 - ✅ اشتراک به حد مجاز می‌رسد → بازگشت خودکار به لایه ارزان
 - ✅ لایه ارزان گران می‌شود → بازگشت خودکار به لایه رایگان
 - ✅ هرگز کدنویسی را متوقف نکنید → هزینه‌های قابل پیش‌بینی
 
-**شما کنترل دارید:** محدودیت‌های هزینه را برای هر ارائه‌دهنده در داشبورد تنظیم کنید و ZenRoute به آنها احترام می‌گذارد.
+**شما کنترل دارید:** محدودیت‌های هزینه را برای هر ارائه‌دهنده در داشبورد تنظیم کنید و ZenRouter به آنها احترام می‌گذارد.
 
 </details>
 
@@ -860,7 +860,7 @@ ZenRoute فقط درخواست‌های شما را به آنها مسیریاب
   cc/claude-haiku-4-5-20251001
 ```
 
-**نکته حرفه‌ای:** از Opus برای کارهای پیچیده و Sonnet برای سرعت استفاده کنید. ZenRoute سهمیه را به ازای هر مدل پیگیری می‌کند!
+**نکته حرفه‌ای:** از Opus برای کارهای پیچیده و Sonnet برای سرعت استفاده کنید. ZenRouter سهمیه را به ازای هر مدل پیگیری می‌کند!
 
 ### OpenAI Codex (Plus/Pro)
 
@@ -1041,7 +1041,7 @@ Vertex Partner (Anthropic / DeepSeek / GLM / Qwen از طریق Vertex):
 ```
 تنظیمات → مدل‌ها → پیشرفته:
   آدرس پایه API OpenAI: http://localhost:20128/v1
-  کلید API OpenAI: [از داشبورد zenroute]
+  کلید API OpenAI: [از داشبورد zenrouter]
   مدل: cc/claude-opus-4-7
 ```
 
@@ -1054,7 +1054,7 @@ Vertex Partner (Anthropic / DeepSeek / GLM / Qwen از طریق Vertex):
 ```json
 {
   "anthropic_api_base": "http://localhost:20128/v1",
-  "anthropic_api_key": "your-zenroute-api-key"
+  "anthropic_api_key": "your-zenrouter-api-key"
 }
 ```
 
@@ -1062,7 +1062,7 @@ Vertex Partner (Anthropic / DeepSeek / GLM / Qwen از طریق Vertex):
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:20128"
-export OPENAI_API_KEY="your-zenroute-api-key"
+export OPENAI_API_KEY="your-zenrouter-api-key"
 
 codex "your prompt"
 ```
@@ -1082,15 +1082,15 @@ codex "your prompt"
   "agents": {
     "defaults": {
       "model": {
-        "primary": "zenroute/kr/claude-sonnet-4.5"
+        "primary": "zenrouter/kr/claude-sonnet-4.5"
       }
     }
   },
   "models": {
     "providers": {
-      "zenroute": {
+      "zenrouter": {
         "baseUrl": "http://127.0.0.1:20128/v1",
-        "apiKey": "sk_zenroute",
+        "apiKey": "sk_zenrouter",
         "api": "openai-completions",
         "models": [
           {
@@ -1104,7 +1104,7 @@ codex "your prompt"
 }
 ```
 
-> **توجه:** OpenClaw فقط با ZenRoute محلی کار می‌کند. برای جلوگیری از مشکلات وضوح IPv6 از `127.0.0.1` به جای `localhost` استفاده کنید.
+> **توجه:** OpenClaw فقط با ZenRouter محلی کار می‌کند. برای جلوگیری از مشکلات وضوح IPv6 از `127.0.0.1` به جای `localhost` استفاده کنید.
 
 ### Cline / Continue / RooCode
 
@@ -1124,15 +1124,15 @@ codex "your prompt"
 
 ```bash
 # کلون و نصب
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter
 npm install
 npm run build
 
 # پیکربندی
 export JWT_SECRET="your-secure-secret-change-this"
 export INITIAL_PASSWORD="your-password"
-export DATA_DIR="/var/lib/zenroute"
+export DATA_DIR="/var/lib/zenrouter"
 export PORT="20128"
 export HOSTNAME="0.0.0.0"
 export NODE_ENV="production"
@@ -1146,7 +1146,7 @@ npm run start
 
 # یا استفاده از PM2
 npm install -g pm2
-pm2 start npm --name zenroute -- start
+pm2 start npm --name zenrouter -- start
 pm2 save
 pm2 startup
 ```
@@ -1155,18 +1155,18 @@ pm2 startup
 
 تصاویر منتشر شده (چند پلتفرم `linux/amd64` + `linux/arm64`):
 
-- Docker Hub: [`joyccn/ZenRoute`](https://hub.docker.com/r/joyccn/ZenRoute)
-- GHCR: [`ghcr.io/joyccn/ZenRoute`](https://github.com/joyccn/ZenRoute/pkgs/container/zenroute)
+- Docker Hub: [`ZenRouter/ZenRouter`](https://hub.docker.com/r/ZenRouter/ZenRouter)
+- GHCR: [`ghcr.io/ZenRouter/ZenRouter`](https://github.com/ZenRouter/ZenRouter/pkgs/container/zenrouter)
 
 **شروع سریع (استفاده از تصویر منتشر شده):**
 
 ```bash
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 20128:20128 \
-  -v "$HOME/.zenroute:/app/data" \
+  -v "$HOME/.zenrouter:/app/data" \
   -e DATA_DIR=/app/data \
-  joyccn/ZenRoute:latest
+  ZenRouter/ZenRouter:latest
 ```
 
 → باز کردن http://localhost:20128
@@ -1174,11 +1174,11 @@ docker run -d \
 **ساخت از سورس (توسعه):**
 
 ```bash
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute/app
-docker build -t zenroute .
-docker run -d --name zenroute -p 20128:20128 \
-  -v "$HOME/.zenroute:/app/data" -e DATA_DIR=/app/data zenroute
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter/app
+docker build -t zenrouter .
+docker run -d --name zenrouter -p 20128:20128 \
+  -v "$HOME/.zenrouter:/app/data" -e DATA_DIR=/app/data zenrouter
 ```
 
 **پیش‌فرض‌های کانتینر:**
@@ -1189,21 +1189,21 @@ docker run -d --name zenroute -p 20128:20128 \
 **دستورات مفید:**
 
 ```bash
-docker logs -f zenroute
-docker restart zenroute
-docker stop zenroute && docker rm zenroute
-docker pull joyccn/ZenRoute:latest   # به‌روزرسانی به آخرین نسخه
+docker logs -f zenrouter
+docker restart zenrouter
+docker stop zenrouter && docker rm zenrouter
+docker pull ZenRouter/ZenRouter:latest   # به‌روزرسانی به آخرین نسخه
 ```
 
-**ماندگاری داده:** `$HOME/.zenroute/db/data.sqlite` در میزبان ↔ `/app/data/db/data.sqlite` در کانتینر.
+**ماندگاری داده:** `$HOME/.zenrouter/db/data.sqlite` در میزبان ↔ `/app/data/db/data.sqlite` در کانتینر.
 
 ### متغیرهای محیطی
 
 | متغیر                                             | پیش‌فرض                                  | توضیحات                                                                         |
 | ---------------------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------- |
-| `JWT_SECRET`                                         | تولید خودکار (`~/.zenroute/jwt-secret`) | راز امضای JWT برای کوکی احراز هویت داشبورد (برای اشتراک بین نمونه‌ها بازنویسی کنید)   |
+| `JWT_SECRET`                                         | تولید خودکار (`~/.zenrouter/jwt-secret`) | راز امضای JWT برای کوکی احراز هویت داشبورد (برای اشتراک بین نمونه‌ها بازنویسی کنید)   |
 | `INITIAL_PASSWORD`                                   | `12345678`                                 | رمز عبور اولین ورود در صورت عدم وجود هش ذخیره شده                                      |
-| `DATA_DIR`                                           | `~/.zenroute`                             | مکان اصلی داده‌های برنامه (SQLite در `$DATA_DIR/db/data.sqlite`)                       |
+| `DATA_DIR`                                           | `~/.zenrouter`                             | مکان اصلی داده‌های برنامه (SQLite در `$DATA_DIR/db/data.sqlite`)                       |
 | `PORT`                                               | پیش‌فرض فریم‌ورک                        | پورت سرویس (`۲۰۱۲۸` در مثال‌ها)                                                  |
 | `HOSTNAME`                                           | پیش‌فرض فریم‌ورک                        | هاست بایند (داکر پیش‌فرض `۰.۰.۰.۰` است)                                            |
 | `NODE_ENV`                                           | پیش‌فرض زمان اجرا                          | برای استقرار `production` را تنظیم کنید                                                         |
@@ -1231,7 +1231,7 @@ docker pull joyccn/ZenRoute:latest   # به‌روزرسانی به آخرین �
 - وضعیت اصلی برنامه: `${DATA_DIR}/db/data.sqlite` (SQLite — ارائه‌دهندگان، ترکیب‌ها، نام‌های مستعار، کلیدها، تنظیمات، تاریخچه استفاده)
 - پشتیبان‌گیری خودکار: `${DATA_DIR}/db/backups/`
 - لاگ‌های اختیاری درخواست/مترجم: `<repo>/logs/...` وقتی `ENABLE_REQUEST_LOGS=true`
-- هر دو `${DATA_DIR}` و `~/.zenroute` در یک کانتینر داکر به یک مکان اشاره می‌کنند — symlink `/root/.zenroute -> /app/data` در زمان ساخت ایجاد می‌شود.
+- هر دو `${DATA_DIR}` و `~/.zenrouter` در یک کانتینر داکر به یک مکان اشاره می‌کنند — symlink `/root/.zenrouter -> /app/data` در زمان ساخت ایجاد می‌شود.
 
 </details>
 
@@ -1328,7 +1328,7 @@ docker pull joyccn/ZenRoute:latest   # به‌روزرسانی به آخرین �
 
 **توکن OAuth منقضی شده است**
 
-- توسط ZenRoute به‌طور خودکار بازسازی می‌شود
+- توسط ZenRouter به‌طور خودکار بازسازی می‌شود
 - اگر مشکل ادامه داشت: داشبورد → ارائه‌دهنده → اتصال مجدد
 
 **هزینه‌های بالا**
@@ -1393,22 +1393,22 @@ Authorization: Bearer your-api-key
 
 ## 📧 پشتیبانی
 
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **مسائل**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **مسائل**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
 
 ---
 
 ## 👥 مشارکت‌کنندگان
 
-با تشکر از همه مشارکت‌کنندگانی که به بهتر شدن ZenRoute کمک کردند!
+با تشکر از همه مشارکت‌کنندگانی که به بهتر شدن ZenRouter کمک کردند!
 
-[![Contributors](https://contrib.rocks/image?repo=joyccn/ZenRoute&max=150&columns=15&anon=1&v=20260309)](https://github.com/joyccn/ZenRoute/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=ZenRouter/ZenRouter&max=150&columns=15&anon=1&v=20260309)](https://github.com/ZenRouter/ZenRouter/graphs/contributors)
 
 ---
 
 ## 📊 نمودار ستاره
 
-[![Star Chart](https://starchart.cc/joyccn/ZenRoute.svg?variant=adaptive)](https://starchart.cc/joyccn/ZenRoute)
+[![Star Chart](https://starchart.cc/ZenRouter/ZenRouter.svg?variant=adaptive)](https://starchart.cc/ZenRouter/ZenRouter)
 
 ## 🔀 فورک‌ها
 
@@ -1420,11 +1420,11 @@ Authorization: Bearer your-api-key
 ساخته شده بر روی شانه‌های غول‌ها:
 
 - **[CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI)** — پیاده‌سازی اصلی Go که الهام‌بخش این پورت جاوااسکریپت بود.
-- **[RTK](https://github.com/rtk-ai/rtk)** ![Stars](https://img.shields.io/github/stars/rtk-ai/rtk?style=flat&color=yellow) — ذخیره‌ساز توکن Rust. ZenRoute خط لوله فشرده‌سازی آن را به JS منتقل می‌کند → **۲۰-۴۰٪- توکن ورودی** در هر درخواست.
-- **[Caveman](https://github.com/JuliusBrussee/caveman)** ![Stars](https://img.shields.io/github/stars/JuliusBrussee/caveman?style=flat&color=yellow) توسط **[@JuliusBrussee](https://github.com/JuliusBrussee)** — پرامپت ویروسی _"چرا از توکن زیاد استفاده کنی وقتی توکن کم کار را انجام می‌دهد"_. ZenRoute پرامپت آن را تطبیق می‌دهد → **۶۵٪- توکن خروجی**.
-- **[Ponytail](https://github.com/DietrichGebert/ponytail)** ![Stars](https://img.shields.io/github/stars/DietrichGebert/ponytail?style=flat&color=yellow) توسط **[@DietrichGebert](https://github.com/DietrichGebert)** — مهارت _"توسعه‌دهنده ارشد تنبل"_. ZenRoute نردبان YAGNI-first آن را تزریق می‌کند → **توکن کمتر، کد کمتر، دیف‌های کوتاه‌تر**.
+- **[RTK](https://github.com/rtk-ai/rtk)** ![Stars](https://img.shields.io/github/stars/rtk-ai/rtk?style=flat&color=yellow) — ذخیره‌ساز توکن Rust. ZenRouter خط لوله فشرده‌سازی آن را به JS منتقل می‌کند → **۲۰-۴۰٪- توکن ورودی** در هر درخواست.
+- **[Caveman](https://github.com/JuliusBrussee/caveman)** ![Stars](https://img.shields.io/github/stars/JuliusBrussee/caveman?style=flat&color=yellow) توسط **[@JuliusBrussee](https://github.com/JuliusBrussee)** — پرامپت ویروسی _"چرا از توکن زیاد استفاده کنی وقتی توکن کم کار را انجام می‌دهد"_. ZenRouter پرامپت آن را تطبیق می‌دهد → **۶۵٪- توکن خروجی**.
+- **[Ponytail](https://github.com/DietrichGebert/ponytail)** ![Stars](https://img.shields.io/github/stars/DietrichGebert/ponytail?style=flat&color=yellow) توسط **[@DietrichGebert](https://github.com/DietrichGebert)** — مهارت _"توسعه‌دهنده ارشد تنبل"_. ZenRouter نردبان YAGNI-first آن را تزریق می‌کند → **توکن کمتر، کد کمتر، دیف‌های کوتاه‌تر**.
 
-تشکر فراوان از این نویسندگان — بدون کار آنها، ویژگی‌های ذخیره‌سازی توکن ZenRoute وجود نداشت. ⭐ آنها را در GitHub بدهید!
+تشکر فراوان از این نویسندگان — بدون کار آنها، ویژگی‌های ذخیره‌سازی توکن ZenRouter وجود نداشت. ⭐ آنها را در GitHub بدهید!
 
 ---
 

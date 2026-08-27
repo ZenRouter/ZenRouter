@@ -1,10 +1,10 @@
-# ZenRoute Architecture
+# ZenRouter Architecture
 
 _Last updated: 2026-02-06_
 
 ## Executive Summary
 
-ZenRoute is a local AI routing gateway and dashboard built on Next.js.
+ZenRouter is a local AI routing gateway and dashboard built on Next.js.
 It provides a single OpenAI-compatible endpoint (`/v1/*`) and routes traffic across multiple upstream providers with translation, fallback, token refresh, and usage tracking.
 
 Core capabilities:
@@ -52,7 +52,7 @@ flowchart LR
         BROWSER[Browser Dashboard]
     end
 
-    subgraph Router[ZenRoute Local Process]
+    subgraph Router[ZenRouter Local Process]
         API[V1 Compatibility API\n/v1/*]
         DASH[Dashboard + Management API\n/api/*]
         CORE[SSE + Translation Core\nopen-sse + src/sse]
@@ -140,7 +140,7 @@ chain (`driver.js`): `bun:sqlite` → `better-sqlite3` (optional native dep) →
 `node:sqlite` (Node ≥22.5) → `sql.js`. Repos live in `src/lib/db/repos/*`;
 schema/migrations in `src/lib/db/migrations/`.
 
-- file: `${DATA_DIR}/db/data.sqlite` (or `~/.zenroute/db/data.sqlite`)
+- file: `${DATA_DIR}/db/data.sqlite` (or `~/.zenrouter/db/data.sqlite`)
 - ⚠️ keep `DATA_DIR` ABSOLUTE for the standalone/bun build (it chdirs into
   `.next/standalone`; a relative path silently creates a fresh empty DB)
 - entities: providerConnections, providerNodes, modelAliases, combos,
@@ -149,7 +149,7 @@ schema/migrations in `src/lib/db/migrations/`.
 Usage DB:
 
 - `src/lib/usageDb.js`
-- files: `~/.zenroute/usage.json`, `~/.zenroute/log.txt`
+- files: `~/.zenrouter/usage.json`, `~/.zenrouter/log.txt`
 - note: currently independent from `DATA_DIR`
 
 ## 4) Auth + Security Surfaces
@@ -382,9 +382,9 @@ erDiagram
 
 Physical storage files:
 
-- main state: `${DATA_DIR}/db.json` (or `~/.zenroute/db.json`)
-- usage stats: `~/.zenroute/usage.json`
-- request log lines: `~/.zenroute/log.txt`
+- main state: `${DATA_DIR}/db.json` (or `~/.zenrouter/db.json`)
+- usage stats: `~/.zenrouter/usage.json`
+- request log lines: `~/.zenrouter/log.txt`
 - optional translator/request debug sessions: `<repo>/logs/...`
 
 ## Deployment Topology
@@ -396,7 +396,7 @@ flowchart LR
         Browser[Dashboard Browser]
     end
 
-    subgraph ContainerOrProcess[ZenRoute Runtime]
+    subgraph ContainerOrProcess[ZenRouter Runtime]
         Next[Next.js Server\nPORT=20128]
         Core[SSE Core + Executors]
         MainDB[(db.json)]
@@ -547,15 +547,15 @@ Environment variables actively used by code:
 
 ## Known Architectural Notes
 
-1. `usageDb` currently stores under `~/.zenroute` and does not follow `DATA_DIR`.
+1. `usageDb` currently stores under `~/.zenrouter` and does not follow `DATA_DIR`.
 2. `/api/v1/route.js` returns a static model list and is not the main models source used by `/v1/models`.
 3. Request logger writes full headers/body when enabled; treat log directory as sensitive.
 4. Cloud behavior depends on correct `NEXT_PUBLIC_BASE_URL` and cloud endpoint reachability.
 
 ## Operational Verification Checklist
 
-- Build from source: `cd /root/dev/zenroute && npm run build`
-- Build Docker image: `cd /root/dev/zenroute && docker build -t zenroute .`
+- Build from source: `cd /root/dev/zenrouter && npm run build`
+- Build Docker image: `cd /root/dev/zenrouter && docker build -t zenrouter .`
 - Start service and verify:
 - `GET /api/settings`
 - `GET /api/v1/models`

@@ -1,14 +1,14 @@
-# Welcome to ZenRoute
+# Welcome to ZenRouter
 
 **Use Claude, Codex, Gemini for FREE • Ultra-cheap alternatives from $0.20/1M tokens**
 
-ZenRoute is an AI model router that maximizes your subscription value and minimizes costs through intelligent routing and automatic fallback.
+ZenRouter is an AI model router that maximizes your subscription value and minimizes costs through intelligent routing and automatic fallback.
 
 ---
 
-## What is ZenRoute?
+## What is ZenRouter?
 
-ZenRoute is a smart proxy that sits between your coding tools (Cursor, Cline, Claude Desktop) and AI providers. It automatically routes requests to the best available model based on quota, cost, and availability.
+ZenRouter is a smart proxy that sits between your coding tools (Cursor, Cline, Claude Desktop) and AI providers. It automatically routes requests to the best available model based on quota, cost, and availability.
 
 **Stop wasting money:**
 - ❌ Subscription quota expires unused every month
@@ -66,7 +66,7 @@ Total: $5.20/month vs $2000 on ChatGPT API!
 
 ---
 
-## Why Choose ZenRoute?
+## Why Choose ZenRouter?
 
 ### Maximize Subscriptions
 
@@ -105,10 +105,10 @@ Get started in 2 minutes:
 
 ```bash
 # Install globally
-npm install -g zenroute
+npm install -g zenrouter
 
 # Start (dashboard opens automatically)
-zenroute
+zenrouter
 ```
 
 🎉 **Dashboard opens** → Connect providers → Start coding!

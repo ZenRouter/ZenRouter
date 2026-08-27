@@ -1,12 +1,12 @@
 # Roo AI Assistant Integration
 
-Integrate ZenRoute with Roo AI Assistant to access multiple AI models through a unified interface.
+Integrate ZenRouter with Roo AI Assistant to access multiple AI models through a unified interface.
 
 ## Prerequisites
 
 - Roo AI Assistant installed
-- ZenRoute API key from [dashboard](http://localhost:20128/dashboard)
-- ZenRoute running (local or cloud)
+- ZenRouter API key from [dashboard](http://localhost:20128/dashboard)
+- ZenRouter running (local or cloud)
 
 ## Configuration Steps
 
@@ -20,13 +20,13 @@ Launch Roo AI Assistant and open the settings panel.
 2. Select **Ollama** as the provider type
 3. Configure the following settings:
 
-**For Local ZenRoute:**
+**For Local ZenRouter:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
 ```
 
-**For Cloud ZenRoute:**
+**For Cloud ZenRouter:**
 ```
 Base URL: http://localhost:20128/v1
 API Key: your-api-key-from-dashboard
@@ -34,7 +34,7 @@ API Key: your-api-key-from-dashboard
 
 ### 3. Select Model
 
-Choose from available ZenRoute models:
+Choose from available ZenRouter models:
 
 **Claude Models:**
 - `cc/claude-opus-4-5-20251101` - Most capable
@@ -54,7 +54,7 @@ Choose from available ZenRoute models:
 Send a test message to verify the integration:
 
 ```
-Hello! Can you confirm you're connected through ZenRoute?
+Hello! Can you confirm you're connected through ZenRouter?
 ```
 
 ## Usage Examples
@@ -87,19 +87,19 @@ Model: cx/deepseek-reasoner
 ## Troubleshooting
 
 ### Connection Failed
-- Verify ZenRoute is running: `curl http://localhost:20128/health`
+- Verify ZenRouter is running: `curl http://localhost:20128/health`
 - Check API key is correct
 - Ensure Base URL includes `/v1` suffix
 
 ### Model Not Available
 - Check model name matches exactly (case-sensitive)
-- Verify model is enabled in your ZenRoute plan
+- Verify model is enabled in your ZenRouter plan
 - Try a different model from the list
 
 ### Slow Responses
 - Switch to faster models (haiku, flash)
 - Check network connection
-- Monitor ZenRoute logs for issues
+- Monitor ZenRouter logs for issues
 
 ## Advanced Configuration
 

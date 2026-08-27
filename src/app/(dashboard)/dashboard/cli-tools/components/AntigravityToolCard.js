@@ -113,7 +113,7 @@ export default function AntigravityToolCard({
     try {
       const keyToUse = selectedApiKey?.trim()
         || (apiKeys?.length > 0 ? apiKeys[0].key : null)
-        || (!cloudEnabled ? "sk_zenroute" : null);
+        || (!cloudEnabled ? "sk_zenrouter" : null);
 
       const res = await fetch("/api/cli-tools/antigravity-mitm", {
         method: "POST",
@@ -333,7 +333,7 @@ export default function AntigravityToolCard({
                   </select>
                 ) : (
                   <span className="min-w-0 rounded bg-surface/40 px-2 py-2 text-xs text-text-muted sm:py-1.5">
-                    {cloudEnabled ? "No API keys - Create one in Keys page" : "sk_zenroute (default)"}
+                    {cloudEnabled ? "No API keys - Create one in Keys page" : "sk_zenrouter (default)"}
                   </span>
                 )}
               </div>
@@ -388,7 +388,7 @@ export default function AntigravityToolCard({
           {!isRunning && serverIsWindows && (
             <div className="flex items-center gap-2 px-2 py-1.5 rounded text-xs bg-yellow-500/10 text-yellow-600 border border-yellow-500/20">
               <span className="material-symbols-outlined text-[14px]">warning</span>
-              <span>Windows: Run terminal (ZenRoute) as Administrator to enable MITM</span>
+              <span>Windows: Run terminal (ZenRouter) as Administrator to enable MITM</span>
             </div>
           )}
 
@@ -396,12 +396,12 @@ export default function AntigravityToolCard({
           {!isRunning && (
             <div className="flex flex-col gap-1.5 px-1">
               <p className="text-xs text-text-muted">
-                <span className="font-medium text-text-main">How it works:</span> Intercepts Antigravity traffic via DNS redirect, letting you reroute models through ZenRoute.
+                <span className="font-medium text-text-main">How it works:</span> Intercepts Antigravity traffic via DNS redirect, letting you reroute models through ZenRouter.
               </p>
               <div className="flex flex-col gap-0.5 text-[11px] text-text-muted">
                 <span>1. Generates SSL cert & adds to system keychain</span>
                 <span>2. Redirects <code className="text-[10px] bg-surface px-1 rounded">daily-cloudcode-pa.googleapis.com</code> → localhost</span>
-                <span>3. Maps Antigravity models to any provider via ZenRoute</span>
+                <span>3. Maps Antigravity models to any provider via ZenRouter</span>
               </div>
             </div>
           )}

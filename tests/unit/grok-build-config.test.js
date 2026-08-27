@@ -45,15 +45,15 @@ describe("grokBuildConfig", () => {
     const result = applyGrokBuildConfig(BASE_CONFIG, APPLY_INPUT);
     const parsed = parseGrokBuildConfig(result);
 
-    expect(parsed.default).toBe("zenroute");
+    expect(parsed.default).toBe("zenrouter");
     expect(parsed.model).toMatchObject({
       model: "cx/gpt-5.6-sol",
       base_url: "http://127.0.0.1:20128/v1",
       context_window: 400000,
     });
     expect(parsed.subagentMappings).toMatchObject({
-      "general-purpose": "zenroute-general-purpose",
-      explore: "zenroute-explore",
+      "general-purpose": "zenrouter-general-purpose",
+      explore: "zenrouter-explore",
       plan: "grok-4.5",
     });
     expect(parsed.subagentModels["general-purpose"]).toMatchObject({
@@ -88,10 +88,10 @@ describe("grokBuildConfig", () => {
       },
     });
 
-    expect(result.match(/^\[model\.zenroute\]$/gm)).toHaveLength(1);
-    expect(result.match(/^\[model\.zenroute-general-purpose\]$/gm)).toHaveLength(1);
-    expect(result.match(/^\[model\.zenroute-explore\]$/gm)).toHaveLength(1);
-    expect(result.match(/^# zenroute-prev-subagent-explore/gm)).toHaveLength(1);
+    expect(result.match(/^\[model\.zenrouter\]$/gm)).toHaveLength(1);
+    expect(result.match(/^\[model\.zenrouter-general-purpose\]$/gm)).toHaveLength(1);
+    expect(result.match(/^\[model\.zenrouter-explore\]$/gm)).toHaveLength(1);
+    expect(result.match(/^# zenrouter-prev-subagent-explore/gm)).toHaveLength(1);
     expect(parseGrokBuildConfig(result).model).toMatchObject({
       model: "cc/claude-opus-4.8",
       context_window: 1000000,
@@ -115,8 +115,8 @@ describe("grokBuildConfig", () => {
     const parsed = parseGrokBuildConfig(result);
     expect(parsed.subagentMappings.explore).toBe("grok-build");
     expect(parsed.subagentModels.explore).toBeNull();
-    expect(result).not.toContain("[model.zenroute-explore]");
-    expect(parsed.subagentMappings["general-purpose"]).toBe("zenroute-general-purpose");
+    expect(result).not.toContain("[model.zenrouter-explore]");
+    expect(parsed.subagentMappings["general-purpose"]).toBe("zenrouter-general-purpose");
   });
 
   it("reset restores previous default and all previous subagent mappings", () => {
@@ -131,8 +131,8 @@ describe("grokBuildConfig", () => {
       explore: "grok-build",
       plan: "grok-4.5",
     });
-    expect(reset).not.toContain("[model.zenroute-");
-    expect(reset).not.toContain("zenroute-prev-");
+    expect(reset).not.toContain("[model.zenrouter-");
+    expect(reset).not.toContain("zenrouter-prev-");
     expect(reset).toContain("[mcp_servers.example]");
   });
 
@@ -146,7 +146,7 @@ describe("grokBuildConfig", () => {
     });
     const reset = resetGrokBuildConfig(applied);
 
-    expect(parseGrokBuildConfig(applied).subagentMappings.plan).toBe("zenroute-plan");
+    expect(parseGrokBuildConfig(applied).subagentMappings.plan).toBe("zenrouter-plan");
     expect(parseGrokBuildConfig(reset).subagentMappings.plan).toBeNull();
     expect(reset).not.toContain("[subagents.models]");
     expect(reset).toContain("[mcp_servers.x]");
@@ -163,14 +163,14 @@ describe("grokBuildConfig", () => {
 
     const parsed = parseGrokBuildConfig(updatedMainOnly);
     expect(parsed.model.model).toBe("gemini/gemini-3.1-pro");
-    expect(parsed.subagentMappings.explore).toBe("zenroute-explore");
+    expect(parsed.subagentMappings.explore).toBe("zenrouter-explore");
     expect(parsed.subagentModels.explore.model).toBe("gemini/gemini-3-flash");
   });
 
   it("returns stable slot names only for supported subagent types", () => {
-    expect(getGrokSubagentSlot("general-purpose")).toBe("zenroute-general-purpose");
-    expect(getGrokSubagentSlot("explore")).toBe("zenroute-explore");
-    expect(getGrokSubagentSlot("plan")).toBe("zenroute-plan");
+    expect(getGrokSubagentSlot("general-purpose")).toBe("zenrouter-general-purpose");
+    expect(getGrokSubagentSlot("explore")).toBe("zenrouter-explore");
+    expect(getGrokSubagentSlot("plan")).toBe("zenrouter-plan");
     expect(getGrokSubagentSlot("unknown")).toBeNull();
   });
 });

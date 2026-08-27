@@ -1,15 +1,15 @@
 # Smart Routing & Auto Fallback
 
-ZenRoute automatically routes your requests through the best available provider using a 3-tier fallback system. Never stop coding due to quota limits or rate limiting.
+ZenRouter automatically routes your requests through the best available provider using a 3-tier fallback system. Never stop coding due to quota limits or rate limiting.
 
 ---
 
 ## How It Works
 
-ZenRoute uses intelligent routing to maximize your existing subscriptions, minimize costs, and ensure 24/7 availability:
+ZenRouter uses intelligent routing to maximize your existing subscriptions, minimize costs, and ensure 24/7 availability:
 
 ```
-Request → ZenRoute → Check Tier 1 (Subscription)
+Request → ZenRouter → Check Tier 1 (Subscription)
                      ↓ quota exhausted
                      Check Tier 2 (Cheap)
                      ↓ budget limit
@@ -47,7 +47,7 @@ Request → ZenRoute → Check Tier 1 (Subscription)
 
 ## Automatic Switching
 
-ZenRoute monitors quota in real-time and switches providers automatically:
+ZenRouter monitors quota in real-time and switches providers automatically:
 
 ### Scenario 1: Subscription Quota Exhausted
 
@@ -89,7 +89,7 @@ User request → cc/claude-opus-4-5
 
 ## Model Selection Logic
 
-ZenRoute selects the best model based on:
+ZenRouter selects the best model based on:
 
 1. **Quota availability** - Check if provider has remaining quota
 2. **Cost tier** - Prefer subscription → cheap → free
@@ -138,7 +138,7 @@ Dashboard → Settings → Budget Control
 → Monthly limit: $50
 ```
 
-When budget reached, ZenRoute automatically switches to free tier.
+When budget reached, ZenRouter automatically switches to free tier.
 
 **3. Configure Fallback Order**
 

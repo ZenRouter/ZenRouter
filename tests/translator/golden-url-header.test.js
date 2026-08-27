@@ -40,7 +40,7 @@ function sanitize(headers) {
     else if (k === "X-Stainless-Os") out[k] = "<OS>";
     else if (["X-CLIENT-VERSION", "X-CORE-VERSION", "X-Msh-Version"].includes(k)
       && typeof normalized === "string") out[k] = normalized.replace(/\d+\.\d+\.\d+(?:[-+][\w.-]+)?/g, "<VERSION>");
-    else if (k === "User-Agent" && typeof normalized === "string" && /^ZenRoute\//i.test(normalized)) {
+    else if (k === "User-Agent" && typeof normalized === "string" && /^ZenRouter\//i.test(normalized)) {
       out[k] = normalized.replace(/\d+\.\d+\.\d+(?:[-+][\w.-]+)?/g, "<VERSION>");
     }
     else out[k] = normalized;

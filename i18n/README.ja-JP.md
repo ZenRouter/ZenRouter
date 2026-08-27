@@ -1,15 +1,15 @@
 <div align="center">
-  <img src="../images/zenroute.png?1" alt="ZenRoute Dashboard" width="800"/>
+  <img src="../images/zenrouter.png?1" alt="ZenRouter Dashboard" width="800"/>
 
-  # ZenRoute - 無料 AI ルーター
+  # ZenRouter - 無料 AI ルーター
 
   **コーディングを止めない。スマートフォールバックで無料＆格安AIモデルに自動ルーティング。**
 
   **すべてのAIコーディングツール（Claude Code、Cursor、Antigravity、Copilot、Codex、Gemini、OpenCode、Cline、OpenClaw...）を40以上のAIプロバイダーと100以上のモデルに接続。**
 
-  [![npm](https://img.shields.io/npm/v/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![Downloads](https://img.shields.io/npm/dm/zenroute.svg)](https://www.npmjs.com/package/zenroute)
-  [![License](https://img.shields.io/npm/l/zenroute.svg)](https://github.com/joyccn/ZenRoute/blob/main/LICENSE)
+  [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![License](https://img.shields.io/npm/l/zenrouter.svg)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
 
 
   [🇻🇳 Tiếng Việt](./README.vi.md) • [🇨🇳 中文](./README.zh-CN.md) • [🇯🇵 日本語](./README.ja-JP.md)
@@ -17,7 +17,7 @@
 
 ---
 
-## 🤔 なぜZenRoute？
+## 🤔 なぜZenRouter？
 
 **お金の無駄遣いと制限に悩まされるのはもう終わりです：**
 
@@ -26,7 +26,7 @@
 - ❌ 高額なAPI（プロバイダーごとに月額$20〜50）
 - ❌ プロバイダー間の手動切り替え
 
-**ZenRouteが解決します：**
+**ZenRouterが解決します：**
 
 - ✅ **サブスクリプションを最大化** - クオータを追跡し、リセット前にすべて使い切る
 - ✅ **自動フォールバック** - サブスクリプション → 格安 → 無料、ダウンタイムゼロ
@@ -45,7 +45,7 @@
        │ http://localhost:20128/v1
        ↓
 ┌─────────────────────────────────────────┐
-│        ZenRoute（スマートルーター）        │
+│        ZenRouter（スマートルーター）        │
 │  • フォーマット変換（OpenAI ↔ Claude）   │
 │  • クオータ追跡                          │
 │  • 自動トークンリフレッシュ               │
@@ -67,8 +67,8 @@
 **1. グローバルインストール：**
 
 ```bash
-npm install -g zenroute
-zenroute
+npm install -g zenrouter
+zenrouter
 ```
 
 🎉 ダッシュボードが `http://localhost:20128` で開きます
@@ -90,7 +90,7 @@ Claude Code/Codex/Gemini CLI/OpenClaw/Cursor/Clineの設定:
 
 **代替方法: ソースから実行（このリポジトリ）：**
 
-このリポジトリパッケージはプライベート（`zenroute-app`）のため、ソース/Docker実行がローカル開発の想定パスです。
+このリポジトリパッケージはプライベート（`zenrouter-app`）のため、ソース/Docker実行がローカル開発の想定パスです。
 
 ```bash
 cp .env.example .env
@@ -115,12 +115,12 @@ PORT=20128 HOSTNAME=0.0.0.0 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run 
 
 <div align="center">
 
-### 📺 完全セットアップガイド - ZenRoute + Claude Code 無料
+### 📺 完全セットアップガイド - ZenRouter + Claude Code 無料
 
-[![ZenRoute + Claude Code Setup](https://img.youtube.com/vi/raEyZPg5xE0/maxresdefault.jpg)](https://www.youtube.com/watch?v=raEyZPg5xE0)
+[![ZenRouter + Claude Code Setup](https://img.youtube.com/vi/raEyZPg5xE0/maxresdefault.jpg)](https://www.youtube.com/watch?v=raEyZPg5xE0)
 
 **🎬 ステップバイステップのチュートリアルを視聴：**
-- ✅ ZenRouteのインストールとセットアップ
+- ✅ ZenRouterのインストールとセットアップ
 - ✅ 無料Claude Sonnet 4.5の設定
 - ✅ Claude Codeとの統合
 - ✅ ライブコーディングデモ
@@ -135,7 +135,7 @@ PORT=20128 HOSTNAME=0.0.0.0 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run 
 
 ## 🛠️ 対応CLIツール
 
-ZenRouteはすべての主要AIコーディングツールとシームレスに連携します：
+ZenRouterはすべての主要AIコーディングツールとシームレスに連携します：
 
 <div align="center">
   <table>
@@ -386,7 +386,7 @@ ZenRouteはすべての主要AIコーディングツールとシームレスに�
 
 フォーマット間のシームレスな変換：
 - **OpenAI** ↔ **Claude** ↔ **Gemini** ↔ **OpenAI Responses**
-- CLIツールがOpenAIフォーマットで送信 → ZenRouteが変換 → プロバイダーがネイティブフォーマットで受信
+- CLIツールがOpenAIフォーマットで送信 → ZenRouterが変換 → プロバイダーがネイティブフォーマットで受信
 - カスタムOpenAIエンドポイントをサポートするすべてのツールで動作
 
 ### 👥 マルチアカウント対応
@@ -440,12 +440,12 @@ ZenRouteはすべての主要AIコーディングツールとシームレスに�
 > **💡 重要 - ダッシュボードのコストについて：**
 >
 > 使用状況分析に表示される「コスト」は**追跡と比較目的のみ**です。
-> ZenRoute自体は**一切課金しません**。有料サービスを使用する場合のみ、プロバイダーに直接支払います。
+> ZenRouter自体は**一切課金しません**。有料サービスを使用する場合のみ、プロバイダーに直接支払います。
 >
 > **例:** ダッシュボードにiFlowモデルの使用で「合計コスト$290」と表示されている場合、
 > これは有料APIを直接使用した場合に支払うであろう金額を表しています。実際のコスト = **$0**（iFlowは無料無制限）。
 >
-> これは無料モデルやZenRoute経由のルーティングでどれだけ節約しているかを示す「節約トラッカー」と考えてください！
+> これは無料モデルやZenRouter経由のルーティングでどれだけ節約しているかを示す「節約トラッカー」と考えてください！
 
 ### 🌐 どこでもデプロイ
 
@@ -477,15 +477,15 @@ ZenRouteはすべての主要AIコーディングツールとシームレスに�
 
 ---
 
-### 📊 ZenRouteのコストと課金について
+### 📊 ZenRouterのコストと課金について
 
-**ZenRouteの課金の実態：**
+**ZenRouterの課金の実態：**
 
-✅ **ZenRouteソフトウェア = 永久無料**（オープンソース、課金なし）
+✅ **ZenRouterソフトウェア = 永久無料**（オープンソース、課金なし）
 ✅ **ダッシュボードの「コスト」= 表示/追跡のみ**（実際の請求ではない）
 ✅ **プロバイダーに直接支払い**（サブスクリプションまたはAPI料金）
 ✅ **無料プロバイダーは無料のまま**（iFlow、Kiro、Qwen = $0 無制限）
-❌ **ZenRouteは請求書を送ったり**カードに課金したりしません
+❌ **ZenRouterは請求書を送ったり**カードに課金したりしません
 
 **コスト表示の仕組み：**
 
@@ -506,9 +506,9 @@ ZenRouteはすべての主要AIコーディングツールとシームレスに�
 
 **支払いルール：**
 - **サブスクリプションプロバイダー**（Claude Code、Codex）：各ウェブサイトで直接支払い
-- **格安プロバイダー**（GLM、MiniMax）：直接支払い、ZenRouteはルーティングのみ
+- **格安プロバイダー**（GLM、MiniMax）：直接支払い、ZenRouterはルーティングのみ
 - **無料プロバイダー**（iFlow、Kiro、Qwen）：本当に永久無料、隠れた料金なし
-- **ZenRoute**：一切課金しない
+- **ZenRouter**：一切課金しない
 
 ---
 
@@ -583,7 +583,7 @@ vs. $20 + 制限に引っかかる = フラストレーション
 <details>
 <summary><b>📊 ダッシュボードに高額なコストが表示されるのはなぜ？</b></summary>
 
-ダッシュボードはトークン使用量を追跡し、有料APIを直接使用した場合の**推定コスト**を表示します。これは**実際の課金ではなく**、ZenRouteを通じて無料モデルや既存のサブスクリプションを使用することでどれだけ節約しているかを示すための参考値です。
+ダッシュボードはトークン使用量を追跡し、有料APIを直接使用した場合の**推定コスト**を表示します。これは**実際の課金ではなく**、ZenRouterを通じて無料モデルや既存のサブスクリプションを使用することでどれだけ節約しているかを示すための参考値です。
 
 **例：**
 - **ダッシュボード表示:** 「合計コスト$290」
@@ -596,16 +596,16 @@ vs. $20 + 制限に引っかかる = フラストレーション
 </details>
 
 <details>
-<summary><b>💳 ZenRouteに課金されますか？</b></summary>
+<summary><b>💳 ZenRouterに課金されますか？</b></summary>
 
-**いいえ。** ZenRouteはあなたのコンピューター上で動作する無料のオープンソースソフトウェアです。一切課金しません。
+**いいえ。** ZenRouterはあなたのコンピューター上で動作する無料のオープンソースソフトウェアです。一切課金しません。
 
 **支払い先：**
 - ✅ **サブスクリプションプロバイダー**（Claude Code $20/月、Codex $20-200/月）→ 各ウェブサイトで直接支払い
-- ✅ **格安プロバイダー**（GLM、MiniMax）→ 直接支払い、ZenRouteはリクエストをルーティングするだけ
-- ❌ **ZenRoute自体** → **一切課金しない**
+- ✅ **格安プロバイダー**（GLM、MiniMax）→ 直接支払い、ZenRouterはリクエストをルーティングするだけ
+- ❌ **ZenRouter自体** → **一切課金しない**
 
-ZenRouteはローカルプロキシ/ルーターです。クレジットカード情報を持たず、請求書を送信できず、課金システムもありません。完全に無料のソフトウェアです。
+ZenRouterはローカルプロキシ/ルーターです。クレジットカード情報を持たず、請求書を送信できず、課金システムもありません。完全に無料のソフトウェアです。
 
 </details>
 
@@ -619,9 +619,9 @@ ZenRouteはローカルプロキシ/ルーターです。クレジットカー�
 - **Kiro**: AWS Builder ID経由で無料無制限Claudeモデル
 - **Qwen**: デバイス認証経由でQwenモデルに無料無制限アクセス
 
-ZenRouteはリクエストをルーティングするだけで、「罠」や将来の課金はありません。本当に無料のサービスであり、ZenRouteはフォールバックサポートでそれらを使いやすくしています。
+ZenRouterはリクエストをルーティングするだけで、「罠」や将来の課金はありません。本当に無料のサービスであり、ZenRouterはフォールバックサポートでそれらを使いやすくしています。
 
-**注意:** 一部のサブスクリプションプロバイダー（Antigravity、GitHub Copilot）には無料プレビュー期間があり、後に有料になる可能性がありますが、それはZenRouteではなく各プロバイダーから明確に告知されます。
+**注意:** 一部のサブスクリプションプロバイダー（Antigravity、GitHub Copilot）には無料プレビュー期間があり、後に有料になる可能性がありますが、それはZenRouterではなく各プロバイダーから明確に告知されます。
 
 </details>
 
@@ -646,7 +646,7 @@ ZenRouteはリクエストをルーティングするだけで、「罠」や将
 
 3. **サブスクリプションプロバイダーは最後に使用：**
    - 既にお持ちの場合のみ
-   - ZenRouteがクオータ追跡で価値を最大化
+   - ZenRouterがクオータ追跡で価値を最大化
 
 **結果:** ほとんどのユーザーは無料ティアのみで月額$0で運用可能！
 
@@ -655,20 +655,20 @@ ZenRouteはリクエストをルーティングするだけで、「罠」や将
 <details>
 <summary><b>📈 使用量が突然急増したら？</b></summary>
 
-ZenRouteのスマートフォールバックが予期しない課金を防止します：
+ZenRouterのスマートフォールバックが予期しない課金を防止します：
 
 **シナリオ:** コーディングスプリント中にクオータを使い切った
 
-**ZenRouteなし：**
+**ZenRouterなし：**
 - ❌ レート制限に到達 → 作業停止 → フラストレーション
 - ❌ または: 意図せず高額なAPI請求が発生
 
-**ZenRouteあり：**
+**ZenRouterあり：**
 - ✅ サブスクリプションが上限に達する → 格安ティアに自動フォールバック
 - ✅ 格安ティアが高くなる → 無料ティアに自動フォールバック
 - ✅ コーディングが止まらない → 予測可能なコスト
 
-**あなたがコントロール:** ダッシュボードでプロバイダーごとの支出上限を設定し、ZenRouteはそれを遵守します。
+**あなたがコントロール:** ダッシュボードでプロバイダーごとの支出上限を設定し、ZenRouterはそれを遵守します。
 
 </details>
 
@@ -692,7 +692,7 @@ ZenRouteのスマートフォールバックが予期しない課金を防止し
   cc/claude-haiku-4-5-20251001
 ```
 
-**プロのヒント:** 複雑なタスクにはOpus、スピード重視ならSonnet。ZenRouteはモデルごとにクオータを追跡します！
+**プロのヒント:** 複雑なタスクにはOpus、スピード重視ならSonnet。ZenRouterはモデルごとにクオータを追跡します！
 
 ### OpenAI Codex (Plus/Pro)
 
@@ -861,7 +861,7 @@ CLIでの使用: premium-coding
 ```
 設定 → Models → Advanced:
   OpenAI API Base URL: http://localhost:20128/v1
-  OpenAI API Key: [zenrouteダッシュボードから]
+  OpenAI API Key: [zenrouterダッシュボードから]
   Model: cc/claude-opus-4-6
 ```
 
@@ -874,7 +874,7 @@ CLIでの使用: premium-coding
 ```json
 {
   "anthropic_api_base": "http://localhost:20128/v1",
-  "anthropic_api_key": "your-zenroute-api-key"
+  "anthropic_api_key": "your-zenrouter-api-key"
 }
 ```
 
@@ -882,7 +882,7 @@ CLIでの使用: premium-coding
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:20128"
-export OPENAI_API_KEY="your-zenroute-api-key"
+export OPENAI_API_KEY="your-zenrouter-api-key"
 
 codex "your prompt"
 ```
@@ -902,15 +902,15 @@ codex "your prompt"
   "agents": {
     "defaults": {
       "model": {
-        "primary": "zenroute/if/glm-4.7"
+        "primary": "zenrouter/if/glm-4.7"
       }
     }
   },
   "models": {
     "providers": {
-      "zenroute": {
+      "zenrouter": {
         "baseUrl": "http://127.0.0.1:20128/v1",
-        "apiKey": "sk_zenroute",
+        "apiKey": "sk_zenrouter",
         "api": "openai-completions",
         "models": [
           {
@@ -924,7 +924,7 @@ codex "your prompt"
 }
 ```
 
-> **注意:** OpenClawはローカルのZenRouteのみで動作します。IPv6解決の問題を避けるため、`localhost` ではなく `127.0.0.1` を使用してください。
+> **注意:** OpenClawはローカルのZenRouterのみで動作します。IPv6解決の問題を避けるため、`localhost` ではなく `127.0.0.1` を使用してください。
 
 ### Cline / Continue / RooCode
 
@@ -944,15 +944,15 @@ Model: cc/claude-opus-4-6
 
 ```bash
 # クローンとインストール
-git clone https://github.com/joyccn/ZenRoute.git
-cd zenroute
+git clone https://github.com/ZenRouter/ZenRouter.git
+cd zenrouter
 npm install
 npm run build
 
 # 設定
 export JWT_SECRET="your-secure-secret-change-this"
 export INITIAL_PASSWORD="your-password"
-export DATA_DIR="/var/lib/zenroute"
+export DATA_DIR="/var/lib/zenrouter"
 export PORT="20128"
 export HOSTNAME="0.0.0.0"
 export NODE_ENV="production"
@@ -966,7 +966,7 @@ npm run start
 
 # またはPM2を使用
 npm install -g pm2
-pm2 start npm --name zenroute -- start
+pm2 start npm --name zenrouter -- start
 pm2 save
 pm2 startup
 ```
@@ -975,28 +975,28 @@ pm2 startup
 
 ```bash
 # イメージをビルド（リポジトリルートから）
-docker build -t zenroute .
+docker build -t zenrouter .
 
 # コンテナを実行（現在のセットアップで使用しているコマンド）
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 20128:20128 \
-  --env-file /root/dev/zenroute/.env \
-  -v zenroute-data:/app/data \
-  -v zenroute-usage:/root/.zenroute \
-  zenroute
+  --env-file /root/dev/zenrouter/.env \
+  -v zenrouter-data:/app/data \
+  -v zenrouter-usage:/root/.zenrouter \
+  zenrouter
 ```
 
 ポータブルコマンド（リポジトリルートにいる場合）：
 
 ```bash
 docker run -d \
-  --name zenroute \
+  --name zenrouter \
   -p 20128:20128 \
   --env-file ./.env \
-  -v zenroute-data:/app/data \
-  -v zenroute-usage:/root/.zenroute \
-  zenroute
+  -v zenrouter-data:/app/data \
+  -v zenrouter-usage:/root/.zenrouter \
+  zenrouter
 ```
 
 コンテナのデフォルト：
@@ -1006,18 +1006,18 @@ docker run -d \
 便利なコマンド：
 
 ```bash
-docker logs -f zenroute
-docker restart zenroute
-docker stop zenroute && docker rm zenroute
+docker logs -f zenrouter
+docker restart zenrouter
+docker stop zenrouter && docker rm zenrouter
 ```
 
 ### 環境変数
 
 | 変数 | デフォルト | 説明 |
 |------|-----------|------|
-| `JWT_SECRET` | 自動生成（`~/.zenroute/jwt-secret`） | ダッシュボード認証クッキーのJWT署名シークレット（複数インスタンス間で共有する場合に設定） |
+| `JWT_SECRET` | 自動生成（`~/.zenrouter/jwt-secret`） | ダッシュボード認証クッキーのJWT署名シークレット（複数インスタンス間で共有する場合に設定） |
 | `INITIAL_PASSWORD` | `12345678` | 保存されたハッシュがない場合の初回ログインパスワード |
-| `DATA_DIR` | `~/.zenroute` | メインアプリのデータベース格納場所（`db.json`） |
+| `DATA_DIR` | `~/.zenrouter` | メインアプリのデータベース格納場所（`db.json`） |
 | `PORT` | フレームワークデフォルト | サービスポート（例では`20128`） |
 | `HOSTNAME` | フレームワークデフォルト | バインドホスト（Dockerデフォルトは`0.0.0.0`） |
 | `NODE_ENV` | ランタイムデフォルト | デプロイ時は`production`に設定 |
@@ -1041,9 +1041,9 @@ docker stop zenroute && docker rm zenroute
 ### ランタイムファイルとストレージ
 
 - メインアプリ状態: `${DATA_DIR}/db.json`（プロバイダー、コンボ、エイリアス、キー、設定）、`src/lib/localDb.js` で管理。
-- 使用履歴とログ: `~/.zenroute/usage.json` と `~/.zenroute/log.txt`、`src/lib/usageDb.js` で管理。
+- 使用履歴とログ: `~/.zenrouter/usage.json` と `~/.zenrouter/log.txt`、`src/lib/usageDb.js` で管理。
 - オプションのリクエスト/トランスレーターログ: `ENABLE_REQUEST_LOGS=true` 時に `<repo>/logs/...`。
-- 使用状況ストレージは現在 `~/.zenroute` パスロジックに従い、`DATA_DIR` とは独立しています。
+- 使用状況ストレージは現在 `~/.zenrouter` パスロジックに従い、`DATA_DIR` とは独立しています。
 
 </details>
 
@@ -1105,7 +1105,7 @@ docker stop zenroute && docker rm zenroute
 - コンボを追加: `cc/claude-opus-4-6 → glm/glm-4.7 → if/kimi-k2-thinking`
 
 **OAuthトークンの期限切れ**
-- ZenRouteが自動リフレッシュ
+- ZenRouterが自動リフレッシュ
 - 問題が続く場合: ダッシュボード → Provider → 再接続
 
 **高コスト**
@@ -1165,22 +1165,22 @@ Authorization: Bearer your-api-key
 
 ## 📧 サポート
 
-- **GitHub**: [github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)
-- **Issues**: [github.com/joyccn/ZenRoute/issues](https://github.com/joyccn/ZenRoute/issues)
+- **GitHub**: [github.com/ZenRouter/ZenRouter](https://github.com/ZenRouter/ZenRouter)
+- **Issues**: [github.com/ZenRouter/ZenRouter/issues](https://github.com/ZenRouter/ZenRouter/issues)
 
 ---
 
 ## 👥 コントリビューター
 
-ZenRouteの改善に貢献してくださったすべてのコントリビューターに感謝します！
+ZenRouterの改善に貢献してくださったすべてのコントリビューターに感謝します！
 
-[![Contributors](https://contrib.rocks/image?repo=joyccn/ZenRoute&max=150&columns=15&anon=1&v=20260309)](https://github.com/joyccn/ZenRoute/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=ZenRouter/ZenRouter&max=150&columns=15&anon=1&v=20260309)](https://github.com/ZenRouter/ZenRouter/graphs/contributors)
 
 ---
 
 ## 📊 スターチャート
 
-[![Star Chart](https://starchart.cc/joyccn/ZenRoute.svg?variant=adaptive)](https://starchart.cc/joyccn/ZenRoute)
+[![Star Chart](https://starchart.cc/ZenRouter/ZenRouter.svg?variant=adaptive)](https://starchart.cc/ZenRouter/ZenRouter)
 
 
 

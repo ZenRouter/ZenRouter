@@ -31,26 +31,26 @@ const readConfig = async () => {
   }
 };
 
-const hasZenRouteConfig = (config) => {
+const hasZenRouterConfig = (config) => {
   if (!Array.isArray(config)) return false;
-  return config.some((entry) => entry.name === "ZenRoute");
+  return config.some((entry) => entry.name === "ZenRouter");
 };
 
-const getZenRouteEntry = (config) => {
+const getZenRouterEntry = (config) => {
   if (!Array.isArray(config)) return null;
-  return config.find((entry) => entry.name === "ZenRoute") || null;
+  return config.find((entry) => entry.name === "ZenRouter") || null;
 };
 
 // GET - Read current copilot config
 export async function GET() {
   try {
     const config = await readConfig();
-    const entry = getZenRouteEntry(config);
+    const entry = getZenRouterEntry(config);
 
     return NextResponse.json({
       installed: true,
       config,
-      hasZenRoute: hasZenRouteConfig(config),
+      hasZenRouter: hasZenRouterConfig(config),
       configPath: getConfigPath(),
       currentModel: entry?.models?.[0]?.id || null,
       currentUrl: entry?.models?.[0]?.url || null,
@@ -61,7 +61,7 @@ export async function GET() {
   }
 }
 
-// POST - Apply ZenRoute config to chatLanguageModels.json
+// POST - Apply ZenRouter config to chatLanguageModels.json
 export async function POST(request) {
   try {
     const { baseUrl, apiKey, models } = await request.json();
@@ -83,10 +83,10 @@ export async function POST(request) {
     const config = existingConfig ?? [];
 
     const endpointUrl = `${baseUrl}/chat/completions#models.ai.azure.com`;
-    const keyToUse = apiKey || "sk_zenroute";
+    const keyToUse = apiKey || "sk_zenrouter";
 
     const newEntry = {
-      name: "ZenRoute",
+      name: "ZenRouter",
       vendor: "azure",
       apiKey: keyToUse,
       models: models.map((id) => ({
@@ -100,8 +100,8 @@ export async function POST(request) {
       })),
     };
 
-    // Replace existing ZenRoute entry or append
-    const idx = config.findIndex((e) => e.name === "ZenRoute");
+    // Replace existing ZenRouter entry or append
+    const idx = config.findIndex((e) => e.name === "ZenRouter");
     if (idx >= 0) {
       config[idx] = newEntry;
     } else {
@@ -127,7 +127,7 @@ export async function POST(request) {
   }
 }
 
-// DELETE - Remove ZenRoute entry from chatLanguageModels.json
+// DELETE - Remove ZenRouter entry from chatLanguageModels.json
 export async function DELETE() {
   try {
     const configPath = getConfigPath();
@@ -144,12 +144,12 @@ export async function DELETE() {
       throw error;
     }
 
-    config = config.filter((e) => e.name !== "ZenRoute");
+    config = config.filter((e) => e.name !== "ZenRouter");
     await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 
     return NextResponse.json({
       success: true,
-      message: "ZenRoute removed from Copilot config",
+      message: "ZenRouter removed from Copilot config",
     });
   } catch (error) {
     console.log("Error resetting copilot settings:", error);
