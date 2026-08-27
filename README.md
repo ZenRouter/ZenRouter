@@ -47,31 +47,19 @@
 
 </div>
 
----
-
-> **Independent Project Notice & Credits**
-> 
-> ZenRoute is an independent AI gateway maintained by **0xJoy** ([github.com/joyccn/ZenRoute](https://github.com/joyccn/ZenRoute)). All credit for the original foundations belongs to **decolua** ([github.com/decolua](https://github.com/decolua)). This repository actively maintains, hardens, and evolves the codebase under the **ZenRoute** banner.
-
----
-
-## Why ZenRoute?
-
-When developing with modern AI coding assistants (Claude Code, Cursor, Codex, Antigravity, Cline, OpenCode), developers frequently face frustrating bottlenecks:
-
-| Challenge | Impact | ZenRoute Solution |
-| :--- | :--- | :--- |
-| **Quota Expiration** | Unused subscription quotas reset every month. | **Maximized Utilization**: Live quota tracking across multiple accounts with intelligent rotation. |
-| **Rate Limit Interruptions** | 429/5xx errors halt coding sessions mid-flow. | **Multi-Tier Fallback**: Cascades automatically from Subscription → API Key → Cheap → Free. |
-| **Verbose CLI Logs** | `git diff`, `pytest`, and `cargo test` burn tokens fast. | **RTK Filter Engine**: Ported Rust state-machine filters compress CLI outputs by **20% to 60%**. |
-| **Tool Fragmentation** | Every tool requires separate keys, endpoints, and configs. | **Unified Endpoint**: Single OpenAI-compatible `/v1/*` endpoint for all your tools. |
-| **Privacy & Security Concerns** | Sending credentials through third-party cloud brokers. | **Local-First & Hardened**: Local SQLite database with encrypted secrets and loopback peer trust. |
-
----
-
 ## Quick Start
 
-### 1. Global Installation (npm)
+### ⚡ One-Line Automated Install (Recommended)
+
+Install ZenRoute instantly via the official install script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/joyccn/ZenRoute/master/install.sh | bash
+```
+
+---
+
+### 📦 Alternative 1: Global Installation (npm)
 
 ```bash
 # Install globally
@@ -85,7 +73,7 @@ The gateway dashboard will open automatically at **`http://localhost:20128/dashb
 
 ---
 
-### 2. Docker Deployment
+### 🐳 Alternative 2: Docker Deployment
 
 ```bash
 docker run -d \
@@ -93,8 +81,8 @@ docker run -d \
   -p 20128:20128 \
   -v "$HOME/.zenroute:/app/data" \
   -e DATA_DIR=/app/data \
-  --restart always \
-  joyccn/ZenRoute:latest
+  --restart unless-stopped \
+  joyccn/zenroute:latest
 ```
 
 Or with `docker-compose.yml`:
@@ -102,9 +90,9 @@ Or with `docker-compose.yml`:
 ```yaml
 services:
   zenroute:
-    image: joyccn/ZenRoute:latest
+    image: joyccn/zenroute:latest
     container_name: zenroute
-    restart: always
+    restart: unless-stopped
     ports:
       - "20128:20128"
     volumes:
@@ -198,7 +186,7 @@ curl http://localhost:20128/v1/chat/completions \
 - Custom HTTP server generates an ephemeral 48-character hex peer token (`x-zen-peer-token`) at boot.
 - Derives client IP directly from the TCP socket to prevent `X-Forwarded-For` spoofing on loopback endpoints.
 - Built-in SSRF protection with asynchronous DNS-pinning and private CIDR blocklist filters.
-- Local SQLite database stored securely at `~/.zenroute/db/data.sqlite` with fallback support for `~/.9router`.
+- Local SQLite database stored securely at `~/.zenroute/db/data.sqlite`.
 
 ### 4. Zero-Leak SSE Streaming Engine
 - Decoupled SSE/NDJSON streaming parser with duplicate token-delta prevention.
