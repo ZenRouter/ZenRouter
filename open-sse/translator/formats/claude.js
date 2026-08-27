@@ -227,7 +227,7 @@ export function anchorClaudeCache(body) {
   if (Array.isArray(body.tools)) {
     const last = body.tools.length - 1;
     body.tools.forEach((tool, i) => {
-      if (i === last) tool.cache_control = { ...CACHE_CONTROL_1H };
+      if (i === last && !tool?.defer_loading) tool.cache_control = { ...CACHE_CONTROL_1H };
       else delete tool.cache_control;
     });
   }
@@ -423,7 +423,7 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
 
     body.tools = body.tools.map((tool, i) => {
       const { cache_control, ...rest } = tool;
-      if (i === body.tools.length - 1) {
+      if (i === body.tools.length - 1 && !tool?.defer_loading) {
         return { ...rest, cache_control: { type: "ephemeral", ttl: "1h" } };
       }
       return rest;

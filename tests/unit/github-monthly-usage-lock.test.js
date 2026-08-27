@@ -74,7 +74,7 @@ describe("GitHub monthly usage exhaustion", () => {
       expect(dbMocks.updateProviderConnection).toHaveBeenCalledWith(
         "github-a",
         expect.objectContaining({
-          "modelLock_claude-fable-5": "2026-08-04T19:32:00.000Z",
+          "modelLock_claude-fable-5": "2026-08-04T19:45:00.000Z",
         }),
       );
       expect(dbMocks.updateProviderConnection.mock.calls[0][1])

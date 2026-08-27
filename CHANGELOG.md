@@ -1,6 +1,12 @@
-# v0.5.56 (2026-08-25)
+# v0.5.56 (2026-08-27)
 
 > **🙏 Credits:** 9Router was originally created by **decolua**. This repository is a maintained fork under **joyccn**, continuing and building upon the original work.
+
+## Fixed
+- **Claude MCP tool prompt caching fix (Issue #3567)**: guarded `cache_control: { type: "ephemeral", ttl: "1h" }` assignment in `open-sse/translator/formats/claude.js` and `open-sse/translator/request/openai-to-claude.js` to skip tools with `defer_loading: true`. Fixes Anthropic API `400 Bad Request: Tool '...' cannot both defer_loading=true cache_control set` when executing Claude Code with MCP plugins.
+- **Qwen 3.8 vision & multimodal support (Issue #3568)**: updated model pattern rules in `open-sse/providers/capabilities.js` to include `*qwen3.8*`, preserving multimodal image inputs and preventing unnecessary vision model fallback swaps.
+- **Poolside Laguna reasoning effort clamping (Issue #3572)**: clamped unsupported reasoning effort levels (`xhigh`, `max`, `ultra`) down to `high` for Poolside and other providers with constrained reasoning effort enums (`minimal | low | medium | high`) in `open-sse/translator/concerns/thinkingUnified.js` and `open-sse/providers/thinkingLevels.js`.
+- **Dashboard Sidebar cleanup**: removed 9Remote and 9English promotional buttons and modals from the dashboard UI navigation.
 
 ## Performance & Optimization
 - **SSE streaming & TTFT latency tuning**: updated shared `SSE_HEADERS`, `SSE_HEADERS_CORS`, and `SSE_HEADERS_NO_BUFFER` in `open-sse/utils/sseConstants.js` to include `Cache-Control: no-cache, no-transform` and `X-Accel-Buffering: no`. Prevents reverse proxies (Cloudflare, Nginx, Vercel relay) from buffering SSE chunks or applying gzip compression, cutting Time-To-First-Token latency.
