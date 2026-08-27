@@ -3,6 +3,7 @@
 > **🙏 Credits:** 9Router was originally created by **decolua**. This repository is a maintained fork under **joyccn**, continuing and building upon the original work.
 
 ## Fixed
+- **Landing page "Get Started" CTA & navigation routing (#3569)**: added missing Next.js `useRouter().push('/dashboard')` navigation handler to the HeroSection "Get Started" CTA button, auto-closed mobile dropdown menu on nav link clicks, and replaced full-page reload `<a>` tags with `<Link>` in `Footer.js`.
 - **LRU session store eviction (PR #3550)**: updated `runtimeSessionStore` and `assistantSessionStore` in `open-sse/utils/sessionManager.js` to re-insert existing entries on access, ensuring true LRU eviction order instead of insertion-order eviction when reaching store caps.
 - **OAuth callback timeout timer & socket leak fix (PR #3543)**: added `waitForCallbackParams` in `src/lib/oauth/utils/server.js` and wrapped browser OAuth flow callback servers in `finally` blocks across `antigravity`, `codex`, `gemini`, `iflow`, and `oauth` services, ensuring `setInterval` poll timers and local HTTP servers are reliably cleaned up on auth timeout or failure.
 - **Claude MCP tool prompt caching fix (Issue #3567)**: guarded `cache_control: { type: "ephemeral", ttl: "1h" }` assignment in `open-sse/translator/formats/claude.js` and `open-sse/translator/request/openai-to-claude.js` to skip tools with `defer_loading: true`. Fixes Anthropic API `400 Bad Request: Tool '...' cannot both defer_loading=true cache_control set` when executing Claude Code with MCP plugins.

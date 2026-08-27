@@ -55,11 +55,14 @@ export default function Navigation() {
           <div className="flex flex-col gap-4 p-6">
             <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#features" onClick={() => setMobileMenuOpen(false)}>Features</a>
             <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>How it Works</a>
-            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/joyccn/9router#readme" target="_blank" rel="noopener noreferrer">Docs</a>
-            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/joyccn/9router" target="_blank" rel="noopener noreferrer">GitHub</a>
-            <button 
-              onClick={() => router.push("/dashboard")}
-              className="h-9 rounded-lg bg-[#f97815] hover:bg-[#e0650a] text-[#181411] text-sm font-bold"
+            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/joyccn/9router#readme" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>Docs</a>
+            <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="https://github.com/joyccn/9router" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>GitHub</a>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                router.push("/dashboard");
+              }}
+              className="h-9 rounded-lg bg-[#f97815] hover:bg-[#e0650a] text-[#181411] text-sm font-bold cursor-pointer"
             >
               Get Started
             </button>
