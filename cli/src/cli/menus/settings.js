@@ -182,7 +182,7 @@ async function toggleHeadroom(currentlyOn) {
 
 /**
  * Reset dashboard password to default via server API (writes the live SQLite DB).
- * After reset, user can log in with the default password "123456".
+ * After reset, user can log in with the default password "12345678".
  */
 async function resetPassword() {
   const ok = await confirm(`Reset dashboard password to default "${DEFAULT_PASSWORD}"?`);

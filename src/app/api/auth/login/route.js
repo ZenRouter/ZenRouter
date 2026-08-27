@@ -54,8 +54,10 @@ export async function POST(request) {
     if (storedHash) {
       isValid = await bcrypt.compare(password, storedHash);
     } else {
-      // Use env var or default
-      const initialPassword = process.env.INITIAL_PASSWORD || "12345678";
+      // Use env var or default — treat placeholder "change-me" as unset
+      const raw = process.env.INITIAL_PASSWORD?.trim();
+      const isPlaceholder = !raw || raw === "change-me" || raw === "change-me-to-a-long-random-secret" || raw === "change-me-to-a-long-random-secret-change-me-in-production-min-32-chars";
+      const initialPassword = isPlaceholder ? "12345678" : raw;
       isValid = password === initialPassword;
     }
 
@@ -64,8 +66,10 @@ export async function POST(request) {
 
       // Default password still in use on a remote client → force a password
       // change before the dashboard is exposed remotely (keeps local UX intact).
+      const rawPw = process.env.INITIAL_PASSWORD?.trim();
+      const isPlaceholderPw = !rawPw || rawPw === "change-me" || rawPw === "change-me-to-a-long-random-secret" || rawPw === "change-me-to-a-long-random-secret-change-me-in-production-min-32-chars";
       const mustChangePassword =
-        !storedHash && !process.env.INITIAL_PASSWORD && !isLocalRequest(request);
+        !storedHash && isPlaceholderPw && !isLocalRequest(request);
 
       if (mustChangePassword) {
         // Do NOT issue a session token: a fresh install's default password is

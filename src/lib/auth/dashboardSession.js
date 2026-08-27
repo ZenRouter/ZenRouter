@@ -121,6 +121,8 @@ export async function verifyDashboardPassword(password) {
   const settings = await getSettings();
   const storedHash = settings?.password;
   if (storedHash) return bcrypt.compare(password, storedHash);
-  const initialPassword = process.env.INITIAL_PASSWORD || DEFAULT_PASSWORD;
+  const raw = process.env.INITIAL_PASSWORD?.trim();
+  const isPlaceholder = !raw || raw === "change-me" || raw === "change-me-to-a-long-random-secret" || raw === "change-me-to-a-long-random-secret-change-me-in-production-min-32-chars";
+  const initialPassword = isPlaceholder ? DEFAULT_PASSWORD : raw;
   return password === initialPassword;
 }
