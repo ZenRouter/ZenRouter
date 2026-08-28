@@ -8,8 +8,8 @@
   
   **将所有 AI 编程工具（Claude Code、Cursor、Antigravity、Copilot、Codex、Gemini、OpenCode、Cline、OpenClaw...）连接到 40+ AI 提供商和 100+ 模型。**
   
-  [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
-  [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![npm](https://img.shields.io/npm/v/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
+  [![Downloads](https://img.shields.io/npm/dm/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
   [![License](https://img.shields.io/npm/l/zenrouter.svg)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
 
   <a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="ZenRouter%2FZenRouter | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
@@ -74,7 +74,7 @@
 **1. 全局安装：**
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 zenrouter
 ```
 

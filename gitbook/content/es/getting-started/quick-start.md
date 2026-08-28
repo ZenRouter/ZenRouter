@@ -9,7 +9,7 @@ Pon en marcha ZenRouter en 5 minutos y comienza a enrutar solicitudes de IA de f
 ### 1. Instalar
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 **Requisitos:** Node.js 20+ ([Detalles de instalación](getting-started/installation.md))

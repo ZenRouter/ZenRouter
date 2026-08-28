@@ -13,8 +13,8 @@
     <img src="../public/providers/openclaw.png" alt="OpenClaw" width="80"/>
   </p>
   
-  [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
-  [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![npm](https://img.shields.io/npm/v/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
+  [![Downloads](https://img.shields.io/npm/dm/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
   [![License](https://img.shields.io/npm/l/zenrouter.svg)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
   
 </div>
@@ -73,7 +73,7 @@
 **1. ติดตั้งแบบ Global:**
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 zenrouter
 ```
 

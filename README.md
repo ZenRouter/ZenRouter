@@ -8,8 +8,8 @@
 
 <br/>
 
-[![npm version](https://img.shields.io/npm/v/zenrouter.svg?color=4B72A4&label=npm)](https://www.npmjs.com/package/zenrouter)
-[![npm downloads](https://img.shields.io/npm/dm/zenrouter.svg?color=4B72A4&label=downloads)](https://www.npmjs.com/package/zenrouter)
+[![npm version](https://img.shields.io/npm/v/@joyccn/zenrouter.svg?color=4B72A4&label=npm)](https://www.npmjs.com/package/@joyccn/zenrouter)
+[![npm downloads](https://img.shields.io/npm/dm/@joyccn/zenrouter.svg?color=4B72A4&label=downloads)](https://www.npmjs.com/package/@joyccn/zenrouter)
 [![GitHub stars](https://img.shields.io/github/stars/ZenRouter/ZenRouter?style=social)](https://github.com/ZenRouter/ZenRouter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/Node.js-%3E%3D18-green)](https://nodejs.org)
@@ -61,8 +61,11 @@ curl -fsSL https://raw.githubusercontent.com/ZenRouter/ZenRouter/master/install.
 ### 📦 Alternative 1: Global Installation (npm)
 
 ```bash
-# Install globally
-npm install -g zenrouter
+# Run directly without installation
+npx @joyccn/zenrouter
+
+# Or install globally
+npm install -g @joyccn/zenrouter
 
 # Start the gateway
 zenrouter

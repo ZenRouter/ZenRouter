@@ -7,8 +7,8 @@
 
   **すべてのAIコーディングツール（Claude Code、Cursor、Antigravity、Copilot、Codex、Gemini、OpenCode、Cline、OpenClaw...）を40以上のAIプロバイダーと100以上のモデルに接続。**
 
-  [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
-  [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![npm](https://img.shields.io/npm/v/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
+  [![Downloads](https://img.shields.io/npm/dm/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
   [![License](https://img.shields.io/npm/l/zenrouter.svg)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
 
 
@@ -67,7 +67,7 @@
 **1. グローバルインストール：**
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 zenrouter
 ```
 

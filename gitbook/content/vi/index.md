@@ -105,7 +105,7 @@ Bắt đầu trong 2 phút:
 
 ```bash
 # Install globally
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 
 # Start (dashboard opens automatically)
 zenrouter

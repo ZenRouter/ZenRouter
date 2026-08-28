@@ -34,7 +34,7 @@ npm --version
 全局安装,任何位置都能使用:
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 **启动 ZenRouter:**
@@ -61,7 +61,7 @@ npm install zenrouter
 **启动 ZenRouter:**
 
 ```bash
-npx zenrouter
+npx @joyccn/zenrouter
 ```
 
 **优势:**
@@ -283,7 +283,7 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 
 # 然后重新安装
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 ### Node.js 版本过低
@@ -372,7 +372,7 @@ pm2 save
 ### 本地开发
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 zenrouter
 ```
 
@@ -382,7 +382,7 @@ zenrouter
 
 ```bash
 # 安装
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 
 # 配置
 export JWT_SECRET="your-secure-secret"

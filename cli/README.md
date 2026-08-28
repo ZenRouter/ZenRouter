@@ -4,8 +4,8 @@
 
 **Connect All AI Code Tools (Claude Code, Cursor, Antigravity, Copilot, Codex, Gemini, OpenCode, Cline, OpenClaw...) to 40+ AI Providers & 100+ Models.**
 
-[![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
-[![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+[![npm](https://img.shields.io/npm/v/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
+[![Downloads](https://img.shields.io/npm/dm/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
 [![Docker Pulls](https://img.shields.io/docker/pulls/joyccn/zenrouter.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/joyccn/zenrouter)
 [![GHCR](https://img.shields.io/badge/GHCR-ZenRouter%2FZenRouter-blue?logo=github)](https://github.com/ZenRouter/ZenRouter/pkgs/container/zenrouter)
 [![License](https://img.shields.io/npm/l/zenrouter.svg)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
@@ -40,11 +40,12 @@
 **Option 1 — npm (recommended for desktop):**
 
 ```bash
-npm install -g zenrouter
-zenrouter
+# Run directly without installation
+npx @joyccn/zenrouter
 
-# Or run directly with npx
-npx zenrouter
+# Or install globally
+npm install -g @joyccn/zenrouter
+zenrouter
 ```
 
 **Option 2 — Docker (server/VPS):**

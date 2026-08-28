@@ -9,7 +9,7 @@ ZenRouterを5分で起動し、AIリクエストをインテリジェントに�
 ### 1. インストール
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 **要件:** Node.js 20+ ([インストール詳細](getting-started/installation.md))

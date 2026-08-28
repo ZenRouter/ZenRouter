@@ -34,7 +34,7 @@ npm --version
 Cài ZenRouter toàn cục để dùng ở bất kỳ đâu:
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 **Khởi động ZenRouter:**
@@ -61,7 +61,7 @@ npm install zenrouter
 **Khởi động ZenRouter:**
 
 ```bash
-npx zenrouter
+npx @joyccn/zenrouter
 ```
 
 **Lợi ích:**
@@ -283,7 +283,7 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 
 # Then install again
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 ### Node.js Phiên bản quá cũ
@@ -372,7 +372,7 @@ pm2 save
 ### Phát triển cục bộ
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 zenrouter
 ```
 
@@ -382,7 +382,7 @@ zenrouter
 
 ```bash
 # Install
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 
 # Configure
 export JWT_SECRET="your-secure-secret"

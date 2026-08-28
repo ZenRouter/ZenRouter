@@ -9,7 +9,7 @@ Ejecuta ZenRouter en tu máquina local para desarrollo y uso personal.
 Instala ZenRouter globalmente vía npm:
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 **Requisitos:**
@@ -113,7 +113,7 @@ Si encuentras errores de permisos durante la instalación:
 
 ```bash
 # Usar sudo (no recomendado)
-sudo npm install -g zenrouter
+sudo npm install -g @joyccn/zenrouter
 
 # O corregir los permisos de npm (recomendado)
 mkdir ~/.npm-global

@@ -7,8 +7,8 @@
   
   **Kết nối tất cả công cụ AI Code (Claude Code, Codex, Cursor, Cline, Copilot, Antigravity...) tới 40+ Nhà cung cấp AI & 100+ Mô hình.**
   
-  [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
-  [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![npm](https://img.shields.io/npm/v/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
+  [![Downloads](https://img.shields.io/npm/dm/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
   [![License](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
   
   [🚀 Bắt đầu nhanh](#-quick-start) • [💡 Tính năng](#-key-features) • [📖 Cài đặt](#-setup-guide)
@@ -69,7 +69,7 @@ Kết quả: Không bao giờ ngừng code, chi phí tối thiểu + tiết ki�
 **1. Cài đặt toàn cục:**
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 zenrouter
 ```
 

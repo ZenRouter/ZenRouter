@@ -9,7 +9,7 @@
 npm経由でZenRouterをグローバルインストール:
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 **要件:**
@@ -113,7 +113,7 @@ kill -9 <PID>
 
 ```bash
 # sudoを使用 (非推奨)
-sudo npm install -g zenrouter
+sudo npm install -g @joyccn/zenrouter
 
 # またはnpm権限を修正 (推奨)
 mkdir ~/.npm-global

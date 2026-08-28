@@ -9,7 +9,7 @@
 通过 npm 全局安装 ZenRouter:
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 **要求:**
@@ -113,7 +113,7 @@ kill -9 <PID>
 
 ```bash
 # 使用 sudo(不推荐)
-sudo npm install -g zenrouter
+sudo npm install -g @joyccn/zenrouter
 
 # 或修复 npm 权限(推荐)
 mkdir ~/.npm-global

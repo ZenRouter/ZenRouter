@@ -105,7 +105,7 @@ ZenRouter 是一款智能代理,位于你的编码工具(Cursor、Cline、Claude
 
 ```bash
 # 全局安装
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 
 # 启动(仪表盘自动打开)
 zenrouter

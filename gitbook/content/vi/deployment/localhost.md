@@ -9,7 +9,7 @@ Chạy ZenRouter trên máy cá nhân để phát triển và dùng cá nhân.
 Cài đặt ZenRouter toàn cục qua npm:
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 **Yêu cầu:**
@@ -113,7 +113,7 @@ Nếu gặp lỗi permission khi cài đặt:
 
 ```bash
 # Use sudo (not recommended)
-sudo npm install -g zenrouter
+sudo npm install -g @joyccn/zenrouter
 
 # Or fix npm permissions (recommended)
 mkdir ~/.npm-global

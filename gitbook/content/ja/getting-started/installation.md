@@ -34,7 +34,7 @@ npm --version
 どこからでも使用できるようにZenRouterをグローバルインストール:
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 **ZenRouterを起動:**
@@ -61,7 +61,7 @@ npm install zenrouter
 **ZenRouterを起動:**
 
 ```bash
-npx zenrouter
+npx @joyccn/zenrouter
 ```
 
 **利点:**
@@ -283,7 +283,7 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 
 # 再度インストール
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 ### Node.jsバージョンが古すぎる
@@ -372,7 +372,7 @@ pm2 save
 ### ローカル開発
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 zenrouter
 ```
 
@@ -382,7 +382,7 @@ zenrouter
 
 ```bash
 # インストール
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 
 # 設定
 export JWT_SECRET="your-secure-secret"

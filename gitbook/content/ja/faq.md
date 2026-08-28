@@ -198,7 +198,7 @@ npm start
 
 ### Localhost(デフォルト)
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 zenrouter
 → Dashboard: http://localhost:3000
 → API: http://localhost:20128/v1

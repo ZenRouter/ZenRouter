@@ -9,7 +9,7 @@ Get ZenRouter running in 5 minutes and start routing AI requests intelligently.
 ### 1. Install
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 ```
 
 **Requirements:** Node.js 20+ ([Installation details](getting-started/installation.md))

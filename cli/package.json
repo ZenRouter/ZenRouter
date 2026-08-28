@@ -1,5 +1,5 @@
 {
-  "name": "zenrouter",
+  "name": "@joyccn/zenrouter",
   "version": "0.5.57",
   "description": "ZenRouter CLI - Serene AI Gateway & Intelligent Routing Engine",
   "bin": {

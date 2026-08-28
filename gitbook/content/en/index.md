@@ -105,7 +105,7 @@ Get started in 2 minutes:
 
 ```bash
 # Install globally
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 
 # Start (dashboard opens automatically)
 zenrouter

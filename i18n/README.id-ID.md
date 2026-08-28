@@ -7,8 +7,8 @@
 
   **Hubungkan semua tool AI coding (Claude Code, Cursor, Antigravity, Copilot, Codex, Gemini, OpenCode, Cline, OpenClaw...) ke 40+ provider AI dan 100+ model.**
 
-  [![npm](https://img.shields.io/npm/v/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
-  [![Downloads](https://img.shields.io/npm/dm/zenrouter.svg)](https://www.npmjs.com/package/zenrouter)
+  [![npm](https://img.shields.io/npm/v/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
+  [![Downloads](https://img.shields.io/npm/dm/@joyccn/zenrouter.svg)](https://www.npmjs.com/package/@joyccn/zenrouter)
   [![License](https://img.shields.io/npm/l/zenrouter.svg)](https://github.com/ZenRouter/ZenRouter/blob/main/LICENSE)
 
   [🚀 Mulai Cepat](#-mulai-cepat) • [💡 Fitur](#-fitur-utama) • [📖 Setup](#-panduan-setup)
@@ -68,7 +68,7 @@ Hasil: ngoding tanpa berhenti, biaya minimum
 **1. Install secara global:**
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 zenrouter
 ```
 
@@ -887,7 +887,7 @@ Dashboard: `http://localhost:20128/dashboard`
 <summary><b>VPS / Cloud</b></summary>
 
 ```bash
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 PORT=20128 HOSTNAME=0.0.0.0 BASE_URL=https://your-domain.com zenrouter
 ```
 
@@ -946,6 +946,6 @@ MIT License — lihat [LICENSE](https://github.com/ZenRouter/ZenRouter/blob/main
 
 **Kalau ZenRouter membantumu, kasih ⭐ di [GitHub](https://github.com/ZenRouter/ZenRouter)!**
 
-[📦 npm](https://www.npmjs.com/package/zenrouter) • [🐛 Laporkan Bug](https://github.com/ZenRouter/ZenRouter/issues)
+[📦 npm](https://www.npmjs.com/package/@joyccn/zenrouter) • [🐛 Laporkan Bug](https://github.com/ZenRouter/ZenRouter/issues)
 
 </div>

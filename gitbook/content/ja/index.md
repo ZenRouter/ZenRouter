@@ -105,7 +105,7 @@ MiniMax経由で200万: $0.40
 
 ```bash
 # グローバルインストール
-npm install -g zenrouter
+npm install -g @joyccn/zenrouter
 
 # 起動(ダッシュボードが自動で開きます)
 zenrouter
