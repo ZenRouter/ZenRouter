@@ -75,6 +75,8 @@ export function createSSEStream(options = {}) {
   let openAIResponsesTerminalSeen = false;
   let openAIResponsesDoneSent = false;
   let streamDoneSent = false;  // track duplicate [DONE] across transform + flush
+  let passthroughFinishSeen = false;  // passthrough: duplicate finish chunks from upstream
+  let passthroughDoneSent = false;    // passthrough: upstream already sent [DONE]
   let finalized = false;
 
   // Usage/logging tail, callable from transform() as well as flush(): a client that
@@ -152,6 +154,13 @@ export function createSSEStream(options = {}) {
           let injectedUsage = false;
           let responsesTerminal = false;
 
+          // Dedup terminators: some upstreams (e.g. stealth/ox-alpha) send the
+          // finish chunk twice and/or their own [DONE]; clients like AI SDK
+          // treat anything after the first finish_reason as a protocol error.
+          const isDoneLine = trimmed.startsWith("data:") && trimmed.slice(5).trim() === "[DONE]";
+          if (isDoneLine && passthroughDoneSent) continue;
+          if (isDoneLine) passthroughDoneSent = true;
+
           if (trimmed.startsWith("data:") && trimmed.slice(5).trim() !== "[DONE]") {
             try {
               const parsed = JSON.parse(trimmed.slice(5).trim());
@@ -198,8 +207,15 @@ export function createSSEStream(options = {}) {
               }
 
               const delta = parsed.choices?.[0]?.delta;
+              // OpenRouter-style gateways stream reasoning under `delta.reasoning`,
+              // normalize to `delta.reasoning_content`
+              if (delta && typeof delta.reasoning === "string" && delta.reasoning_content === undefined) {
+                delta.reasoning_content = delta.reasoning;
+                delete delta.reasoning;
+                fieldsInjected = true;
+              }
               const content = delta?.content;
-              const reasoning = delta?.reasoning_content;
+              const reasoning = delta?.reasoning_content || delta?.reasoning;
               if (content && typeof content === "string") {
                 totalContentLength += content.length;
                 accumulatedContent += content;
@@ -217,6 +233,19 @@ export function createSSEStream(options = {}) {
               responsesTerminal = isOpenAIResponsesTerminalEvent(currentOpenAIResponsesEvent, parsed);
 
               const isFinishChunk = parsed.choices?.[0]?.finish_reason;
+              const nativeReason = parsed.choices?.[0]?.native_finish_reason;
+              // Detect upstream gateway errors masked as HTTP 200 (e.g. OpenRouter
+              // sending finish_reason:"stop" with native_finish_reason:"network_error"
+              // and empty content). Error out so the stream aborts and combo fallbacks.
+              if (isFinishChunk && nativeReason && ["network_error", "error", "server_error", "timeout"].includes(nativeReason) && totalContentLength === 0) {
+                controller.error(new Error(`Upstream stream failed: ${nativeReason}`));
+                return;
+              }
+              if (isFinishChunk && passthroughFinishSeen) {
+                // Duplicate finish chunk
+                continue;
+              }
+              if (isFinishChunk) passthroughFinishSeen = true;
               if (isFinishChunk && !hasValidUsage(parsed.usage)) {
                 const estimated = estimateUsage(body, totalContentLength, FORMATS.OPENAI);
                 parsed.usage = filterUsageForFormat(estimated, FORMATS.OPENAI);
@@ -413,7 +442,7 @@ export function createSSEStream(options = {}) {
           // Without it they can hang until timeout and trigger failover.
           // Gemini-family clients (Antigravity, Vertex, Gemini) reject this sentinel with 400 syntax errors.
           const isGeminiFamily = provider === "antigravity" || provider === "gemini" || provider === "vertex";
-          if (!streamDoneSent && !isGeminiFamily) {
+          if (!streamDoneSent && !passthroughDoneSent && !isGeminiFamily) {
             const doneOutput = "data: [DONE]\n\n";
             reqLogger?.appendConvertedChunk?.(doneOutput);
             controller.enqueue(sharedEncoder.encode(doneOutput));
