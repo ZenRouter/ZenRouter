@@ -63,6 +63,13 @@ export class CommandCodeExecutor extends BaseExecutor {
   }
 }
 
+export const __test__ = {
+  peekFirstCommandCodeFrame: async (response) => {
+    const res = await inspectAndWrapCommandCodeResponse(response, "test-model");
+    return { isError: !res.ok, status: res.status };
+  }
+};
+
 export function parseCommandCodeError(event) {
   if (!event || typeof event !== "object") {
     return {

@@ -23,7 +23,8 @@ function baseModelId(model) {
 }
 
 function isResponsesModel(model) {
-  return RESPONSES_MODELS.has(baseModelId(model));
+  const base = baseModelId(model);
+  return /muse/i.test(base) || RESPONSES_MODELS.has(base);
 }
 
 function resolveOpencodeSession(body, credentials) {
