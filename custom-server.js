@@ -54,6 +54,32 @@ http.createServer = (...args) => {
   const rest = args.filter((a) => typeof a !== "function");
   if (!handler) return origCreate(...args);
   const wrapped = (req, res) => {
+    // Static Asset URL Normalizer: fix encoded dynamic segments in _next/static
+    // e.g. /_next/static/chunks/app/(dashboard)/dashboard/providers/%5Bid%5D/page-*.js
+    // Browser encodes [ ] ( ) but disk files are decoded. Without this, ChunkLoadError 2134.
+    // Fixes: custom-server.js:56 — production patch was missing in dev repo.
+    if (req.url && req.url.includes("%") && req.url.includes("/_next/static/")) {
+      try {
+        const url = new URL(req.url, "http://localhost");
+        if (url.pathname.startsWith("/_next/static/") && url.pathname.includes("%")) {
+          const decodedPath = decodeURIComponent(url.pathname);
+          if (decodedPath !== url.pathname) {
+            req.url = decodedPath + url.search;
+          }
+        }
+      } catch {
+        // Fallback for malformed URI — handle known encodings only
+        if (req.url.startsWith("/_next/static/")) {
+          const decodedUrl = req.url
+            .replace(/%28/gi, "(")
+            .replace(/%29/gi, ")")
+            .replace(/%5B/gi, "[")
+            .replace(/%5D/gi, "]");
+          if (decodedUrl !== req.url) req.url = decodedUrl;
+        }
+      }
+    }
+
     // Low-latency streaming tuning: disable Nagle's algorithm (TCP_NODELAY) and enable TCP Keep-Alive
     if (req.socket) {
       if (typeof req.socket.setNoDelay === "function") req.socket.setNoDelay(true);
@@ -103,19 +129,6 @@ http.createServer = (...args) => {
     if (viaProxy) {
       req.headers["x-zen-via-proxy"] = "1";
       req.headers["x-zen-via-proxy"] = "1";
-    }
-
-    // Next.js static asset URL normalization for Cloudflare Tunnel / proxies
-    // Fix: decode percent-encoded parenthesis (%28dashboard%29) and brackets (%5Bid%5D) in _next/static URLs
-    if (req.url && req.url.startsWith("/_next/static/")) {
-      const decodedUrl = req.url
-        .replace(/%28/gi, "(")
-        .replace(/%29/gi, ")")
-        .replace(/%5B/gi, "[")
-        .replace(/%5D/gi, "]");
-      if (decodedUrl !== req.url) {
-        req.url = decodedUrl;
-      }
     }
 
     return handler(req, res);

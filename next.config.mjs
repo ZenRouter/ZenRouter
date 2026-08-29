@@ -57,6 +57,35 @@ const nextConfig = {
     };
     return config;
   },
+  async headers() {
+    return [
+      {
+        // Dashboard + API need to allow self + inline/eval for Next, plus GTM + Cloudflare Insights
+        source: "/(.*)",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            // NOTE: This overrides the broken Report-Only `connect-src 'none'` that was injected
+            // by reverse-proxy/Cloudflare on zen.hlcyn.xyz. If your proxy still sends
+            // `Content-Security-Policy-Report-Only: connect-src 'none'`, REMOVE it at the proxy
+            // (nginx `add_header`, Cloudflare Transform Rules, etc.) — browser enforces BOTH headers
+            // and the stricter `none` will still block /api/* and RSC `?_rsc=` fetches.
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://static.cloudflareinsights.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "img-src 'self' data: blob: https:",
+              "connect-src 'self' https://www.googletagmanager.com https://static.cloudflareinsights.com",
+              "frame-ancestors 'self'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join("; "),
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
