@@ -347,6 +347,136 @@ export function getComboModelsFromData(modelStr, combosData) {
  * @param {number|string} [options.comboStickyLimit=1] - Requests per combo model before switching
  * @returns {Promise<Response>}
  */
+
+const SSE_CONTENT_TYPE = "text/event-stream";
+const PEEK_MAX_BYTES = 256 * 1024;
+
+function frameCarriesContent(line) {
+  if (!line.startsWith("data:")) return false;
+  const payload = line.slice(5).trim();
+  if (!payload || payload === "[DONE]") return false;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(payload);
+  } catch {
+    return false;
+  }
+
+  if (hasOutputTokens(parsed.usage) || hasOutputTokens(parsed.response?.usage)) return true;
+
+  const delta = parsed.choices?.[0]?.delta;
+  if (nonEmptyString(delta?.content)) return true;
+  if (nonEmptyString(delta?.reasoning_content) || nonEmptyString(delta?.reasoning)) return true;
+  if (delta?.tool_calls?.length || delta?.function_call) return true;
+
+  if (parsed.type === "content_block_delta") {
+    const d = parsed.delta;
+    if (nonEmptyString(d?.text) || nonEmptyString(d?.partial_json) || nonEmptyString(d?.thinking)) return true;
+  }
+  if (parsed.type === "content_block_start" && parsed.content_block?.type === "tool_use") return true;
+
+  if (typeof parsed.type === "string" && parsed.type.endsWith(".delta") && nonEmptyString(parsed.delta)) return true;
+
+  const parts = parsed.candidates?.[0]?.content?.parts;
+  if (Array.isArray(parts) && parts.some(p => nonEmptyString(p?.text) || p?.functionCall || p?.inlineData)) return true;
+
+  if (nonEmptyString(parsed.message?.content) || nonEmptyString(parsed.response)) return true;
+  if (parsed.message?.tool_calls?.length) return true;
+
+  return false;
+}
+
+function nonEmptyString(v) {
+  return typeof v === "string" && v.length > 0;
+}
+
+function hasOutputTokens(usage) {
+  if (!usage || typeof usage !== "object") return false;
+  const n = Number(
+    usage.completion_tokens ?? usage.output_tokens ?? usage.candidatesTokenCount ?? 0
+  );
+  return Number.isFinite(n) && n > 0;
+}
+
+export async function peekStreamForContent(response, timeoutMs = 15000) {
+  const contentType = response?.headers?.get?.("content-type") || "";
+  if (!contentType.includes(SSE_CONTENT_TYPE) || !response?.body) {
+    return { hasContent: true, body: response?.body };
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const bufferedChunks = [];
+  let bufferedBytes = 0;
+  let textBuffer = "";
+  let hasContent = false;
+
+  const readPromise = (async () => {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        if (textBuffer.trim()) {
+          const lines = textBuffer.split("\n");
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed && frameCarriesContent(trimmed)) {
+              hasContent = true;
+              break;
+            }
+          }
+        }
+        break;
+      }
+
+      bufferedChunks.push(value);
+      bufferedBytes += value.byteLength;
+      textBuffer += decoder.decode(value, { stream: true });
+
+      const lines = textBuffer.split("\n");
+      textBuffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed && frameCarriesContent(trimmed)) {
+          hasContent = true;
+          break;
+        }
+      }
+
+      if (hasContent || bufferedBytes >= PEEK_MAX_BYTES) break;
+    }
+  })();
+
+  const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeoutMs));
+  await Promise.race([readPromise, timeoutPromise]);
+
+  const replayedStream = new ReadableStream({
+    async start(controller) {
+      for (const chunk of bufferedChunks) {
+        controller.enqueue(chunk);
+      }
+    },
+    async pull(controller) {
+      try {
+        const { done, value } = await reader.read();
+        if (done) {
+          controller.close();
+        } else {
+          controller.enqueue(value);
+        }
+      } catch (err) {
+        controller.error(err);
+      }
+    },
+    async cancel(reason) {
+      try { await reader.cancel(reason); } catch {}
+    }
+  });
+
+  return { hasContent, body: replayedStream };
+}
+
 export async function handleComboChat({ body, models, handleSingleModel, log, comboName, comboStrategy, comboStickyLimit = 1, autoSwitch = true }) {
   // Apply rotation strategy if enabled
   let rotatedModels = getRotatedModels(models, comboName, comboStrategy, comboStickyLimit);
@@ -377,8 +507,18 @@ export async function handleComboChat({ body, models, handleSingleModel, log, co
       
       // Success (2xx) - return response
       if (result.ok) {
-        log.info("COMBO", `Model ${modelStr} succeeded`);
-        return result;
+        // Empty-stream guard (#3463): verify the stream actually carries content before returning success
+        const peek = await peekStreamForContent(result);
+        if (peek.hasContent) {
+          log.info("COMBO", `Model ${modelStr} succeeded`);
+          return new Response(peek.body, {
+            status: result.status,
+            statusText: result.statusText,
+            headers: result.headers,
+          });
+        }
+        log.warn("COMBO", `Model ${modelStr} returned empty stream (no content frames) -> trying next model`);
+        continue;
       }
 
       // Extract error info from response
