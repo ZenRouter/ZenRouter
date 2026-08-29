@@ -58,31 +58,43 @@ const nextConfig = {
     return config;
   },
   async headers() {
+    // NOTE: ZenRouter previously had NO CSP, so prod relied on proxy-injected
+    // `Content-Security-Policy-Report-Only: connect-src 'none'` which is Report-Only
+    // (does not block by itself) but if proxy sends enforcing `Content-Security-Policy:
+    // connect-src 'none'` it WILL block. Remove that at proxy (nginx add_header,
+    // Cloudflare Transform Rules). This header below is the correct enforcing policy.
+    const dashboardCsp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://static.cloudflareinsights.com https://cloudflareinsights.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' data: https://fonts.gstatic.com",
+      "img-src 'self' data: blob: https:",
+      // GA4 beacons to google-analytics.com, Insights beacons to cloudflareinsights.com, HMR needs ws/wss
+      "connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://static.cloudflareinsights.com https://cloudflareinsights.com ws: wss:",
+      "media-src 'self' blob: data:",
+      "worker-src 'self' blob:",
+      "object-src 'none'",
+      "frame-ancestors 'self'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; ");
     return [
       {
-        // Dashboard + API need to allow self + inline/eval for Next, plus GTM + Cloudflare Insights
-        source: "/(.*)",
-        headers: [
-          {
-            key: "Content-Security-Policy",
-            // NOTE: This overrides the broken Report-Only `connect-src 'none'` that was injected
-            // by reverse-proxy/Cloudflare on zen.hlcyn.xyz. If your proxy still sends
-            // `Content-Security-Policy-Report-Only: connect-src 'none'`, REMOVE it at the proxy
-            // (nginx `add_header`, Cloudflare Transform Rules, etc.) — browser enforces BOTH headers
-            // and the stricter `none` will still block /api/* and RSC `?_rsc=` fetches.
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://static.cloudflareinsights.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' data: https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://www.googletagmanager.com https://static.cloudflareinsights.com",
-              "frame-ancestors 'self'",
-              "base-uri 'self'",
-              "form-action 'self'",
-            ].join("; "),
-          },
-        ],
+        // API/SSE are non-browser or same-origin fetch — minimal CSP, no inline needed
+        source: "/api/:path*",
+        headers: [{ key: "Content-Security-Policy", value: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'" }],
+      },
+      {
+        source: "/v1/:path*",
+        headers: [{ key: "Content-Security-Policy", value: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'" }],
+      },
+      {
+        source: "/v1beta/:path*",
+        headers: [{ key: "Content-Security-Policy", value: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'" }],
+      },
+      {
+        source: "/((?!api|v1|v1beta|_next/static|_next/image).*)",
+        headers: [{ key: "Content-Security-Policy", value: dashboardCsp }],
       },
     ];
   },
