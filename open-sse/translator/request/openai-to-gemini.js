@@ -22,7 +22,7 @@ import { ROLE, GEMINI_ROLE, OPENAI_BLOCK, CLAUDE_BLOCK } from "../schema/index.j
 // Sanitize function names for Gemini API.
 // Gemini requires: starts with [a-zA-Z_], followed by [a-zA-Z0-9_.:\-], max 64 chars.
 // Replace any invalid character with '_' and truncate to 64.
-function sanitizeGeminiFunctionName(name) {
+function sanitizeGeminiFunctionName(name, existingNames = new Set()) {
   if (!name) return "_unknown";
   // Replace any char not in [a-zA-Z0-9_.:\-] with '_'
   let sanitized = name.replace(/[^a-zA-Z0-9_.:\-]/g, "_");
@@ -30,8 +30,21 @@ function sanitizeGeminiFunctionName(name) {
   if (!/^[a-zA-Z_]/.test(sanitized)) {
     sanitized = "_" + sanitized;
   }
-  // Truncate to 64 chars
-  return sanitized.substring(0, 64);
+  // Truncate to 64 chars max
+  if (sanitized.length <= 64 && !existingNames.has(sanitized)) {
+    existingNames.add(sanitized);
+    return sanitized;
+  }
+
+  // Disambiguate with hash suffix on collision or truncation
+  let base = sanitized.substring(0, 56);
+  let finalName = base;
+  let counter = 1;
+  while (existingNames.has(finalName)) {
+    finalName = `${base}_${counter++}`;
+  }
+  existingNames.add(finalName);
+  return finalName;
 }
 
 export function sanitizeAntigravitySystemPrompt(text) {

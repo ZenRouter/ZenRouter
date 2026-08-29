@@ -24,6 +24,9 @@ const STRIP_RULES = [
   // OpenCode zen /v1/responses endpoint (e.g. muse models) returns HTTP 400
   // when max_tokens is supplied — it derives the cap from reasoning_effort.
   { provider: "opencode", match: /muse/i, drop: ["max_tokens", "max_completion_tokens", "max_output_tokens"] },
+  // OpenAI gpt-5.4-mini / newer models: max_tokens is deprecated and rejected with 400.
+  // Translate max_tokens -> max_completion_tokens.
+  { provider: "openai", match: /gpt-5\.4-mini|gpt-5\.[4-9]|o1|o3/i, translateMaxTokens: true },
 ];
 
 // Test a rule's match (regex or predicate) against the model id.
@@ -46,6 +49,12 @@ export function stripUnsupportedParams(provider, model, body) {
     if (!matches(rule, model)) continue;
     for (const key of rule.drop || []) {
       if (body[key] !== undefined) delete body[key];
+    }
+    if (rule.translateMaxTokens && body.max_tokens !== undefined) {
+      if (body.max_completion_tokens === undefined) {
+        body.max_completion_tokens = body.max_tokens;
+      }
+      delete body.max_tokens;
     }
     // CF Workers AI oneOf root schema only accepts content as plain string (#1926)
     if (rule.flattenContent && Array.isArray(body.messages)) {

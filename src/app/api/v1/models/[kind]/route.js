@@ -21,32 +21,44 @@ export async function OPTIONS() {
 }
 
 /**
- * GET /v1/models/{kind} - OpenAI-compatible models list filtered by capability.
- * Supported kinds: image, tts, stt, embedding, image-to-text, web.
+ * GET /v1/models/{kind_or_id} - OpenAI-compatible models list filtered by capability,
+ * or retrieve a single model object when queried by model ID (e.g. Claude Code interactive check).
  */
 export async function GET(_request, { params }) {
   try {
-    const { kind } = await params;
-    const kindFilter = KIND_SLUG_MAP[kind];
+    const { kind: kindOrId } = await params;
+    const kindFilter = KIND_SLUG_MAP[kindOrId];
 
-    if (!kindFilter) {
-      return Response.json(
-        {
-          error: {
-            message: `Unknown model kind: ${kind}. Supported: ${Object.keys(KIND_SLUG_MAP).join(", ")}`,
-            type: "invalid_request_error",
-          },
-        },
-        { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
-      );
+    if (kindFilter) {
+      const data = await buildModelsList(kindFilter);
+      return Response.json({ object: "list", data }, {
+        headers: { "Access-Control-Allow-Origin": "*" },
+      });
     }
 
-    const data = await buildModelsList(kindFilter);
-    return Response.json({ object: "list", data }, {
-      headers: { "Access-Control-Allow-Origin": "*" },
-    });
+    // Single model ID lookup (fixes Claude Code CLI interactive mode & SDK lookups)
+    const allModels = await buildModelsList();
+    const decodedId = decodeURIComponent(kindOrId);
+    const found = allModels.find(m => m.id === decodedId || m.id === kindOrId);
+
+    if (found) {
+      return Response.json(found, {
+        headers: { "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    return Response.json(
+      {
+        error: {
+          message: `Model '${kindOrId}' not found in catalog`,
+          type: "invalid_request_error",
+          code: "model_not_found"
+        },
+      },
+      { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
+    );
   } catch (error) {
-    console.log("Error fetching models by kind:", error);
+    console.log("Error fetching model by kind/id:", error);
     return Response.json(
       { error: { message: error.message, type: "server_error" } },
       { status: 500 }
