@@ -58,7 +58,7 @@ curl -X POST $NINEROUTER_URL/v1/search \
   -d '{"model":"xquik","query":"from:github release","max_results":10,"provider_options":{"queryType":"Latest"}}'
 ```
 
-Add the Xquik API key in 9Router's provider settings. Xquik charges 1 credit per returned post. Continue a search by passing `pagination.next_cursor` as `provider_options.cursor`.
+Add the Xquik API key in ZenRouter's provider settings. Xquik charges 1 credit per returned post. Continue a search by passing `pagination.next_cursor` as `provider_options.cursor`.
 
 Xquik responses include provider pagination and credit usage:
 
