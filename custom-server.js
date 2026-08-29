@@ -104,6 +104,20 @@ http.createServer = (...args) => {
       req.headers["x-zen-via-proxy"] = "1";
       req.headers["x-zen-via-proxy"] = "1";
     }
+
+    // Next.js static asset URL normalization for Cloudflare Tunnel / proxies
+    // Fix: decode percent-encoded parenthesis (%28dashboard%29) and brackets (%5Bid%5D) in _next/static URLs
+    if (req.url && req.url.startsWith("/_next/static/")) {
+      const decodedUrl = req.url
+        .replace(/%28/gi, "(")
+        .replace(/%29/gi, ")")
+        .replace(/%5B/gi, "[")
+        .replace(/%5D/gi, "]");
+      if (decodedUrl !== req.url) {
+        req.url = decodedUrl;
+      }
+    }
+
     return handler(req, res);
   };
   const server = origCreate(...rest, wrapped);
