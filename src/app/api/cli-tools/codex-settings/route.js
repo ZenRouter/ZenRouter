@@ -205,19 +205,16 @@ export async function DELETE() {
 
     // Remove OPENAI_API_KEY from auth.json
     const authPath = getCodexAuthPath();
-    try {
-      const existingAuth = await fs.readFile(authPath, "utf-8");
-      const authData = JSON.parse(existingAuth);
-      delete authData.OPENAI_API_KEY;
-      delete authData.auth_mode;
+    const authData = (await readExistingConfig(authPath, JSON.parse)) ?? {};
+    delete authData.OPENAI_API_KEY;
+    delete authData.auth_mode;
 
-      // Write back or delete if empty
-      if (Object.keys(authData).length === 0) {
-        await fs.unlink(authPath);
-      } else {
-        await fs.writeFile(authPath, JSON.stringify(authData, null, 2));
-      }
-    } catch { /* No auth file */ }
+    // Write back or delete if empty
+    if (Object.keys(authData).length === 0) {
+      await fs.unlink(authPath).catch(() => {});
+    } else {
+      await fs.writeFile(authPath, JSON.stringify(authData, null, 2));
+    }
 
     return NextResponse.json({
       success: true,
