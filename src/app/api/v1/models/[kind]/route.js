@@ -37,7 +37,7 @@ export async function GET(_request, { params }) {
     }
 
     // Single model ID lookup (fixes Claude Code CLI interactive mode & SDK lookups)
-    const allModels = await buildModelsList();
+    const allModels = await buildModelsList(["llm", "image", "tts", "stt", "embedding", "imageToText", "webSearch", "webFetch"]);
     const decodedId = decodeURIComponent(kindOrId);
     const found = allModels.find(m => m.id === decodedId || m.id === kindOrId);
 
