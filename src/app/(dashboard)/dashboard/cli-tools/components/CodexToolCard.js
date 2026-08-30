@@ -180,7 +180,7 @@ name = "ZenRouter"
 base_url = "${getEffectiveBaseUrl()}"
 wire_api = "responses"
 
-[model_providers.9router.http_headers]
+[model_providers.zenrouter.http_headers]
 Authorization = "Bearer ${keyToUse}"
 
 [agents]

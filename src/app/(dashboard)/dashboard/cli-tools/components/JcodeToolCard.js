@@ -36,7 +36,7 @@ export default function JcodeToolCard({
   const [customBaseUrl, setCustomBaseUrl] = useState("");
   const hasInitializedModel = useRef(false);
 
-  const currentBaseUrl = jcodeStatus?.config?.providers?.["9router"]?.base_url || "";
+  const currentBaseUrl = jcodeStatus?.config?.providers?.["zenrouter"]?.base_url || jcodeStatus?.config?.providers?.["9router"]?.base_url || "";
 
   const getConfigStatus = () => {
     if (!jcodeStatus?.installed) return null;

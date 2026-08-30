@@ -95,7 +95,7 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
     }
   };
 
-  const currentBaseUrl = status?.config?.provider?.["9router"]?.options?.baseURL || "";
+  const currentBaseUrl = status?.config?.provider?.["zenrouter"]?.options?.baseURL || status?.config?.provider?.["9router"]?.options?.baseURL || "";
 
   const getConfigStatus = () => {
     if (!status?.installed) return null;
