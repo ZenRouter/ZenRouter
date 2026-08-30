@@ -38,6 +38,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - `open-sse/utils/stream.js:133` uses `indexOf("\n")` loop instead of `split("\n")` to avoid intermediate array allocs.
   - `src/lib/db/repos/settingsRepo.js:67` adds 2s L1 cache for `readRaw()` with invalidation on `updateSettings()` to cut 2-3 DB reads per `/v1` request.
 
+#### Kimi K3 / NVIDIA (#kimi-k3)
+- **fix(kimi): auto-clamp thinking_effort for NVIDIA Kimi K3**
+  - `open-sse/providers/thinkingLevels.js:38` add provider-specific `nvidia/*kimi*k3* → [low,high,max]` (no `medium`), previously `[low,medium,high,max]` caused `400 Unsupported Kimi K3 thinking_effort="medium"`.
+  - `open-sse/translator/concerns/thinkingUnified.js:309` kimi case now respects `supportedLevels` and clamps `medium→high`, `minimal→low`, `xhigh→max`; verified `nvidia/kimi-k3 medium→high`, `low→low`, `tokenrouter/kimi-k3 medium→medium`.
+  - Live logs at `zen.hlcyn.xyz` showed loop over 19 keys ×20s due to same 400; now first account succeeds via auto-clamp, no fallback loop.
+
 ### Verified
 - `checkFallbackError` returns 15m for AiHubMix strings ✅
 - `assertPublicUrl` blocks 10 SSRF vectors, allows public host ✅
