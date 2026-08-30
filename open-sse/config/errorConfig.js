@@ -71,6 +71,9 @@ export const ERROR_RULES = [
   { text: "quota exceeded",           backoff: true },
   { text: "capacity",                 backoff: true },
   { text: "overloaded",               backoff: true },
+  // AiHubMix free-tier abuse gate (#3602): "Sorry, to prevent abuse of free resources..."
+  { text: "prevent abuse",            cooldownMs: COOLDOWN.extended },
+  { text: "can only try",             cooldownMs: COOLDOWN.extended },
 
   // --- Status-based rules (fallback when text doesn't match) ---
   { status: 401, cooldownMs: COOLDOWN.long },
