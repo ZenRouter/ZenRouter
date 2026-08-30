@@ -154,7 +154,11 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
   // Provider answered with a completed Responses-API JSON body while the
   // client speaks Chat Completions (e.g. OpenCode zen muse models).
   if (targetFormat === FORMATS.OPENAI_RESPONSES && responseBody?.object === "response") {
-    return openaiResponsesObjectToCompletion(responseBody);
+    const completion = openaiResponsesObjectToCompletion(responseBody);
+    if (sourceFormat === FORMATS.CLAUDE && Array.isArray(completion?.choices)) {
+      return openAICompletionToClaudeMessage(completion);
+    }
+    return completion;
   }
   // Provider responded in OpenAI Chat Completions shape but the client speaks
   // Responses API — convert so tool_calls/text surface as Responses `output`.
@@ -224,6 +228,12 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
         result.usage.completion_tokens_details = { reasoning_tokens: usage.thoughtsTokenCount };
       }
     }
+    if (sourceFormat === FORMATS.CLAUDE) {
+      return openAICompletionToClaudeMessage(result);
+    }
+    if (sourceFormat === FORMATS.OPENAI_RESPONSES) {
+      return openAICompletionToResponses(result, customToolNames);
+    }
     return result;
   }
 
@@ -238,7 +248,12 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
     // Some providers (e.g. xiaomi-tokenplan) return OpenAI-format responses even when
     // the request was translated to Claude format — the targetFormat is Claude but the
     // actual response is OpenAI-native and needs no further translation.
-    if (responseBody.choices || (responseBody.content && !Array.isArray(responseBody.content))) return responseBody;
+    if (responseBody.choices || (responseBody.content && !Array.isArray(responseBody.content))) {
+      if (sourceFormat === FORMATS.CLAUDE && Array.isArray(responseBody?.choices)) {
+        return openAICompletionToClaudeMessage(responseBody);
+      }
+      return responseBody;
+    }
 
     let textContent = "", thinkingContent = "";
     const toolCalls = [];
@@ -280,14 +295,30 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
         total_tokens: (responseBody.usage.input_tokens || 0) + (responseBody.usage.output_tokens || 0)
       };
     }
+    if (sourceFormat === FORMATS.CLAUDE) {
+      return openAICompletionToClaudeMessage(result);
+    }
+    if (sourceFormat === FORMATS.OPENAI_RESPONSES) {
+      return openAICompletionToResponses(result, customToolNames);
+    }
     return result;
   }
 
   // Ollama
   if (targetFormat === FORMATS.OLLAMA) {
-    return ollamaBodyToOpenAI(responseBody);
+    const result = ollamaBodyToOpenAI(responseBody);
+    if (sourceFormat === FORMATS.CLAUDE && Array.isArray(result?.choices)) {
+      return openAICompletionToClaudeMessage(result);
+    }
+    if (sourceFormat === FORMATS.OPENAI_RESPONSES && Array.isArray(result?.choices)) {
+      return openAICompletionToResponses(result, customToolNames);
+    }
+    return result;
   }
 
+  if (sourceFormat === FORMATS.CLAUDE && Array.isArray(responseBody?.choices)) {
+    return openAICompletionToClaudeMessage(responseBody);
+  }
   return responseBody;
 }
 
