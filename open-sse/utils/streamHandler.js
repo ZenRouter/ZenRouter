@@ -1,6 +1,21 @@
 // Stream handler with disconnect detection - shared for all providers
-import { STREAM_STALL_TIMEOUT_MS, STREAM_FIRST_CHUNK_TIMEOUT_MS } from "../config/runtimeConfig.js";
+import { STREAM_STALL_TIMEOUT_MS, STREAM_FIRST_CHUNK_TIMEOUT_MS, SSE_KEEPALIVE_MS } from "../config/runtimeConfig.js";
+import { FORMATS } from "../translator/formats.js";
 import { dbg, isDebugEnabled } from "./debugLog.js";
+
+// Shared text encoder for keepalive payloads
+const keepaliveEncoder = new TextEncoder();
+
+// Pre-encoded ping payloads
+const CLAUDE_PING_BYTES = keepaliveEncoder.encode("event: ping\ndata: {}\n\n");
+const OPENAI_PING_BYTES = keepaliveEncoder.encode(": ping\n\n");
+
+function getKeepaliveBytes(sourceFormat) {
+  if (sourceFormat === FORMATS.CLAUDE) {
+    return CLAUDE_PING_BYTES;
+  }
+  return OPENAI_PING_BYTES;
+}
 
 // Get HH:MM:SS timestamp
 function getTimeString() {
@@ -88,18 +103,35 @@ export function createStreamController({ onDisconnect, onError, log, provider, m
 }
 
 /**
- * Create transform stream with disconnect detection
- * Wraps existing transform stream and adds abort capability.
+ * Create transform stream with disconnect detection and keepalive heartbeat
+ * Wraps existing transform stream and adds abort & ping capability.
  *
  * Stall detection lives in pipeWithDisconnect (tied to upstream byte
- * activity), not here — output of the transform stream may be silent
- * for long periods while raw bytes still flow (e.g. Kiro EventStream
- * binary frames buffering, Claude reasoning streams).
+ * activity). When the upstream model is silent for long stretches
+ * (e.g. reasoning thinking, prompt prefill), an optional keepalive timer
+ * emits periodic SSE pings (`event: ping` for Claude, `: ping` for OpenAI)
+ * to prevent proxy timeouts and client stall warnings.
  */
-export function createDisconnectAwareStream(transformStream, streamController, onAbortTerminal = null) {
+export function createDisconnectAwareStream(
+  transformStream,
+  streamController,
+  onAbortTerminal = null,
+  keepaliveMs = SSE_KEEPALIVE_MS,
+  sourceFormat = null
+) {
   const reader = transformStream.readable.getReader();
   const writer = transformStream.writable.getWriter();
   let terminalEmitted = false;
+  let keepaliveTimer = null;
+  let lastActivityAt = Date.now();
+  const pingBytes = getKeepaliveBytes(sourceFormat);
+
+  const clearKeepalive = () => {
+    if (keepaliveTimer) {
+      clearInterval(keepaliveTimer);
+      keepaliveTimer = null;
+    }
+  };
 
   // Emit a synthesized terminal payload (e.g. Responses response.failed + [DONE]) once
   const emitTerminal = (controller) => {
@@ -112,8 +144,29 @@ export function createDisconnectAwareStream(transformStream, streamController, o
   };
 
   return new ReadableStream({
+    start(controller) {
+      if (keepaliveMs > 0) {
+        keepaliveTimer = setInterval(() => {
+          if (!streamController.isConnected()) {
+            clearKeepalive();
+            return;
+          }
+          const elapsed = Date.now() - lastActivityAt;
+          if (elapsed >= keepaliveMs) {
+            try {
+              controller.enqueue(pingBytes);
+              lastActivityAt = Date.now();
+            } catch {
+              clearKeepalive();
+            }
+          }
+        }, Math.min(keepaliveMs, 1000));
+      }
+    },
+
     async pull(controller) {
       if (!streamController.isConnected()) {
+        clearKeepalive();
         emitTerminal(controller);
         controller.close();
         return;
@@ -121,14 +174,17 @@ export function createDisconnectAwareStream(transformStream, streamController, o
 
       try {
         const { done, value } = await reader.read();
+        lastActivityAt = Date.now();
 
         if (done) {
+          clearKeepalive();
           streamController.handleComplete();
           controller.close();
           return;
         }
         controller.enqueue(value);
       } catch (error) {
+        clearKeepalive();
         const wasConnected = streamController.isConnected();
         // Controller already closed = downstream ended; not an upstream error, skip noisy log.
         const msg0 = error?.message || "";
@@ -166,6 +222,7 @@ export function createDisconnectAwareStream(transformStream, streamController, o
     },
 
     cancel(reason) {
+      clearKeepalive();
       streamController.handleDisconnect(reason || "cancelled");
       reader.cancel();
       writer.abort();
@@ -174,7 +231,7 @@ export function createDisconnectAwareStream(transformStream, streamController, o
 }
 
 /**
- * Pipe provider response through transform with disconnect detection.
+ * Pipe provider response through transform with disconnect detection and keepalive.
  *
  * Stall watchdog tracks raw upstream byte activity, not transform output.
  * Reasoning models (Claude thinking via Kiro, etc.) can produce zero SSE
@@ -188,8 +245,22 @@ export function createDisconnectAwareStream(transformStream, streamController, o
  * @param {Response} providerResponse - Response from provider
  * @param {TransformStream} transformStream - Transform stream for SSE
  * @param {object} streamController - Stream controller from createStreamController
+ * @param {function|null} onAbortTerminal - Optional abort terminal serializer
+ * @param {number} stallTimeoutMs - Stall timeout in ms
+ * @param {number} firstChunkTimeoutMs - TTFT timeout in ms
+ * @param {number} keepaliveMs - Keepalive ping interval in ms (0 = disabled)
+ * @param {string} sourceFormat - Client source format (e.g. "claude", "openai")
  */
-export function pipeWithDisconnect(providerResponse, transformStream, streamController, onAbortTerminal = null, stallTimeoutMs = STREAM_STALL_TIMEOUT_MS, firstChunkTimeoutMs = STREAM_FIRST_CHUNK_TIMEOUT_MS) {
+export function pipeWithDisconnect(
+  providerResponse,
+  transformStream,
+  streamController,
+  onAbortTerminal = null,
+  stallTimeoutMs = STREAM_STALL_TIMEOUT_MS,
+  firstChunkTimeoutMs = STREAM_FIRST_CHUNK_TIMEOUT_MS,
+  keepaliveMs = SSE_KEEPALIVE_MS,
+  sourceFormat = null
+) {
   let stallTimer = null;
   let chunkCount = 0;
   let totalBytes = 0;
@@ -252,7 +323,9 @@ export function pipeWithDisconnect(providerResponse, transformStream, streamCont
   return createDisconnectAwareStream(
     { readable: transformedBody, writable: { getWriter: () => ({ abort: () => Promise.resolve() }) } },
     wrappedController,
-    onAbortTerminal
+    onAbortTerminal,
+    keepaliveMs,
+    sourceFormat
   );
 }
 

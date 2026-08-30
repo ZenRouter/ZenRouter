@@ -117,7 +117,16 @@ export async function handleStreamingResponse({ providerResponse, provider, mode
   const recordingController = onStreamAborted
     ? withAbortRecording(streamController, (reason) => onStreamAborted(transformStream.getStreamSnapshot?.() || null, reason))
     : streamController;
-  const transformedBody = pipeWithDisconnect(providerResponse, transformStream, recordingController, onAbortTerminal, stallTimeoutMs);
+  const transformedBody = pipeWithDisconnect(
+    providerResponse,
+    transformStream,
+    recordingController,
+    onAbortTerminal,
+    stallTimeoutMs,
+    undefined,
+    undefined,
+    sourceFormat
+  );
 
   saveRequestDetail(buildRequestDetail({
     provider, model, connectionId,
