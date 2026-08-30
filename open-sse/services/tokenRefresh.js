@@ -133,8 +133,8 @@ function vertexRefreshHandler(c, log) {
 }
 
 const REFRESH_HANDLERS = {
-  "gemini-cli": (c, log) => refreshGoogleToken(c.refreshToken, PROVIDERS["gemini-cli"].clientId, PROVIDERS["gemini-cli"].clientSecret, log),
-  antigravity: (c, log) => refreshGoogleToken(c.refreshToken, PROVIDERS.antigravity.clientId, PROVIDERS.antigravity.clientSecret, log),
+  "gemini-cli": (c, log, proxyOptions) => refreshGoogleToken(c.refreshToken, PROVIDERS["gemini-cli"].clientId, PROVIDERS["gemini-cli"].clientSecret, log, proxyOptions),
+  antigravity: (c, log, proxyOptions) => refreshGoogleToken(c.refreshToken, PROVIDERS.antigravity.clientId, PROVIDERS.antigravity.clientSecret, log, proxyOptions),
   claude: (c, log) => refreshClaudeOAuthToken(c.refreshToken, log),
   codex: (c, log) => refreshCodexToken(c.refreshToken, log),
   iflow: (c, log) => refreshIflowToken(c.refreshToken, log),
@@ -157,30 +157,30 @@ const REFRESH_HANDLERS = {
   "vertex-partner": vertexRefreshHandler
 };
 
-export async function getAccessToken(provider, credentials, log) {
+export async function getAccessToken(provider, credentials, log, proxyOptions = null) {
   if (!credentials || !credentials.refreshToken || typeof credentials.refreshToken !== "string") {
     log?.warn?.("TOKEN_REFRESH", `No valid refresh token available for provider: ${provider}`);
     return null;
   }
-  return _getAccessTokenInternal(provider, credentials, log);
+  return _getAccessTokenInternal(provider, credentials, log, proxyOptions);
 }
 
-async function _getAccessTokenInternal(provider, credentials, log) {
+async function _getAccessTokenInternal(provider, credentials, log, proxyOptions = null) {
   if (provider === "gemini") {
-    return refreshGoogleToken(credentials.refreshToken, PROVIDERS.gemini.clientId, PROVIDERS.gemini.clientSecret, log);
+    return refreshGoogleToken(credentials.refreshToken, PROVIDERS.gemini.clientId, PROVIDERS.gemini.clientSecret, log, proxyOptions);
   }
   const handler = REFRESH_HANDLERS[provider];
   if (!handler) {
     log?.warn?.("TOKEN_REFRESH", `Unsupported provider for token refresh: ${provider}`);
     return null;
   }
-  return handler(credentials, log);
+  return handler(credentials, log, proxyOptions);
 }
 
-export async function refreshTokenByProvider(provider, credentials, log) {
+export async function refreshTokenByProvider(provider, credentials, log, proxyOptions = null) {
   if (!credentials.refreshToken) return null;
   const handler = REFRESH_HANDLERS[provider];
-  return handler ? handler(credentials, log) : refreshAccessToken(provider, credentials.refreshToken, credentials, log);
+  return handler ? handler(credentials, log, proxyOptions) : refreshAccessToken(provider, credentials.refreshToken, credentials, log);
 }
 
 export function formatProviderCredentials(provider, credentials, log) {

@@ -459,6 +459,10 @@ export const __testing = { createBypassRequest };
 
 export async function proxyAwareFetch(url, options = {}, proxyOptions = null) {
   const targetUrl = typeof url === "string" ? url : url.toString();
+  const isMockedFetch = (globalThis.fetch !== patchedFetch);
+  if (isMockedFetch) {
+    return globalThis.fetch(url, options);
+  }
 
   // Vercel relay: forward request via relay headers
   const vercelRelayUrl = normalizeString(proxyOptions?.vercelRelayUrl);

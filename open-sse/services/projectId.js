@@ -8,6 +8,7 @@
  */
 
 import { CLOUD_CODE_API, LOAD_CODE_ASSIST_HEADERS, ANTIGRAVITY_LOAD_CODE_ASSIST_HEADERS, LOAD_CODE_ASSIST_METADATA } from "../config/appConstants.js";
+import { proxyAwareFetch } from "../utils/proxyFetch.js";
 
 // ─── Cache ────────────────────────────────────────────────────────────────────
 // connectionId -> { projectId: string, fetchedAt: number }
@@ -81,9 +82,11 @@ startCacheCleanup();
  *
  * @param {string} connectionId - The connection identifier for cache keying
  * @param {string} accessToken  - Valid OAuth access token
+ * @param {string} provider     - Provider ID (antigravity or gemini-cli)
+ * @param {object|null} proxyOptions - Proxy configuration for outbound requests
  * @returns {Promise<string|null>} Real project ID or null
  */
-export async function getProjectIdForConnection(connectionId, accessToken, provider = "gemini-cli") {
+export async function getProjectIdForConnection(connectionId, accessToken, provider = "gemini-cli", proxyOptions = null) {
     if (!connectionId || !accessToken) return null;
 
     // Return cached value if still fresh
@@ -102,7 +105,7 @@ export async function getProjectIdForConnection(connectionId, accessToken, provi
 
     const promise = (async () => {
         try {
-            const projectId = await fetchProjectId(accessToken, controller.signal, provider);
+            const projectId = await fetchProjectId(accessToken, controller.signal, provider, proxyOptions);
             if (projectId) {
                 projectIdCache.set(connectionId, {projectId, fetchedAt: Date.now()});
                 return projectId;
@@ -153,17 +156,19 @@ export function removeConnection(connectionId) {
  *
  * @param {string}      accessToken
  * @param {AbortSignal} signal
+ * @param {string}      provider
+ * @param {object|null} proxyOptions
  * @returns {Promise<string|null>}
  */
-async function fetchProjectId(accessToken, signal, provider) {
+async function fetchProjectId(accessToken, signal, provider, proxyOptions = null) {
     const endpoints = CLOUD_CODE_API[provider] || CLOUD_CODE_API["gemini-cli"];
     const headers = provider === "antigravity" ? ANTIGRAVITY_LOAD_CODE_ASSIST_HEADERS : LOAD_CODE_ASSIST_HEADERS;
-    const response = await fetch(endpoints.loadCodeAssist, {
+    const response = await proxyAwareFetch(endpoints.loadCodeAssist, {
         method: "POST",
         headers: { ...headers, "Authorization": `Bearer ${accessToken}` },
         body: JSON.stringify({ metadata: LOAD_CODE_ASSIST_METADATA }),
         signal
-    });
+    }, proxyOptions);
 
     if (!response.ok) {
         const errorText = await response.text().catch(() => "");
@@ -187,7 +192,7 @@ async function fetchProjectId(accessToken, signal, provider) {
         }
     }
 
-    return onboardUser(accessToken, tierID, signal, endpoints, provider);
+    return onboardUser(accessToken, tierID, signal, endpoints, provider, proxyOptions);
 }
 
 /**
@@ -196,9 +201,12 @@ async function fetchProjectId(accessToken, signal, provider) {
  * @param {string}      accessToken
  * @param {string}      tierID
  * @param {AbortSignal} externalSignal  – propagated from the connection's AbortController
+ * @param {object}      endpoints
+ * @param {string}      provider
+ * @param {object|null} proxyOptions
  * @returns {Promise<string|null>}
  */
-async function onboardUser(accessToken, tierID, externalSignal, endpoints, provider) {
+async function onboardUser(accessToken, tierID, externalSignal, endpoints, provider, proxyOptions = null) {
     console.log(`[ProjectId] Onboarding user with tier: ${tierID}`);
 
     const reqBody = { tierId: tierID, metadata: LOAD_CODE_ASSIST_METADATA };
@@ -216,12 +224,12 @@ async function onboardUser(accessToken, tierID, externalSignal, endpoints, provi
         externalSignal?.addEventListener("abort", forwardAbort);
 
         try {
-            const response = await fetch(endpoints.onboardUser, {
+            const response = await proxyAwareFetch(endpoints.onboardUser, {
                 method: "POST",
                 headers: { ...headers, "Authorization": `Bearer ${accessToken}` },
                 body: JSON.stringify(reqBody),
                 signal: localCtrl.signal
-            });
+            }, proxyOptions);
 
             clearTimeout(timeoutId);
 

@@ -37,8 +37,8 @@ export const refreshAccessToken = (provider, refreshToken, credentials) =>
 export const refreshClaudeOAuthToken = (refreshToken) =>
   _refreshClaudeOAuthToken(refreshToken, log);
 
-export const refreshGoogleToken = (refreshToken, clientId, clientSecret) =>
-  _refreshGoogleToken(refreshToken, clientId, clientSecret, log);
+export const refreshGoogleToken = (refreshToken, clientId, clientSecret, proxyOptions = null) =>
+  _refreshGoogleToken(refreshToken, clientId, clientSecret, log, proxyOptions);
 
 export const refreshCodexToken = (refreshToken) =>
   _refreshCodexToken(refreshToken, log);
@@ -55,11 +55,11 @@ export const refreshCopilotToken = (githubAccessToken) =>
 export const refreshKiroToken = (refreshToken, providerSpecificData) =>
   _refreshKiroToken(refreshToken, providerSpecificData, log);
 
-export const getAccessToken = (provider, credentials) =>
-  _getAccessToken(provider, credentials, log);
+export const getAccessToken = (provider, credentials, proxyOptions = null) =>
+  _getAccessToken(provider, credentials, log, proxyOptions);
 
-export const refreshTokenByProvider = (provider, credentials) =>
-  _refreshTokenByProvider(provider, credentials, log);
+export const refreshTokenByProvider = (provider, credentials, proxyOptions = null) =>
+  _refreshTokenByProvider(provider, credentials, log, proxyOptions);
 
 export const formatProviderCredentials = (provider, credentials) =>
   _formatProviderCredentials(provider, credentials, log);
@@ -120,14 +120,15 @@ function needsProjectId(provider) {
  * @param {string} provider
  * @param {string} connectionId
  * @param {string} accessToken
+ * @param {object|null} proxyOptions
  */
-function _refreshProjectId(provider, connectionId, accessToken) {
+function _refreshProjectId(provider, connectionId, accessToken, proxyOptions = null) {
   if (!needsProjectId(provider) || !connectionId || !accessToken) return;
 
   // Evict the stale cached entry so getProjectIdForConnection does a real fetch
   invalidateProjectId(connectionId);
 
-  getProjectIdForConnection(connectionId, accessToken)
+  getProjectIdForConnection(connectionId, accessToken, provider, proxyOptions)
     .then((projectId) => {
       if (!projectId) return;
       updateProviderCredentials(connectionId, { projectId }).catch((err) => {
@@ -259,7 +260,13 @@ export async function checkAndRefreshToken(provider, credentials, options = {}) 
       };
 
       // Non-blocking: refresh projectId with the new access token
-      _refreshProjectId(provider, creds.connectionId, creds.accessToken);
+      const refreshProxyOptions = {
+        connectionProxyEnabled: creds.providerSpecificData?.connectionProxyEnabled === true,
+        connectionProxyUrl: creds.providerSpecificData?.connectionProxyUrl || "",
+        connectionNoProxy: creds.providerSpecificData?.connectionNoProxy || "",
+        vercelRelayUrl: creds.providerSpecificData?.vercelRelayUrl || "",
+      };
+      _refreshProjectId(provider, creds.connectionId, creds.accessToken, refreshProxyOptions);
     }
   }
 
