@@ -1616,7 +1616,7 @@ export default function ProfilePage() {
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm sm:text-base">Enable Observability</p>
               <p className="text-xs sm:text-sm text-text-muted">
-                Record request details for inspection in the logs view
+                Record request details for inspection in Usage → Details. When disabled, that tab stays empty. Requires restart-free toggle; can also be forced via <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/5 text-xs">OBSERVABILITY_ENABLED</code> env.
               </p>
             </div>
             <Toggle

@@ -112,6 +112,7 @@ export default function RequestDetailsTab() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [providers, setProviders] = useState([]);
   const [providerNameCache, setProviderNameCache] = useState(null);
+  const [observabilityEnabled, setObservabilityEnabled] = useState(null);
   const [filters, setFilters] = useState({
     provider: "",
     startDate: "",
@@ -128,6 +129,16 @@ export default function RequestDetailsTab() {
       setProviderNameCache(cache.providerNameCache);
     } catch (error) {
       console.error("Failed to fetch providers:", error);
+    }
+  }, []);
+
+  const fetchObservability = useCallback(async () => {
+    try {
+      const res = await fetch("/api/settings");
+      const data = await res.json();
+      setObservabilityEnabled(data.enableObservability === true);
+    } catch {
+      setObservabilityEnabled(false);
     }
   }, []);
 
@@ -156,7 +167,8 @@ export default function RequestDetailsTab() {
 
   useEffect(() => {
     fetchProviders();
-  }, [fetchProviders]);
+    fetchObservability();
+  }, [fetchProviders, fetchObservability]);
 
   useEffect(() => {
     fetchDetails();
@@ -275,8 +287,15 @@ export default function RequestDetailsTab() {
                 </tr>
               ) : details.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="p-8 text-center text-text-muted">
-                    No request details found
+                  <td colSpan="9" className="p-8 text-center text-text-muted">
+                    {observabilityEnabled === false ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <span>Observability is disabled — request details are not recorded.</span>
+                        <span className="text-xs">Enable it in <a href="/dashboard/profile" className="underline text-primary">Profile → Observability</a> or set <code className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/5">OBSERVABILITY_ENABLED=true</code></span>
+                      </div>
+                    ) : (
+                      "No request details found"
+                    )}
                   </td>
                 </tr>
               ) : (
