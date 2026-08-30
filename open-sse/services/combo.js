@@ -399,7 +399,7 @@ function hasOutputTokens(usage) {
   return Number.isFinite(n) && n > 0;
 }
 
-export async function peekStreamForContent(response, timeoutMs = 15000) {
+export async function peekStreamForContent(response, timeoutMs = 45000) {
   const contentType = response?.headers?.get?.("content-type") || "";
   if (!contentType.includes(SSE_CONTENT_TYPE) || !response?.body) {
     return { hasContent: true, body: response?.body };
@@ -502,7 +502,10 @@ export async function handleComboChat({ body, models, handleSingleModel, log, co
     log.info("COMBO", `Trying model ${i + 1}/${rotatedModels.length}: ${modelStr}`);
 
     try {
-      const rawResult = await handleSingleModel(body, modelStr);
+      // Clone body so in-place mutations in downstream handlers/translators
+      // don't corrupt the request for subsequent fallback models (#3619).
+      const modelBody = structuredClone(body);
+      const rawResult = await handleSingleModel(modelBody, modelStr);
       const result = rawResult?.ok ? await rejectFastEmptyStream(rawResult) : rawResult;
       
       // Success (2xx) - return response
