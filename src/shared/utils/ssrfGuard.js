@@ -139,9 +139,9 @@ export function assertPublicUrl(rawUrl) {
   const host = parsed.hostname.toLowerCase();
 
   if (BLOCKED_HOSTNAMES.has(host)) throw new Error("Blocked URL: internal host");
-  if (BLOCKED_DNS_REBINDING_HOSTS.has(host)) throw new Error("Blocked URL: DNS rebinding host");
+  if (BLOCKED_DNS_REBINDING_HOSTS.has(host)) throw new Error("Blocked URL: private IP (DNS rebinding host)");
   if (BLOCKED_SUFFIXES.some((s) => host.endsWith(s))) throw new Error("Blocked URL: internal host");
-  if (BLOCKED_DNS_REBINDING_SUFFIXES.some((s) => host.endsWith(s))) throw new Error("Blocked URL: DNS rebinding host");
+  if (BLOCKED_DNS_REBINDING_SUFFIXES.some((s) => host.endsWith(s))) throw new Error("Blocked URL: private IP (DNS rebinding host)");
   if (isBlockedIpv4(host)) throw new Error("Blocked URL: private IP");
   if (isBlockedAlternativeIpv4(host)) throw new Error("Blocked URL: private IP (alt encoding)");
   if (host.includes(":") && isBlockedIpv6(host)) throw new Error("Blocked URL: private IP");
@@ -149,7 +149,11 @@ export function assertPublicUrl(rawUrl) {
 
 // Full asynchronous validation with DNS lookup resolution to prevent DNS rebinding.
 export function assertPublicUrlAsync(rawUrl) {
-  assertPublicUrl(rawUrl);
+  try {
+    assertPublicUrl(rawUrl);
+  } catch (e) {
+    return Promise.reject(e);
+  }
   const parsed = new URL(rawUrl);
   const host = parsed.hostname.toLowerCase();
 
