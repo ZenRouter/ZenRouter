@@ -776,11 +776,10 @@ function startServer(updatePromise) {
           const { clearScreen } = require("./src/cli/utils/display");
           clearScreen();
 
-          // Enable auto startup on OS boot
-          try {
-            const { enableAutoStart } = require("./src/cli/tray/autostart");
-            enableAutoStart(__filename);
-          } catch (e) { }
+          // Autostart is now opt-in via tray menu only (#3628).
+          // Previously hide auto-enabled autostart, which made it impossible to
+          // disable (deleting the .vbs/plist was undone on next hide).
+          // Respect user's explicit choice: do not touch autostart here.
 
           if (process.platform === "darwin") {
             // macOS: keep current process alive — spawning a detached child puts
