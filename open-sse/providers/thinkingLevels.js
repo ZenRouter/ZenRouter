@@ -35,6 +35,9 @@ const CODEX_GPT_5_6_LEVELS = ["none", "minimal", "low", "medium", "high", "xhigh
 
 // Model-name pattern overrides (glob, first match wins) — more precise than format default.
 const PATTERN_THINKING = [
+  // NVIDIA Kimi K3 via NIM only supports low/high/max (no medium) — error 400 otherwise
+  { provider: "nvidia", pattern: "*kimi*k3*", levels: ["low", "high", "max"] },
+  { provider: "nvidia", pattern: "*kimi-k3*", levels: ["low", "high", "max"] },
   { provider: "poolside", pattern: "*", levels: ["minimal", "low", "medium", "high"] },
   { pattern: "*laguna*", levels: ["minimal", "low", "medium", "high"] },
   { provider: "codex", pattern: "*gpt-5.6-sol*", levels: [...CODEX_GPT_5_6_LEVELS, "ultra"] },

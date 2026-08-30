@@ -308,7 +308,18 @@ function applyFormat(fmt, body, cfg, caps, supportedLevels) {
     }
     case "kimi": {
       if (none && canDisable) { body.thinking = { type: "disabled" }; break; }
-      const effort = toKimiReasoningEffort(eff);
+      let effort = toKimiReasoningEffort(eff);
+      // Auto-clamp unsupported levels (e.g. NVIDIA Kimi K3 rejects medium)
+      if (effort && supportedLevels && !supportedLevels.includes(effort)) {
+        const clampMap = { minimal: "low", low: "low", medium: "high", high: "high", xhigh: "max", max: "max" };
+        const mapped = clampMap[effort];
+        if (mapped && supportedLevels.includes(mapped)) effort = mapped;
+        else {
+          // Fallback: prefer high > max > low for kimi
+          for (const pref of ["high", "max", "low"]) if (supportedLevels.includes(pref)) { effort = pref; break; }
+          if (!supportedLevels.includes(effort)) effort = supportedLevels[0];
+        }
+      }
       if (effort) body.reasoning_effort = effort;
       break;
     }
