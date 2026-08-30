@@ -47,13 +47,113 @@ function uniqueName(rawName, index, usedNames) {
   return candidate;
 }
 
+const UNSUPPORTED_KIRO_KEYWORDS = new Set([
+  "additionalProperties",
+  "$schema",
+  "$defs",
+  "definitions",
+  "$ref",
+  "$comment",
+  "title",
+  "default",
+  "examples",
+  "const",
+  "deprecated",
+  "readOnly",
+  "writeOnly",
+  "unevaluatedProperties",
+  "unevaluatedItems",
+]);
+
+function mergeAllOf(obj) {
+  if (!obj || typeof obj !== "object") return;
+  if (Array.isArray(obj.allOf) && obj.allOf.length > 0) {
+    const merged = {};
+    for (const sub of obj.allOf) {
+      if (sub && typeof sub === "object") {
+        mergeAllOf(sub);
+        if (sub.properties && typeof sub.properties === "object") {
+          merged.properties = { ...(merged.properties || {}), ...sub.properties };
+        }
+        if (Array.isArray(sub.required)) {
+          merged.required = [...(merged.required || []), ...sub.required];
+        }
+        if (sub.type && !merged.type) {
+          merged.type = sub.type;
+        }
+        for (const [k, v] of Object.entries(sub)) {
+          if (!["properties", "required", "type", "allOf"].includes(k) && !(k in merged)) {
+            merged[k] = v;
+          }
+        }
+      }
+    }
+    delete obj.allOf;
+    if (merged.properties) obj.properties = { ...(obj.properties || {}), ...merged.properties };
+    if (merged.required) obj.required = [...(obj.required || []), ...merged.required];
+    if (merged.type && !obj.type) obj.type = merged.type;
+    for (const [k, v] of Object.entries(merged)) {
+      if (!(k in obj)) obj[k] = v;
+    }
+  }
+  for (const v of Object.values(obj)) {
+    if (v && typeof v === "object") mergeAllOf(v);
+  }
+}
+
+function selectBestSchema(schemas) {
+  if (!Array.isArray(schemas) || schemas.length === 0) return 0;
+  for (let i = 0; i < schemas.length; i++) {
+    if (schemas[i]?.type && schemas[i].type !== "null") return i;
+  }
+  return 0;
+}
+
+function flattenAnyOfOneOf(obj) {
+  if (!obj || typeof obj !== "object") return;
+  if (Array.isArray(obj.anyOf) && obj.anyOf.length > 0) {
+    const nonNull = obj.anyOf.filter(s => s && s.type !== "null");
+    if (nonNull.length > 0) {
+      const selected = nonNull[selectBestSchema(nonNull)];
+      delete obj.anyOf;
+      Object.assign(obj, selected);
+    } else {
+      delete obj.anyOf;
+    }
+  }
+  if (Array.isArray(obj.oneOf) && obj.oneOf.length > 0) {
+    const nonNull = obj.oneOf.filter(s => s && s.type !== "null");
+    if (nonNull.length > 0) {
+      const selected = nonNull[selectBestSchema(nonNull)];
+      delete obj.oneOf;
+      Object.assign(obj, selected);
+    } else {
+      delete obj.oneOf;
+    }
+  }
+  for (const v of Object.values(obj)) {
+    if (v && typeof v === "object") flattenAnyOfOneOf(v);
+  }
+}
+
+function flattenTypeArrays(obj) {
+  if (!obj || typeof obj !== "object") return;
+  if (Array.isArray(obj.type)) {
+    const nonNull = obj.type.filter(t => t !== "null");
+    obj.type = nonNull.length > 0 ? nonNull[0] : "string";
+  }
+  for (const v of Object.values(obj)) {
+    if (v && typeof v === "object") flattenTypeArrays(v);
+  }
+}
+
 function cleanSchemaValue(value) {
   if (Array.isArray(value)) return value.map(cleanSchemaValue);
   if (!value || typeof value !== "object") return value;
 
   const cleaned = {};
   for (const [key, child] of Object.entries(value)) {
-    if (key === "additionalProperties") continue;
+    if (UNSUPPORTED_KIRO_KEYWORDS.has(key)) continue;
     if (key === "required" && Array.isArray(child) && child.length === 0) continue;
     cleaned[key] = cleanSchemaValue(child);
   }
@@ -61,7 +161,12 @@ function cleanSchemaValue(value) {
 }
 
 function normalizeRootSchema(schema) {
-  const cleaned = cleanSchemaValue(schema && typeof schema === "object" ? clone(schema) : {});
+  const cloned = schema && typeof schema === "object" ? clone(schema) : {};
+  mergeAllOf(cloned);
+  flattenAnyOfOneOf(cloned);
+  flattenTypeArrays(cloned);
+
+  const cleaned = cleanSchemaValue(cloned);
   cleaned.type = "object";
   if (!cleaned.properties || typeof cleaned.properties !== "object" || Array.isArray(cleaned.properties)) {
     cleaned.properties = {};
