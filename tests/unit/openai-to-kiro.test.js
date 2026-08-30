@@ -11,7 +11,8 @@ import { openaiToKiroRequest } from "../../open-sse/translator/request/openai-to
 
 const contentOf = (result) =>
   result.conversationState.currentMessage.userInputMessage.content;
-const systemPromptOf = (result) => result.systemPrompt || "";
+const systemPromptOf = (result) =>
+  result.conversationState.currentMessage.userInputMessage.content || "";
 
 describe("openaiToKiroRequest", () => {
   describe("basic message conversion", () => {
@@ -568,22 +569,14 @@ describe("openaiToKiroRequest", () => {
       expect(systemPromptOf(result)).toContain("<max_thinking_length>16000</max_thinking_length>");
     });
 
-    it("keeps top-level systemPrompt stable across turns", () => {
+    it("does not include top-level systemPrompt to prevent Kiro 400 (#3459)", () => {
       const first = openaiToKiroRequest(
         "claude-sonnet-4.6-thinking",
         { messages: [{ role: "user", content: "first" }] },
         true,
         {}
       );
-      const second = openaiToKiroRequest(
-        "claude-sonnet-4.6-thinking",
-        { messages: [{ role: "user", content: "second" }] },
-        true,
-        {}
-      );
-
-      expect(first.systemPrompt).toBe(second.systemPrompt);
-      expect(first.systemPrompt).not.toContain("Current time");
+      expect(first.systemPrompt).toBeUndefined();
       expect(first.conversationState.currentMessage.userInputMessage.content).toContain("Current time");
     });
 
