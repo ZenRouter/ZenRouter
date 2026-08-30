@@ -64,10 +64,23 @@ const DEFAULT_SETTINGS = {
   pxpipeTimeoutMs: 15000,
 };
 
+let cachedRaw = null;
+let cachedRawTs = 0;
+const RAW_CACHE_TTL_MS = 2000;
+
 async function readRaw() {
+  if (cachedRaw !== null && Date.now() - cachedRawTs < RAW_CACHE_TTL_MS) return cachedRaw;
   const db = await getAdapter();
   const row = db.get(`SELECT data FROM settings WHERE id = 1`);
-  return row ? parseJson(row.data, {}) : {};
+  const raw = row ? parseJson(row.data, {}) : {};
+  cachedRaw = raw;
+  cachedRawTs = Date.now();
+  return raw;
+}
+
+function invalidateSettingsCache() {
+  cachedRaw = null;
+  cachedRawTs = 0;
 }
 
 // Merge raw settings with defaults; backward-compat for missing keys
@@ -107,6 +120,7 @@ export async function updateSettings(updates) {
       [stringifyJson(next)],
     );
   });
+  invalidateSettingsCache();
   return mergeWithDefaults(next);
 }
 

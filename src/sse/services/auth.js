@@ -6,8 +6,16 @@ import { resolveProviderId, FREE_PROVIDERS } from "@/shared/constants/providers.
 import { getAntigravityQuotaCache } from "./antigravityQuota.js";
 import * as log from "../utils/logger.js";
 
-// Mutex to prevent race conditions during account selection
-let selectionMutex = Promise.resolve();
+// Per-provider mutexes to prevent race conditions without cross-provider serialization (#3629)
+// Previously a single global Promise chain serialized ALL providers, causing TTFT degradation
+// when Claude + Codex + OpenAI requests arrived concurrently.
+const providerMutexes = new Map(); // providerId -> Promise
+function getProviderMutex(providerId) {
+  return providerMutexes.get(providerId) || Promise.resolve();
+}
+function setProviderMutex(providerId, promise) {
+  providerMutexes.set(providerId, promise);
+}
 
 const GITHUB_MONTHLY_USAGE_LIMIT = "you've reached your additional usage limit for your plan";
 
@@ -52,10 +60,11 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
     ? excludeConnectionIds
     : (excludeConnectionIds ? new Set([excludeConnectionIds]) : new Set());
   const preferredConnectionId = options?.preferredConnectionId || null;
-  // Acquire mutex to prevent race conditions
-  const currentMutex = selectionMutex;
+  // Acquire per-provider mutex (was global before #3629)
+  const earlyProviderId = resolveProviderId(provider);
+  const currentMutex = getProviderMutex(earlyProviderId);
   let resolveMutex;
-  selectionMutex = new Promise(resolve => { resolveMutex = resolve; });
+  setProviderMutex(earlyProviderId, new Promise(resolve => { resolveMutex = resolve; }));
 
   try {
     await currentMutex;

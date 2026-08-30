@@ -281,12 +281,19 @@ async function getDispatcher(proxyUrl) {
   if (!normalized) return null;
 
   if (!proxyDispatchers.has(normalized)) {
-    // Evict oldest entry if max size reached
+    // Evict oldest entry if max size reached — destroy socket to avoid FD leak (#3629)
     if (proxyDispatchers.size >= MEMORY_CONFIG.proxyDispatchersMaxSize) {
-      proxyDispatchers.delete(proxyDispatchers.keys().next().value);
+      const oldestKey = proxyDispatchers.keys().next().value;
+      const oldest = proxyDispatchers.get(oldestKey);
+      try { oldest?.destroy?.(); oldest?.close?.(); } catch {}
+      proxyDispatchers.delete(oldestKey);
     }
     const { ProxyAgent } = await import("undici");
-    proxyDispatchers.set(normalized, new ProxyAgent({ uri: normalized }));
+    proxyDispatchers.set(normalized, new ProxyAgent({
+      uri: normalized,
+      keepAliveTimeout: 30_000,
+      keepAliveMaxTimeout: 60_000,
+    }));
   }
 
   return proxyDispatchers.get(normalized);

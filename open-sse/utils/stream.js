@@ -130,10 +130,11 @@ export function createSSEStream(options = {}) {
       buffer += text;
       reqLogger?.appendProviderChunk?.(text);
 
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-
-      for (const line of lines) {
+      // Index-based extraction avoids intermediate split array (#3629)
+      let idx;
+      while ((idx = buffer.indexOf("\n")) !== -1) {
+        const line = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 1);
         const trimmed = line.trim();
         if (isDebugEnabled && trimmed) {
           sseLineCount++;
