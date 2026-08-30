@@ -3,7 +3,7 @@
 All notable changes to ZenRouter (fork of 9Router) will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional Commits.
 
-## [Unreleased] - 2026-08-30
+## [0.5.60] - 2026-08-30
 
 ### Fixed
 
