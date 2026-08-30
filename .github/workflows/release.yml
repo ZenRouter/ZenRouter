@@ -78,7 +78,13 @@ jobs:
         if: env.NPM_TOKEN != ''
         run: |
           cd cli
-          npm publish --access public --provenance
+          CURRENT_VER=$(node -p "require('./package.json').version")
+          NPM_VER=$(npm view @joyccn/zenrouter version 2>/dev/null || echo "0.0.0")
+          if [ "$CURRENT_VER" = "$NPM_VER" ]; then
+            echo "Version $CURRENT_VER is already published to npm. Skipping npm publish."
+          else
+            npm publish --access public --provenance
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
