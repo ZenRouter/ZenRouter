@@ -7,6 +7,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Fixed
 
+#### Antigravity & Gemini-CLI / Proxy Support
+- **fix(antigravity): pass connection proxy options to GCP project ID discovery and token refresh**
+  - Resolved `400 FAILED_PRECONDITION: User location is not supported for the API use` when using proxies with Antigravity / Gemini-CLI models (e.g. `gemini-3.7-flash-high`).
+  - `open-sse/services/projectId.js`, `open-sse/services/tokenRefresh/providers.js`, and `src/sse/services/tokenRefresh.js` now route `loadCodeAssist`, `onboardUser`, and Google OAuth token refresh requests through `proxyAwareFetch` with connection-level `proxyOptions`, preventing domestic IP leakage.
+  - `src/sse/handlers/chat.js` and `open-sse/executors/gemini-cli.js` forward connection proxy settings dynamically.
+
+#### Claude Code / Non-Streaming Contract (#3462)
+- **fix(translator): enforce Anthropic `type: "message"` response shape on non-streaming `/v1/messages`**
+  - `open-sse/handlers/chatCore/nonStreamingHandler.js`: When client source format is Claude (such as Claude Code's non-streaming permission classifier / prompt security requests), responses from OpenAI/Gemini/Ollama upstreams are translated into Anthropic message structures (`type: "message"`, `role: "assistant"`, `content: [...]`) rather than leaking `chat.completion` objects.
+
+#### Kiro / AWS Tool Schema (#3641)
+- **fix(kiro): recursively flatten `anyOf`, `oneOf`, `allOf`, and type arrays in tool schemas**
+  - `open-sse/translator/concerns/kiroConversation.js`: Added recursive schema normalization that merges `allOf`, picks valid non-null schemas from `anyOf`/`oneOf`, collapses type arrays (`["string", "null"]` → `"string"`), and strips unsupported JSON schema keywords (`$schema`, `title`, `additionalProperties`) to eliminate `400 REQUEST_BODY_INVALID` errors.
+
+#### CommandCode / Error Interception (#3636)
+- **fix(commandcode): add retryable error definitions for stream error interception**
+  - `open-sse/config/errorConfig.js`: Added `[commandcode error` matching rules to prevent transient stream errors from breaking the retry loop.
+
 #### CLI / Autostart (#3628)
 - **fix(cli): respect autostart disable — `hide` no longer force-enables autostart**
   - `cli/cli.js:781` previously called `enableAutoStart()` unconditionally on Hide-to-Tray, recreating `zenrouter.vbs` / `com.zenrouter.autostart.plist` after user deleted it or disabled via tray menu. Now autostart is opt-in via tray menu only (`cli/src/cli/tray/tray.js:98` toggle). Verified that no other launch path recreates the file.
