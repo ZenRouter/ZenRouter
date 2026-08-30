@@ -74,6 +74,9 @@ export const ERROR_RULES = [
   // AiHubMix free-tier abuse gate (#3602): "Sorry, to prevent abuse of free resources..."
   { text: "prevent abuse",            cooldownMs: COOLDOWN.extended },
   { text: "can only try",             cooldownMs: COOLDOWN.extended },
+  // CommandCode stream error interception (#3636)
+  { text: "[commandcode error",        cooldownMs: COOLDOWN.short },
+  { text: "commandcode error",         cooldownMs: COOLDOWN.short },
 
   // --- Status-based rules (fallback when text doesn't match) ---
   { status: 401, cooldownMs: COOLDOWN.long },
