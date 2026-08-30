@@ -26,7 +26,9 @@ const STRIP_RULES = [
   { provider: "opencode", match: /muse/i, drop: ["max_tokens", "max_completion_tokens", "max_output_tokens"] },
   // OpenAI gpt-5.4-mini / newer models: max_tokens is deprecated and rejected with 400.
   // Translate max_tokens -> max_completion_tokens.
+  // Must be provider-agnostic: gateways like openrouter/vercel also proxy gpt-5.4-mini (#3587).
   { provider: "openai", match: /gpt-5\.4-mini|gpt-5\.[4-9]|o1|o3/i, translateMaxTokens: true },
+  { match: /gpt-5\.4-mini|gpt-5\.[4-9]|o1|o3/i, translateMaxTokens: true },
 ];
 
 // Test a rule's match (regex or predicate) against the model id.
