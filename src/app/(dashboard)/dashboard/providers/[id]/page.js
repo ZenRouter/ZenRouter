@@ -751,6 +751,12 @@ export default function ProviderDetailPage() {
 
   const handleOAuthSuccess = () => {
     fetchConnections();
+    fetchCustomModels();
+    if (providerId === "qoder") {
+      setTimeout(() => {
+        handleImportQoderModels();
+      }, 300);
+    }
     setShowOAuthModal(false);
   };
 
@@ -777,7 +783,13 @@ export default function ProviderDetailPage() {
 
       if (res.ok) {
         await fetchConnections();
+        await fetchCustomModels();
         setShowAddApiKeyModal(false);
+        if (providerId === "qoder") {
+          setTimeout(() => {
+            handleImportQoderModels();
+          }, 300);
+        }
         return;
       }
 
@@ -1754,7 +1766,13 @@ export default function ProviderDetailPage() {
         error={addConnectionError}
         existingNames={connections.map((c) => c.name).filter(Boolean)}
         onSave={handleSaveApiKey}
-        onBulkDone={fetchConnections}
+        onBulkDone={async () => {
+          await fetchConnections();
+          await fetchCustomModels();
+          if (providerId === "qoder") {
+            await handleImportQoderModels();
+          }
+        }}
         onClose={() => {
           setAddConnectionError("");
           setShowAddApiKeyModal(false);

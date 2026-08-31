@@ -161,7 +161,11 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
           const vres = await fetch("/api/providers/validate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ provider, apiKey: entry.apiKey }),
+            body: JSON.stringify({
+              provider,
+              apiKey: entry.apiKey,
+              ...(entry.providerSpecificData ? { providerSpecificData: entry.providerSpecificData } : {}),
+            }),
           });
           const vdata = await vres.json().catch(() => ({}));
           isValid = !!vdata.valid;
