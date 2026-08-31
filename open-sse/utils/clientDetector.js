@@ -35,6 +35,9 @@ export function detectClientTool(headers = {}, body = {}) {
   // Claude Code / Claude CLI
   if (ua.includes("claude-cli") || ua.includes("claude-code") || xApp === "cli") return "claude";
 
+  // OpenCode / Nara CLI / NaraRouter
+  if (ua.includes("opencode") || ua.includes("nara") || headers["x-opencode-client"] || headers["x-nara-client"]) return "opencode";
+
   // Gemini CLI
   if (ua.includes("gemini-cli")) return "gemini-cli";
 

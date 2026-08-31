@@ -94,7 +94,10 @@ const MAX_ASSISTANT_SESSIONS = 5000;
 const MAX_CONTINUATION_SESSIONS = 5000;
 
 // Client headers/body fields that carry an upstream session id (priority order)
-const SESSION_HEADER_KEYS = ["x-session-id", "session-id", "session_id", "x-amp-thread-id"];
+const SESSION_HEADER_KEYS = [
+    "x-session-id", "session-id", "session_id", "x-amp-thread-id",
+    "x-opencode-session", "x-nara-session-id", "x-naracli-session-id", "x-cline-session-id", "x-roo-session-id"
+];
 const CLAUDE_CODE_SESSION_RE = /_session_([a-f0-9-]+)$/;
 const CLAUDE_CODE_SESSION_HEADER = "x-claude-code-session-id";
 
