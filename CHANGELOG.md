@@ -46,6 +46,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Updated `src/sse/handlers/chat.js` to always return `503 Service Unavailable` instead of echoing stale 500 error codes from the database when all accounts are rate-limited.
   - Added `*.tgz` to `.gitignore`.
 
+#### Context & Quota Optimization / Model Context & Remaining-First Selection (#3740, #3750)
+- **feat(quota): remaining-first OAuth account selection for Claude and Codex (PR #3740)**
+  - Created `src/sse/services/quotaAwareSelection.js` and wired remaining-first account selection into `src/sse/services/auth.js`.
+  - Automatically sorts Claude and Codex OAuth accounts by remaining session quota (highest first) before fill-first / round-robin selection.
+  - Skips accounts with exhausted blocking (e.g. weekly) quotas and returns `allRateLimited` when all accounts are blocked.
+  - Added `quotaAwareSelection`, `quotaCacheTtlMs`, and `quotaAwareProviders` to settings repository and route whitelists.
+- **fix(models): propagate context window and max tokens from live catalog and custom models (#3750)**
+  - Updated `src/shared/utils/providerLiveModels.js` to preserve `context_length` / `max_completion_tokens` as `capabilities` from upstream `/models` responses.
+  - Updated `src/app/api/v1/models/route.js` to propagate `context_length` and `max_completion_tokens` for live models, custom models, and custom combo limits, allowing downstream agents (e.g. CLI tools) to perform accurate compaction.
+
 ## [0.5.60] - 2026-08-30
 
 ### Fixed

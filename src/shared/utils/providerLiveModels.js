@@ -74,7 +74,26 @@ export async function fetchProviderLiveModels(providerId, apiKey, { useCache = t
     // OpenAI-style { data: [...] }, { models: [...] }, or a bare array.
     const raw = Array.isArray(data) ? data : (data?.data || data?.models || []);
     const models = raw
-      .map((m) => ({ id: m?.id || m?.name, name: m?.name || m?.id }))
+      .map((m) => {
+        const id = m?.id || m?.name;
+        const name = m?.name || m?.id;
+        const contextWindow = Number(
+          m?.context_length ?? m?.context_window ?? m?.max_context_tokens ?? m?.per_request_limits?.prompt_tokens
+        );
+        const maxOutput = Number(
+          m?.max_completion_tokens ?? m?.max_tokens ?? m?.top_provider?.max_completion_tokens ?? m?.per_request_limits?.completion_tokens
+        );
+        const caps = {};
+        if (Number.isFinite(contextWindow) && contextWindow > 0) caps.contextWindow = contextWindow;
+        if (Number.isFinite(maxOutput) && maxOutput > 0) caps.maxOutput = maxOutput;
+        return {
+          id,
+          name,
+          ...(Object.keys(caps).length > 0 ? { capabilities: caps } : {}),
+          ...(Number.isFinite(contextWindow) && contextWindow > 0 ? { context_length: contextWindow } : {}),
+          ...(Number.isFinite(maxOutput) && maxOutput > 0 ? { max_completion_tokens: maxOutput } : {}),
+        };
+      })
       .filter((m) => typeof m.id === "string" && m.id.trim() !== "");
 
     if (!models.length) return null;

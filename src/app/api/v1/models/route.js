@@ -264,8 +264,16 @@ export async function buildModelsList(kindFilter) {
         }
       }
 
-      if (hasContext) entry.context_length = minContext;
-      if (hasMaxOutput) entry.max_completion_tokens = maxOutput;
+      if (Number.isFinite(Number(combo.contextWindow || combo.context_length))) {
+        entry.context_length = Number(combo.contextWindow || combo.context_length);
+      } else if (hasContext) {
+        entry.context_length = minContext;
+      }
+      if (Number.isFinite(Number(combo.maxOutput || combo.max_completion_tokens))) {
+        entry.max_completion_tokens = Number(combo.maxOutput || combo.max_completion_tokens);
+      } else if (hasMaxOutput) {
+        entry.max_completion_tokens = maxOutput;
+      }
     }
     models.push(entry);
   }
@@ -281,11 +289,15 @@ export async function buildModelsList(kindFilter) {
       for (const model of providerModels) {
         if (!kindFilter.includes(modelKind(model))) continue;
         if (isDisabled(alias, model.id)) continue;
-        models.push({
+        const fallback = getCapabilitiesForModel(providerId, model.id);
+        const item = {
           id: `${alias}/${model.id}`,
           object: "model",
           owned_by: alias,
-        });
+        };
+        if (Number.isFinite(fallback?.contextWindow)) item.context_length = fallback.contextWindow;
+        if (Number.isFinite(fallback?.maxOutput)) item.max_completion_tokens = fallback.maxOutput;
+        models.push(item);
       }
     }
 
@@ -410,6 +422,7 @@ export async function buildModelsList(kindFilter) {
         .filter((modelId) => typeof modelId === "string" && modelId.trim() !== "");
 
       const customModelKindById = new Map();
+      const customCapabilitiesById = new Map();
       const customModelIds = customModels
         .filter((m) => {
           if (!m?.id) return false;
@@ -422,7 +435,17 @@ export async function buildModelsList(kindFilter) {
         })
         .map((m) => {
           const modelId = String(m.id).trim();
-          if (modelId) customModelKindById.set(modelId, getModelKind(m) || LLM_KIND);
+          if (modelId) {
+            customModelKindById.set(modelId, getModelKind(m) || LLM_KIND);
+            const cw = Number(m.contextWindow || m.context_length);
+            const mo = Number(m.maxOutput || m.max_completion_tokens);
+            if ((Number.isFinite(cw) && cw > 0) || (Number.isFinite(mo) && mo > 0)) {
+              customCapabilitiesById.set(modelId, {
+                ...(Number.isFinite(cw) && cw > 0 ? { contextWindow: cw } : {}),
+                ...(Number.isFinite(mo) && mo > 0 ? { maxOutput: mo } : {}),
+              });
+            }
+          }
           return modelId;
         })
         .filter((modelId) => modelId !== "");
@@ -472,6 +495,7 @@ export async function buildModelsList(kindFilter) {
         // pattern-matched capabilities the dashboard uses (useModelCaps.js) so
         // dynamically-discovered LLM models still surface vision/reasoning/search/tools.
         const caps = liveCapabilitiesById.get(modelId)
+          || customCapabilitiesById.get(modelId)
           || capabilitiesFromServiceKind(customKind || liveKind)
           || (kind === LLM_KIND ? getCapabilitiesForModel(providerId, modelId) : null);
         if (caps) model.capabilities = caps;
