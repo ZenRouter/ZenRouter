@@ -7,6 +7,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Tool Calling & Function Limits / Tool Name Length Compression (#3622, PR #3637)
+- **fix(translator): compress tool names > 64 chars to prevent Gemini/Vertex/OpenAI rejection (fixes #3622)**
+  - Added `open-sse/utils/toolCompressor.js` with `compressToolNames`, compressing tool names longer than 64 characters to a 55-character prefix with an 8-character MD5 hash suffix to guarantee uniqueness without prefix collision.
+  - Rewrote tool declarations, message history (`tool_use`, `tool_calls`, `tool` response), and `tool_choice` across Claude and OpenAI request payloads.
+  - Added `decloakOpenAIChunk` to restore compressed tool names back to their original full client names on both streaming SSE deltas and non-streaming response completions.
+  - Added unit test suite in `tests/unit/tool-name-compression-3622.test.js`.
+
 #### Search & SSRF / SearXNG Docker Internal Routing (#3756)
 - **fix(search): allow admin-configured internal SearXNG and Ollama search in Docker (fixes #3756)**
   - Differentiated admin-configured base URLs (`SEARXNG_URL` on Docker network `searxng:8080` or loopback) from untrusted client overrides in `open-sse/handlers/search/index.js`.

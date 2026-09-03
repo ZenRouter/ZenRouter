@@ -11,6 +11,7 @@ import { openaiResponsesObjectToCompletion } from "../../translator/response/ope
 import { buildRequestDetail, extractRequestConfig, extractUsageFromResponse, saveUsageStats, formatDoneLine } from "./requestDetail.js";
 import { appendRequestLog, saveRequestDetail } from "@/lib/usageDb.js";
 import { decloakToolNames } from "../../utils/claudeCloaking.js";
+import { decloakOpenAIChunk } from "../../utils/toolCompressor.js";
 import { ROLE, RESPONSES_ITEM } from "../../translator/schema/index.js";
 import { buildToolCallId } from "../../translator/concerns/thoughtSignature.js";
 
@@ -414,8 +415,9 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
       });
   }
 
-  // Decloak tool_use names once on raw Claude body, before any translation (INPUT side)
+  // Decloak tool_use names once on raw body, before any translation (INPUT side)
   responseBody = decloakToolNames(responseBody, toolNameMap);
+  responseBody = decloakOpenAIChunk(responseBody, toolNameMap);
 
   const usage = extractUsageFromResponse(responseBody);
   appendLog({ tokens: usage, status: "200 OK" });
@@ -466,6 +468,14 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
       if (choice?.message?.reasoning_content && choice.message.content) {
         delete choice.message.reasoning_content;
       }
+    }
+  }
+
+  if (toolNameMap?.size > 0 && translatedResponse) {
+    if (isClaudeMessageResponse) {
+      translatedResponse = decloakToolNames(translatedResponse, toolNameMap);
+    } else if (translatedResponse?.choices) {
+      translatedResponse = decloakOpenAIChunk(translatedResponse, toolNameMap);
     }
   }
 
