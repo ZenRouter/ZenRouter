@@ -109,6 +109,13 @@ export const captureThinking = extractThinking;
 function resolveFormat(targetFormat, model, provider) {
   const providerFmt = provider ? PROVIDERS[provider]?.thinkingFormat : null;
   if (providerFmt) return providerFmt;
+  // Custom OpenAI/Anthropic-compatible providers use the OpenAI wire format
+  // (e.g. https://generativelanguage.googleapis.com/v1beta/openai). Even if
+  // the underlying model is a Gemini model, the compatible endpoint expects
+  // reasoning_effort, not generationConfig.thinkingConfig. See decolua/9router#3718.
+  if (provider?.startsWith("openai-compatible") || provider?.startsWith("anthropic-compatible")) {
+    return FORMAT_TO_NATIVE[targetFormat] || "openai";
+  }
   const caps = getCapabilitiesForModel(provider, model);
   if (caps.thinkingFormat) return caps.thinkingFormat;
   return FORMAT_TO_NATIVE[targetFormat] || "openai";
