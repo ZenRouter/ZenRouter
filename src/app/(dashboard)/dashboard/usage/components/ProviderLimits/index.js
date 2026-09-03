@@ -44,6 +44,10 @@ import { ConfirmModal, EditConnectionModal } from "@/shared/components";
 import { USAGE_SUPPORTED_PROVIDERS } from "@/shared/constants/providers";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
+// Countdown display ticks in seconds; derive from REFRESH_INTERVAL_MS so it can't
+// drift out of sync with the actual auto-refresh cadence (was hardcoded to 60).
+const REFRESH_INTERVAL_S = REFRESH_INTERVAL_MS / 1000;
+
 // Maps the stored providerSpecificData.authMethod to a human label for Kiro.
 // Values come from the Kiro connect flows: builder-id/idc (device code),
 // google/github (social), imported (refresh-token paste), api_key (headless).
@@ -136,7 +140,7 @@ export default function ProviderLimits() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [hasHydratedAutoRefresh, setHasHydratedAutoRefresh] = useState(false);
   const [refreshingAll, setRefreshingAll] = useState(false);
-  const [countdown, setCountdown] = useState(60);
+  const [countdown, setCountdown] = useState(REFRESH_INTERVAL_S);
   const [connectionsLoading, setConnectionsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
@@ -466,7 +470,7 @@ export default function ProviderLimits() {
     if (refreshingAll) return;
 
     setRefreshingAll(true);
-    setCountdown(60);
+    setCountdown(REFRESH_INTERVAL_S);
 
     // Throttle Claude: poll its quota every Nth auto-tick (manual force bypasses)
     const tick = (tickCountRef.current += 1);
@@ -630,7 +634,7 @@ export default function ProviderLimits() {
 
     const timers = createQuotaAutoRefresh({
       onRefresh: refreshAll,
-      onTick: (remainingSecs) => setCountdown(typeof remainingSecs === "number" ? remainingSecs : 60),
+      onTick: (remainingSecs) => setCountdown(typeof remainingSecs === "number" ? remainingSecs : REFRESH_INTERVAL_S),
     });
     timers.start();
     return () => timers.stop();
