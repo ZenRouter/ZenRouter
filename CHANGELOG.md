@@ -7,6 +7,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Dashboard UI/UX, Theme Flash & Indonesian Localization (#925cb4aad, #831001c32, #c24a85427, #a58902e4a)
+- **feat(ui): pool theme pre-hydration script, connections scroll container, CLI key presets, and complete Indonesian localization**
+  - Added pre-hydration inline script in `<head>` of `src/app/layout.js` to inspect `localStorage.getItem("theme")` and immediately apply `.dark` to `documentElement` before the browser performs first paint, eliminating reload white flash.
+  - Constrained provider connection list height with `max-h-[500px] overflow-y-auto pr-1` in `src/app/(dashboard)/dashboard/providers/[id]/page.js` and `ConnectionsCard.js`, preventing unbounded vertical growth when managing dozens of provider accounts.
+  - Extended CLI tool endpoint presets store in `cliEndpointPresets.js` to support saving, deleting, and naming custom API key presets across tools; updated `ApiKeySelect.js` to allow saving custom keys directly into named presets and restored keys from tool config.
+  - Completed Indonesian localization (`public/i18n/literals/id.json`) to 1,450 translated literals while strictly sanitizing and enforcing ZenRouter branding (`ZenRouter`, `sk_zenrouter`, and clean CLI instructions).
+  - Added unit test suite in `tests/unit/cli-endpoint-presets.test.js` covering endpoint and key preset stores.
+
 #### Provider Catalog, Web Fetch & Missing Assets (#44e4b80bb, #e0ffc7e2a, #6efb97904)
 - **feat(providers): pool Ollama Cloud web fetch, dead opencode model filter, and missing icons**
   - Added Ollama Cloud as a full `webFetch` provider in `open-sse/handlers/fetch/index.js` and `open-sse/providers/registry/ollama.js`, supporting markdown extraction, page titles, and discovered link harvesting via `https://ollama.com/api/web_fetch`.
