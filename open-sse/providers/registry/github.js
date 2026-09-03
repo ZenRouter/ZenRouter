@@ -47,6 +47,7 @@ export default {
     usage: {
       url: "https://api.github.com/copilot_internal/user",
     },
+    quirks: { preservePromptCacheKey: true },
   },
   models: [
     { id: "gpt-5.2", name: "GPT-5.2" },

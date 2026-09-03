@@ -1,4 +1,4 @@
-import { ERROR_RULES, BACKOFF_CONFIG, TRANSIENT_COOLDOWN_MS } from "../config/errorConfig.js";
+import { ERROR_RULES, BACKOFF_CONFIG, TRANSIENT_COOLDOWN_MS, MAX_RATE_LIMIT_COOLDOWN_MS } from "../config/errorConfig.js";
 
 /**
  * Calculate exponential backoff cooldown for rate limits (429)
@@ -13,17 +13,89 @@ export function getQuotaCooldown(backoffLevel = 0) {
 }
 
 /**
+ * Best-effort extraction of a precise rate-limit reset time from common
+ * provider error shapes. Handles GLM/Z.AI "reset at" datetime, "retry in N"
+ * relative phrases, and standard Retry-After header (seconds or HTTP-date).
+ * Returns epoch ms or null.
+ * Ported from PR #3612 (generic parser for provider-reported reset times).
+ * @param {Response|null} response - Fetch response (for Retry-After header)
+ * @param {string} message - Error message text
+ * @returns {number|null} Epoch ms when rate limit resets, or null
+ */
+export function extractResetsAtMs(response, message) {
+  if (!message) return null;
+  const text = typeof message === "string" ? message : JSON.stringify(message);
+
+  // GLM/Z.AI: "reset at 2026-08-17 02:56:15" (provider sends UTC without suffix)
+  const resetAt = text.match(/reset at\s+(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})/i);
+  if (resetAt) {
+    const ms = Date.parse(`${resetAt[1]}T${resetAt[2]}Z`);
+    if (Number.isFinite(ms) && ms > Date.now()) return ms;
+  }
+
+  // "retry in 300 seconds" / "resets in 5 minutes" / "try again in 1 hour"
+  const inTime = text.match(/(?:retry|try again|resets?)\s+(?:after|in)\s+(\d+(?:\.\d+)?)\s*(seconds?|minutes?|hours?)/i);
+  if (inTime) {
+    const n = Number(inTime[1]);
+    const unit = inTime[2][0].toLowerCase();
+    const mult = unit === "s" ? 1000 : unit === "m" ? 60000 : 3600000;
+    const ms = Date.now() + n * mult;
+    if (Number.isFinite(ms)) return ms;
+  }
+
+  // Retry-After header (seconds or HTTP-date) — PR #3612
+  const ra = response?.headers?.get?.("retry-after") ?? response?.headers?.get?.("Retry-After");
+  if (ra) {
+    const secs = Number(ra);
+    if (Number.isFinite(secs) && secs > 0) return Date.now() + secs * 1000;
+    const dateMs = Date.parse(ra);
+    if (Number.isFinite(dateMs) && dateMs > Date.now()) return dateMs;
+  }
+
+  return null;
+}
+
+/**
+ * Parse Retry-After header value to epoch ms.
+ * Separate helper for callers that only have the header string.
+ * @param {string|number} retryAfter - Raw Retry-After header value
+ * @returns {number|null} Epoch ms or null
+ */
+export function parseRetryAfter(retryAfter) {
+  if (retryAfter == null) return null;
+  const raw = String(retryAfter).trim();
+  if (!raw) return null;
+  const secs = Number(raw);
+  if (Number.isFinite(secs) && secs > 0) return Date.now() + secs * 1000;
+  const dateMs = Date.parse(raw);
+  if (Number.isFinite(dateMs) && dateMs > Date.now()) return dateMs;
+  return null;
+}
+
+/**
  * Check if error should trigger account fallback (switch to next account)
  * Config-driven: matches ERROR_RULES top-to-bottom (text rules first, then status)
  * @param {number} status - HTTP status code
  * @param {string} errorText - Error message text
  * @param {number} backoffLevel - Current backoff level for exponential backoff
- * @returns {{ shouldFallback: boolean, cooldownMs: number, newBackoffLevel?: number }}
+ * @param {Response|null} [response] - Optional fetch Response for Retry-After header parsing (PR #3612)
+ * @returns {{ shouldFallback: boolean, cooldownMs: number, newBackoffLevel?: number, resetsAtMs?: number }}
  */
-export function checkFallbackError(status, errorText, backoffLevel = 0) {
+export function checkFallbackError(status, errorText, backoffLevel = 0, response = null) {
   const lowerError = errorText
     ? (typeof errorText === "string" ? errorText : JSON.stringify(errorText)).toLowerCase()
     : "";
+
+  // Provider-reported precise reset (429 + Retry-After or "reset at" pattern) — PR #3612
+  if (status === 429) {
+    const resetsAtMs = extractResetsAtMs(response, errorText);
+    if (resetsAtMs) {
+      const cooldownMs = Math.min(resetsAtMs - Date.now(), MAX_RATE_LIMIT_COOLDOWN_MS);
+      if (cooldownMs > 0) {
+        return { shouldFallback: true, cooldownMs, resetsAtMs };
+      }
+    }
+  }
 
   for (const rule of ERROR_RULES) {
     // Text-based rule: match substring in error message

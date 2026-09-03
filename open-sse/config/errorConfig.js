@@ -39,7 +39,7 @@ export const BACKOFF_CONFIG = {
 export const TRANSIENT_COOLDOWN_MS = 30 * 1000;
 
 // Hard cap for provider-reported rate limit cooldown (e.g. codex resets_at can be 5-6h)
-export const MAX_RATE_LIMIT_COOLDOWN_MS = 30 * 60 * 1000;
+export const MAX_RATE_LIMIT_COOLDOWN_MS = 6 * 60 * 60 * 1000;
 
 // Cooldown durations (ms)
 const COOLDOWN = {
@@ -71,6 +71,8 @@ export const ERROR_RULES = [
   { text: "quota exceeded",           backoff: true },
   { text: "capacity",                 backoff: true },
   { text: "overloaded",               backoff: true },
+  // Console provider: "Model is unavailable" wrapped in 403 (issue #3729)
+  { text: "model is unavailable",     cooldownMs: COOLDOWN.long },
   // AiHubMix free-tier abuse gate (#3602): "Sorry, to prevent abuse of free resources..."
   { text: "prevent abuse",            cooldownMs: COOLDOWN.extended },
   { text: "can only try",             cooldownMs: COOLDOWN.extended },

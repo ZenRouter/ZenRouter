@@ -129,11 +129,10 @@ export function convertResponsesApiFormat(body) {
     }
   }
 
-  // Cleanup Responses API specific fields
+  // Cleanup Responses API specific fields (prompt_cache_key is preserved for cache affinity — PR #3733)
   delete result.input;
   delete result.instructions;
   delete result.include;
-  delete result.prompt_cache_key;
   delete result.store;
   delete result.reasoning;
 

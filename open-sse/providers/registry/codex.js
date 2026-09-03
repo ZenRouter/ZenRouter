@@ -44,6 +44,7 @@ export default {
       resetCreditsUrl: "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits",
       resetCreditsConsumeUrl: "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits/consume",
     },
+    quirks: { preservePromptCacheKey: true },
   },
   models: [
     { id: "gpt-5.6-sol", name: "GPT 5.6 Sol" },
