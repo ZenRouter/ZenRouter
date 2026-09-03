@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSettings, updateSettings } from "@/lib/localDb";
 import { applyOutboundProxyEnv } from "@/lib/network/outboundProxy";
 import { resetComboRotation } from "open-sse/services/combo.js";
+import { resolveObservabilityEnabled } from "@/lib/db/repos/requestDetailsRepo.js";
 import bcrypt from "bcryptjs";
 
 export const dynamic = "force-dynamic";
@@ -91,10 +92,12 @@ export async function GET() {
     
     const enableRequestLogs = process.env.ENABLE_REQUEST_LOGS === "true";
     const enableTranslator = process.env.ENABLE_TRANSLATOR === "true";
-    
-    return NextResponse.json({ 
-      ...safeSettings, 
+
+    return NextResponse.json({
+      ...safeSettings,
       enableRequestLogs,
+      enableRequestLogsDefined: process.env.ENABLE_REQUEST_LOGS !== undefined,
+      observabilityEnabled: resolveObservabilityEnabled(safeSettings),
       enableTranslator,
       hasPassword: !!password
     }, { headers: SETTINGS_RESPONSE_HEADERS });

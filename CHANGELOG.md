@@ -56,6 +56,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Updated `src/shared/utils/providerLiveModels.js` to preserve `context_length` / `max_completion_tokens` as `capabilities` from upstream `/models` responses.
   - Updated `src/app/api/v1/models/route.js` to propagate `context_length` and `max_completion_tokens` for live models, custom models, and custom combo limits, allowing downstream agents (e.g. CLI tools) to perform accurate compaction.
 
+#### Dashboard UI/UX / Provider Status Filter & Compact Token Display (PR #3704, PR #3747)
+- **feat(providers): add connection status filter to providers dashboard (PR #3704)**
+  - Added `STATUS_FILTER_OPTIONS`, `getConnectionStatus`, and `matchesStatusFilter` in `src/app/(dashboard)/dashboard/providers/utils.js`.
+  - Added client-side status filter dropdown (All / Active / Inactive / No connection) to `src/app/(dashboard)/dashboard/providers/page.js` across OAuth, Free, Free Tier, API Key, and Custom Compatible providers.
+  - Always treats `noAuth` free providers as Active rather than "No connection".
+- **feat(usage): compact notation for large token counts (>100k) and observability callouts (PR #3747)**
+  - Created reusable formatting utilities in `src/shared/utils/format.js` with `fmtCompact` using en-US compact notation (`100K`, `1.5M`, `2B`) for token counts >= 100k.
+  - Applied `fmtCompact` with full-count tooltip hover in `OverviewCards.js`, `RecentRequests` in `UsageStats.js`, and `UsageTable.js`.
+  - Updated `/api/settings` GET endpoint with `enableRequestLogsDefined` and `observabilityEnabled`.
+  - Fixed loading state `colSpan` (7 → 9) in `RequestDetailsTab.js` and surfaced environment vs database settings precedence.
+  - Updated snapshot for Claude 2.1.257 User-Agent header in `golden-url-header.test.js`.
+
 ## [0.5.60] - 2026-08-30
 
 ### Fixed

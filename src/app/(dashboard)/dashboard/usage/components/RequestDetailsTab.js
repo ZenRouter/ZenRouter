@@ -136,7 +136,14 @@ export default function RequestDetailsTab() {
     try {
       const res = await fetch("/api/settings");
       const data = await res.json();
-      setObservabilityEnabled(data.enableObservability === true);
+      if (typeof data.observabilityEnabled === "boolean") {
+        setObservabilityEnabled(data.observabilityEnabled);
+      } else {
+        const disabled = data.enableRequestLogsDefined
+          ? data.enableRequestLogs !== true
+          : data.enableObservability !== true;
+        setObservabilityEnabled(!disabled);
+      }
     } catch {
       setObservabilityEnabled(false);
     }
@@ -278,7 +285,7 @@ export default function RequestDetailsTab() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="p-8 text-center text-text-muted">
+                  <td colSpan="9" className="p-8 text-center text-text-muted">
                     <div className="flex items-center justify-center gap-2">
                       <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
                       Loading...

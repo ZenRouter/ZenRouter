@@ -4,18 +4,7 @@ import { useState, useEffect, useCallback, useMemo, Fragment } from "react";
 import PropTypes from "prop-types";
 import Card from "@/shared/components/Card";
 import Badge from "@/shared/components/Badge";
-
-const fmt = (n) => new Intl.NumberFormat().format(n || 0);
-const fmtCost = (n) => `$${(n || 0).toFixed(2)}`;
-
-function fmtTime(iso) {
-  if (!iso) return "Never";
-  const diffMins = Math.floor((Date.now() - new Date(iso)) / 60000);
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-  return new Date(iso).toLocaleDateString();
-}
+import { fmt, fmtCompact, fmtCost, fmtTime } from "@/shared/utils/format";
 
 function SortIcon({ field, currentSort, currentOrder }) {
   if (currentSort !== field) return <span className="ml-1 opacity-20">↕</span>;
@@ -252,4 +241,4 @@ UsageTable.propTypes = {
 };
 
 // Re-export utilities for use in UsageStats orchestrator
-export { fmt, fmtCost, fmtTime };
+export { fmt, fmtCompact, fmtCost, fmtTime };

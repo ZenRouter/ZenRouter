@@ -2,9 +2,8 @@
 
 import PropTypes from "prop-types";
 import Card from "@/shared/components/Card";
-
-const fmt = (n) => new Intl.NumberFormat().format(n || 0);
-const fmtCost = (n) => `$${(n || 0).toFixed(2)}`;
+import Tooltip from "@/shared/components/Tooltip";
+import { fmt, fmtCompact, fmtCost } from "@/shared/utils/format";
 
 export default function OverviewCards({ stats }) {
   return (
@@ -15,15 +14,21 @@ export default function OverviewCards({ stats }) {
       </Card>
       <Card className="flex min-w-0 flex-col gap-1 px-4 py-3">
         <span className="text-text-muted text-sm uppercase font-semibold">Total Input Tokens</span>
-        <span className="truncate text-2xl font-bold text-primary">{fmt(stats.totalPromptTokens)}</span>
+        <Tooltip text={`${fmt(stats.totalPromptTokens)} total input tokens`}>
+          <span className="truncate text-2xl font-bold text-primary">{fmtCompact(stats.totalPromptTokens)}</span>
+        </Tooltip>
       </Card>
       <Card className="flex min-w-0 flex-col gap-1 px-4 py-3">
         <span className="text-text-muted text-sm uppercase font-semibold">Cached Tokens</span>
-        <span className="truncate text-2xl font-bold text-info">{fmt(stats.totalCachedTokens)}</span>
+        <Tooltip text={`${fmt(stats.totalCachedTokens)} cached tokens`}>
+          <span className="truncate text-2xl font-bold text-info">{fmtCompact(stats.totalCachedTokens)}</span>
+        </Tooltip>
       </Card>
       <Card className="flex min-w-0 flex-col gap-1 px-4 py-3">
         <span className="text-text-muted text-sm uppercase font-semibold">Output Tokens</span>
-        <span className="truncate text-2xl font-bold text-success">{fmt(stats.totalCompletionTokens)}</span>
+        <Tooltip text={`${fmt(stats.totalCompletionTokens)} output tokens`}>
+          <span className="truncate text-2xl font-bold text-success">{fmtCompact(stats.totalCompletionTokens)}</span>
+        </Tooltip>
       </Card>
       <Card className="flex min-w-0 flex-col gap-1 px-4 py-3">
         <span className="text-text-muted text-sm uppercase font-semibold">Est. Cost</span>
