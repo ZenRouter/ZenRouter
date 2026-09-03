@@ -36,11 +36,8 @@
 import { platform, arch } from "os";
 
 // ─── Claude Code (claude-cli) ──────────────────────────────────────────
-// 2.1.257 (2026-08-30) — latest GitHub release; CHANGELOG.md top entry matches.
-// npm distribution is deprecated (stub installer); UA format unchanged in the
-// native builds. Beta-flag list mirrors 2.1.x runtime; some flags are
-// opus/sonnet-gated.
-export const CLAUDE_CODE_VERSION = "2.1.257";
+// 2.1.258 (2026-09-02) — latest release; supports Fable 5.1 and updated flags.
+export const CLAUDE_CODE_VERSION = "2.1.258";
 export const CLAUDE_CLI_USER_AGENT = `claude-cli/${CLAUDE_CODE_VERSION} (external, sdk-cli)`;
 
 // Anthropic-Beta flag set — Anthropic adds/removes flags per release. We

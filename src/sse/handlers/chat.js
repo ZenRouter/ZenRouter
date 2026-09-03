@@ -24,6 +24,7 @@ import { detectFormatByEndpoint } from "open-sse/translator/formats.js";
 import * as log from "../utils/logger.js";
 import { updateProviderCredentials, checkAndRefreshToken } from "../services/tokenRefresh.js";
 import { getProjectIdForConnection } from "open-sse/services/projectId.js";
+import { stripModelContextMarker } from "open-sse/utils/modelMarkers.js";
 
 /**
  * Handle chat completion request
@@ -64,12 +65,12 @@ async function handleChatInternal(request, clientRawRequest = null, serverReques
   // Claude Code 1M-context beta appends "[1m]" to model name (e.g. "claude-opus-5[1m]")
   // while the capability rides in anthropic-beta header. Strip the marker for routing
   // so combo lookup and provider/model parsing succeed. See decolua/9router#3690.
-  if (typeof modelStr === "string" && /\[1m\]$/i.test(modelStr)) {
-    const stripped = modelStr.replace(/\[1m\]$/i, "");
-    log.debug("CHAT", `Stripped [1m] marker: "${modelStr}" -> "${stripped}"`);
-    modelStr = stripped;
-    body = { ...body, model: stripped };
-    if (clientRawRequest?.body) clientRawRequest.body = { ...clientRawRequest.body, model: stripped };
+  const { model: cleanModel, contextMarker } = stripModelContextMarker(modelStr);
+  if (contextMarker) {
+    log.debug("CHAT", `Stripped [${contextMarker}] marker: "${modelStr}" -> "${cleanModel}"`);
+    modelStr = cleanModel;
+    body = { ...body, model: cleanModel };
+    if (clientRawRequest?.body) clientRawRequest.body = { ...clientRawRequest.body, model: cleanModel };
   }
 
   // Request summary is emitted as the unified "▶" line in chatCore (has fmt/thinking/account)

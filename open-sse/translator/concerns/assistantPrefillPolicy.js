@@ -27,14 +27,21 @@ export function applyAssistantPrefillPolicy(body, rawHeaders = null) {
   const trailingAssistant = body.messages.at(-1);
   if (trailingAssistant?.role !== ROLE.ASSISTANT) return body;
 
+  const isToolUseBlock = (block) =>
+    (block?.type === CLAUDE_BLOCK.TOOL_USE ||
+     block?.type === CLAUDE_BLOCK.SERVER_TOOL_USE ||
+     block?.type === "server_tool_use") && block.id;
+
   const toolUses = Array.isArray(trailingAssistant.content)
-    ? trailingAssistant.content.filter((block) => block?.type === CLAUDE_BLOCK.TOOL_USE && block.id)
+    ? trailingAssistant.content.filter(isToolUseBlock)
     : [];
   if (toolUses.length > 0) {
     body.messages.push({
       role: ROLE.USER,
       content: toolUses.map((toolUse) => ({
-        type: CLAUDE_BLOCK.TOOL_RESULT,
+        type: toolUse.type === CLAUDE_BLOCK.SERVER_TOOL_USE || toolUse.type === "server_tool_use"
+          ? (CLAUDE_BLOCK.WEB_SEARCH_TOOL_RESULT || "web_search_tool_result")
+          : CLAUDE_BLOCK.TOOL_RESULT,
         tool_use_id: toolUse.id,
         is_error: true,
         content: INCOMPLETE_TOOL_RESULT,

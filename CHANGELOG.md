@@ -7,6 +7,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Claude & Routing Integrity / Foreign Server Tool Dropping, 1M Context Marker & Adaptive Thinking (#3685, #3690, #3692, #3718)
+- **fix(routing): pool Claude foreign tool sanitizing, 1M context marker, and OpenAI-wire thinking (fixes #3685, #3690, #3692, #3718)**
+  - Dropped foreign `server_tool_use` blocks with non-Anthropic IDs (e.g. `call_` from GLM/OpenAI) and their paired `tool_result` / `web_search_tool_result` blocks in `open-sse/translator/formats/claude.js`, preventing HTTP 400 session poisoning in multi-provider combos.
+  - Stripped empty text blocks and pruned empty messages leftover after foreign tool filtering to adhere to Anthropic Messages API validation rules.
+  - Updated `open-sse/translator/concerns/assistantPrefillPolicy.js` to recognize `server_tool_use` blocks so valid trailing server tool calls are not erroneously discarded as empty text prefills.
+  - Added `open-sse/utils/modelMarkers.js` with `stripModelContextMarker` to strip the `[1m]` suffix Claude Code appends during 1M context beta before model routing in `src/sse/handlers/chat.js`.
+  - Bumped `CLAUDE_CODE_VERSION` to `2.1.258` in `open-sse/config/clientVersions.js` to support the latest Claude Code capabilities and Fable 5.1 model fingerprinting.
+  - Declared `claude-fable-5-1` in `open-sse/providers/capabilities.js` with `thinkingCanDisable: false` and adjusted `claude-adaptive` handling in `open-sse/translator/concerns/thinkingUnified.js` to pass `output_config.effort` directly without redundant `thinking` blocks.
+  - Introduced `NATIVE_ONLY_FORMATS` in `open-sse/translator/concerns/thinkingUnified.js` to ensure models with native thinking formats (Gemini, Claude) always resolve to `openai` (`reasoning_effort`) when routed over OpenAI-compatible endpoints.
+  - Added unit test suites in `tests/unit/claude-foreign-server-tool-use.test.js` and `tests/unit/model-context-marker.test.js`, and expanded tests in `tests/translator/thinking-unified.test.js`, `tests/unit/capabilities.test.js`, and `tests/unit/claude-cloaking.test.js`.
+
 #### Gemini & Antigravity / Function Response Protobuf Struct Wrapping (#3318)
 - **fix(translator): wrap JSON array tool responses into Struct object for Gemini (fixes #3318)**
   - Wrapped JSON array tool responses into `{ result: [...] }` in `open-sse/translator/request/openai-to-gemini.js` so `functionResponse.response` is always a `google.protobuf.Struct` object, eliminating `INVALID_ARGUMENT: Proto field is not repeating, cannot start list`.

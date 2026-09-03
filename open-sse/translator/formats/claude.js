@@ -223,31 +223,48 @@ export function normalizeClaudePassthrough(body, model = "", rawHeaders = null) 
     }
   }
 
-  // 3.5 Drop foreign server_tool_use ids that don't match Anthropic pattern
-  // (combo mixing GLM built-in tools leaks call_ ids into history; Anthropic
-  // rejects them with 400 and poisons the session). See decolua/9router#3685.
-  const SERVER_TOOL_USE_RE = /^srvtoolu_[a-zA-Z0-9_]+$/;
-  const invalidServerIds = new Set();
+  // 3.5 Drop foreign server_tool_use blocks carrying a foreign (non-srvtoolu_) id,
+  // and drop paired tool_result / web_search_tool_result so no orphan reference remains (#3685, #3692).
+  const CLAUDE_SERVER_TOOL_USE_ID = /^srvtoolu_[a-zA-Z0-9_]+$/;
+  const droppedServerToolUseIds = new Set();
   if (Array.isArray(body.messages)) {
     for (const msg of body.messages) {
       if (!Array.isArray(msg.content)) continue;
+      const kept = [];
       for (const block of msg.content) {
-        if (block.type === "server_tool_use" && typeof block.id === "string" && !SERVER_TOOL_USE_RE.test(block.id)) {
-          invalidServerIds.add(block.id);
+        const isServerToolUse = block?.type === "server_tool_use" || block?.type === CLAUDE_BLOCK.SERVER_TOOL_USE;
+        if (isServerToolUse && !CLAUDE_SERVER_TOOL_USE_ID.test(String(block?.id ?? ""))) {
+          if (block?.id != null) droppedServerToolUseIds.add(String(block.id));
+          continue;
+        }
+        kept.push(block);
+      }
+      msg.content = kept;
+    }
+    if (droppedServerToolUseIds.size > 0) {
+      for (const msg of body.messages) {
+        if (!Array.isArray(msg.content)) continue;
+        const kept = msg.content.filter(block => !(
+          (block?.type === CLAUDE_BLOCK.TOOL_RESULT || block?.type === CLAUDE_BLOCK.WEB_SEARCH_TOOL_RESULT || block?.type === "web_search_tool_result")
+          && droppedServerToolUseIds.has(String(block.tool_use_id ?? ""))
+        ));
+        if (kept.length !== msg.content.length) {
+          msg.content = kept;
         }
       }
     }
-    if (invalidServerIds.size > 0) {
-      for (const msg of body.messages) {
-        if (!Array.isArray(msg.content)) continue;
-        const filtered = msg.content.filter(block => {
-          if (block.type === "server_tool_use" && invalidServerIds.has(block.id)) return false;
-          if (block.type === CLAUDE_BLOCK.TOOL_RESULT && block.tool_use_id && invalidServerIds.has(block.tool_use_id)) return false;
-          return true;
-        });
-        msg.content = filtered;
-      }
-    }
+
+    // 3.6 Drop empty text blocks and any message left with no content at all.
+    // Anthropic rejects `messages.N.content` blocks with empty text (400
+    // "text content blocks must be non-empty"); a message whose blocks were all
+    // stripped above must be dropped, not padded with an empty placeholder.
+    body.messages = body.messages.filter(msg => {
+      if (typeof msg.content === "string") return msg.content.trim().length > 0;
+      if (!Array.isArray(msg.content)) return true;
+      msg.content = msg.content.filter(block =>
+        !(block?.type === CLAUDE_BLOCK.TEXT && !String(block.text ?? "").trim()));
+      return msg.content.length > 0;
+    });
   }
 
   applyAssistantPrefillPolicy(body, rawHeaders);
