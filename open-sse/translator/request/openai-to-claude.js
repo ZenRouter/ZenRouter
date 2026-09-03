@@ -1,6 +1,7 @@
 import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
 import { CLAUDE_SYSTEM_PROMPT } from "../../config/appConstants.js";
+import { DEFAULT_THINKING_CLAUDE_SIGNATURE } from "../../config/defaultThinkingSignature.js";
 import { adjustMaxTokens } from "../formats/maxTokens.js";
 import { safeParseJSON } from "../concerns/json.js";
 import { parseDataUri } from "../concerns/image.js";
@@ -256,10 +257,12 @@ function getContentBlocksFromMessage(msg, toolNameMap = new Map()) {
       }
     }
   } else if (msg.role === ROLE.ASSISTANT) {
-    // DeepSeek/MiniMax-style reasoning echo — map back to a Claude thinking
-    // block so multi-turn context isn't polluted by an unknown field.
     if (msg.reasoning_content) {
-      blocks.push({ type: CLAUDE_BLOCK.THINKING, thinking: msg.reasoning_content });
+      blocks.push({
+        type: CLAUDE_BLOCK.THINKING,
+        thinking: msg.reasoning_content,
+        signature: DEFAULT_THINKING_CLAUDE_SIGNATURE
+      });
     }
     if (Array.isArray(msg.content)) {
       for (const part of msg.content) {
