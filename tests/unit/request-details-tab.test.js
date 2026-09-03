@@ -82,7 +82,7 @@ describe("request details — tab crash-risk cases", () => {
     expect(res.pagination.pageSize).toBe(9999);
   });
 
-  it("oversized field → stored truncated + reparseable (no circular)", async () => {
+  it("oversized field → stored redacted + reparseable (no circular)", async () => {
     const huge = "x".repeat(20 * 1024);
     await saveDetail({
       id: "trunc-1", provider: "openai", model: "gpt-4",
@@ -92,9 +92,9 @@ describe("request details — tab crash-risk cases", () => {
 
     const got = await db.getRequestDetailById("trunc-1");
     expect(got).toBeDefined();
-    // Truncated field is a plain object safe for JSON.stringify in the drawer
+    // Redacted field is a plain object safe for JSON.stringify in the drawer
     expect(() => JSON.stringify(got)).not.toThrow();
-    expect(got.request._truncated).toBe(true);
+    expect(got.request.redacted).toBe(true);
   });
 
   it("missing tokens/timestamp on row → getInputTokens-style access safe", async () => {

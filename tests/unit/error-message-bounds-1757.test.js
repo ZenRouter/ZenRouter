@@ -27,6 +27,8 @@ describe("bounded upstream error messages (#1757)", () => {
     }), { status: 429 });
 
     const parsed = await parseUpstreamError(response);
-    expect(parsed.message).toHaveLength(MAX_UPSTREAM_ERROR_BYTES);
+    // Raw upstream bodies are no longer echoed; ensure the bounded read does not leak oversized payloads
+    expect(parsed.message.length).toBeLessThanOrEqual(500);
+    expect(parsed.message).not.toContain("x".repeat(100));
   });
 });
