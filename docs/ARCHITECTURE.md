@@ -501,8 +501,8 @@ Translations are selected dynamically based on source payload shape and provider
 
 ## 3) Stream Safety
 
-- disconnect-aware stream controller
-- translation stream with end-of-stream flush and `[DONE]` handling
+- disconnect-aware stream controller with Bun & Node socket-close bridge in `custom-server.js` to immediately abort upstream requests and stop token billing on client hangup (#3559)
+- translation stream with end-of-stream flush, cancel-path aborted usage recording, and `[DONE]` handling
 - usage estimation fallback when provider usage metadata is missing
 
 ## 4) Cloud Sync Degradation

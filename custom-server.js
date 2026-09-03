@@ -139,12 +139,41 @@ http.createServer = (...args) => {
         }
       };
       req.socket.once("error", onSocketError);
+
+      // Bun runtime compatibility (#3559): Bun's node:http ServerResponse never emits
+      // 'close' when a client disconnects mid-stream, so Next's signalFromNodeResponse
+      // never aborts request.signal and upstream keeps billing indefinitely.
+      // We safely bridge the raw TCP socket's 'close' event into res.emit('close')
+      // strictly when res has NOT finished writing (!res.writableFinished && !res.writableEnded).
+      // This triggers Next's createAbortController -> request.signal.abort() ->
+      // streamController.handleDisconnect("client_aborted") -> upstream fetch abort.
+      const onSocketClose = () => {
+        if (!res.writableFinished && !res.writableEnded) {
+          if (typeof res.emit === "function") {
+            try { res.emit("close"); } catch {}
+          }
+          if (typeof res.destroy === "function") {
+            try { res.destroy(); } catch {}
+          }
+        }
+      };
+      req.socket.once("close", onSocketClose);
+      if (typeof req.once === "function") {
+        req.once("aborted", onSocketClose);
+      }
+
       if (typeof res.once === "function") {
-        res.once("finish", () => {
+        const cleanupListeners = () => {
           if (req.socket && typeof req.socket.removeListener === "function") {
             req.socket.removeListener("error", onSocketError);
+            req.socket.removeListener("close", onSocketClose);
           }
-        });
+          if (typeof req.removeListener === "function") {
+            req.removeListener("aborted", onSocketClose);
+          }
+        };
+        res.once("finish", cleanupListeners);
+        res.once("close", cleanupListeners);
       }
     }
 

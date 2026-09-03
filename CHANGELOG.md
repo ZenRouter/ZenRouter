@@ -7,6 +7,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Fixed
 
+#### Networking & Billing / Bun Client Disconnect Abort (#3559)
+- **fix(stream,server): bridge client TCP socket close into ServerResponse on Bun & Node (fixes #3559)**
+  - Bridged incoming socket `close` and `aborted` events in `custom-server.js` directly to `res.emit('close')` and `res.destroy()` when the response is unfinished (`!res.writableFinished && !res.writableEnded`).
+  - Enables Bun compatibility where `ServerResponse` never natively emits `close`, resolving the defect where client hangup failed to propagate to Next's `request.signal`.
+  - Upstream requests are immediately aborted and partial usage recorded, stopping token waste and continuous billing when clients disconnect mid-stream.
+  - Added regression test suite in `tests/unit/custom-server-socket.test.js`.
+
 #### Performance pool — L1 caches, zero-mutation stream, models TTL (upstream PR #3629)
 - **perf(stream): accumulate content/thinking in chunk arrays** in `open-sse/utils/stream.js` (`contentChunks`/`thinkingChunks` + single `join("")`), cutting per-chunk string GC pressure; split-packet handling kept index-based.
 - **perf(db): L1 caches for API keys and connections** in `src/lib/db/repos/apiKeysRepo.js` (`apiKeyCache` + negative cache) and `connectionsRepo.js` (`connectionCache` per filter) with `invalidate*Cache()` on every mutation. Settings keeps Zen's 2s TTL raw cache (better than upstream's unbounded merged cache); usage keeps Zen's object-identity dedup (no field-equality scan, so no `idx_uh_dedup`/schema bump needed).
