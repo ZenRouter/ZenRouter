@@ -99,7 +99,7 @@ async function runHeavyStartup() {
 
   if (settings.tunnelEnabled) ensureCloudflared().catch(() => {});
 
-  if (settings.mitmEnabled) {
+  if (settings.mitmEnabled && process.env.ZENROUTER_DISABLE_MITM !== "1") {
     // Sync mitmAlias DB → JSON cache so standalone MITM server can read it.
     syncMitmAliasCache().catch(() => {});
     autoStartMitm(settings);

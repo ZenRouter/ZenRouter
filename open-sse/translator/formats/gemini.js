@@ -308,6 +308,37 @@ function flattenTypeArrays(obj) {
   }
 }
 
+// Convert prefixItems (tuple validation) to items — Gemini cannot express tuples,
+// and a type:"array" schema without items is rejected with "missing field"
+function convertPrefixItems(obj) {
+  if (!obj || typeof obj !== "object") return;
+
+  if (Array.isArray(obj.prefixItems) && obj.prefixItems.length > 0) {
+    const variants = obj.prefixItems.filter(s => s && s.type !== "null");
+    if (!obj.items && variants.length === 1) {
+      obj.items = variants[0];
+    } else if (!obj.items && variants.length > 1) {
+      obj.items = { anyOf: variants };
+    }
+    delete obj.prefixItems;
+  }
+
+  for (const value of Object.values(obj)) {
+    if (value && typeof value === "object") {
+      convertPrefixItems(value);
+    }
+  }
+}
+
+// Gemini requires items on every type:"array" schema — fill a permissive placeholder
+function ensureArrayItems(obj) {
+  if (!obj || typeof obj !== "object") return;
+  if (obj.type === "array" && !obj.items) {
+    obj.items = { type: "string" };
+  }
+  for (const v of Object.values(obj)) if (v && typeof v === "object") ensureArrayItems(v);
+}
+
 // Infer missing type=object when properties exist (Gemini requires explicit type)
 // isSchema ensures we don't inject type="object" into the properties name-map (#2884).
 function ensureObjectType(obj, isSchema = true) {
@@ -338,11 +369,13 @@ export function cleanJSONSchemaForAntigravity(schema) {
 
   // Phase 2: Flatten complex structures
   mergeAllOf(cleaned);
+  convertPrefixItems(cleaned);
   flattenAnyOfOneOf(cleaned);
   flattenTypeArrays(cleaned);
 
   // Phase 2.5: Infer missing type=object when properties exist (Gemini requirement)
   ensureObjectType(cleaned);
+  ensureArrayItems(cleaned);
 
   // Phase 3: Remove all unsupported keywords at ALL levels (including inside arrays)
   removeUnsupportedKeywords(cleaned, UNSUPPORTED_SCHEMA_CONSTRAINTS);

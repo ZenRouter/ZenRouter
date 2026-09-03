@@ -844,21 +844,70 @@ function startServer(updatePromise) {
     });
   }
 
+  function disableMitmInDatabase() {
+    const dataDir = process.env.DATA_DIR || (
+      process.platform === "win32"
+        ? path.join(process.env.APPDATA || os.homedir(), "zenrouter")
+        : path.join(os.homedir(), ".zenrouter")
+    );
+
+    // 1. Legacy db.json
+    try {
+      const legacyPath = path.join(dataDir, "db.json");
+      if (fs.existsSync(legacyPath)) {
+        const db = JSON.parse(fs.readFileSync(legacyPath, "utf-8"));
+        if (db.settings) db.settings.mitmEnabled = false;
+        fs.writeFileSync(legacyPath, JSON.stringify(db, null, 2));
+      }
+    } catch { /* best effort */ }
+
+    // 2. SQLite data.sqlite (#3755: ensure mitm is disabled in sqlite so server does not loop)
+    try {
+      const sqlitePath = path.join(dataDir, "db", "data.sqlite");
+      if (fs.existsSync(sqlitePath)) {
+        let db = null;
+        try {
+          const { DatabaseSync } = require("node:sqlite");
+          db = new DatabaseSync(sqlitePath);
+        } catch {}
+
+        if (!db) {
+          try {
+            const runtimeBetter = path.join(dataDir, "runtime", "node_modules", "better-sqlite3");
+            const BetterSqlite = require(fs.existsSync(runtimeBetter) ? runtimeBetter : "better-sqlite3");
+            db = new BetterSqlite(sqlitePath);
+          } catch {}
+        }
+
+        if (db) {
+          try {
+            const row = db.prepare("SELECT data FROM settings WHERE id = 1").get();
+            if (row && row.data) {
+              const settings = JSON.parse(row.data);
+              settings.mitmEnabled = false;
+              db.prepare("UPDATE settings SET data = ? WHERE id = 1").run(JSON.stringify(settings));
+            }
+            if (typeof db.close === "function") db.close();
+          } catch {}
+        }
+      }
+    } catch { /* best effort */ }
+  }
+
   function tryRestart(code) {
     const aliveMs = Date.now() - serverStartTime;
     // Reset counter if last run was stable
     if (aliveMs >= RESTART_RESET_MS) restartCount = 0;
 
     if (restartCount >= MAX_RESTARTS) {
-      console.error(`\n⚠️  Server crashed ${MAX_RESTARTS} times. Disabling MIT and restarting...`);
-      try {
-        const dbPath = path.join(os.homedir(), process.platform === "win32" ? path.join("AppData", "Roaming", "zenrouter", "db.json") : path.join(".zenrouter", "db.json"));
-        if (fs.existsSync(dbPath)) {
-          const db = JSON.parse(fs.readFileSync(dbPath, "utf-8"));
-          if (db.settings) db.settings.mitmEnabled = false;
-          fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-        }
-      } catch { /* best effort */ }
+      console.error(`\n⚠️  Server crashed ${MAX_RESTARTS} times. Disabling MITM and restarting...`);
+      if (crashLog.length) {
+        console.error("\n--- Server crash log ---");
+        crashLog.forEach(l => console.error(l));
+        console.error("--- End crash log ---\n");
+      }
+      disableMitmInDatabase();
+      process.env.ZENROUTER_DISABLE_MITM = "1";
       restartCount = 0;
       server = spawnServer();
       attachServerEvents();

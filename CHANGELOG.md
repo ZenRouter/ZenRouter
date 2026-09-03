@@ -7,6 +7,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Server Stability & CLI Crash Recovery (#3755, #3743)
+- **fix(cli,server): safely disable MITM in SQLite and JSON on repeated crash (fixes #3755)**
+  - Added `disableMitmInDatabase` in `cli/cli.js` supporting both SQLite `data.sqlite` (`node:sqlite` / `better-sqlite3`) and legacy `db.json`, preventing infinite restart crash loops when upgrading from 0.5.55.
+  - Set `ZENROUTER_DISABLE_MITM=1` and honored it in `src/shared/services/initializeApp.js` during emergency recovery.
+  - Always surfaced `crashLog` to console on maximum restarts to provide immediate diagnostic visibility.
+  - Added unit test suite in `tests/unit/cli-restart-mitm-3755.test.js`.
+- **fix(gemini): convert `prefixItems` and ensure array items in schema sanitizer (fixes #3743)**
+  - Added `convertPrefixItems` to map tuple parameter definitions to `items` before keyword removal in `open-sse/translator/formats/gemini.js`.
+  - Added `ensureArrayItems` to guarantee every `type: "array"` schema defines an `items` field, preventing Gemini API rejection (`400 INVALID_ARGUMENT: Cannot find field items`).
+  - Added regression test cases in `tests/unit/gemini-mcp-schema-cleaner-2884.test.js`.
+
 #### Dashboard & Models / Custom Capabilities on Custom OAI & Compatible Nodes (#3752, upstream 38f031f4c)
 - **feat(models): capability toggles, tune button, and upsert for custom and compatible models (fixes #3752)**
   - Added capability toggles (Vision, Reasoning) to `AddCustomModelModal` with whitelist sanitization in `POST /api/models/custom`.

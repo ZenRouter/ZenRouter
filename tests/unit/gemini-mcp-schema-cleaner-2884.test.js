@@ -32,21 +32,32 @@ describe("cleanJSONSchemaForAntigravity (#2884, #3743)", () => {
     expect(schema.properties.properties.additionalProperties).toBeUndefined();
   });
 
-  it("strips prefixItems constraint without corrupting arrays (#3743)", () => {
+  it("converts prefixItems to items when items is omitted (#3743)", () => {
     const schema = {
       type: "object",
       properties: {
-        tuple_data: {
+        single_tuple: {
+          type: "array",
+          prefixItems: [{ type: "string" }],
+        },
+        multi_tuple: {
           type: "array",
           prefixItems: [{ type: "string" }, { type: "number" }],
-          items: { type: "string" },
+        },
+        bare_array: {
+          type: "array",
         },
       },
     };
 
     cleanJSONSchemaForAntigravity(schema);
 
-    expect(schema.properties.tuple_data.prefixItems).toBeUndefined();
-    expect(schema.properties.tuple_data.items).toBeDefined();
+    expect(schema.properties.single_tuple.prefixItems).toBeUndefined();
+    expect(schema.properties.single_tuple.items).toEqual({ type: "string" });
+
+    expect(schema.properties.multi_tuple.prefixItems).toBeUndefined();
+    expect(schema.properties.multi_tuple.items).toEqual({ type: "string" });
+
+    expect(schema.properties.bare_array.items).toEqual({ type: "string" });
   });
 });
