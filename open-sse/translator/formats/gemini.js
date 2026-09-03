@@ -13,7 +13,7 @@ export const UNSUPPORTED_SCHEMA_CONSTRAINTS = [
   // with "Unknown name ...: Cannot find field".
   "uniqueItems", "contains",
   // 2020-12 keywords with no Gemini equivalent
-  "unevaluatedProperties", "unevaluatedItems", "contentSchema",
+  "unevaluatedProperties", "unevaluatedItems", "contentSchema", "prefixItems",
   // Claude rejects these in VALIDATED mode
   "default", "examples",
   // JSON Schema meta keywords
@@ -136,26 +136,31 @@ export function generateProjectId() {
 }
 
 // Helper: Remove unsupported keywords recursively from object/array
-// Also strips all vendor extension fields (x- prefixed) not supported by Gemini
-function removeUnsupportedKeywords(obj, keywords) {
+// Also strips all vendor extension fields (x- prefixed) not supported by Gemini.
+// isSchema tracks whether obj is a schema node vs a property-name map (#2884).
+function removeUnsupportedKeywords(obj, keywords, isSchema = true) {
   if (!obj || typeof obj !== "object") return;
 
   if (Array.isArray(obj)) {
     for (const item of obj) {
-      removeUnsupportedKeywords(item, keywords);
+      removeUnsupportedKeywords(item, keywords, isSchema);
     }
     return;
   }
 
   for (const key of Object.keys(obj)) {
-    if (keywords.includes(key) || key.startsWith("x-")) {
+    if (isSchema && (keywords.includes(key) || key.startsWith("x-"))) {
       delete obj[key];
       continue;
     }
 
     const value = obj[key];
     if (value && typeof value === "object") {
-      removeUnsupportedKeywords(value, keywords);
+      removeUnsupportedKeywords(
+        value,
+        keywords,
+        isSchema ? key !== "properties" : true
+      );
     }
   }
 }
@@ -304,10 +309,20 @@ function flattenTypeArrays(obj) {
 }
 
 // Infer missing type=object when properties exist (Gemini requires explicit type)
-function ensureObjectType(obj) {
+// isSchema ensures we don't inject type="object" into the properties name-map (#2884).
+function ensureObjectType(obj, isSchema = true) {
   if (!obj || typeof obj !== "object") return;
-  if (obj.properties && !obj.type) obj.type = "object";
-  for (const v of Object.values(obj)) if (v && typeof v === "object") ensureObjectType(v);
+  if (isSchema && !Array.isArray(obj) && obj.properties && typeof obj.properties === "object" && !obj.type) {
+    obj.type = "object";
+  }
+  for (const [k, v] of Object.entries(obj)) {
+    if (v && typeof v === "object") {
+      ensureObjectType(
+        v,
+        Array.isArray(obj) ? isSchema : isSchema ? k !== "properties" : true
+      );
+    }
+  }
 }
 
 // Clean JSON Schema for Antigravity API compatibility - removes unsupported keywords recursively

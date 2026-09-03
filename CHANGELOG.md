@@ -3,6 +3,32 @@
 All notable changes to ZenRouter (fork of 9Router) will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional Commits.
 
+## [0.5.62] - 2026-09-03
+
+### Fixed
+
+#### Gemini & Antigravity / MCP Schema Cleaner (#2884, #3743)
+- **fix(translator): preserve parameters named `properties` / `title` and strip `prefixItems` for Gemini API**
+  - Differentiated JSON schema definition nodes from property name maps (`schema.properties`) by threading `isSchema` context in `removeUnsupportedKeywords` and `ensureObjectType`.
+  - Prevented invalid `type: "object"` injection into `schema.properties.type` when tools declare a parameter literally named `properties` (e.g. official Notion MCP tools), and preserved parameters named `title`, `default`, `format`.
+  - Added JSON Schema 2020-12 `prefixItems` to `UNSUPPORTED_SCHEMA_CONSTRAINTS` to prevent Gemini rejection on tuple-formatted tools.
+
+#### Kiro / Thinking Protocol (#3641, #3746, #3749)
+- **fix(kiro): strip generic top-level thinking fields before dispatch**
+  - Stripped `thinking`, `reasoning`, `reasoning_effort`, `thinkingConfig`, `enable_thinking`, `output_config`, and `think` in `KiroExecutor.transformRequest`.
+  - Prevents AWS Bedrock / Kiro `400 REQUEST_BODY_INVALID` when non-Claude clients (Responses API or Gemini) send thinking or reasoning parameters to Kiro models.
+
+#### OpenCode / Muse Spark 1.3 & Vision (#3738, #3739)
+- **fix(opencode): route Muse Spark 1.3 to Responses API and declare vision capability**
+  - Added `muse-spark-1.3-contributor-free` to `RESPONSES_MODELS` and `providerModels.js`, ensuring requests target `/zen/v1/responses` rather than `/chat/completions`.
+  - Marked `muse-spark-1.2-contributor-free` and `muse-spark-1.3-contributor-free` with `vision: true` in `PROVIDER_CAPABILITIES` so inline images are not stripped.
+
+#### Claude / Fable 5.1 & Client Spoofing (#3719)
+- **feat(claude): support Claude Fable 5.1 and bump spoofed CLI version**
+  - Updated `CLAUDE_CODE_VERSION` in `open-sse/config/clientVersions.js` to `2.1.257`.
+  - Added `claude-fable-5-1` to `open-sse/providers/registry/claude.js` and `open-sse/providers/pricing.js`.
+  - Configured `*claude*fable*` with `thinkingFormat: "claude-adaptive"`.
+
 ## [0.5.60] - 2026-08-30
 
 ### Fixed

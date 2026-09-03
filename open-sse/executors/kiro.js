@@ -3,6 +3,7 @@ import { PROVIDERS } from "../config/providers.js";
 import {
   KIRO_CODEWHISPERER_TARGET,
   KIRO_ENDPOINT_FALLBACK_STATUSES,
+  KIRO_UNSUPPORTED_THINKING_FIELDS,
   resolveKiroModel,
 } from "../config/kiroConstants.js";
 import { v4 as uuidv4 } from "uuid";
@@ -322,6 +323,13 @@ export class KiroExecutor extends BaseExecutor {
   }
 
   transformRequest(model, body, stream, credentials) {
+    // Last gate before generateAssistantResponse. Drops stray generic thinking
+    // members from Responses (Codex), Gemini or Ollama clients that cause Kiro to
+    // return 400 {"reason":"REQUEST_BODY_INVALID"} (#3641, #2716, #3749).
+    // Nested additionalModelRequestFields.output_config is preserved.
+    if (body && typeof body === "object") {
+      for (const field of KIRO_UNSUPPORTED_THINKING_FIELDS) delete body[field];
+    }
     return body;
   }
 
