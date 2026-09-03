@@ -195,12 +195,12 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
           }
 
           // Check if there are actual tool responses in the next messages
-          const hasActualResponses = toolCallIds.some(fid => toolResponses[fid]);
+          const hasActualResponses = toolCallIds.some(fid => toolResponses[fid] !== undefined);
 
           if (hasActualResponses) {
             const toolParts = [];
             for (const fid of toolCallIds) {
-              if (!toolResponses[fid]) continue;
+              if (toolResponses[fid] === undefined) continue;
 
               let name = tcID2Name[fid];
               if (!name) {
@@ -212,11 +212,11 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
                 }
               }
 
-              let resp = toolResponses[fid];
-              let parsedResp = tryParseJSON(resp);
-              if (parsedResp === null) {
-                parsedResp = { result: resp };
-              } else if (typeof parsedResp !== "object") {
+              const rawResp = toolResponses[fid] ?? "";
+              let parsedResp = tryParseJSON(rawResp);
+              if (parsedResp === null || typeof parsedResp !== "object") {
+                parsedResp = { result: rawResp };
+              } else if (Array.isArray(parsedResp)) {
                 parsedResp = { result: parsedResp };
               }
 
@@ -224,7 +224,7 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
                 functionResponse: {
                   id: fid,
                   name: sanitizeGeminiFunctionName(name, existingToolNames, toolNameMap),
-                  response: { result: parsedResp }
+                  response: parsedResp
                 }
               });
             }
@@ -414,11 +414,17 @@ function wrapInCloudCodeEnvelopeForClaude(model, claudeRequest, credentials = nu
             const resolvedName = toolUseIdToName[block.tool_use_id]
               ? sanitizeGeminiFunctionName(toolUseIdToName[block.tool_use_id], existingToolNames, toolNameMap)
               : "tool";
+            let parsed = tryParseJSON(content);
+            if (parsed === null || typeof parsed !== "object") {
+              parsed = { result: content ?? "" };
+            } else if (Array.isArray(parsed)) {
+              parsed = { result: parsed };
+            }
             parts.push({
               functionResponse: {
                 id: block.tool_use_id,
                 name: resolvedName,
-                response: { result: tryParseJSON(content) || content }
+                response: parsed
               }
             });
           }

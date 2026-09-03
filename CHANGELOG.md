@@ -7,6 +7,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Gemini & Antigravity / Function Response Protobuf Struct Wrapping (#3318)
+- **fix(translator): wrap JSON array tool responses into Struct object for Gemini (fixes #3318)**
+  - Wrapped JSON array tool responses into `{ result: [...] }` in `open-sse/translator/request/openai-to-gemini.js` so `functionResponse.response` is always a `google.protobuf.Struct` object, eliminating `INVALID_ARGUMENT: Proto field is not repeating, cannot start list`.
+  - Passed JSON object responses directly without redundant double-wrapping in `{ result: { ... } }`.
+  - Preserved empty string tool responses as `{ result: "" }` instead of dropping them during boolean truthiness check.
+  - Added unit test suite in `tests/unit/gemini-function-response-struct.test.js`.
+
 #### Tool Calling & Function Limits / Tool Name Length Compression (#3622, PR #3637)
 - **fix(translator): compress tool names > 64 chars to prevent Gemini/Vertex/OpenAI rejection (fixes #3622)**
   - Added `open-sse/utils/toolCompressor.js` with `compressToolNames`, compressing tool names longer than 64 characters to a 55-character prefix with an 8-character MD5 hash suffix to guarantee uniqueness without prefix collision.
