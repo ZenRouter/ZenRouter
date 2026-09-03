@@ -62,8 +62,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name || github.event.inputs.tag }}
-          name: "🌿 ZenRouter ${{ github.ref_name || github.event.inputs.tag }}"
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: "🌿 ZenRouter ${{ github.event.inputs.tag || github.ref_name }}"
           draft: false
           prerelease: false
           generate_release_notes: true
