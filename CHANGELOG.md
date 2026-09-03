@@ -7,6 +7,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Search & SSRF / SearXNG Docker Internal Routing (#3756)
+- **fix(search): allow admin-configured internal SearXNG and Ollama search in Docker (fixes #3756)**
+  - Differentiated admin-configured base URLs (`SEARXNG_URL` on Docker network `searxng:8080` or loopback) from untrusted client overrides in `open-sse/handlers/search/index.js`.
+  - Bypassed private-IP blocking of `fetchPublic` only when no client-supplied `providerOptions.baseUrl` is present, allowing standard Docker sibling container deployments to function without 502 errors.
+  - Retained strict `fetchPublic` SSRF validation on any client-provided baseUrl overrides.
+  - Added unit test suite in `tests/unit/search-searxng-ssrf-3756.test.js`.
+
+#### Models API / Single Model Lookup Route (#3588, upstream 5caa72f5f)
+- **fix(models): replace single-segment route with catch-all for single model lookup (fixes #3588)**
+  - Replaced `src/app/api/v1/models/[kind]` with catch-all `src/app/api/v1/models/[...model]/route.js` to correctly match provider-prefixed IDs containing slashes (e.g. `cc/claude-sonnet-5`, `openai/gpt-4o`).
+  - Preserved capability filtering routes (`/v1/models/image`, `/v1/models/web`, etc.) while returning OpenAI-compatible model objects or `404 model_not_found` for individual model queries.
+  - Added unit test suite in `tests/unit/v1-model-lookup-3588.test.js`.
+
 #### Server Stability & CLI Crash Recovery (#3755, #3743)
 - **fix(cli,server): safely disable MITM in SQLite and JSON on repeated crash (fixes #3755)**
   - Added `disableMitmInDatabase` in `cli/cli.js` supporting both SQLite `data.sqlite` (`node:sqlite` / `better-sqlite3`) and legacy `db.json`, preventing infinite restart crash loops when upgrading from 0.5.55.

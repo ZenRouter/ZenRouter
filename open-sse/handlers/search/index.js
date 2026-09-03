@@ -100,8 +100,17 @@ async function tryDedicatedProvider({ provider, providerConfig, body, credential
 
   log?.info?.("SEARCH", `${provider.id} | "${params.query.slice(0, 80)}" | type=${params.searchType}`);
 
+  // Admin-configured internal search engines (e.g. SEARXNG_URL on Docker network or local Ollama search)
+  // are trusted when no client-supplied override is present. Client baseUrl overrides must always
+  // be validated through fetchPublic to prevent SSRF (#3714, #3756).
+  const hasClientOverride = Boolean(
+    typeof params.providerOptions?.baseUrl === "string" && params.providerOptions.baseUrl.trim().length > 0
+  );
+  const isTrustedInternal = !hasClientOverride && (provider.id === "searxng" || provider.id === "ollama-search");
+  const fetchFn = isTrustedInternal ? fetch : fetchPublic;
+
   try {
-    const resp = await fetchPublic(url, { ...init, headers: sanitizeHeaders(init.headers), signal: controller.signal });
+    const resp = await fetchFn(url, { ...init, headers: sanitizeHeaders(init.headers), signal: controller.signal });
     clearTimeout(timer);
     if (!resp.ok) {
       const errText = await resp.text().catch(() => "");
