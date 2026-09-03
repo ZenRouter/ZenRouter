@@ -38,7 +38,7 @@ jobs:
         run: npm ci
 
       - name: Install tests deps
-        run: cd tests && npm ci || npm install
+        run: cd tests && npm ci
 
       - name: Install CLI deps
         run: npm --prefix cli ci || npm --prefix cli install

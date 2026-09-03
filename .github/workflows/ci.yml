@@ -19,7 +19,7 @@ jobs:
             tests/package-lock.json
       - run: npm ci
       - name: Install tests deps
-        run: cd tests && npm ci || npm install
+        run: cd tests && npm ci
       - run: npm test --if-present
         env:
           JWT_SECRET: test-jwt-secret-at-least-32-chars-long-for-ci-simulation
