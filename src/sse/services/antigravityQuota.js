@@ -78,6 +78,30 @@ async function _doRefresh(connectionId, accessToken, providerSpecificData, now) 
   }
 }
 
+// Strike-based fallback for when quota API lies (remaining >0 but generation still 429).
+// See decolua/9router#3681 — Google's quota API can report 60-100% remaining while
+// generation endpoints still 429 with "reset after 14s" hint, causing 300s blind
+// lock storms across all accounts. Track consecutive 429s per connection+model
+// where quota claims remaining >0; after N strikes treat as exhausted anyway.
+const quotaStrikes = new Map(); // key -> { count, lastTime }
+const STRIKE_THRESHOLD = 3;
+const STRIKE_WINDOW_MS = 5 * 60 * 1000;
+
+function recordStrike(connectionId, model) {
+  const key = `${connectionId}:${model}`;
+  const now = Date.now();
+  const entry = quotaStrikes.get(key) || { count: 0, lastTime: 0 };
+  if (now - entry.lastTime > STRIKE_WINDOW_MS) entry.count = 0;
+  entry.count += 1;
+  entry.lastTime = now;
+  quotaStrikes.set(key, entry);
+  return entry.count;
+}
+
+function clearStrikes(connectionId, model) {
+  quotaStrikes.delete(`${connectionId}:${model}`);
+}
+
 /**
  * Handle Antigravity 409/429 — refresh RAM cache and return model resetAt when exhausted.
  * Called from chat handler error path.
@@ -89,11 +113,28 @@ export async function handleAntigravityQuotaError(connectionId, status, model, a
   // Throttle applies to error paths too: one quota request per account/30s.
   // The first 409/429 populates cache; concurrent or repeated errors reuse it.
   const quota = (await refreshAntigravityQuota(connectionId, accessToken, providerSpecificData))?.[model];
-  if (!quota || quota.remainingPercentage > 0 || !quota.resetAt) return null;
+  if (!quota || !quota.resetAt) return null;
 
   const resetMs = new Date(quota.resetAt).getTime();
-  if (resetMs <= Date.now()) return null;
+  if (resetMs <= Date.now()) {
+    clearStrikes(connectionId, model);
+    return null;
+  }
 
-  log.warn("AG_QUOTA", `${connectionId.slice(0, 8)} | UPSTREAM_${status} ${model} — quota exhausted; CACHE_BLOCK until ${quota.resetAt}`);
-  return resetMs;
+  // Honest 0% case — quota API correctly reports exhausted
+  if (quota.remainingPercentage <= 0) {
+    clearStrikes(connectionId, model);
+    log.warn("AG_QUOTA", `${connectionId.slice(0, 8)} | UPSTREAM_${status} ${model} — quota exhausted; CACHE_BLOCK until ${quota.resetAt}`);
+    return resetMs;
+  }
+
+  // Dishonest >0% case — quota claims remaining but we still got 429.
+  // Use strike-based circuit breaker to avoid multi-day storm.
+  const strikes = recordStrike(connectionId, model);
+  if (strikes >= STRIKE_THRESHOLD) {
+    log.warn("AG_QUOTA", `${connectionId.slice(0, 8)} | UPSTREAM_${status} ${model} — quota claims ${quota.remainingPercentage}% remaining but ${strikes} consecutive 429s; treating as exhausted until ${quota.resetAt}`);
+    return resetMs;
+  }
+  log.info("AG_QUOTA", `${connectionId.slice(0, 8)} | quota claims ${quota.remainingPercentage}% remaining (strike ${strikes}/${STRIKE_THRESHOLD}) — not yet blocking`);
+  return null;
 }

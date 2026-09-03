@@ -153,6 +153,11 @@ http.createServer = (...args) => {
     return handler(req, res);
   };
   const server = origCreate(...rest, wrapped);
+  // Increase HTTP keep-alive timeout to prevent stale connection resets during agent idle periods.
+  // Default Node keepAliveTimeout is 5s, which causes "error sending request" after idle.
+  // See decolua/9router#3709.
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
   server.once("listening", () => {
     startBackgroundTokenRefreshFromCustomServer();
   });
