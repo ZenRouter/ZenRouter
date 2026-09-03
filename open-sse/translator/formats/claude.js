@@ -189,6 +189,33 @@ export function normalizeClaudePassthrough(body, model = "", rawHeaders = null) 
     }
   }
 
+  // 3.5 Drop foreign server_tool_use ids that don't match Anthropic pattern
+  // (combo mixing GLM built-in tools leaks call_ ids into history; Anthropic
+  // rejects them with 400 and poisons the session). See decolua/9router#3685.
+  const SERVER_TOOL_USE_RE = /^srvtoolu_[a-zA-Z0-9_]+$/;
+  const invalidServerIds = new Set();
+  if (Array.isArray(body.messages)) {
+    for (const msg of body.messages) {
+      if (!Array.isArray(msg.content)) continue;
+      for (const block of msg.content) {
+        if (block.type === "server_tool_use" && typeof block.id === "string" && !SERVER_TOOL_USE_RE.test(block.id)) {
+          invalidServerIds.add(block.id);
+        }
+      }
+    }
+    if (invalidServerIds.size > 0) {
+      for (const msg of body.messages) {
+        if (!Array.isArray(msg.content)) continue;
+        const filtered = msg.content.filter(block => {
+          if (block.type === "server_tool_use" && invalidServerIds.has(block.id)) return false;
+          if (block.type === CLAUDE_BLOCK.TOOL_RESULT && block.tool_use_id && invalidServerIds.has(block.tool_use_id)) return false;
+          return true;
+        });
+        msg.content = filtered;
+      }
+    }
+  }
+
   applyAssistantPrefillPolicy(body, rawHeaders);
   return body;
 }
