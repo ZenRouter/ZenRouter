@@ -93,3 +93,11 @@ export async function deleteProviderNode(id) {
   });
   return removed;
 }
+
+// PR 3623: custom-compatible providers expose only configured models.
+// The allowlist enforcement lives in src/app/api/v1/models/route.js where
+// rawModelIds is initialized as [] for compatible providers and only
+// customModels / modelAliases are merged. This helper identifies such nodes.
+export function isCustomCompatibleNode(node) {
+  return node?.type === "openai-compatible" || node?.type === "anthropic-compatible";
+}

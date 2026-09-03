@@ -49,3 +49,16 @@ for (const entry of REGISTRY) {
 
 // TTS model/voice tables keyed by special names (openai-tts-models, ...), not provider ids
 Object.assign(PROVIDER_MODELS, buildTtsProviderModels());
+
+// PR 3623: custom-compatible model filtering — compatible providers expose only
+// explicitly configured custom models. The registry's static PROVIDER_MODELS
+// remain authoritative for built-in providers; the filtering is enforced at
+// request time in src/app/api/v1/models/route.js where rawModelIds is forced
+// to [] for compatible providers and only customModels / aliases are merged.
+// Export helper so other modules can consistently detect compatible providers.
+export function isCustomCompatibleProvider(providerId) {
+  const entry = REGISTRY.find((r) => r.id === providerId);
+  // Compatible providers are identified by prefix or by transport shape;
+  // the dashboard stores them as providerNodes with type openai-compatible.
+  return typeof providerId === "string" && (providerId.startsWith("openai-compatible-") || providerId.startsWith("anthropic-compatible-"));
+}

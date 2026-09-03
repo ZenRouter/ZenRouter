@@ -1,5 +1,10 @@
 // Fetch and cache suggested models for providers that expose a public models API
 // Fetches via backend proxy to avoid CORS issues
+// PR 3655: generic live /models catalog also exposes a manual fetch button
+// (handleFetchLiveModels in providers/[id]/page.js) that calls
+// /api/providers/:id/models?refresh=1 to bypass the 5-minute cache in
+// providerLiveModels.js. This fetcher remains for the legacy suggested-models
+// endpoint (models.dev / public APIs) and is used alongside the live catalog.
 
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const cache = new Map(); // key: fetcher.url → { data, expiresAt }
