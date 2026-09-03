@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { CapacityBadges } from "@/shared/components";
 
-export default function ModelRow({ model, fullModel, alias, copied, onCopy, testStatus, isCustom, isFree, onDeleteAlias, onTest, isTesting, onDisable, caps, thinkingSuffix }) {
+export default function ModelRow({ model, fullModel, alias, copied, onCopy, testStatus, isCustom, isFree, onDeleteAlias, onTest, isTesting, onDisable, caps, thinkingSuffix, onEditCaps }) {
   const displayModel = thinkingSuffix ? `${fullModel}(${thinkingSuffix})` : fullModel;
   const borderColor = testStatus === "ok"
     ? "border-green-500/40"
@@ -31,6 +31,20 @@ export default function ModelRow({ model, fullModel, alias, copied, onCopy, test
             <CapacityBadges caps={caps} colorOverride="text-text-muted/70" size={12} />
           </span>
         </div>
+        {onEditCaps && (
+          <div className="relative shrink-0 group/btn">
+            <button
+              onClick={onEditCaps}
+              className="rounded p-0.5 text-text-muted transition-opacity hover:bg-sidebar hover:text-primary opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+              title="Configure capabilities"
+            >
+              <span className="material-symbols-outlined text-sm">tune</span>
+            </button>
+            <span className="pointer-events-none absolute mt-1 top-5 left-1/2 -translate-x-1/2 text-[10px] text-text-muted whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
+              Capabilities
+            </span>
+          </div>
+        )}
         {onTest && (
           <div className="relative shrink-0 group/btn">
             <button
@@ -99,4 +113,5 @@ ModelRow.propTypes = {
   onDisable: PropTypes.func,
   caps: PropTypes.object,
   thinkingSuffix: PropTypes.string,
+  onEditCaps: PropTypes.func,
 };

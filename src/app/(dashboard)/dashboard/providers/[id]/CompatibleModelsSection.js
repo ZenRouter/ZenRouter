@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { Button } from "@/shared/components";
+import { Button, CapacityBadges } from "@/shared/components";
 import { getProviderCustomModelRows } from "@/shared/utils/providerCustomModels";
-function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias, onTest, testStatus, isTesting }) {
+function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias, onTest, testStatus, isTesting, onEditCaps, caps }) {
   const borderColor = testStatus === "ok"
     ? "border-green-500/40"
     : testStatus === "error"
@@ -26,7 +26,10 @@ function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias,
         {testStatus === "ok" ? "check_circle" : testStatus === "error" ? "cancel" : "smart_toy"}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{modelId}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-medium truncate">{modelId}</p>
+          <CapacityBadges caps={caps} colorOverride="text-text-muted/70" size={12} />
+        </div>
         <div className="flex items-center gap-1 mt-1">
           <code className="text-xs text-text-muted font-mono bg-sidebar px-1.5 py-0.5 rounded">{fullModel}</code>
           <div className="relative group/btn">
@@ -42,6 +45,20 @@ function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias,
               {copied === `model-${modelId}` ? "Copied!" : "Copy"}
             </span>
           </div>
+          {onEditCaps && (
+            <div className="relative group/btn">
+              <button
+                onClick={onEditCaps}
+                className="p-0.5 hover:bg-sidebar rounded text-text-muted hover:text-primary transition-colors"
+                title="Configure capabilities"
+              >
+                <span className="material-symbols-outlined text-sm">tune</span>
+              </button>
+              <span className="pointer-events-none absolute top-5 left-1/2 -translate-x-1/2 text-[10px] text-text-muted whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
+                Capabilities
+              </span>
+            </div>
+          )}
           {onTest && (
             <div className="relative group/btn">
               <button
@@ -71,7 +88,20 @@ function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias,
   );
 }
 
-export default function CompatibleModelsSection({ providerStorageAlias, providerDisplayAlias, modelAliases, customModels, copied, onCopy, onDeleteAlias, onAddCustomModel, onDeleteCustomModel, connections, isAnthropic }) {
+export default function CompatibleModelsSection({
+  providerStorageAlias,
+  providerDisplayAlias,
+  modelAliases,
+  customModels,
+  copied,
+  onCopy,
+  onDeleteAlias,
+  onAddCustomModel,
+  onDeleteCustomModel,
+  connections,
+  isAnthropic,
+  onEditCaps,
+}) {
   const [newModel, setNewModel] = useState("");
   const [adding, setAdding] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -195,19 +225,24 @@ export default function CompatibleModelsSection({ providerStorageAlias, provider
 
       {allModels.length > 0 && (
         <div className="flex flex-col gap-3">
-          {allModels.map(({ id, alias, source }) => (
-            <CompatibleModelRow
-              key={`${source}-${providerStorageAlias}/${id}`}
-              modelId={id}
-              fullModel={`${providerDisplayAlias}/${id}`}
-              copied={copied}
-              onCopy={onCopy}
-              onDeleteAlias={() => source === "custom" ? onDeleteCustomModel(id) : onDeleteAlias(alias)}
-              onTest={connections.length > 0 ? () => handleTestModel(id) : undefined}
-              testStatus={modelTestResults[id]}
-              isTesting={testingModelId === id}
-            />
-          ))}
+          {allModels.map(({ id, alias, source }) => {
+            const customEntry = (customModels || []).find((cm) => cm.id === id);
+            return (
+              <CompatibleModelRow
+                key={`${source}-${providerStorageAlias}/${id}`}
+                modelId={id}
+                fullModel={`${providerDisplayAlias}/${id}`}
+                copied={copied}
+                onCopy={onCopy}
+                onDeleteAlias={() => source === "custom" ? onDeleteCustomModel(id) : onDeleteAlias(alias)}
+                onTest={connections.length > 0 ? () => handleTestModel(id) : undefined}
+                testStatus={modelTestResults[id]}
+                isTesting={testingModelId === id}
+                caps={customEntry?.caps}
+                onEditCaps={onEditCaps ? () => onEditCaps(id, customEntry?.caps) : undefined}
+              />
+            );
+          })}
         </div>
       )}
     </div>
@@ -229,4 +264,5 @@ CompatibleModelsSection.propTypes = {
     isActive: PropTypes.bool,
   })).isRequired,
   isAnthropic: PropTypes.bool,
+  onEditCaps: PropTypes.func,
 };

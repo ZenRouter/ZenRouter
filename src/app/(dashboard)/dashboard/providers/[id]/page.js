@@ -61,6 +61,7 @@ export default function ProviderDetailPage() {
   const [modelsTestError, setModelsTestError] = useState("");
   const [testingModelIds, setTestingModelIds] = useState(() => new Set());
   const [showAddCustomModel, setShowAddCustomModel] = useState(false);
+  const [editingModelCaps, setEditingModelCaps] = useState(null);
   const [selectedConnectionIds, setSelectedConnectionIds] = useState([]);
   const [bulkProxyPoolId, setBulkProxyPoolId] = useState("__none__");
   const [bulkUpdatingProxy, setBulkUpdatingProxy] = useState(false);
@@ -535,12 +536,12 @@ export default function ProviderDetailPage() {
     }
   };
 
-  const handleAddCustomModel = async (modelId, type = "llm", providerAliasOverride = providerStorageAlias) => {
+  const handleAddCustomModel = async (modelId, type = "llm", providerAliasOverride = providerStorageAlias, caps = null) => {
     try {
       const res = await fetch("/api/models/custom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ providerAlias: providerAliasOverride, id: modelId, type }),
+        body: JSON.stringify({ providerAlias: providerAliasOverride, id: modelId, type, ...(caps ? { caps } : {}) }),
       });
       if (res.ok) {
         await fetchCustomModels();
@@ -552,6 +553,11 @@ export default function ProviderDetailPage() {
     } catch (error) {
       console.log("Error adding custom model:", error);
     }
+  };
+
+  const handleEditCaps = (modelId, currentCaps = null) => {
+    setEditingModelCaps({ id: modelId, caps: currentCaps });
+    setShowAddCustomModel(true);
   };
 
   const handleDeleteCustomModel = async (modelId, type = "llm", providerAliasOverride = providerStorageAlias) => {
@@ -1133,6 +1139,7 @@ export default function ProviderDetailPage() {
           onDeleteCustomModel={(modelId) => handleDeleteCustomModel(modelId, "llm", providerStorageAlias)}
           connections={connections}
           isAnthropic={isAnthropicCompatible}
+          onEditCaps={handleEditCaps}
         />
       );
     }
@@ -1228,6 +1235,7 @@ export default function ProviderDetailPage() {
             isFree={false}
             caps={getCaps(`${providerId}/${model.id}`)}
             thinkingSuffix={resolveThinkingSuffix(model.id)}
+            onEditCaps={() => handleEditCaps(model.id, getCaps(`${providerId}/${model.id}`))}
           />
         ))}
 
@@ -1254,6 +1262,7 @@ export default function ProviderDetailPage() {
               onDisable={() => handleDisableModel(model.id)}
               caps={getCaps(`${providerId}/${model.id}`)}
               thinkingSuffix={resolveThinkingSuffix(model.id)}
+              onEditCaps={() => handleEditCaps(model.id, getCaps(`${providerId}/${model.id}`))}
             />
           );
         })}
@@ -1877,18 +1886,22 @@ export default function ProviderDetailPage() {
           isAnthropic={isAnthropicCompatible}
         />
       )}
-      {!isCompatible && (
-        <AddCustomModelModal
-          isOpen={showAddCustomModel}
-          providerAlias={providerStorageAlias}
-          providerDisplayAlias={providerDisplayAlias}
-          onSave={async (modelId) => {
-            await handleAddCustomModel(modelId, "llm", providerStorageAlias);
-            setShowAddCustomModel(false);
-          }}
-          onClose={() => setShowAddCustomModel(false)}
-        />
-      )}
+      <AddCustomModelModal
+        isOpen={showAddCustomModel}
+        providerAlias={providerStorageAlias}
+        providerDisplayAlias={providerDisplayAlias}
+        initialModelId={editingModelCaps?.id || ""}
+        initialCaps={editingModelCaps?.caps || null}
+        onSave={async (modelId, caps) => {
+          await handleAddCustomModel(modelId, "llm", providerStorageAlias, caps);
+          setEditingModelCaps(null);
+          setShowAddCustomModel(false);
+        }}
+        onClose={() => {
+          setEditingModelCaps(null);
+          setShowAddCustomModel(false);
+        }}
+      />
 
       {providerId === "codex" && (
         <BulkImportCodexModal

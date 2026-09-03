@@ -5,7 +5,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
-### Fixed
+### Added / Fixed
+
+#### Dashboard & Models / Custom Capabilities on Custom OAI & Compatible Nodes (#3752, upstream 38f031f4c)
+- **feat(models): capability toggles, tune button, and upsert for custom and compatible models (fixes #3752)**
+  - Added capability toggles (Vision, Reasoning) to `AddCustomModelModal` with whitelist sanitization in `POST /api/models/custom`.
+  - Added retroactive capability configuration (`tune` icon button) to `CompatibleModelRow` and `ModelRow`, allowing capabilities on custom OpenAI-compatible, Anthropic-compatible, and default provider models to be customized in-place without deleting and re-adding.
+  - Updated `addCustomModel` in `src/lib/db/repos/aliasRepo.js` to perform atomic upsert, merging capability updates with existing metadata.
+  - Included custom models with their explicit capability overrides in `GET /api/models`.
+  - Added live cache invalidation via `customModelChanged` event in `src/shared/hooks/useModelCaps.js`.
+  - Added unit test suite in `tests/unit/custom-model-capabilities-3752.test.js`.
 
 #### Networking & Billing / Bun Client Disconnect Abort (#3559)
 - **fix(stream,server): bridge client TCP socket close into ServerResponse on Bun & Node (fixes #3559)**

@@ -2,18 +2,32 @@
 
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Button, Modal } from "@/shared/components";
+import { Button, Modal, Toggle } from "@/shared/components";
+import { CAPACITY_META } from "@/shared/constants/models";
 
-export default function AddCustomModelModal({ isOpen, providerAlias, providerDisplayAlias, onSave, onClose }) {
+const defaultCaps = () => Object.fromEntries(Object.keys(CAPACITY_META).map((key) => [key, false]));
+
+export default function AddCustomModelModal({ isOpen, providerAlias, providerDisplayAlias, initialModelId = "", initialCaps = null, onSave, onClose }) {
   const [modelId, setModelId] = useState("");
+  const [caps, setCaps] = useState(defaultCaps);
   const [testStatus, setTestStatus] = useState(null); // null | "testing" | "ok" | "error"
   const [testError, setTestError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // Reset state when modal opens
-  useEffect(() => {
-    if (isOpen) { setModelId(""); setTestStatus(null); setTestError(""); }
-  }, [isOpen]);
+  const [prevOpenKey, setPrevOpenKey] = useState(null);
+  const isEditing = Boolean(initialModelId);
+
+  // Sync state when modal opens or target changes (React-recommended pattern without useEffect)
+  const currentOpenKey = isOpen ? `${initialModelId || "__new__"}` : null;
+  if (currentOpenKey !== prevOpenKey) {
+    setPrevOpenKey(currentOpenKey);
+    if (isOpen) {
+      setModelId(initialModelId || "");
+      setCaps(initialCaps ? { ...defaultCaps(), ...initialCaps } : defaultCaps());
+      setTestStatus(null);
+      setTestError("");
+    }
+  }
 
   // Strip provider's own alias prefix (e.g. "cc/model" -> "model" for cc provider)
   const stripAlias = (id) => {
@@ -46,7 +60,10 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
     if (!cleanId || saving) return;
     setSaving(true);
     try {
-      await onSave(cleanId);
+      await onSave(cleanId, caps);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("customModelChanged"));
+      }
     } finally {
       setSaving(false);
     }
@@ -57,7 +74,7 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add Custom Model">
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? "Configure Model Capabilities" : "Add Custom Model"}>
       <div className="flex flex-col gap-4">
         <div>
           <label className="text-sm font-medium mb-1.5 block">Model ID</label>
@@ -68,8 +85,9 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
               onChange={(e) => { setModelId(e.target.value); setTestStatus(null); setTestError(""); }}
               onKeyDown={handleKeyDown}
               placeholder="e.g. claude-opus-4-5"
-              className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
-              autoFocus
+              disabled={isEditing}
+              className={`flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary ${isEditing ? "opacity-75 cursor-not-allowed" : ""}`}
+              autoFocus={!isEditing}
             />
             <Button
               variant="secondary"
@@ -84,6 +102,22 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
           <p className="text-xs text-text-muted mt-1">
             Sent to provider as: <code className="font-mono bg-sidebar px-1 rounded">{stripAlias(modelId.trim()) || "model-id"}</code>
           </p>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-1.5 block">Capabilities</label>
+          <div className="flex flex-wrap gap-4">
+            {Object.entries(CAPACITY_META).map(([key, meta]) => (
+              <Toggle
+                key={key}
+                checked={!!caps[key]}
+                onChange={(v) => setCaps((prev) => ({ ...prev, [key]: v }))}
+                label={meta.label}
+                description={meta.desc}
+                size="sm"
+              />
+            ))}
+          </div>
         </div>
 
         {/* Test result */}
@@ -108,7 +142,7 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
             size="sm"
             disabled={!modelId.trim() || saving}
           >
-            {saving ? "Adding..." : "Add Model"}
+            {saving ? "Saving..." : isEditing ? "Save Capabilities" : "Add Model"}
           </Button>
         </div>
       </div>
@@ -120,6 +154,8 @@ AddCustomModelModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   providerAlias: PropTypes.string.isRequired,
   providerDisplayAlias: PropTypes.string.isRequired,
+  initialModelId: PropTypes.string,
+  initialCaps: PropTypes.object,
   onSave: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
 };
