@@ -5,6 +5,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-03
+
 ### Added / Fixed
 
 #### Security / Dependabot Vulnerabilities Resolution (51 Vulnerabilities Resolved)
