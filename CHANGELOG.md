@@ -29,6 +29,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Added `claude-fable-5-1` to `open-sse/providers/registry/claude.js` and `open-sse/providers/pricing.js`.
   - Configured `*claude*fable*` with `thinkingFormat: "claude-adaptive"`.
 
+#### Networking & Proxy / SOCKS5 Warnings (#3744, PR #3745)
+- **fix(proxy): suppress undici SOCKS5 ExperimentalWarning and downgrade ProxyFetch fallback logs**
+  - Suppressed Node undici `ExperimentalWarning: SOCKS5 proxy support is experimental and subject to change` in `custom-server.js` and `bootstrap.js`.
+  - Downgraded `[ProxyFetch] Proxy failed, falling back to direct` logs from `warn` to `debug` in `open-sse/utils/proxyFetch.js` to eliminate log journal spam when direct fallback succeeds.
+
+#### Kiro / MITM Inline Image Forwarding (PR #3734)
+- **fix(kiro): forward inline images as OpenAI `image_url` parts in MITM handler**
+  - Extracted attached images from `userInputMessage.images` and converted them into OpenAI-compatible `image_url` data URIs with proper MIME mapping in `src/mitm/handlers/kiro.js`.
+  - Supported image-only turns and historical turn image preservation.
+  - Added `.kiro/` workspace ignore in `.gitignore`.
+
+#### Docker & Standalone / Rate Limit Status (#3712)
+- **fix(docker): bundle `node-machine-id` into standalone Docker image and return 503 for rate-limited providers**
+  - Explicitly copied `node_modules/node-machine-id` into standalone image in `Dockerfile`, preventing dynamic require runtime failures.
+  - Updated `src/sse/handlers/chat.js` to always return `503 Service Unavailable` instead of echoing stale 500 error codes from the database when all accounts are rate-limited.
+  - Added `*.tgz` to `.gitignore`.
+
 ## [0.5.60] - 2026-08-30
 
 ### Fixed
