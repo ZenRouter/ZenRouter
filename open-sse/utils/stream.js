@@ -344,6 +344,9 @@ export function createSSEStream(options = {}) {
         if (parsed.choices?.[0]?.delta?.reasoning_content) {
           totalContentLength += parsed.choices[0].delta.reasoning_content.length;
           accumulatedThinking += parsed.choices[0].delta.reasoning_content;
+        } else if (parsed.choices?.[0]?.delta?.reasoning) {
+          totalContentLength += parsed.choices[0].delta.reasoning.length;
+          accumulatedThinking += parsed.choices[0].delta.reasoning;
         }
         
         // Gemini format

@@ -240,6 +240,11 @@ export function detectRequiredCapabilities(body) {
   // server-side grounding — prefer combo entries that declare search support.
   // Matches OpenAI-style {type:"web_search"} and Gemini googleSearch shapes.
   const declaredTools = Array.isArray(body.tools) ? body.tools : [];
+  if (declaredTools.some((tool) => (
+    tool?.type === "function" || tool?.function || tool?.functionDeclarations
+  ))) {
+    required.add("tools");
+  }
   for (const tool of declaredTools) {
     const name = typeof tool === "string"
       ? tool

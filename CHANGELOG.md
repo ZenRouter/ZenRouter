@@ -7,6 +7,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Fixed
 
+#### OpenAI Models / Max Completion Tokens & Streaming Reasoning (PR #3657, PR #3601)
+- **fix(translator): emit `max_completion_tokens` for gpt-5/o-series in *-to-openai request builders (PR #3657)**
+  - Hoisted `requiresMaxCompletionTokens` check (`/gpt-5|o[134]-/i`) in `open-sse/translator/formats/maxTokens.js`.
+  - Updated `claudeToOpenAIRequest`, `geminiToOpenAIRequest`, and `antigravityToOpenAIRequest` to emit `max_completion_tokens` instead of `max_tokens`, preventing HTTP 400 rejection from OpenAI Chat Completions.
+- **fix(stream): keep `delta.reasoning` in streaming passthrough & accumulate thinking (PR #3601)**
+  - Extended `hasValuableContent` in `open-sse/utils/streamHelpers.js` to recognize `delta.reasoning`.
+  - Accumulated `delta.reasoning` in `totalContentLength` and `accumulatedThinking` in `open-sse/utils/stream.js` so reasoning tokens from providers like Ollama/DeepSeek are neither dropped nor under-counted.
+
+#### Model Patterns & CommandCode / GLM-5.3-Flash & DeepSeek-V4-Vision (PR #3618, Issue #3753)
+- **feat(capabilities): update GLM 5.3 context window and add multimodal vision patterns (PR #3618, Issue #3753)**
+  - Updated `*glm-5.3*` context window to 1M with 131k output limit, and added multimodal `*glm-5.3-flash*` (vision, video, pdf, thinking) to `open-sse/providers/capabilities.js`.
+  - Added `*deepseek-v4*vision*` pattern to declare vision capability for `deepseek-v4-flash-vision-exp`.
+  - Added `z-ai/glm-5.3-flash` and `deepseek/deepseek-v4-flash-vision-exp` to `open-sse/providers/registry/commandcode.js`.
+
+#### Tool Calling & Combo Autoswitch / OpenRouter Schema Sanitizer & Tools Detection (PR #3665)
+- **fix(tools): normalize OpenRouter function tool schemas and detect tools in combo auto-switch (PR #3665)**
+  - Added `open-sse/utils/toolSchemaCompatibility.js` to strip invalid regex `pattern` constraints from tool parameter schemas before OpenRouter dispatch.
+  - Added function tool detection in `open-sse/services/combo.js:detectRequiredCapabilities` so combos float tool-capable models first when requests declare function tools.
+
 #### Gemini & Antigravity / MCP Schema Cleaner (#2884, #3743)
 - **fix(translator): preserve parameters named `properties` / `title` and strip `prefixItems` for Gemini API**
   - Differentiated JSON schema definition nodes from property name maps (`schema.properties`) by threading `isSchema` context in `removeUnsupportedKeywords` and `ensureObjectType`.

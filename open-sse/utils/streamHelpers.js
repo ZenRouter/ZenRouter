@@ -40,6 +40,7 @@ export function hasValuableContent(chunk, format) {
     const delta = chunk.choices[0].delta;
     return delta.content && delta.content !== "" ||
            delta.reasoning_content && delta.reasoning_content !== "" ||
+           delta.reasoning && delta.reasoning !== "" ||
            delta.tool_calls && delta.tool_calls.length > 0 ||
            // Generated images arrive on their own chunk with nothing else in the
            // delta, so leaving `images` out of this list dropped every one of them.

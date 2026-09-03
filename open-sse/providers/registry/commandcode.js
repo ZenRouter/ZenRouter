@@ -30,6 +30,8 @@ export default {
   models: [
     { id: "deepseek/deepseek-v4-pro", name: "DeepSeek V4 Pro" },
     { id: "deepseek/deepseek-v4-flash", name: "DeepSeek V4 Flash" },
+    { id: "deepseek/deepseek-v4-flash-vision-exp", name: "DeepSeek V4 Flash Vision (exp)" },
+    { id: "z-ai/glm-5.3-flash", name: "GLM 5.3 Flash" },
     { id: "moonshotai/Kimi-K2.6", name: "Kimi K2.6" },
     { id: "moonshotai/Kimi-K2.5", name: "Kimi K2.5" },
     { id: "zai-org/GLM-5.1", name: "GLM 5.1" },
