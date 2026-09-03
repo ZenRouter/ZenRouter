@@ -102,10 +102,9 @@ export const CURSOR_VERSION = "3.17.8";
 export const CURSOR_CONNECT_ES_VERSION = "1.6.1";
 
 // ─── Antigravity ───────────────────────────────────────────────────────
-// Antigravity IDE Desktop 2.10.0 (2026-08-24: embedded terminals, Git-native
-// sidebar VCS, audio attachments). Antigravity CLI is on a separate line
-// (1.1.20, released 2026-08-25) — the IDE is what we impersonate.
-export const ANTIGRAVITY_IDE_VERSION = "2.10.0";
+// Antigravity IDE Desktop 2.11.0 (2026-08-28: Gemini 3.8 Flash support, daily host quota).
+// Antigravity CLI is on a separate line (1.1.20, released 2026-08-25) — the IDE is what we impersonate.
+export const ANTIGRAVITY_IDE_VERSION = "2.11.0";
 export const ANTIGRAVITY_IDE_USER_AGENT = (() => {
   // macOS arm64 is the official captured fingerprint; we keep the
   // platform stable even when zenrouter runs on Linux/Windows because
