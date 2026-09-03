@@ -42,7 +42,6 @@ export async function addCustomModel({ providerAlias, id, type = "llm", name, ca
       const nextCaps = caps ? { ...(prev.caps || {}), ...caps } : prev.caps;
       const next = { ...prev, ...(name ? { name } : {}), ...(nextCaps ? { caps: nextCaps } : {}) };
       db.run(`UPDATE kv SET value = ? WHERE scope = 'customModels' AND key = ?`, [stringifyJson(next), k]);
-      added = true;
       return;
     }
     const value = stringifyJson({ providerAlias, id, type, name: name || id, ...(caps ? { caps } : {}) });

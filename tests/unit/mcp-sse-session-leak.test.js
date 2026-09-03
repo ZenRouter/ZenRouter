@@ -12,6 +12,10 @@ vi.mock("@/lib/mcp/stdioSseBridge", () => ({
   unregisterSession: (name, sid) => { bridge.sessions.delete(sid); },
 }));
 
+vi.mock("@/dashboardGuard", () => ({
+  hasValidCliToken: async () => true,
+}));
+
 beforeEach(() => { bridge.sessions.clear(); bridge.nextSid = 0; });
 afterEach(() => { bridge.sessions.clear(); });
 
@@ -24,11 +28,6 @@ describe("mcp sse session leak fix (#3527)", () => {
       signal: controller.signal,
       headers: new Headers({ "x-zen-cli-token": "dummy" }),
     };
-
-    // Mock hasValidCliToken to return true
-    vi.mock("@/dashboardGuard", () => ({
-      hasValidCliToken: async () => true,
-    }));
 
     const response = await GET(request, { params: Promise.resolve({ plugin: "known" }) });
     expect(response.status).toBe(200);

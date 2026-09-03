@@ -27,14 +27,14 @@ describe("Custom Model Capabilities & Upsert (#3752)", () => {
     expect(found).toBeDefined();
     expect(found.caps).toEqual({ vision: true, reasoning: false });
 
-    // 2. Upsert: re-adding with updated capabilities reasoning=true updates in-place
+    // 2. Upsert: re-adding with updated capabilities reasoning=true updates in-place (returns false as already exists)
     const addedSecond = await addCustomModel({
       providerAlias,
       id: modelId,
       type: "llm",
       caps: { reasoning: true },
     });
-    expect(addedSecond).toBe(true);
+    expect(addedSecond).toBe(false);
 
     allCustom = await getCustomModels();
     const matching = allCustom.filter((m) => m.providerAlias === providerAlias && m.id === modelId);
