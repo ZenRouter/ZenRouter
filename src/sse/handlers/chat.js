@@ -47,7 +47,17 @@ export async function handleChat(request, clientRawRequest = null) {
       headers: Object.fromEntries(request.headers.entries())
     };
   }
-  const modelStr = body.model;
+  let modelStr = body.model;
+  // Claude Code 1M-context beta appends "[1m]" to model name (e.g. "claude-opus-5[1m]")
+  // while the capability rides in anthropic-beta header. Strip the marker for routing
+  // so combo lookup and provider/model parsing succeed. See decolua/9router#3690.
+  if (typeof modelStr === "string" && /\[1m\]$/i.test(modelStr)) {
+    const stripped = modelStr.replace(/\[1m\]$/i, "");
+    log.debug("CHAT", `Stripped [1m] marker: "${modelStr}" -> "${stripped}"`);
+    modelStr = stripped;
+    body = { ...body, model: stripped };
+    if (clientRawRequest?.body) clientRawRequest.body = { ...clientRawRequest.body, model: stripped };
+  }
 
   // Request summary is emitted as the unified "▶" line in chatCore (has fmt/thinking/account)
 
