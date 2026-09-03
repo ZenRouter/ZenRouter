@@ -77,6 +77,7 @@ export function getProviderSetting(params, key) {
  */
 export function resolveBaseUrl(config, params) {
   const override = getProviderSetting(params, "baseUrl");
+  const clientOverride = typeof params.providerOptions?.baseUrl === "string" && params.providerOptions.baseUrl.trim().length > 0 ? params.providerOptions.baseUrl.trim() : null;
   if (override) {
     // SSRF guard: client-supplied base URLs must be public http(s) only.
     let parsed;
@@ -89,6 +90,22 @@ export function resolveBaseUrl(config, params) {
       throw new Error(`Invalid baseUrl protocol: ${parsed.protocol}`);
     }
     assertPublicUrl(override);
+    // Credential exfiltration guard: client-controlled baseUrl override must not
+    // receive stored provider credentials. A public attacker domain passes
+    // assertPublicUrl, so we must also block token attachment to any client
+    // overridden host that differs from the admin-configured baseUrl.
+    if (clientOverride && params.token) {
+      const overrideHost = parsed.host.toLowerCase();
+      let baseHost = null;
+      try { baseHost = new URL(config.baseUrl).host.toLowerCase(); } catch { baseHost = null; }
+      if (baseHost && overrideHost !== baseHost) {
+        throw new Error("baseUrl override with stored credentials is not allowed — attacker-controlled domain would receive API key");
+      }
+      // If custom provider has no baseHost, any client override with token is unsafe — block
+      if (!baseHost) {
+        throw new Error("baseUrl override with stored credentials is not allowed");
+      }
+    }
   }
   return (override || config.baseUrl).replace(/\/+$/, "");
 }
