@@ -11,8 +11,50 @@ const SETTINGS_RESPONSE_HEADERS = {
   "Cache-Control": "no-store"
 };
 
-// Secrets must never be mass-assigned from request body (CWE-915)
-// Security-critical settings that must be explicitly handled, not mass-assigned
+// Whitelist of settings allowed via generic PATCH (CWE-915 mass-assignment protection)
+// Security-critical fields (auth, SSO, proxy, etc.) must be updated via
+// dedicated secure flows with explicit verification, not mass-assigned.
+const ALLOWED_SETTING_KEYS = new Set([
+  "cloudEnabled",
+  "tunnelEnabled",
+  "tunnelUrl",
+  "tunnelProvider",
+  "tailscaleEnabled",
+  "tailscaleUrl",
+  "stickyRoundRobinLimit",
+  "providerStrategies",
+  "quotaVisibility",
+  "comboStrategy",
+  "comboStickyRoundRobinLimit",
+  "comboStrategies",
+  "capacityAdapter",
+  "observabilityMaxRecords",
+  "observabilityBatchSize",
+  "observabilityFlushIntervalMs",
+  "observabilityMaxJsonSize",
+  "mitmRouterBaseUrl",
+  "dnsToolEnabled",
+  "rtkEnabled",
+  "headroomEnabled",
+  "headroomUrl",
+  "headroomCompressUserMessages",
+  "headroomTimeoutMs",
+  "cavemanEnabled",
+  "cavemanLevel",
+  "ponytailEnabled",
+  "ponytailLevel",
+  "pxpipeEnabled",
+  "pxpipeAutoInstall",
+  "pxpipeMinChars",
+  "pxpipeTimeoutMs",
+  // legacy / compatibility
+  "fallbackStrategy",
+  "claudeAutoPing",
+  "codexAutoPing",
+]);
+
+// Security-critical keys that must never be mass-assigned (defense in depth,
+// also enforced by ALLOWED whitelist). Kept for audit trail.
 const PROTECTED_SETTING_KEYS = [
   "password",
   "mitmSudoEncrypted",
@@ -61,48 +103,57 @@ export async function GET() {
 
 export async function PATCH(request) {
   try {
-    const body = await request.json();
+    const rawBody = await request.json();
 
-    // Strip protected secrets before any internal handling sets them
+    // Whitelist enforcement: only ALLOWED_SETTING_KEYS may be mass-assigned.
+    // All other keys (including PROTECTED and arbitrary __proto__/constructor)
+    // are dropped. Password is handled separately via newPassword flow.
+    const body = {};
+    for (const [key, value] of Object.entries(rawBody || {})) {
+      if (ALLOWED_SETTING_KEYS.has(key)) {
+        body[key] = value;
+      }
+    }
+    // Defense in depth: explicitly strip any protected key that might have
+    // slipped through if ALLOWED and PROTECTED ever overlap.
     for (const key of PROTECTED_SETTING_KEYS) delete body[key];
 
-    // If updating password, hash it
-    if (body.newPassword) {
+    // If updating password, hash it (handled outside whitelist)
+    if (rawBody.newPassword) {
       const settings = await getSettings();
       const currentHash = settings.password;
 
       // Verify current password if it exists
       if (currentHash) {
-        if (!body.currentPassword) {
+        if (!rawBody.currentPassword) {
           return NextResponse.json({ error: "Current password required" }, { status: 400 });
         }
-        const isValid = await bcrypt.compare(body.currentPassword, currentHash);
+        const isValid = await bcrypt.compare(rawBody.currentPassword, currentHash);
         if (!isValid) {
           return NextResponse.json({ error: "Invalid current password" }, { status: 401 });
         }
       } else {
         // First time setting password, no current password needed
         // Allow empty currentPassword or default "12345678"
-        if (body.currentPassword && body.currentPassword !== "12345678" && body.currentPassword !== "123456") {
+        if (rawBody.currentPassword && rawBody.currentPassword !== "12345678" && rawBody.currentPassword !== "123456") {
            return NextResponse.json({ error: "Invalid current password" }, { status: 401 });
         }
       }
 
       const salt = await bcrypt.genSalt(10);
-      body.password = await bcrypt.hash(body.newPassword, salt);
-      delete body.newPassword;
-      delete body.currentPassword;
+      body.password = await bcrypt.hash(rawBody.newPassword, salt);
     }
 
-    if (Object.prototype.hasOwnProperty.call(body, "oidcClientSecret")) {
-      if (!body.oidcClientSecret || !String(body.oidcClientSecret).trim()) {
-        delete body.oidcClientSecret;
-      }
-    }
+    // oidcClientSecret is protected and not in whitelist; it should not be
+    // mass-assigned. It is intentionally ignored here. Dedicated SSO flows
+    // should handle it via secure endpoints with re-auth.
 
     const settings = await updateSettings(body);
 
-    // Apply outbound proxy settings immediately (no restart required)
+    // Apply outbound proxy settings immediately (no restart required) — note
+    // outboundProxy* are PROTECTED and not mass-assignable via this whitelist;
+    // this block is retained for backwards compat if they are allowed via
+    // internal updates, but will not trigger for generic PATCH.
     if (
       Object.prototype.hasOwnProperty.call(body, "outboundProxyEnabled") ||
       Object.prototype.hasOwnProperty.call(body, "outboundProxyUrl") ||

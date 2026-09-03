@@ -224,7 +224,15 @@ export async function proxy(request) {
   }
 
   // Always protected - require valid JWT or local CLI token (machineId-based)
+  // Database import/export is dual-auth: require BOTH JWT AND API key/CLI token
   if (isAlwaysProtected(pathname)) {
+    if (pathname === "/api/settings/database" || pathname.startsWith("/api/settings/database/")) {
+      const hasJwt = await hasValidToken(request);
+      const hasCli = await hasValidCliToken(request);
+      const hasApi = hasCli || (await hasValidApiKey(request));
+      if (hasJwt && hasApi) return NextResponse.next();
+      return NextResponse.json({ error: "Unauthorized: dual authentication required" }, { status: 401 });
+    }
     if (await hasValidCliToken(request) || await hasValidToken(request))
       return NextResponse.next();
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

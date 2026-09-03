@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { exportDb, getSettings, importDb } from "@/lib/localDb";
+import { exportDb, getSettings, importDb, validateApiKey } from "@/lib/localDb";
 import { applyOutboundProxyEnv } from "@/lib/network/outboundProxy";
 import { verifyDashboardPassword } from "@/lib/auth/dashboardSession";
 import { hasValidCliToken, hasValidToken } from "@/dashboardGuard";
@@ -7,11 +7,31 @@ import { hasValidCliToken, hasValidToken } from "@/dashboardGuard";
 const CLI_TOKEN_HEADER = "x-zen-cli-token";
 const PASSWORD_HEADER = "x-zen-password";
 
+function extractApiKey(request) {
+  const authHeader = request.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) return authHeader.slice(7);
+  const apiKeyHeader = request.headers.get("x-api-key");
+  if (apiKeyHeader) return apiKeyHeader;
+  const googleHeader = request.headers.get("x-goog-api-key");
+  if (googleHeader) return googleHeader;
+  return request.nextUrl.searchParams?.get("key") || null;
+}
+
+async function hasValidApiKey(request) {
+  // CLI token counts as API-key equivalent for local tooling
+  if (await hasValidCliToken(request)) return true;
+  const apiKey = extractApiKey(request);
+  if (!apiKey) return false;
+  return await validateApiKey(apiKey);
+}
+
 async function checkAuth(request, password) {
-  if (await hasValidCliToken(request) || await hasValidToken(request)) {
-    return Boolean(password) && await verifyDashboardPassword(password);
-  }
-  return false;
+  const hasJwt = await hasValidToken(request);
+  const hasApiKey = await hasValidApiKey(request);
+  // Dual-auth: require BOTH a valid JWT (auth cookie) AND a valid API key/CLI token,
+  // plus password re-auth for sensitive export/import.
+  if (!hasJwt || !hasApiKey) return false;
+  return Boolean(password) && await verifyDashboardPassword(password);
 }
 
 export async function GET(request) {

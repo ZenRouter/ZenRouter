@@ -7,64 +7,52 @@ const DEFAULT_PASSWORD = "12345678";
 /**
  * The dashboard's auth-token signing key.
  *
- * Production requires an operator-supplied JWT_SECRET (≥ 32 chars) so that
- * every container restart uses the same secret — otherwise sessions would
- * silently invalidate on redeploy. `.env.example` already ships a placeholder.
+ * JWT_SECRET is REQUIRED in all environments (≥ 32 chars). No fallback secret
+ * is provided — every deployment must supply an explicit strong secret so that
+ * container restarts do not silently invalidate sessions and so that the
+ * secret does not default to a publicly known value.
  *
- * For local dev / tests / build-only contexts we fall back to a clearly
- * insecure deterministic string so `npm run dev`, `npm run build`, and the
- * vitest suite can run without an extra export step. Production never reaches
- * this fallback:
- *   - `NODE_ENV=production` (the runtime value `next start` and Next.js prod
- *     build set) → strict, throws without a real secret;
- *   - `NODE_ENV=test` → strict too, tests should always pass an explicit
- *     `loadJwtSecret(...)` argument or set the env themselves;
- *   - everything else (development, production-build phase, CI) → fallback so
- *     `npm run build` and `npm run dev` keep working out of the box.
+ * Rotation is supported via an optional old secret:
+ *   - JWT_SECRET        — current primary secret (signs new tokens)
+ *   - JWT_SECRET_OLD    — previous secret (verifies old tokens during rotation)
+ *   Aliases for the old secret (for backwards compat): JWT_OLD_SECRET,
+ *   JWT_SECRET_PREVIOUS. Only the primary is used for signing; verification
+ *   tries each valid secret in order.
  *
  * Trim whitespace before validation so `"  secret\n"` is not silently accepted
- * as 32 chars of whitespace, and the minimum-length check catches every
- * accidental placeholder.
+ * as 32 chars of whitespace.
  */
-const DEV_FALLBACK_SECRET = "dev-only-insecure-jwt-secret-do-not-use-in-production";
-
 export function loadJwtSecret(rawSecret = process.env.JWT_SECRET) {
   const secret = typeof rawSecret === "string" ? rawSecret.trim() : "";
   if (secret && secret.length >= 32) return secret;
-
-  // "production" covers:
-  //   - NODE_ENV=production explicit (npm start, deployment envs)
-  //   - phase-production-build / phase-export / phase-static (Next.js sets these
-  //     during `npm run build` while producing the standalone bundle — never
-  //     seen at runtime by end users, so safe to skip the fallback)
-  // For runtime safety we only honour the runtime NODE_ENV here; the build
-  // phase is allowed the fallback so the bundle can be produced without an
-  // injected secret.
-  const phase = process.env.NODE_ENV || "";
-  const isBuildPhase = (process.env.NEXT_PHASE || "").startsWith("phase-");
-  if (phase === "production" && !isBuildPhase) {
-    throw new Error(
-      "JWT_SECRET environment variable is required. Set a strong random secret (min 32 chars) in your .env file."
-    );
-  }
-  if (phase === "test") {
-    throw new Error(
-      "JWT_SECRET environment variable is required. Set a strong random secret (min 32 chars) in your .env file."
-    );
-  }
-
-  // dev / build-only fallback. Loud warning so the operator still notices.
-  if (!globalThis.__jwtDevFallbackWarned) {
-    console.warn(
-      "[jwt] JWT_SECRET not set; using insecure development fallback. " +
-        "Set JWT_SECRET in your .env before deploying."
-    );
-    globalThis.__jwtDevFallbackWarned = true;
-  }
-  return DEV_FALLBACK_SECRET;
+  throw new Error(
+    "JWT_SECRET environment variable is required. Set a strong random secret (min 32 chars) in your .env file."
+  );
 }
 
-const SECRET = new TextEncoder().encode(loadJwtSecret());
+export function loadJwtOldSecret(
+  rawOld = process.env.JWT_SECRET_OLD ?? process.env.JWT_OLD_SECRET ?? process.env.JWT_SECRET_PREVIOUS
+) {
+  const secret = typeof rawOld === "string" ? rawOld.trim() : "";
+  if (secret && secret.length >= 32) return secret;
+  return null;
+}
+
+function getPrimarySecret() {
+  return new TextEncoder().encode(loadJwtSecret());
+}
+
+function getJwtSecrets() {
+  const secrets = [getPrimarySecret()];
+  const old = loadJwtOldSecret();
+  if (old) {
+    const primaryRaw = loadJwtSecret();
+    if (old !== primaryRaw) {
+      secrets.push(new TextEncoder().encode(old));
+    }
+  }
+  return secrets;
+}
 
 export function shouldUseSecureCookie(request) {
   const forceSecureCookie = process.env.AUTH_COOKIE_SECURE === "true";
@@ -78,27 +66,41 @@ export async function createDashboardAuthToken(claims = {}) {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("24h")
-    .sign(SECRET);
+    .sign(getPrimarySecret());
 }
 
 export async function verifyDashboardAuthToken(token) {
   if (!token) return false;
+  let secrets;
   try {
-    await jwtVerify(token, SECRET);
-    return true;
+    secrets = getJwtSecrets();
   } catch {
     return false;
   }
+  for (const sec of secrets) {
+    try {
+      await jwtVerify(token, sec);
+      return true;
+    } catch {}
+  }
+  return false;
 }
 
 export async function getDashboardAuthSession(token) {
   if (!token) return null;
+  let secrets;
   try {
-    const { payload } = await jwtVerify(token, SECRET);
-    return payload;
+    secrets = getJwtSecrets();
   } catch {
     return null;
   }
+  for (const sec of secrets) {
+    try {
+      const { payload } = await jwtVerify(token, sec);
+      return payload;
+    } catch {}
+  }
+  return null;
 }
 
 export async function setDashboardAuthCookie(cookieStore, request, claims = {}) {

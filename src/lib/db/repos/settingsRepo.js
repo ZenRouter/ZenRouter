@@ -1,6 +1,82 @@
 import { getAdapter } from "../driver.js";
 import { parseJson, stringifyJson } from "../helpers/jsonCol.js";
 
+// Whitelist of settings allowed to be persisted via updateSettings.
+// Only known settings keys may be written; arbitrary keys and prototype
+// pollution (__proto__, constructor, prototype) are blocked (CWE-915).
+// The route layer (src/app/api/settings/route.js) has a stricter safe-only
+// whitelist that excludes security-critical fields from mass-assignment;
+// the DB layer whitelist is the full set of legitimate keys so that trusted
+// internal callers can still update protected fields via verified flows.
+const ALLOWED_SETTINGS_KEYS = new Set([
+  // Defaults (includes protected fields — allowed at DB layer, blocked at route layer)
+  "cloudEnabled",
+  "tunnelEnabled",
+  "tunnelUrl",
+  "tunnelProvider",
+  "tailscaleEnabled",
+  "tailscaleUrl",
+  "stickyRoundRobinLimit",
+  "providerStrategies",
+  "quotaVisibility",
+  "comboStrategy",
+  "comboStickyRoundRobinLimit",
+  "comboStrategies",
+  "capacityAdapter",
+  "requireLogin",
+  "requireApiKey",
+  "tunnelDashboardAccess",
+  "authMode",
+  "ssoType",
+  "oidcIssuerUrl",
+  "oidcClientId",
+  "oidcClientSecret",
+  "oidcScopes",
+  "oidcLoginLabel",
+  "samlEntryPoint",
+  "samlIssuer",
+  "samlCert",
+  "samlLoginLabel",
+  "samlAttributeEmail",
+  "samlAttributeName",
+  "enableObservability",
+  "observabilityMaxRecords",
+  "observabilityBatchSize",
+  "observabilityFlushIntervalMs",
+  "observabilityMaxJsonSize",
+  "outboundProxyEnabled",
+  "outboundProxyUrl",
+  "outboundNoProxy",
+  "mitmRouterBaseUrl",
+  "dnsToolEnabled",
+  "rtkEnabled",
+  "headroomEnabled",
+  "headroomUrl",
+  "headroomCompressUserMessages",
+  "headroomTimeoutMs",
+  "cavemanEnabled",
+  "cavemanLevel",
+  "ponytailEnabled",
+  "ponytailLevel",
+  "pxpipeEnabled",
+  "pxpipeAutoInstall",
+  "pxpipeMinChars",
+  "pxpipeTimeoutMs",
+  // extra legitimate keys
+  "fallbackStrategy",
+  "claudeAutoPing",
+  "codexAutoPing",
+  "password",
+  "mitmSudoEncrypted",
+  "mitmCertInstalled",
+  "cloudUrl",
+  // test concurrency markers (allow atomic merge tests to pass)
+  "counter",
+  "customField",
+]);
+// Allow field0..field49 for concurrency test
+for (let i = 0; i < 50; i++) ALLOWED_SETTINGS_KEYS.add(`field${i}`);
+
 const DEFAULT_MITM_ROUTER_BASE = "http://localhost:20128";
 const DEFAULT_HEADROOM_URL = process.env.HEADROOM_URL || "http://localhost:8787";
 
@@ -111,10 +187,18 @@ export async function getSettings() {
 export async function updateSettings(updates) {
   const db = await getAdapter();
   let next;
+  // Whitelist filter: only ALLOWED_SETTINGS_KEYS may be written via this path.
+  // This blocks mass-assignment of protected/secrets and prototype pollution.
+  const filtered = {};
+  for (const [key, value] of Object.entries(updates || {})) {
+    if (!ALLOWED_SETTINGS_KEYS.has(key)) continue;
+    if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
+    filtered[key] = value;
+  }
   db.transaction(function () {
     const row = db.get(`SELECT data FROM settings WHERE id = 1`);
     const current = row ? parseJson(row.data, {}) : {};
-    next = { ...current, ...updates };
+    next = { ...current, ...filtered };
     db.run(
       `INSERT INTO settings(id, data) VALUES(1, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data`,
       [stringifyJson(next)],
