@@ -44,6 +44,15 @@ const PATTERN_THINKING = [
   { provider: "codex", pattern: "*gpt-5.6-terra*", levels: [...CODEX_GPT_5_6_LEVELS, "ultra"] },
   { provider: "codex", pattern: "*gpt-5.6-luna*", levels: CODEX_GPT_5_6_LEVELS },
   { pattern: "*codex*", levels: ["low", "medium", "high", "xhigh"] }, // codex cannot disable thinking
+  // ── codebuddy-cn per-model effort sets (e014cb537) — read off the client picker
+  // (server-delivered supportedEfforts), 2026-08-30. Gateway uses thinkingFormat "openai"
+  // but rejects levels outside each model's set, so we must clamp per model, not per format.
+  // hy3* limited to low/high (no medium/xhigh), hy4* only high, glm-5.3* low/high/max,
+  // deepseek-v4* low/high/xhigh.
+  { provider: "codebuddy-cn", pattern: "glm-5.3*",     levels: ["low", "high", "max"] },
+  { provider: "codebuddy-cn", pattern: "deepseek-v4*", levels: ["low", "high", "xhigh"] },
+  { provider: "codebuddy-cn", pattern: "hy3*",         levels: ["low", "high"] },
+  { provider: "codebuddy-cn", pattern: "hy4*",         levels: ["high"] },
 ];
 
 // Returns valid thinking levels for a model, or null when the model has no reasoning.

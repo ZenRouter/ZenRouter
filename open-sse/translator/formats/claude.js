@@ -13,6 +13,40 @@ import { applyAssistantPrefillPolicy } from "../concerns/assistantPrefillPolicy.
 const CACHE_CONTROL_5M = { type: "ephemeral" };
 const CACHE_CONTROL_1H = { type: "ephemeral", ttl: "1h" };
 
+/**
+ * Deferred-tool detection — WHY this exists:
+ * Anthropic rejects 400 when a tool carries BOTH `defer_loading: true` and
+ * `cache_control` ("Tools defer_loading cannot use prompt caching", #3567).
+ * MCP clients (Claude Code) put deferred tools at the TAIL of the array,
+ * which is exactly where the 1h cache breakpoint lands. If we anchor on a
+ * deferred tool the request 400s before combo fallback can try the next hop.
+ *
+ * Guard details (more robust than upstream):
+ * - handle `null` / non-object entries (defensive, array may be mutated elsewhere)
+ * - accept both snake_case `defer_loading` (Anthropic spec) and camelCase
+ *   `deferLoading` (some SDKs / internal transforms) as truthy
+ * - strict `=== true` check so `"false"` / `1` don't false-positive
+ * - exported for unit tests and for reuse in prepareClaudeRequest
+ */
+export function isDeferredTool(tool) {
+  if (!tool || typeof tool !== "object") return false;
+  return tool.defer_loading === true || tool.deferLoading === true;
+}
+
+/**
+ * Find the last tool index that CAN carry cache_control.
+ * Returns -1 when tools is not an array, empty, or every entry is deferred.
+ * Fixed-window anchor must use this, not `tools.length -1`, otherwise all-deferred
+ * convoys silently anchor on a deferred tool and 400.
+ */
+export function lastCacheableToolIndex(tools) {
+  if (!Array.isArray(tools) || tools.length === 0) return -1;
+  for (let i = tools.length - 1; i >= 0; i--) {
+    if (!isDeferredTool(tools[i])) return i;
+  }
+  return -1; // every tool is deferred — caller must strip all cache_control
+}
+
 // Check if message has valid non-empty content
 export function hasValidContent(msg) {
   if (typeof msg.content === "string" && msg.content.trim()) return true;
@@ -252,11 +286,30 @@ export function anchorClaudeCache(body) {
   }
 
   if (Array.isArray(body.tools)) {
-    const last = body.tools.length - 1;
-    body.tools.forEach((tool, i) => {
-      if (i === last && !tool?.defer_loading) tool.cache_control = { ...CACHE_CONTROL_1H };
-      else delete tool.cache_control;
-    });
+    if (body.tools.length === 0) {
+      // Empty array — nothing to anchor; fall through to no-cache state.
+      // Explicitly ensure no stale cache_control leaks from caller reuse.
+    } else {
+      const last = lastCacheableToolIndex(body.tools);
+      if (last === -1) {
+        // Edge: every tool is deferred → anchoring is impossible. Strip any
+        // client-supplied cache_control on deferred tools so we never 400.
+        // Keep prompt caching on system/messages only.
+        if (process.env.DEBUG_CACHE === "1") {
+          // eslint-disable-next-line no-console
+          console.debug("[claude] anchorClaudeCache: all tools deferred, skipping tool cache breakpoint");
+        }
+        body.tools.forEach((tool) => {
+          if (tool && typeof tool === "object") delete tool.cache_control;
+        });
+      } else {
+        body.tools.forEach((tool, i) => {
+          if (!tool || typeof tool !== "object") return;
+          if (i === last) tool.cache_control = { ...CACHE_CONTROL_1H };
+          else delete tool.cache_control;
+        });
+      }
+    }
   }
 
   if (Array.isArray(body.messages)) {
@@ -448,9 +501,19 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
         });
     }
 
+    // Anchor cache on last CACHEABLE tool, not naive tail. Handles:
+    // - empty tools (after built-in filtering) → no anchor, already stripped
+    // - mixed deferred/non-deferred → anchor on last non-deferred
+    // - all-deferred → strip all, never emit cache_control on defer_loading:true
+    // - both snake_case and camelCase deferred flags via isDeferredTool()
+    const lastCacheable = lastCacheableToolIndex(body.tools);
+    if (lastCacheable === -1 && body.tools.length > 0 && process.env.DEBUG_CACHE === "1") {
+      // eslint-disable-next-line no-console
+      console.debug("[claude] prepareClaudeRequest: all tools deferred, stripping tool cache_control");
+    }
     body.tools = body.tools.map((tool, i) => {
       const { cache_control, ...rest } = tool;
-      if (i === body.tools.length - 1 && !tool?.defer_loading) {
+      if (i === lastCacheable) {
         return { ...rest, cache_control: { type: "ephemeral", ttl: "1h" } };
       }
       return rest;

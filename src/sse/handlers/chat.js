@@ -7,7 +7,7 @@ import {
   extractApiKey,
   isValidApiKey,
 } from "../services/auth.js";
-import { handleAntigravityQuotaError } from "../services/antigravityQuota.js";
+import { handleAntigravityQuotaError, clearAntigravityStrikes } from "../services/antigravityQuota.js";
 import { getSettings } from "@/lib/localDb";
 import { getModelInfo, getComboModels } from "../services/model.js";
 import { handleChatCore } from "open-sse/handlers/chatCore.js";
@@ -334,6 +334,16 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       },
       onRequestSuccess: async () => {
         await clearAccountError(credentials.connectionId, credentials, model);
+        // Antigravity: success resets "consecutive" strike counter so a future
+        // 429-burst must re-accumulate 3 strikes from scratch. Also clears any
+        // synthesized 15m block (but keeps a real upstream 0% block intact).
+        if (provider === "antigravity") {
+          try {
+            clearAntigravityStrikes(credentials.connectionId, model);
+          } catch {
+            // never let quota bookkeeping crash a successful response
+          }
+        }
       }
     });
 

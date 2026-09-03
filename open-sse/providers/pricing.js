@@ -99,6 +99,13 @@ export const MODEL_PRICING = {
   "kimi-k2":                      { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
   "kimi-k2-thinking":             { input: 1.50,  output: 6.00,  cached: 0.75,  reasoning: 9.00,   cache_creation: 1.50  },
   "kimi-k2.5":                    { input: 1.20,  output: 4.80,  cached: 0.60,  reasoning: 7.20,   cache_creation: 1.20  },
+  // codebuddy-cn refresh e014cb537 — hy / kimi-k3 family (Tencent Hy rates: ~0.066/0.26 per TokenRouter)
+  "hy3-preview":                  { input: 0.30,  output: 1.20,  cached: 0.06,  reasoning: 1.80,   cache_creation: 0.30  },
+  "hy3":                          { input: 0.30,  output: 1.20,  cached: 0.06,  reasoning: 1.80,   cache_creation: 0.30  },
+  "hy3-x":                        { input: 0.30,  output: 1.20,  cached: 0.06,  reasoning: 1.80,   cache_creation: 0.30  },
+  "hy4-preview":                  { input: 0.40,  output: 2.00,  cached: 0.08,  reasoning: 2.00,   cache_creation: 0.40  },
+  "hy4-preview-x":                { input: 0.40,  output: 2.00,  cached: 0.08,  reasoning: 2.00,   cache_creation: 0.40  },
+  "kimi-k3-1":                    { input: 1.20,  output: 4.80,  cached: 0.60,  reasoning: 7.20,   cache_creation: 1.20  },
   "kimi-k2.5-thinking":           { input: 1.80,  output: 7.20,  cached: 0.90,  reasoning: 10.80,  cache_creation: 1.80  },
   "kimi-k2.6":                    { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
   "kimi-latest":                  { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
@@ -117,6 +124,9 @@ export const MODEL_PRICING = {
   "glm-4.6v":                     { input: 0.75,  output: 3.00,  cached: 0.375, reasoning: 4.50,   cache_creation: 0.75  },
   "glm-4.7":                      { input: 0.75,  output: 3.00,  cached: 0.375, reasoning: 4.50,   cache_creation: 0.75  },
   "glm-5":                        { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
+  // codebuddy-cn refresh e014cb537 — explicit pricing for new 5.3 family (gateway bills same as 5.2)
+  "glm-5.3":                      { input: 1.05,  output: 3.50,  cached: 0.525, reasoning: 3.50,   cache_creation: 1.05  },
+  "glm-5.3-flash":                { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
 
   // === MiniMax ===
   "MiniMax-M3":                   { input: 0.30,  output: 1.20,  cached: 0.06,  reasoning: 1.80,   cache_creation: 0.30  },
