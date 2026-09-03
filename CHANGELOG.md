@@ -7,6 +7,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Provider Catalog, Web Fetch & Missing Assets (#44e4b80bb, #e0ffc7e2a, #6efb97904)
+- **feat(providers): pool Ollama Cloud web fetch, dead opencode model filter, and missing icons**
+  - Added Ollama Cloud as a full `webFetch` provider in `open-sse/handlers/fetch/index.js` and `open-sse/providers/registry/ollama.js`, supporting markdown extraction, page titles, and discovered link harvesting via `https://ollama.com/api/web_fetch`.
+  - Scoped web fetch provider failures using `webfetch:<providerId>` lock keys in `src/sse/handlers/fetch.js`, ensuring fetch quota or timeout errors never take account credentials offline for LLM chat requests.
+  - Filtered unavailable `deepseek-v4-flash-free` from OpenCode suggested free models in `src/app/api/providers/suggested-models/filters.js` to avoid offering dead model choices to users.
+  - Added pricing entry for `z-ai/glm-5.3-free` in `open-sse/providers/pricing.js`.
+  - Added missing 128x128 provider icons in `public/providers/` for `alims-intl.png`, `alitp-intl.png`, `fish-audio.png`, and `selfhosted-*` services to eliminate 404 images on the dashboard.
+  - Added unit test suites in `tests/unit/ollama-web-fetch-provider.test.js` and `tests/unit/suggested-models-filters.test.js`, and expanded tests in `tests/unit/fetch-success-clears-account.test.js`.
+
 #### Claude & Routing Integrity / Foreign Server Tool Dropping, 1M Context Marker & Adaptive Thinking (#3685, #3690, #3692, #3718)
 - **fix(routing): pool Claude foreign tool sanitizing, 1M context marker, and OpenAI-wire thinking (fixes #3685, #3690, #3692, #3718)**
   - Dropped foreign `server_tool_use` blocks with non-Anthropic IDs (e.g. `call_` from GLM/OpenAI) and their paired `tool_result` / `web_search_tool_result` blocks in `open-sse/translator/formats/claude.js`, preventing HTTP 400 session poisoning in multi-provider combos.
