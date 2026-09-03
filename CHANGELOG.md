@@ -3,6 +3,17 @@
 All notable changes to ZenRouter (fork of 9Router) will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional Commits.
 
+## [Unreleased]
+
+### Fixed
+
+#### Performance pool — L1 caches, zero-mutation stream, models TTL (upstream PR #3629)
+- **perf(stream): accumulate content/thinking in chunk arrays** in `open-sse/utils/stream.js` (`contentChunks`/`thinkingChunks` + single `join("")`), cutting per-chunk string GC pressure; split-packet handling kept index-based.
+- **perf(db): L1 caches for API keys and connections** in `src/lib/db/repos/apiKeysRepo.js` (`apiKeyCache` + negative cache) and `connectionsRepo.js` (`connectionCache` per filter) with `invalidate*Cache()` on every mutation. Settings keeps Zen's 2s TTL raw cache (better than upstream's unbounded merged cache); usage keeps Zen's object-identity dedup (no field-equality scan, so no `idx_uh_dedup`/schema bump needed).
+- **perf(models): 30s TTL + `Cache-Control: public, max-age=30, stale-while-revalidate=60`** in `src/app/api/v1/models/route.js` for agent `/v1/models` polling storms.
+- **test:** new `tests/unit/performance-optimizations.test.js` (14 tests, hardened Zen port of upstream's 11 — TTL semantics, negative cache, per-filter isolation, 50-chunk join, object-identity dedup).
+- **docs:** `docs/ARCHITECTURE.md` SQLite paths corrected (`data.sqlite`, `usageHistory`/`usageDaily`); `open-sse/AGENTS.md` perf conventions documented.
+
 ## [0.5.63] - 2026-09-03
 
 ### Fixed

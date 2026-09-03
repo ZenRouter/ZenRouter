@@ -56,8 +56,8 @@ flowchart LR
         API[V1 Compatibility API\n/v1/*]
         DASH[Dashboard + Management API\n/api/*]
         CORE[SSE + Translation Core\nopen-sse + src/sse]
-        DB[(db.json)]
-        UDB[(usage.json + log.txt)]
+        DB[(SQLite data.sqlite)]
+        UDB[(SQLite usageHistory)]
     end
 
     subgraph Upstreams[Upstream Providers]
@@ -382,9 +382,9 @@ erDiagram
 
 Physical storage files:
 
-- main state: `${DATA_DIR}/db.json` (or `~/.zenrouter/db.json`)
-- usage stats: `~/.zenrouter/usage.json`
-- request log lines: `~/.zenrouter/log.txt`
+- main state: `${DATA_DIR}/db/data.sqlite` (or `~/.zenrouter/db/data.sqlite`; legacy `db.json`/`usage.json` kept only for migration via `src/lib/db/paths.js:LEGACY_FILES`)
+- usage stats: SQLite tables `usageHistory`/`usageDaily` + in-memory recent-requests ring (`src/lib/db/repos/usageRepo.js`)
+- request details: SQLite `requestDetails` (`requestDetailsRepo.js`, payloads redacted)
 - optional translator/request debug sessions: `<repo>/logs/...`
 
 ## Deployment Topology
@@ -399,8 +399,8 @@ flowchart LR
     subgraph ContainerOrProcess[ZenRouter Runtime]
         Next[Next.js Server\nPORT=20128]
         Core[SSE Core + Executors]
-        MainDB[(db.json)]
-        UsageDB[(usage.json/log.txt)]
+        MainDB[(SQLite data.sqlite)]
+        UsageDB[(usageHistory/usageDaily)]
     end
 
     subgraph External[External Services]

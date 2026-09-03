@@ -24,6 +24,7 @@ Provider-agnostic SSE engine: one OpenAI-style request → any provider (LLM cha
 - Config-driven, DRY, camelCase. NEVER hardcode values, models, or block/role strings — use `config/` + `schema/` constants.
 - Translator pipeline pivots through OpenAI as the intermediate format. A translator registered on the exact `source:target` pair (e.g. `claude:kiro`) runs as a **direct route**, skipping the lossy double-hop.
 - Translators self-register via `register(from, to, reqFn, resFn)` as an import side-effect — new files MUST be imported in `translator/index.js`.
+- Perf: accumulate streamed text in chunk arrays + `join("")` once (never `+=` per chunk); per-provider mutexes (never a global lock); L1 repo caches with explicit `invalidate*Cache()` on every mutation; `/v1/models` 30s TTL with `Cache-Control: public, max-age=30, stale-while-revalidate=60`. Zen diverges from upstream #3629 on purpose: settings uses a 2s TTL raw cache and usage uses object-identity dedup (no field-equality scan, no extra index).
 
 ## How to add
 
