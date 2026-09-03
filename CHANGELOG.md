@@ -7,6 +7,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Security / Dependabot Vulnerabilities Resolution (51 Vulnerabilities Resolved)
+- **fix(security): resolve 51 Dependabot alerts by updating gitbook Next.js and overriding transitive dompurify and qs**
+  - Updated `next` to `^16.3.2` in `gitbook/package.json`, resolving 31 vulnerabilities (including all 13 High severity CVEs in older Next.js 16.1.1).
+  - Added npm overrides in root `package.json` for `dompurify` (`^3.4.14`) and `qs` (`^6.16.0`), eliminating 18 `dompurify` XSS/bypass vulnerabilities and 2 `qs` DoS/array-limit bypass vulnerabilities.
+  - Achieved `0 vulnerabilities` on both root and `gitbook` `npm audit` reports.
+
 #### Dashboard UI/UX, Theme Flash & Indonesian Localization (#925cb4aad, #831001c32, #c24a85427, #a58902e4a)
 - **feat(ui): pool theme pre-hydration script, connections scroll container, CLI key presets, and complete Indonesian localization**
   - Added pre-hydration inline script in `<head>` of `src/app/layout.js` to inspect `localStorage.getItem("theme")` and immediately apply `.dark` to `documentElement` before the browser performs first paint, eliminating reload white flash.

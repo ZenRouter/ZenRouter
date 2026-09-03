@@ -63,6 +63,10 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4"
   },
+  "overrides": {
+    "dompurify": "^3.4.14",
+    "qs": "^6.16.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/ZenRouter/ZenRouter.git"
