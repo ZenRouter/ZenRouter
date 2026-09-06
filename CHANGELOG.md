@@ -22,6 +22,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Pricing exact + patterns at official 10/50 rates (cached 1, cache_creation 12.5).
   - Test: official limits asserted across codex/openai/luo aliases in `tests/unit/capabilities.test.js`.
 
+#### ESLint zero-errors across the repo
+- **fix(lint): zero eslint errors/warnings in shared components, dashboards, and data modules**
+  - Async dashboard loaders converted to cancelled-IIFE effects with unmount guards (fixes `set-state-in-effect` cascading-render risk in ~40 components).
+  - React-compiler violations fixed: used-before-declared loaders moved up, impure calls memoized, ref reads moved out of render.
+  - `<img>` migrated to `next/image`, entities escaped, `exhaustive-deps` completed.
+  - `import/no-anonymous-default-export` scoped off for `open-sse/**` + `src/lib/**` (single-descriptor modules by design); cli build output ignored; 3 stale disables removed.
+  - Verified: `npx eslint` 0 errors 0 warnings, 2348 tests passed, `npm run build` clean.
+
 ## [0.6.0] - 2026-09-03
 
 ### Added / Fixed
