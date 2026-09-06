@@ -5,6 +5,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### Added / Fixed
+
+#### 9Router critical backports (#3782, #3784, #3764, #3786, #3833)
+- **fix(security,translator,dashboard): backport 5 critical 9router fixes**
+  - SSRF guard on `POST /api/cli-tools/cowork-mcp-tools` for remote callers (`assertPublicUrl`, local-host self-hosted MCP keeps working).
+  - `injectReasoningContent` passes non-array `messages` through for upstream 400 instead of unhandled 500.
+  - `ensureToolCallIds` / `generateToolCallId` skip null entries and coerce non-string tool names.
+  - `claude-adaptive` maps `auto` effort to `high` instead of writing literal `auto` into `output_config` (400 + account backoff).
+  - Concurrent per-model Test buttons via `testingModelIds` Set on `ModelsCard` + `CompatibleModelsSection`.
+  - Tests: `tests/unit/cowork-mcp-ssrf-guard.test.js`, `tests/unit/translator-toolcall-null-guards.test.js`, expanded `thinking-unified` + `reasoningContentInjector` suites. Full suite 2347 passed, build clean.
+
+#### GPT-6 Astra official mapping
+- **feat(models): add GPT-6 Astra official mapping**
+  - `*gpt-6-astra*` / `*gpt-6*` capability pattern: 1050000 ctx, 128000 out, vision+reasoning+search, openai thinking format.
+  - Pricing exact + patterns at official 10/50 rates (cached 1, cache_creation 12.5).
+  - Test: official limits asserted across codex/openai/luo aliases in `tests/unit/capabilities.test.js`.
+
 ## [0.6.0] - 2026-09-03
 
 ### Added / Fixed
