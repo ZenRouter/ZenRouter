@@ -12,27 +12,30 @@ export default function PasswordOnboardingModal() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Check if user already dismissed the prompt in this browser session
-    const dismissed = sessionStorage.getItem("zenrouter_pwd_onboarding_dismissed");
-    if (dismissed) {
-      setLoading(false);
-      return;
-    }
-
-    // Check password state from settings
-    fetch("/api/settings")
-      .then((res) => {
+    let cancelled = false;
+    (async () => {
+      // Check if user already dismissed the prompt in this browser session
+      const dismissed = sessionStorage.getItem("zenrouter_pwd_onboarding_dismissed");
+      if (dismissed) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+      // Check password state from settings
+      try {
+        const res = await fetch("/api/settings");
         if (!res.ok) throw new Error("Failed to check status");
-        return res.json();
-      })
-      .then((data) => {
+        const data = await res.json();
         // If password is not set yet (using default 12345678)
         if (data && data.hasPassword === false) {
-          setIsOpen(true);
+          if (!cancelled) setIsOpen(true);
         }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const handleDismiss = () => {

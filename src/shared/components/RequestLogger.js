@@ -24,7 +24,23 @@ export default function RequestLogger() {
   };
 
   useEffect(() => {
-    fetchLogs();
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) setLoading(true);
+      try {
+        const res = await fetch("/api/usage/request-logs");
+        if (cancelled) return;
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setLogs(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch logs:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {

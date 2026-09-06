@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import Modal from "./Modal";
 import ProviderIcon from "./ProviderIcon";
@@ -63,19 +63,19 @@ export default function ModelSelectModal({
   );
 
   useEffect(() => {
-    if (!isOpen || cursorConnectionIds.length === 0) {
-      setCursorModels([]);
-      return undefined;
-    }
-
     let cancelled = false;
-    Promise.all(cursorConnectionIds.map(async (connectionId) => {
-      const response = await fetch(`/api/providers/${connectionId}/models`, { cache: "no-store" });
-      if (!response.ok) return [];
-      const data = await response.json();
-      return Array.isArray(data.models) ? data.models : [];
-    }))
-      .then((modelLists) => {
+    (async () => {
+      if (!isOpen || cursorConnectionIds.length === 0) {
+        if (!cancelled) setCursorModels([]);
+        return;
+      }
+      try {
+        const modelLists = await Promise.all(cursorConnectionIds.map(async (connectionId) => {
+          const response = await fetch(`/api/providers/${connectionId}/models`, { cache: "no-store" });
+          if (!response.ok) return [];
+          const data = await response.json();
+          return Array.isArray(data.models) ? data.models : [];
+        }));
         if (cancelled) return;
         const seen = new Set();
         setCursorModels(modelLists.flat().filter((model) => {
@@ -83,12 +83,12 @@ export default function ModelSelectModal({
           seen.add(model.id);
           return true;
         }));
-      })
-      .catch((error) => {
+      } catch (error) {
         // Do not hide the static fallback when the account catalog is unavailable.
         console.warn("Unable to load Cursor models for selector:", error);
         if (!cancelled) setCursorModels([]);
-      });
+      }
+    })();
 
     return () => { cancelled = true; };
   }, [isOpen, cursorConnectionIds]);
@@ -131,68 +131,72 @@ export default function ModelSelectModal({
     return () => { cancelled = true; };
   }, [isOpen, activeProviders]);
 
-  const fetchCombos = async () => {
-    try {
-      const res = await fetch("/api/combos");
-      if (!res.ok) throw new Error(`Failed to fetch combos: ${res.status}`);
-      const data = await res.json();
-      setCombos(data.combos || []);
-    } catch (error) {
-      console.error("Error fetching combos:", error);
-      setCombos([]);
-    }
-  };
-
   useEffect(() => {
-    if (isOpen) fetchCombos();
+    if (!isOpen) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/combos");
+        if (!res.ok) throw new Error(`Failed to fetch combos: ${res.status}`);
+        const data = await res.json();
+        if (!cancelled) setCombos(data.combos || []);
+      } catch (error) {
+        console.error("Error fetching combos:", error);
+        if (!cancelled) setCombos([]);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [isOpen]);
 
-  const fetchProviderNodes = async () => {
-    try {
-      const res = await fetch("/api/provider-nodes");
-      if (!res.ok) throw new Error(`Failed to fetch provider nodes: ${res.status}`);
-      const data = await res.json();
-      setProviderNodes(data.nodes || []);
-    } catch (error) {
-      console.error("Error fetching provider nodes:", error);
-      setProviderNodes([]);
-    }
-  };
-
   useEffect(() => {
-    if (isOpen) fetchProviderNodes();
+    if (!isOpen) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/provider-nodes");
+        if (!res.ok) throw new Error(`Failed to fetch provider nodes: ${res.status}`);
+        const data = await res.json();
+        if (!cancelled) setProviderNodes(data.nodes || []);
+      } catch (error) {
+        console.error("Error fetching provider nodes:", error);
+        if (!cancelled) setProviderNodes([]);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [isOpen]);
 
-  const fetchCustomModels = async () => {
-    try {
-      const res = await fetch("/api/models/custom");
-      if (!res.ok) throw new Error(`Failed to fetch custom models: ${res.status}`);
-      const data = await res.json();
-      setCustomModels(data.models || []);
-    } catch (error) {
-      console.error("Error fetching custom models:", error);
-      setCustomModels([]);
-    }
-  };
-
   useEffect(() => {
-    if (isOpen) fetchCustomModels();
+    if (!isOpen) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/models/custom");
+        if (!res.ok) throw new Error(`Failed to fetch custom models: ${res.status}`);
+        const data = await res.json();
+        if (!cancelled) setCustomModels(data.models || []);
+      } catch (error) {
+        console.error("Error fetching custom models:", error);
+        if (!cancelled) setCustomModels([]);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [isOpen]);
 
-  const fetchDisabledModels = async () => {
-    try {
-      const res = await fetch("/api/models/disabled");
-      if (!res.ok) throw new Error(`Failed to fetch disabled models: ${res.status}`);
-      const data = await res.json();
-      setDisabledModels(data.disabled || {});
-    } catch (error) {
-      console.error("Error fetching disabled models:", error);
-      setDisabledModels({});
-    }
-  };
-
   useEffect(() => {
-    if (isOpen) fetchDisabledModels();
+    if (!isOpen) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/models/disabled");
+        if (!res.ok) throw new Error(`Failed to fetch disabled models: ${res.status}`);
+        const data = await res.json();
+        if (!cancelled) setDisabledModels(data.disabled || {});
+      } catch (error) {
+        console.error("Error fetching disabled models:", error);
+        if (!cancelled) setDisabledModels({});
+      }
+    })();
+    return () => { cancelled = true; };
   }, [isOpen]);
 
   const allProviders = useMemo(() => ({ ...OAUTH_PROVIDERS, ...FREE_PROVIDERS, ...FREE_TIER_PROVIDERS, ...APIKEY_PROVIDERS }), []);
@@ -442,15 +446,15 @@ export default function ModelSelectModal({
     if (!searchQuery.trim()) return combos;
     const query = searchQuery.toLowerCase();
     return combos.filter(c => (c?.name || "").toLowerCase().includes(query));
-  }, [combos, searchQuery, kindFilter]);
+  }, [combos, searchQuery, kindFilter, capFilter]);
 
   // Sort models alphabetically, with added models floated to top
-  const sortModels = (models) => {
+  const sortModels = useCallback((models) => {
     const getName = (m) => (m?.name || m?.id || m?.value || "");
     const added = models.filter(m => addedModelValues.includes(m.value)).sort((a, b) => getName(a).localeCompare(getName(b)));
     const rest = models.filter(m => !addedModelValues.includes(m.value)).sort((a, b) => getName(a).localeCompare(getName(b)));
     return [...added, ...rest];
-  };
+  }, [addedModelValues]);
 
   // Filter models by search query
   const filteredGroups = useMemo(() => {
@@ -480,7 +484,7 @@ export default function ModelSelectModal({
     });
 
     return filtered;
-  }, [groupedModels, searchQuery, addedModelValues]);
+  }, [groupedModels, searchQuery, capFilter, getCaps, sortModels]);
 
   const handleSelect = (model) => {
     const value = model?.value || model?.name || model;

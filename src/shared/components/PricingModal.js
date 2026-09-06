@@ -8,31 +8,31 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const loadPricing = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/pricing");
-      if (response.ok) {
-        const data = await response.json();
-        setPricingData(data);
-      } else {
-        // Fallback to defaults
-        const defaults = getDefaultPricing();
-        setPricingData(defaults);
-      }
-    } catch (error) {
-      console.error("Failed to load pricing:", error);
-      const defaults = getDefaultPricing();
-      setPricingData(defaults);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (isOpen) {
-      loadPricing();
-    }
+    if (!isOpen) return undefined;
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) setLoading(true);
+      try {
+        const response = await fetch("/api/pricing");
+        if (cancelled) return;
+        if (response.ok) {
+          const data = await response.json();
+          if (!cancelled) setPricingData(data);
+        } else {
+          // Fallback to defaults
+          const defaults = getDefaultPricing();
+          if (!cancelled) setPricingData(defaults);
+        }
+      } catch (error) {
+        console.error("Failed to load pricing:", error);
+        const defaults = getDefaultPricing();
+        if (!cancelled) setPricingData(defaults);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [isOpen]);
 
   const handlePricingChange = (provider, model, field, value) => {

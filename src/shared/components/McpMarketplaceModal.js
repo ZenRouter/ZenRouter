@@ -29,7 +29,7 @@ export default function McpMarketplaceModal({ isOpen, onClose, onAdd, addedNames
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [isOpen]);
+  }, [isOpen, servers.length]);
 
   const addedSet = useMemo(() => new Set(addedNames), [addedNames]);
 

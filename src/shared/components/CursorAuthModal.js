@@ -45,8 +45,33 @@ export default function CursorAuthModal({ isOpen, onSuccess, onClose }) {
 
   // Auto-detect tokens when modal opens
   useEffect(() => {
-    if (!isOpen) return;
-    runAutoDetect();
+    if (!isOpen) return undefined;
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) setAutoDetecting(true);
+      if (!cancelled) setError(null);
+      if (!cancelled) setAutoDetected(false);
+      if (!cancelled) setWindowsManual(false);
+      try {
+        const res = await fetch("/api/oauth/cursor/auto-import");
+        const data = await res.json();
+        if (cancelled) return;
+        if (data.found) {
+          setAccessToken(data.accessToken);
+          setMachineId(data.machineId);
+          setAutoDetected(true);
+        } else if (data.windowsManual) {
+          setWindowsManual(true);
+        } else {
+          setError(data.error || "Could not auto-detect tokens");
+        }
+      } catch {
+        if (!cancelled) setError("Failed to auto-detect tokens");
+      } finally {
+        if (!cancelled) setAutoDetecting(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [isOpen]);
 
   const handleImportToken = async () => {

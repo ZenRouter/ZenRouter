@@ -21,19 +21,25 @@ export default function AddCustomEmbeddingModal({ isOpen, onClose, onCreated, on
   const [validationResult, setValidationResult] = useState(null);
 
   useEffect(() => {
-    if (!isOpen) return;
-    setValidationResult(null);
-    setCheckKey("");
-    setCheckModelId("");
-    if (isEdit) {
-      setFormData({
-        name: node.name || "",
-        prefix: node.prefix || "",
-        baseUrl: node.baseUrl || DEFAULT_BASE_URL,
-      });
-    } else {
-      setFormData({ name: "", prefix: "", baseUrl: DEFAULT_BASE_URL });
-    }
+    if (!isOpen) return undefined;
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) setValidationResult(null);
+      if (!cancelled) setCheckKey("");
+      if (!cancelled) setCheckModelId("");
+      if (isEdit) {
+        if (!cancelled) {
+          setFormData({
+            name: node.name || "",
+            prefix: node.prefix || "",
+            baseUrl: node.baseUrl || DEFAULT_BASE_URL,
+          });
+        }
+      } else {
+        if (!cancelled) setFormData({ name: "", prefix: "", baseUrl: DEFAULT_BASE_URL });
+      }
+    })();
+    return () => { cancelled = true; };
   }, [isOpen, isEdit, node]);
 
   const handleSubmit = async () => {

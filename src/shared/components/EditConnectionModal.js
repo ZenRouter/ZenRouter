@@ -32,34 +32,41 @@ export default function EditConnectionModal({ isOpen, connection, proxyPools, on
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (connection) {
-      setFormData({
-        name: connection.name || "",
-        priority: connection.priority || 1,
-        apiKey: "",
-      });
-      // Load Azure-specific data if present
-      if (connection.provider === "azure" && connection.providerSpecificData) {
-        setAzureData({
-          azureEndpoint: connection.providerSpecificData.azureEndpoint || "",
-          apiVersion: connection.providerSpecificData.apiVersion || "2024-10-01-preview",
-          deployment: connection.providerSpecificData.deployment || "",
-          organization: connection.providerSpecificData.organization || "",
+    if (!connection) return undefined;
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) {
+        setFormData({
+          name: connection.name || "",
+          priority: connection.priority || 1,
+          apiKey: "",
         });
       }
-      if (connection.provider === "cloudflare-ai" && connection.providerSpecificData) {
-        setCloudflareData({ accountId: connection.providerSpecificData.accountId || "" });
+      // Load Azure-specific data if present
+      if (connection.provider === "azure" && connection.providerSpecificData) {
+        if (!cancelled) {
+          setAzureData({
+            azureEndpoint: connection.providerSpecificData.azureEndpoint || "",
+            apiVersion: connection.providerSpecificData.apiVersion || "2024-10-01-preview",
+            deployment: connection.providerSpecificData.deployment || "",
+            organization: connection.providerSpecificData.organization || "",
+          });
+        }
       }
-      setBaseUrl(connection.providerSpecificData?.baseUrl || "");
+      if (connection.provider === "cloudflare-ai" && connection.providerSpecificData) {
+        if (!cancelled) setCloudflareData({ accountId: connection.providerSpecificData.accountId || "" });
+      }
+      if (!cancelled) setBaseUrl(connection.providerSpecificData?.baseUrl || "");
       // Load region for providers that support it (e.g. xiaomi-tokenplan)
       const providerCfg = AI_PROVIDERS?.[connection.provider];
       if (providerCfg?.regions) {
         const savedRegion = connection.providerSpecificData?.region || providerCfg.defaultRegion || providerCfg.regions[0]?.id || "";
-        setRegion(savedRegion);
+        if (!cancelled) setRegion(savedRegion);
       }
-      setTestResult(null);
-      setValidationResult(null);
-    }
+      if (!cancelled) setTestResult(null);
+      if (!cancelled) setValidationResult(null);
+    })();
+    return () => { cancelled = true; };
   }, [connection]);
 
   const isOAuth = connection?.authType === "oauth";
