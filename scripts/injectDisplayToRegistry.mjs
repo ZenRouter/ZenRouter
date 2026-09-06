@@ -19,7 +19,7 @@ const displayBody = displaySrc
   .replace(/^export const /gm, "const ")
   .replace(/^export function /gm, "function ")
   .replace(/^const RISK_NOTICE\s*=.*$/m, ""); // remove redeclaration
-// eslint-disable-next-line no-new-func
+
 const getDisplay = new Function("RISK_NOTICE", `${displayBody}; return PROVIDER_DISPLAY;`);
 const DISPLAY = getDisplay(RISK_NOTICE);
 

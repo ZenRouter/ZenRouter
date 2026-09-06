@@ -313,7 +313,6 @@ export function anchorClaudeCache(body) {
         // client-supplied cache_control on deferred tools so we never 400.
         // Keep prompt caching on system/messages only.
         if (process.env.DEBUG_CACHE === "1") {
-          // eslint-disable-next-line no-console
           console.debug("[claude] anchorClaudeCache: all tools deferred, skipping tool cache breakpoint");
         }
         body.tools.forEach((tool) => {
@@ -525,7 +524,6 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
     // - both snake_case and camelCase deferred flags via isDeferredTool()
     const lastCacheable = lastCacheableToolIndex(body.tools);
     if (lastCacheable === -1 && body.tools.length > 0 && process.env.DEBUG_CACHE === "1") {
-      // eslint-disable-next-line no-console
       console.debug("[claude] prepareClaudeRequest: all tools deferred, stripping tool cache_control");
     }
     body.tools = body.tools.map((tool, i) => {
