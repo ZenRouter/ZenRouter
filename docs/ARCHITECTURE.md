@@ -145,6 +145,12 @@ schema/migrations in `src/lib/db/migrations/`.
   `.next/standalone`; a relative path silently creates a fresh empty DB)
 - entities: providerConnections, providerNodes, modelAliases, combos,
   apiKeys, settings, pricing, usageHistory/usageDaily/requestDetails
+- startup integrity gate (`src/lib/db/integrity.js`): `PRAGMA quick_check`
+  runs before any schema migration or backup pruning; on corruption boot
+  throws `DatabaseCorruptionError` instead of starting with an empty
+  accounts list, and the driver chain never falls through to another
+  adapter. Recovery is manual — verify a candidate under
+  `${DATA_DIR}/db/backups` with `PRAGMA quick_check`, then restore it.
 
 Usage DB:
 

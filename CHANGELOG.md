@@ -30,6 +30,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - `import/no-anonymous-default-export` scoped off for `open-sse/**` + `src/lib/**` (single-descriptor modules by design); cli build output ignored; 3 stale disables removed.
   - Verified: `npx eslint` 0 errors 0 warnings, 2348 tests passed, `npm run build` clean.
 
+#### Database fail-closed on corruption (#3817)
+- **fix(db): fail closed before migrating corrupted databases**
+  - `PRAGMA quick_check` integrity gate in `runMigrationOnce`; `DatabaseCorruptionError` stops boot before schema mutation or backup pruning, driver chain never falls through.
+  - Recovery stays manual with backup candidates under `${DATA_DIR}/db/backups`.
+  - Tests: `tests/unit/db-integrity-safety.test.js` 2/2 passed. Docs: integrity gate in `docs/ARCHITECTURE.md`.
+
+#### Combo visibility + cache budget lock
+- **fix(dashboard): show combos on every media kind page, lock cache budget**
+  - `COMBO_KINDS` enabled for embedding/image/imageToText/tts/stt/video/music so kind-tagged combos stop vanishing (fixes #3787).
+  - Test: `anchorClaudeCache` re-anchor counted at max 3 markers, never exceeding the Anthropic 4-marker budget (#3795 verified already-safe).
+
 ## [0.6.0] - 2026-09-03
 
 ### Added / Fixed

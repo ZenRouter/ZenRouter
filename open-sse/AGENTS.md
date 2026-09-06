@@ -29,6 +29,7 @@ Provider-agnostic SSE engine: one OpenAI-style request → any provider (LLM cha
 ## How to add
 
 - **Provider**: copy `providers/REGISTRY_TEMPLATE.js` → `providers/registry/{id}.js`; add models to `config/providerModels.js`. Generic providers need no executor (DefaultExecutor handles OpenAI-compatible APIs).
+- **Model**: add an ordered `PATTERN_CAPABILITIES` entry in `providers/capabilities.js` (specific before generic) + exact/pattern pricing in `providers/pricing.js`, then lock it with a case in `tests/unit/capabilities.test.js` (e.g. GPT-6 Astra: 1050000 ctx / 128000 out).
 - **Executor** (only for non-standard upstream): subclass `BaseExecutor` (override `getBaseUrls`/`buildHeaders`/`buildUrl`/`execute`), register in `executors/index.js` map. `getExecutor` falls back to `DefaultExecutor` when absent.
 - **Translator**: add `request|response/<from>-to-<to>.js` calling `register(...)`, then import it in `translator/index.js`. Reuse `schema/` + `concerns/` — don't re-implement parsing.
 
