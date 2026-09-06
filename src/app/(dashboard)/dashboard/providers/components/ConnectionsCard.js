@@ -73,7 +73,7 @@ function ConnectionRow({ connection, proxyPools, isOAuth, isFirst, isLast, onMov
     check();
     const t = modelLockUntil ? setInterval(check, 1000) : null;
     return () => { if (t) clearInterval(t); };
-  }, [modelLockUntil]);
+  }, [modelLockUntil, connection]);
 
   useEffect(() => {
     if (!showProxyDropdown) return;
@@ -325,7 +325,14 @@ export default function ConnectionsCard({ providerId, isOAuth }) {
     finally { setLoading(false); }
   }, [providerId]);
 
-  useEffect(() => { fetch_(); }, [fetch_]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      await fetch_();
+      if (cancelled) return;
+    })();
+    return () => { cancelled = true; };
+  }, [fetch_]);
 
   const saveStrategy = async (strategy, stickyLimit) => {
     try {

@@ -458,10 +458,12 @@ export default function ProviderDetailPage() {
   };
 
   useEffect(() => {
-    fetchConnections();
-    fetchAliases();
-    fetchCustomModels();
-    fetchDisabledModels();
+    let cancelled = false;
+    (async () => {
+      await Promise.all([fetchConnections(), fetchAliases(), fetchCustomModels(), fetchDisabledModels()]);
+      if (cancelled) return;
+    })();
+    return () => { cancelled = true; };
   }, [fetchConnections, fetchAliases, fetchCustomModels, fetchDisabledModels]);
 
   // Load the active connection live catalog for providers exposing a /models
@@ -472,14 +474,20 @@ export default function ProviderDetailPage() {
     // endpoint (nvidia, openrouter, cursor, ...). Compatible nodes are managed
     // in their own section; the static registry stays as fallback.
     if (isCompatible) {
-      setLiveModels([]);
-      return;
+      let cancelled = false;
+      (async () => {
+        if (!cancelled) setLiveModels([]);
+      })();
+      return () => { cancelled = true; };
     }
 
     const connection = connections.find((item) => item.isActive !== false);
     if (!connection?.id) {
-      setLiveModels([]);
-      return;
+      let cancelled = false;
+      (async () => {
+        if (!cancelled) setLiveModels([]);
+      })();
+      return () => { cancelled = true; };
     }
 
     let cancelled = false;
@@ -895,7 +903,11 @@ export default function ProviderDetailPage() {
   };
 
   useEffect(() => {
-    setSelectedConnectionIds((prev) => prev.filter((id) => connections.some((conn) => conn.id === id)));
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) setSelectedConnectionIds((prev) => prev.filter((id) => connections.some((conn) => conn.id === id)));
+    })();
+    return () => { cancelled = true; };
   }, [connections]);
 
   const selectedProxySummary = (() => {

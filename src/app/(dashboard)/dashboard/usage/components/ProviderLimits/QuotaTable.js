@@ -110,11 +110,19 @@ export default function QuotaTable({
   const totalPages = Math.max(1, Math.ceil(sortedQuotas.length / PAGE_SIZE));
 
   useEffect(() => {
-    setPage(1);
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) setPage(1);
+    })();
+    return () => { cancelled = true; };
   }, [sortMode, quotas]);
 
   useEffect(() => {
-    setPage((currentPage) => Math.min(currentPage, totalPages));
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) setPage((currentPage) => Math.min(currentPage, totalPages));
+    })();
+    return () => { cancelled = true; };
   }, [totalPages]);
 
   if (!quotas || quotas.length === 0) {

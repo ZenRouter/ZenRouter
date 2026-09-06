@@ -51,15 +51,25 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
   const [validationResult, setValidationResult] = useState(null);
 
   // openai: reset baseUrl when apiType changes; anthropic: reset checks when opened
+  const hasApiType = config.hasApiType;
+  const defaultBaseUrl = config.defaultBaseUrl;
+  const apiType = formData.apiType;
   useEffect(() => {
-    if (config.hasApiType) {
-      setFormData((prev) => ({ ...prev, baseUrl: config.defaultBaseUrl }));
-    } else if (isOpen) {
-      setValidationResult(null);
-      setCheckKey("");
-      setCheckModelId("");
-    }
-  }, [config.hasApiType ? formData.apiType : isOpen]);
+    let cancelled = false;
+    (async () => {
+      // Reading apiType re-runs the reset whenever the selected API type changes.
+      if (hasApiType && apiType) {
+        if (!cancelled) setFormData((prev) => ({ ...prev, baseUrl: defaultBaseUrl }));
+      } else if (!hasApiType && isOpen) {
+        if (!cancelled) {
+          setValidationResult(null);
+          setCheckKey("");
+          setCheckModelId("");
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [hasApiType, defaultBaseUrl, apiType, isOpen]);
 
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.prefix.trim() || !formData.baseUrl.trim()) return;

@@ -11,6 +11,7 @@ function CallbackContent() {
   const [status, setStatus] = useState("processing");
 
   useEffect(() => {
+    (() => {
     const code = searchParams.get("code");
     const token = searchParams.get("token");
     const state = searchParams.get("state");
@@ -82,6 +83,7 @@ function CallbackContent() {
       window.close();
       setTimeout(() => setStatus("done"), 500);
     }, 1500);
+    })();
   }, [searchParams]);
 
   return (

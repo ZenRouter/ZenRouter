@@ -43,7 +43,12 @@ export default function UsageChart({ period = "7d" }) {
   }, [period]);
 
   useEffect(() => {
-    fetchData();
+    let cancelled = false;
+    (async () => {
+      await fetchData();
+      if (cancelled) return;
+    })();
+    return () => { cancelled = true; };
   }, [fetchData]);
 
   const hasData = data.some((d) => d.tokens > 0 || d.cost > 0);

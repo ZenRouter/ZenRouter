@@ -81,7 +81,12 @@ export default function ProxyPoolsPage() {
   }, []);
 
   useEffect(() => {
-    fetchProxyPools();
+    let cancelled = false;
+    (async () => {
+      await fetchProxyPools();
+      if (cancelled) return;
+    })();
+    return () => { cancelled = true; };
   }, [fetchProxyPools]);
 
   const resetForm = () => {
@@ -329,7 +334,11 @@ export default function ProxyPoolsPage() {
 
   // Cleanup selectedIds when pools change
   useEffect(() => {
-    setSelectedIds((prev) => prev.filter((id) => proxyPools.some((p) => p.id === id)));
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) setSelectedIds((prev) => prev.filter((id) => proxyPools.some((p) => p.id === id)));
+    })();
+    return () => { cancelled = true; };
   }, [proxyPools]);
 
   const openBatchImportModal = () => {
@@ -895,7 +904,7 @@ export default function ProxyPoolsPage() {
             value={cloudflareForm.apiToken}
             onChange={(e) => setCloudflareForm((prev) => ({ ...prev, apiToken: e.target.value }))}
             placeholder="your-cloudflare-api-token"
-            hint={<>Requires "Workers Scripts: Edit" permission. <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Get token →</a></>}
+            hint={<>Requires &quot;Workers Scripts: Edit&quot; permission. <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Get token →</a></>}
             type="password"
           />
           <Input

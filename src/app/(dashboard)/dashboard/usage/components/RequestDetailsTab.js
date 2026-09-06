@@ -173,12 +173,21 @@ export default function RequestDetailsTab() {
   }, [pagination.page, pagination.pageSize, filters]);
 
   useEffect(() => {
-    fetchProviders();
-    fetchObservability();
+    let cancelled = false;
+    (async () => {
+      await Promise.all([fetchProviders(), fetchObservability()]);
+      if (cancelled) return;
+    })();
+    return () => { cancelled = true; };
   }, [fetchProviders, fetchObservability]);
 
   useEffect(() => {
-    fetchDetails();
+    let cancelled = false;
+    (async () => {
+      await fetchDetails();
+      if (cancelled) return;
+    })();
+    return () => { cancelled = true; };
   }, [fetchDetails]);
 
   const handleViewDetail = (detail) => {

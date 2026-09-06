@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
+import Image from "next/image";
 import {
   ReactFlow,
   Handle,
@@ -54,12 +55,13 @@ function ProviderNode({ data }) {
         style={{ backgroundColor: `${color}15` }}
       >
         {imageUrl && !imgError ? (
-          <img
+          <Image
             src={imageUrl}
             alt={label}
-            className="w-6 h-6 rounded-sm object-contain"
+            width={24}
+            height={24}
+            className="rounded-sm object-contain"
             loading="lazy"
-            decoding="async"
             onError={() => {
               const m = imageUrl?.match(/^\/providers\/([^/]+)\.png$/i);
               if (m) markProviderIconMissing(m[1]);
@@ -110,12 +112,13 @@ function RouterNode({ data }) {
       <Handle type="source" position={Position.Left} id="left" className="!bg-transparent !border-0 !w-0 !h-0" />
       <Handle type="source" position={Position.Right} id="right" className="!bg-transparent !border-0 !w-0 !h-0" />
 
-      <img
+      <Image
         src="/icons/logo.svg"
         alt="ZenRouter"
-        className={`w-6 h-6 mr-2 object-contain ${powering ? "topology-router-icon" : ""}`}
+        width={24}
+        height={24}
+        className={`mr-2 object-contain ${powering ? "topology-router-icon" : ""}`}
         loading="lazy"
-        decoding="async"
       />
       <span className={`text-sm font-bold ${powering ? "topology-router-label text-yellow-300" : "text-primary"}`}>
         ZenRouter
@@ -369,13 +372,14 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
 
   // Track firstSeen per active provider; drop provider if running too long (BE stuck)
   const firstSeenRef = useRef({});
-  const [tick, setTick] = useState(0);
+  // Clock as state (never Date.now() during render) so expiry re-evaluates cleanly.
+  const [now, setNow] = useState(0);
 
   useEffect(() => {
     const seen = firstSeenRef.current;
-    const now = Date.now();
+    const at = Date.now();
     for (const p of rawActiveSet) {
-      if (!seen[p]) seen[p] = now;
+      if (!seen[p]) seen[p] = at;
     }
     for (const p of Object.keys(seen)) {
       if (!rawActiveSet.has(p)) delete seen[p];
@@ -384,19 +388,24 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
 
   useEffect(() => {
     if (rawActiveSet.size === 0) return;
-    const id = setInterval(() => setTick((t) => t + 1), FE_ACTIVE_TICK_MS);
+    const id = setInterval(() => setNow(Date.now()), FE_ACTIVE_TICK_MS);
     return () => clearInterval(id);
   }, [rawActiveSet]);
 
-  const activeSet = useMemo(() => {
-    const now = Date.now();
-    const filtered = new Set();
-    for (const p of rawActiveSet) {
-      const ts = firstSeenRef.current[p];
-      if (!ts || now - ts < FE_ACTIVE_TIMEOUT_MS) filtered.add(p);
-    }
-    return filtered;
-  }, [rawActiveSet, tick]);
+  const [activeSet, setActiveSet] = useState(() => new Set(rawActiveSet));
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const seen = firstSeenRef.current;
+      const filtered = new Set();
+      for (const p of rawActiveSet) {
+        const ts = seen[p];
+        if (!ts || now - ts < FE_ACTIVE_TIMEOUT_MS) filtered.add(p);
+      }
+      if (!cancelled) setActiveSet(filtered);
+    })();
+    return () => { cancelled = true; };
+  }, [rawActiveSet, now]);
 
   const { nodes, edges } = useMemo(
     () => buildLayout(providers, activeSet, lastSet, errorSet),
@@ -411,11 +420,11 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
 
   const rfInstance = useRef(null);
   const containerRef = useRef(null);
-  const fitOpts = { padding: 0.2, duration: 200 };
+  const fitOpts = useMemo(() => ({ padding: 0.2, duration: 200 }), []);
   const onInit = useCallback((instance) => {
     rfInstance.current = instance;
     setTimeout(() => instance.fitView(fitOpts), 50);
-  }, []);
+  }, [fitOpts]);
 
   // Re-fit on container resize
   useEffect(() => {
@@ -426,7 +435,7 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [fitOpts]);
 
   // Re-fit when node count/layout changes
   useEffect(() => {
@@ -434,7 +443,7 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
       const id = setTimeout(() => rfInstance.current.fitView(fitOpts), 50);
       return () => clearTimeout(id);
     }
-  }, [nodes.length]);
+  }, [nodes.length, fitOpts]);
 
   return (
     <div ref={containerRef} className="h-[320px] w-full min-w-0 rounded-lg border border-border bg-bg-subtle/30 sm:h-[480px]">

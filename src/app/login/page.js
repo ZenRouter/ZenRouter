@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Card, Button, Input } from "@/shared/components";
 
 export default function LoginPage() {
@@ -161,7 +162,7 @@ export default function LoginPage() {
         {/* Brand Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-surface border border-border p-3 mb-4 shadow-[var(--shadow-warm)] hover:scale-105 transition-transform duration-300">
-            <img src="/icons/logo.svg" alt="ZenRouter" className="w-full h-full object-contain" />
+            <Image src="/icons/logo.svg" alt="ZenRouter" width={40} height={40} className="h-full w-full object-contain" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-text-main mb-1.5 flex items-center justify-center gap-2">
             ZenRouter
