@@ -441,7 +441,7 @@ export default function ModelSelectModal({
     if (kindFilter || capFilter) return [];
     if (!searchQuery.trim()) return combos;
     const query = searchQuery.toLowerCase();
-    return combos.filter(c => c.name.toLowerCase().includes(query));
+    return combos.filter(c => (c?.name || "").toLowerCase().includes(query));
   }, [combos, searchQuery, kindFilter]);
 
   // Sort models alphabetically, with added models floated to top
@@ -465,11 +465,11 @@ export default function ModelSelectModal({
         if (models.length === 0) return;
       }
       if (query) {
-        const providerNameMatches = group.name.toLowerCase().includes(query);
+        const providerNameMatches = (group.name || "").toLowerCase().includes(query);
         models = models.filter(
           (m) =>
-            m.name.toLowerCase().includes(query) ||
-            m.id.toLowerCase().includes(query)
+            (m?.name || m?.id || "").toLowerCase().includes(query) ||
+            (m?.id || "").toLowerCase().includes(query)
         );
         if (models.length === 0 && !providerNameMatches) return;
       }
