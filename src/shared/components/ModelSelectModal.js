@@ -446,8 +446,9 @@ export default function ModelSelectModal({
 
   // Sort models alphabetically, with added models floated to top
   const sortModels = (models) => {
-    const added = models.filter(m => addedModelValues.includes(m.value)).sort((a, b) => a.name.localeCompare(b.name));
-    const rest = models.filter(m => !addedModelValues.includes(m.value)).sort((a, b) => a.name.localeCompare(b.name));
+    const getName = (m) => (m?.name || m?.id || m?.value || "");
+    const added = models.filter(m => addedModelValues.includes(m.value)).sort((a, b) => getName(a).localeCompare(getName(b)));
+    const rest = models.filter(m => !addedModelValues.includes(m.value)).sort((a, b) => getName(a).localeCompare(getName(b)));
     return [...added, ...rest];
   };
 

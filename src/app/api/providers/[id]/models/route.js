@@ -176,13 +176,11 @@ const PROVIDER_MODELS_CONFIG = {
     })
   },
   antigravity: {
-    url: "https://daily-cloudcode-pa.sandbox.googleapis.com/v1internal:models",
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    authHeader: "Authorization",
-    authPrefix: "Bearer ",
-    body: {},
-    parseResponse: (data) => data.models || []
+    // Antigravity models are static curated / quota family; upstream Google endpoint returns 403/404 for consumer accounts
+    customResolver: async (connection) => {
+      const staticModels = getModelsByProviderId("antigravity");
+      return { models: staticModels };
+    }
   },
   github: {
     url: "https://api.githubcopilot.com/models",
@@ -491,7 +489,10 @@ export async function GET(request, { params }) {
       }
 
       const data = await response.json();
-      const models = data.data || data.models || [];
+      const models = (data.data || data.models || []).map((m) => {
+        if (!m || typeof m !== "object") return { id: String(m), name: String(m) };
+        return { ...m, name: m.name || m.label || m.id };
+      });
 
       return NextResponse.json({
         provider: connection.provider,
@@ -532,7 +533,10 @@ export async function GET(request, { params }) {
       }
 
       const data = await response.json();
-      const models = data.data || data.models || [];
+      const models = (data.data || data.models || []).map((m) => {
+        if (!m || typeof m !== "object") return { id: String(m), name: String(m) };
+        return { ...m, name: m.name || m.label || m.id };
+      });
 
       return NextResponse.json({
         provider: connection.provider,
