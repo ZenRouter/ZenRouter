@@ -62,4 +62,18 @@ describe("getCapabilitiesForModel", () => {
     expect(getCapabilitiesForModel("kiro", "gpt-5.6-luna-agentic")).toMatchObject(kiroGpt56Expected);
     expect(getCapabilitiesForModel("kiro", "gpt-5.6-sol-thinking-agentic")).toMatchObject(kiroGpt56Expected);
   });
+
+  it("reports GPT-6 Astra with official 1.05M context / 128k output limits", () => {
+    const expected = {
+      contextWindow: 1050000,
+      maxOutput: 128000,
+      thinkingFormat: "openai",
+      reasoning: true,
+      vision: true,
+      search: true,
+    };
+    for (const model of ["gpt-6-astra", "openai/gpt-6-astra", "luo/luo/gpt-6-astra"]) {
+      expect(getCapabilitiesForModel("codex", model)).toMatchObject(expected);
+    }
+  });
 });
