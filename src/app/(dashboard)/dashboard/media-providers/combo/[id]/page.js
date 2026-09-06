@@ -1,8 +1,9 @@
 "use client";
 
 import { useParams, notFound, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Card, Button, Input, Toggle, ModelSelectModal } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import { AI_PROVIDERS, MEDIA_PROVIDER_KINDS } from "@/shared/constants/providers";
@@ -37,6 +38,19 @@ const EXAMPLE_BODIES = {
   image: (n) => ({ model: n, prompt: "A cute cat playing piano", n: 1, size: "1024x1024" }),
   tts: (n) => ({ model: n, input: "Hello, this is a test.", voice: "alloy" }),
 };
+
+// Mask large b64_json strings to keep JSON view readable
+function maskB64(obj) {
+  if (!obj || typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(maskB64);
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    out[k] = (k === "b64_json" && typeof v === "string" && v.length > 100)
+      ? `<${v.length} chars base64>`
+      : maskB64(v);
+  }
+  return out;
+}
 
 // Map combo.kind → listing route to go back to
 function getListingHref(kind) {
@@ -169,7 +183,7 @@ export default function ComboDetailPage() {
     if (res.ok) router.push(getListingHref(combo.kind));
   };
 
-  const handleTest = async () => {
+  const handleTest = useCallback(async () => {
     setTesting(true);
     setTestResult(null);
     setTestError("");
@@ -213,20 +227,7 @@ export default function ComboDetailPage() {
       setTestError(e.message || "Network error");
     }
     setTesting(false);
-  };
-
-  // Mask large b64_json strings to keep JSON view readable
-  function maskB64(obj) {
-    if (!obj || typeof obj !== "object") return obj;
-    if (Array.isArray(obj)) return obj.map(maskB64);
-    const out = {};
-    for (const [k, v] of Object.entries(obj)) {
-      out[k] = (k === "b64_json" && typeof v === "string" && v.length > 100)
-        ? `<${v.length} chars base64>`
-        : maskB64(v);
-    }
-    return out;
-  }
+  }, [testResult, combo, apiKey]);
 
   if (loading) return <div className="text-text-muted text-sm">Loading...</div>;
   if (!combo) return notFound();
@@ -357,7 +358,7 @@ export default function ComboDetailPage() {
                       Download
                     </a>
                   </div>
-                  <img src={testResult.imageUrl} alt="Generated" className="max-w-full rounded-lg border border-border" loading="lazy" decoding="async" />
+                  <Image src={testResult.imageUrl || ""} alt="Generated" width={1024} height={1024} unoptimized className="h-auto w-auto max-w-full rounded-lg border border-border" />
                 </div>
               )}
               {testResult.audioUrl && (

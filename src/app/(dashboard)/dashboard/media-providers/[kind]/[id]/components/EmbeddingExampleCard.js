@@ -37,7 +37,11 @@ export function EmbeddingExampleCard({ providerId, customAlias }) {
   const { copied: copiedRes, copy: copyRes } = useCopyToClipboard();
 
   useEffect(() => {
-    setLocalEndpoint(window.location.origin);
+    let cancelled = false;
+    const nextEndpoint = window.location.origin;
+    (async () => {
+      if (!cancelled) setLocalEndpoint(nextEndpoint);
+    })();
     fetch("/api/keys")
       .then((r) => r.json())
       .then((d) => { setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || ""); })
@@ -46,6 +50,7 @@ export function EmbeddingExampleCard({ providerId, customAlias }) {
       .then((r) => r.json())
       .then((d) => { if (d.publicUrl) setTunnelEndpoint(d.publicUrl); })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   const endpoint = useTunnel ? tunnelEndpoint : localEndpoint;

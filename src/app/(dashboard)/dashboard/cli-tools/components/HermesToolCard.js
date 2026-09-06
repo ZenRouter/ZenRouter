@@ -50,23 +50,6 @@ export default function HermesToolCard({
 
   const configStatus = getConfigStatus();
 
-  useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey) {
-      setSelectedApiKey(apiKeys[0].key);
-    }
-  }, [apiKeys, selectedApiKey]);
-
-  useEffect(() => {
-    if (initialStatus) setHermesStatus(initialStatus);
-  }, [initialStatus]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      if (!hermesStatus) checkStatus();
-      fetchModelAliases();
-    }
-  }, [isExpanded]);
-
   const fetchModelAliases = async () => {
     try {
       const res = await fetch("/api/models/alias");
@@ -76,14 +59,6 @@ export default function HermesToolCard({
       console.log("Error fetching model aliases:", error);
     }
   };
-
-  useEffect(() => {
-    if (hermesStatus?.installed && !hasInitializedModel.current) {
-      hasInitializedModel.current = true;
-      const cfg = hermesStatus.settings?.model;
-      if (cfg?.default) setSelectedModel(cfg.default);
-    }
-  }, [hermesStatus]);
 
   const checkStatus = async () => {
     setChecking(true);
@@ -97,6 +72,72 @@ export default function HermesToolCard({
       setChecking(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    if (apiKeys?.length > 0 && !selectedApiKey) {
+      const nextApiKey = apiKeys[0].key;
+      (async () => {
+        if (!cancelled) setSelectedApiKey(nextApiKey);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [apiKeys, selectedApiKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (initialStatus) {
+      const nextStatus = initialStatus;
+      (async () => {
+        if (!cancelled) setHermesStatus(nextStatus);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [initialStatus]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    let cancelled = false;
+    if (!hermesStatus) {
+      (async () => {
+        setChecking(true);
+        try {
+          const res = await fetch(ENDPOINT);
+          const data = await res.json();
+          if (!cancelled) setHermesStatus(data);
+        } catch (error) {
+          if (!cancelled) setHermesStatus({ installed: false, error: error.message });
+        } finally {
+          if (!cancelled) setChecking(false);
+        }
+      })();
+    }
+    (async () => {
+      try {
+        const res = await fetch("/api/models/alias");
+        const data = await res.json();
+        if (res.ok && !cancelled) setModelAliases(data.aliases || {});
+      } catch (error) {
+        console.log("Error fetching model aliases:", error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded, hermesStatus]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (hermesStatus?.installed && !hasInitializedModel.current) {
+      hasInitializedModel.current = true;
+      const cfg = hermesStatus.settings?.model;
+      if (cfg?.default) {
+        const nextModel = cfg.default;
+        (async () => {
+          if (!cancelled) setSelectedModel(nextModel);
+        })();
+      }
+    }
+    return () => { cancelled = true; };
+  }, [hermesStatus]);
 
   const normalizeLocalhost = (url) => url.replace("://localhost", "://127.0.0.1");
 

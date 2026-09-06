@@ -66,30 +66,95 @@ export default function ClaudeToolCard({
 
   const configStatus = getConfigStatus();
 
-  useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey) {
-      setSelectedApiKey(apiKeys[0].key);
+  const fetchModelAliases = async () => {
+    try {
+      const res = await fetch("/api/models/alias");
+      const data = await res.json();
+      if (res.ok) setModelAliases(data.aliases || {});
+    } catch (error) {
+      console.log("Error fetching model aliases:", error);
     }
+  };
+
+  const checkClaudeStatus = async () => {
+    setCheckingClaude(true);
+    try {
+      const res = await fetch("/api/cli-tools/claude-settings");
+      const data = await res.json();
+      setClaudeStatus(data);
+      setExaMcpEnabled(!!data.exaMcpEnabled);
+    } catch (error) {
+      setClaudeStatus({ installed: false, error: error.message });
+    } finally {
+      setCheckingClaude(false);
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    if (apiKeys?.length > 0 && !selectedApiKey) {
+      const nextApiKey = apiKeys[0].key;
+      (async () => {
+        if (!cancelled) setSelectedApiKey(nextApiKey);
+      })();
+    }
+    return () => { cancelled = true; };
   }, [apiKeys, selectedApiKey]);
 
   useEffect(() => {
+    let cancelled = false;
     if (initialStatus) {
-      setClaudeStatus(initialStatus);
-      setExaMcpEnabled(!!initialStatus.exaMcpEnabled);
+      const nextStatus = initialStatus;
+      const nextExaMcp = !!initialStatus.exaMcpEnabled;
+      (async () => {
+        if (cancelled) return;
+        setClaudeStatus(nextStatus);
+        setExaMcpEnabled(nextExaMcp);
+      })();
     }
+    return () => { cancelled = true; };
   }, [initialStatus]);
 
   useEffect(() => {
+    let cancelled = false;
     const v = claudeStatus?.settings?.env?.CLAUDE_CODE_MAX_CONTEXT_TOKENS;
-    setMaxContextTokens(v || "");
+    const nextTokens = v || "";
+    (async () => {
+      if (!cancelled) setMaxContextTokens(nextTokens);
+    })();
+    return () => { cancelled = true; };
   }, [claudeStatus?.settings?.env?.CLAUDE_CODE_MAX_CONTEXT_TOKENS]);
 
   useEffect(() => {
-    if (isExpanded) {
-      if (!claudeStatus) checkClaudeStatus();
-      fetchModelAliases();
+    if (!isExpanded) return;
+    let cancelled = false;
+    if (!claudeStatus) {
+      (async () => {
+        setCheckingClaude(true);
+        try {
+          const res = await fetch("/api/cli-tools/claude-settings");
+          const data = await res.json();
+          if (cancelled) return;
+          setClaudeStatus(data);
+          setExaMcpEnabled(!!data.exaMcpEnabled);
+        } catch (error) {
+          if (!cancelled) setClaudeStatus({ installed: false, error: error.message });
+        } finally {
+          if (!cancelled) setCheckingClaude(false);
+        }
+      })();
     }
-  }, [isExpanded]);
+    (async () => {
+      try {
+        const res = await fetch("/api/models/alias");
+        const data = await res.json();
+        if (res.ok && !cancelled) setModelAliases(data.aliases || {});
+      } catch (error) {
+        console.log("Error fetching model aliases:", error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded, claudeStatus]);
 
   useEffect(() => {
     fetch("/api/settings").then(r => r.json()).then(data => {
@@ -107,17 +172,8 @@ export default function ClaudeToolCard({
     }).catch(() => {});
   };
 
-  const fetchModelAliases = async () => {
-    try {
-      const res = await fetch("/api/models/alias");
-      const data = await res.json();
-      if (res.ok) setModelAliases(data.aliases || {});
-    } catch (error) {
-      console.log("Error fetching model aliases:", error);
-    }
-  };
-
   useEffect(() => {
+    let cancelled = false;
     if (claudeStatus?.installed && !hasInitializedModels.current) {
       hasInitializedModels.current = true;
       const env = claudeStatus.settings?.env || {};
@@ -134,24 +190,13 @@ export default function ClaudeToolCard({
       // Restore key from settings.json; ApiKeySelect matches it against saved presets
       const tokenFromFile = env.ANTHROPIC_AUTH_TOKEN;
       if (tokenFromFile) {
-        setSelectedApiKey(tokenFromFile);
+        (async () => {
+          if (!cancelled) setSelectedApiKey(tokenFromFile);
+        })();
       }
     }
+    return () => { cancelled = true; };
   }, [claudeStatus, apiKeys, tool.defaultModels, onModelMappingChange]);
-
-  const checkClaudeStatus = async () => {
-    setCheckingClaude(true);
-    try {
-      const res = await fetch("/api/cli-tools/claude-settings");
-      const data = await res.json();
-      setClaudeStatus(data);
-      setExaMcpEnabled(!!data.exaMcpEnabled);
-    } catch (error) {
-      setClaudeStatus({ installed: false, error: error.message });
-    } finally {
-      setCheckingClaude(false);
-    }
-  };
 
   const getEffectiveBaseUrl = () => {
     const url = customBaseUrl || baseUrl;

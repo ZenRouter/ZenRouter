@@ -56,10 +56,6 @@ export default function CombosPage() {
   const [confirmState, setConfirmState] = useState(null);
   const { copied, copy } = useCopyToClipboard();
 
-  useEffect(() => {
-    fetchData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   const fetchData = async () => {
     try {
       const [combosRes, providersRes, settingsRes] = await Promise.all([
@@ -70,7 +66,7 @@ export default function CombosPage() {
       const combosData = await combosRes.json();
       const providersData = await providersRes.json();
       const settingsData = settingsRes.ok ? await settingsRes.json() : {};
-      
+
       // Only LLM combos here - webSearch/webFetch combos belong to media-providers/web
       if (combosRes.ok) setCombos((combosData.combos || []).filter(c => !c.kind || c.kind === "llm"));
       if (providersRes.ok) {
@@ -89,6 +85,40 @@ export default function CombosPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [combosRes, providersRes, settingsRes] = await Promise.all([
+          fetch("/api/combos"),
+          fetch("/api/providers"),
+          fetch("/api/settings"),
+        ]);
+        const combosData = await combosRes.json();
+        const providersData = await providersRes.json();
+        const settingsData = settingsRes.ok ? await settingsRes.json() : {};
+
+        // Only LLM combos here - webSearch/webFetch combos belong to media-providers/web
+        if (combosRes.ok && !cancelled) setCombos((combosData.combos || []).filter(c => !c.kind || c.kind === "llm"));
+        if (providersRes.ok && !cancelled) {
+          setActiveProviders(providersData.connections || []);
+        }
+        if (!cancelled) setComboStrategies(settingsData.comboStrategies || {});
+        const rawAdapter = settingsData.capacityAdapter || {};
+        const normalized = {};
+        for (const cap of CAPACITY_ADAPTER_CAPS) {
+          normalized[cap.key] = normalizeCapEntry(rawAdapter[cap.key]);
+        }
+        if (!cancelled) setCapacityAdapter(normalized);
+      } catch (error) {
+        console.log("Error fetching data:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSetCapacityAdapter = async (next) => {
     setCapacityAdapter(next);
@@ -678,19 +708,20 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
     }
   };
 
-  const fetchModalData = async () => {
-    try {
-      const aliasesRes = await fetch("/api/models/alias");
-      if (!aliasesRes.ok) return;
-      const aliasesData = await aliasesRes.json();
-      setModelAliases(aliasesData.aliases || {});
-    } catch (error) {
-      console.error("Error fetching modal data:", error);
-    }
-  };
-
   useEffect(() => {
-    if (isOpen) fetchModalData();
+    if (!isOpen) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const aliasesRes = await fetch("/api/models/alias");
+        if (!aliasesRes.ok) return;
+        const aliasesData = await aliasesRes.json();
+        if (!cancelled) setModelAliases(aliasesData.aliases || {});
+      } catch (error) {
+        console.error("Error fetching modal data:", error);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [isOpen]);
 
   const validateName = (value) => {

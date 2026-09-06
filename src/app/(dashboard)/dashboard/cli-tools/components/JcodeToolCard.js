@@ -48,23 +48,6 @@ export default function JcodeToolCard({
 
   const configStatus = getConfigStatus();
 
-  useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey) {
-      setSelectedApiKey(apiKeys[0].key);
-    }
-  }, [apiKeys, selectedApiKey]);
-
-  useEffect(() => {
-    if (initialStatus) setJcodeStatus(initialStatus);
-  }, [initialStatus]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      if (!jcodeStatus) checkJcodeStatus();
-      fetchModelAliases();
-    }
-  }, [isExpanded]);
-
   const fetchModelAliases = async () => {
     try {
       const res = await fetch("/api/models/alias");
@@ -74,23 +57,6 @@ export default function JcodeToolCard({
       console.log("Error fetching model aliases:", error);
     }
   };
-
-  useEffect(() => {
-    if (jcodeStatus?.installed && !hasInitializedModel.current) {
-      hasInitializedModel.current = true;
-      const provider = jcodeStatus.config?.providers?.["zenrouter"];
-      if (provider) {
-        if (provider.default_model) {
-          setSelectedModel(provider.default_model);
-        }
-        // Try to match API key from env file
-        const envApiKey = jcodeStatus.envApiKey;
-        if (envApiKey && apiKeys?.some(k => k.key === envApiKey)) {
-          setSelectedApiKey(envApiKey);
-        }
-      }
-    }
-  }, [jcodeStatus, apiKeys]);
 
   const checkJcodeStatus = async () => {
     setCheckingJcode(true);
@@ -104,6 +70,81 @@ export default function JcodeToolCard({
       setCheckingJcode(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    if (apiKeys?.length > 0 && !selectedApiKey) {
+      const nextApiKey = apiKeys[0].key;
+      (async () => {
+        if (!cancelled) setSelectedApiKey(nextApiKey);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [apiKeys, selectedApiKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (initialStatus) {
+      const nextStatus = initialStatus;
+      (async () => {
+        if (!cancelled) setJcodeStatus(nextStatus);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [initialStatus]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    let cancelled = false;
+    if (!jcodeStatus) {
+      (async () => {
+        setCheckingJcode(true);
+        try {
+          const res = await fetch("/api/cli-tools/jcode-settings");
+          const data = await res.json();
+          if (!cancelled) setJcodeStatus(data);
+        } catch (error) {
+          if (!cancelled) setJcodeStatus({ installed: false, error: error.message });
+        } finally {
+          if (!cancelled) setCheckingJcode(false);
+        }
+      })();
+    }
+    (async () => {
+      try {
+        const res = await fetch("/api/models/alias");
+        const data = await res.json();
+        if (res.ok && !cancelled) setModelAliases(data.aliases || {});
+      } catch (error) {
+        console.log("Error fetching model aliases:", error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded, jcodeStatus]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (jcodeStatus?.installed && !hasInitializedModel.current) {
+      hasInitializedModel.current = true;
+      const provider = jcodeStatus.config?.providers?.["zenrouter"];
+      if (provider) {
+        if (provider.default_model) {
+          const nextModel = provider.default_model;
+          (async () => {
+            if (!cancelled) setSelectedModel(nextModel);
+          })();
+        }
+        // Try to match API key from env file
+        const envApiKey = jcodeStatus.envApiKey;
+        if (envApiKey && apiKeys?.some(k => k.key === envApiKey)) {
+          (async () => {
+            if (!cancelled) setSelectedApiKey(envApiKey);
+          })();
+        }
+      }
+    }
+    return () => { cancelled = true; };
+  }, [jcodeStatus, apiKeys]);
 
   const normalizeLocalhost = (url) => url.replace("://localhost", "://127.0.0.1");
 

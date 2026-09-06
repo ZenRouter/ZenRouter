@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { Badge, Button } from "@/shared/components";
 import { getModelsByProviderId } from "@/shared/constants/models";
 import { isAnthropicCompatibleProvider, isOpenAICompatibleProvider } from "@/shared/constants/providers";
@@ -207,7 +208,11 @@ export default function BasicChatPageClient() {
   const historyMenuRef = useRef(null);
 
   useEffect(() => {
-    setIsHydrated(true);
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) setIsHydrated(true);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -376,8 +381,9 @@ export default function BasicChatPageClient() {
   }, [isHydrated, sessions, activeSessionId, activeProviderId, draft]);
 
   useEffect(() => {
-    if (!isHydrated || loadingData || initializedRef.current) return;
-    if (providerGroups.length === 0) return;
+    let cancelled = false;
+    if (!isHydrated || loadingData || initializedRef.current) return () => { cancelled = true; };
+    if (providerGroups.length === 0) return () => { cancelled = true; };
 
     const savedProvider = providerGroups.find((group) => group.providerId === activeProviderId) || providerGroups[0];
     const savedModel = activeModelId && modelIndex.has(activeModelId)
@@ -390,10 +396,16 @@ export default function BasicChatPageClient() {
         ? modelIndex.get(session.modelId)
         : savedModel;
       initializedRef.current = true;
-      setActiveSessionId(session.id);
-      setActiveProviderId(sessionModel?.providerId || savedProvider.providerId);
-      setActiveModelId(sessionModel?.id || savedModel.id);
-      return;
+      const nextSessionId = session.id;
+      const nextProviderId = sessionModel?.providerId || savedProvider.providerId;
+      const nextModelId = sessionModel?.id || savedModel.id;
+      (async () => {
+        if (cancelled) return;
+        setActiveSessionId(nextSessionId);
+        setActiveProviderId(nextProviderId);
+        setActiveModelId(nextModelId);
+      })();
+      return () => { cancelled = true; };
     }
 
     const session = {
@@ -409,10 +421,17 @@ export default function BasicChatPageClient() {
     };
 
     initializedRef.current = true;
-    setSessions([session]);
-    setActiveSessionId(session.id);
-    setActiveProviderId(savedProvider.providerId);
-    setActiveModelId(savedModel.id);
+    const nextSession = session;
+    const nextProviderId = savedProvider.providerId;
+    const nextModelId = savedModel.id;
+    (async () => {
+      if (cancelled) return;
+      setSessions([nextSession]);
+      setActiveSessionId(nextSession.id);
+      setActiveProviderId(nextProviderId);
+      setActiveModelId(nextModelId);
+    })();
+    return () => { cancelled = true; };
   }, [isHydrated, loadingData, providerGroups, modelIndex, sessions, activeSessionId, activeProviderId, activeModelId]);
 
   const updateSession = (sessionId, updater) => {
@@ -890,8 +909,8 @@ export default function BasicChatPageClient() {
                       {message.attachments?.length ? (
                         <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3 mt-2">
                           {message.attachments.map((attachment) => (
-                            <a key={attachment.id} href={attachment.dataUrl} target="_blank" rel="noreferrer" className="overflow-hidden rounded-[18px] border border-white/10 bg-black/20">
-                              <img src={attachment.dataUrl} alt={attachment.name} className="h-28 w-full object-cover" loading="lazy" decoding="async" />
+                            <a key={attachment.id} href={attachment.dataUrl} target="_blank" rel="noreferrer" className="relative block h-28 w-full overflow-hidden rounded-[18px] border border-white/10 bg-black/20">
+                              <Image src={attachment.dataUrl} alt={attachment.name} fill unoptimized sizes="(max-width: 768px) 50vw, 33vw" className="object-cover" />
                             </a>
                           ))}
                         </div>

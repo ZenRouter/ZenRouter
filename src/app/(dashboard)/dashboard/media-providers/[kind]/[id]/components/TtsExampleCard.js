@@ -67,7 +67,11 @@ export function TtsExampleCard({ providerId }) {
   const [connectionCount, setConnectionCount] = useState(0);
 
   useEffect(() => {
-    setLocalEndpoint(window.location.origin);
+    let cancelled = false;
+    const nextEndpoint = window.location.origin;
+    (async () => {
+      if (!cancelled) setLocalEndpoint(nextEndpoint);
+    })();
     fetch("/api/keys")
       .then((r) => r.json())
       .then((d) => { setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || ""); })
@@ -94,37 +98,63 @@ export function TtsExampleCard({ providerId }) {
         if (config.hasBrowseButton) {
           // Google TTS: pre-select "en" (English) as default, show as single voice chip
           const defaultVoice = voices.find((v) => v.id === "en") || voices[0];
-          setSelectedLang(defaultVoice.id);
-          setSelectedVoice(defaultVoice.id);
-          setSelectedVoiceName(defaultVoice.name);
-          setCountryVoices([{ id: defaultVoice.id, name: defaultVoice.name }]);
+          const nextLang = defaultVoice.id;
+          const nextVoice = defaultVoice.id;
+          const nextVoiceName = defaultVoice.name;
+          const nextCountryVoices = [{ id: defaultVoice.id, name: defaultVoice.name }];
+          (async () => {
+            if (cancelled) return;
+            setSelectedLang(nextLang);
+            setSelectedVoice(nextVoice);
+            setSelectedVoiceName(nextVoiceName);
+            setCountryVoices(nextCountryVoices);
+          })();
         } else {
           // OpenAI/OpenRouter: set voice chips directly (no language picker)
-          setCountryVoices(voices);
-          setSelectedVoice(voices[0].id);
-          setSelectedVoiceName(voices[0].name || voices[0].id);
+          const nextCountryVoices = voices;
+          const nextVoice = voices[0].id;
+          const nextVoiceName = voices[0].name || voices[0].id;
+          (async () => {
+            if (cancelled) return;
+            setCountryVoices(nextCountryVoices);
+            setSelectedVoice(nextVoice);
+            setSelectedVoiceName(nextVoiceName);
+          })();
         }
       }
     }
     // api-language (edge-tts, local-device, elevenlabs): NO default load, wait for user to pick language
     // config (nvidia, hyperbolic, deepgram, huggingface, cartesia, playht, coqui, tortoise, inworld, qwen):
     // use ttsConfig.models for model selector; voice is empty by default (backend uses provider default)
-  }, [providerId]);
+    return () => { cancelled = true; };
+  }, [providerId, config.hasBrowseButton, config.hasModelSelector, config.modelKey, config.voiceKey, config.voiceSource, config.voicesPerModel]);
 
   // Update voices when model changes (voicesPerModel providers)
   useEffect(() => {
-    if (!config.voicesPerModel || !selectedModel) return;
-    const voices = getTtsVoicesForModel(providerId, selectedModel) || [];
-    setCountryVoices(voices);
-    if (voices.length) {
-      setSelectedVoice(voices[0].id);
-      setSelectedVoiceName(voices[0].name || voices[0].id);
-    } else {
-      // Model has no preset voices (voicedesign/voiceclone) — drop stale voice
-      setSelectedVoice("");
-      setSelectedVoiceName("");
+    let cancelled = false;
+    if (config.voicesPerModel && selectedModel) {
+      const voices = getTtsVoicesForModel(providerId, selectedModel) || [];
+      if (voices.length) {
+        const nextCountryVoices = voices;
+        const nextVoice = voices[0].id;
+        const nextVoiceName = voices[0].name || voices[0].id;
+        (async () => {
+          if (cancelled) return;
+          setCountryVoices(nextCountryVoices);
+          setSelectedVoice(nextVoice);
+          setSelectedVoiceName(nextVoiceName);
+        })();
+      } else {
+        // Model has no preset voices (voicedesign/voiceclone) — drop stale voice
+        (async () => {
+          if (cancelled) return;
+          setSelectedVoice("");
+          setSelectedVoiceName("");
+        })();
+      }
     }
-  }, [selectedModel]);
+    return () => { cancelled = true; };
+  }, [selectedModel, config.voicesPerModel, providerId]);
 
   // Open modal — load language list
   const openModal = async () => {

@@ -77,11 +77,55 @@ export default function APIPageClient({ machineId }) {
   // API key visibility toggle state
   const [visibleKeys, setVisibleKeys] = useState(new Set());
 
+  // Client-side reachable only (server no longer probes; watchdog handles backend health).
+  // Miss-debounce: only flip to false after N consecutive misses.
+  const updateReachable = useCallback((_unused, clientRef, missRef, setter, everRef, everSetter) => {
+    const reachable = clientRef.current;
+    if (reachable) {
+      missRef.current = 0;
+      setter(true);
+      if (!everRef.current) {
+        everRef.current = true;
+        everSetter(true);
+      }
+    } else {
+      missRef.current += 1;
+      if (missRef.current >= REACHABLE_MISS_THRESHOLD) setter(false);
+    }
+  }, []);
+
+  // Trust user intent (settingsEnabled): UI stays "enabled" while watchdog restarts process
+  const syncTunnelStatus = useCallback(async () => {
+    try {
+      const statusRes = await fetch("/api/tunnel/status", { cache: "no-store" });
+      if (!statusRes.ok) return;
+      const data = await statusRes.json();
+      const tEnabled = data.tunnel?.settingsEnabled ?? data.tunnel?.enabled ?? false;
+      const tUrl = data.tunnel?.tunnelUrl || "";
+      setTunnelUrl(tUrl);
+      setTunnelPublicUrl(data.tunnel?.publicUrl || "");
+      setTunnelEnabled(tEnabled);
+      updateReachable(null, tunnelClientReachableRef, tunnelMissRef, setTunnelReachable, tunnelEverReachableRef, setTunnelEverReachable);
+
+      const tsEn = data.tailscale?.settingsEnabled ?? data.tailscale?.enabled ?? false;
+      const tsUrlVal = data.tailscale?.tunnelUrl || "";
+      setTsUrl(tsUrlVal);
+      setTsEnabled(tsEn);
+      updateReachable(null, tsClientReachableRef, tsMissRef, setTsReachable, tsEverReachableRef, setTsEverReachable);
+    } catch { /* ignore poll errors */ }
+  }, [updateReachable]);
+
   // Client-side local/remote detection (UI hint only, not a security gate)
   const [isRemoteHost, setIsRemoteHost] = useState(false);
   useEffect(() => {
-    if (typeof window !== "undefined")
-      setIsRemoteHost(!["localhost", "127.0.0.1", "::1"].includes(window.location.hostname));
+    let cancelled = false;
+    if (typeof window !== "undefined") {
+      const nextIsRemoteHost = !["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+      (async () => {
+        if (!cancelled) setIsRemoteHost(nextIsRemoteHost);
+      })();
+    }
+    return () => { cancelled = true; };
   }, []);
 
   const { copied, copy } = useCopyToClipboard();
@@ -98,9 +142,74 @@ export default function APIPageClient({ machineId }) {
   }, [tsInstallLog]);
 
   useEffect(() => {
-    fetchData();
-    loadSettings();
-  }, []);
+    let cancelled = false;
+    (async () => {
+      try {
+        const fetchKeys = async () => {
+          const res = await fetch("/api/keys");
+          if (!res.ok) return [];
+          const data = await res.json();
+          return data.keys || [];
+        };
+
+        let existing = await fetchKeys();
+        // Auto-provision a default key for first-time users so the endpoint works out of the box.
+        if (existing.length === 0) {
+          try {
+            const createRes = await fetch("/api/keys", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name: "Default Key" }),
+            });
+            if (createRes.ok) existing = await fetchKeys();
+          } catch { /* fall through to empty render */ }
+        }
+        if (!cancelled) setKeys(existing);
+      } catch (error) {
+        console.log("Error fetching data:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    (async () => {
+      setTunnelChecking(true);
+      try {
+        const [settingsRes, statusRes] = await Promise.all([
+          fetch("/api/settings"),
+          fetch("/api/tunnel/status", { cache: "no-store" })
+        ]);
+        if (settingsRes.ok) {
+          const data = await settingsRes.json();
+          if (cancelled) return;
+          setRequireApiKey(data.requireApiKey || false);
+          setRequireLogin(data.requireLogin !== false);
+          setHasPassword(data.hasPassword || false);
+          setTunnelDashboardAccess(data.tunnelDashboardAccess || false);
+        }
+        if (statusRes.ok) {
+          const data = await statusRes.json();
+          if (cancelled) return;
+          const tEnabled = data.tunnel?.settingsEnabled ?? data.tunnel?.enabled ?? false;
+          const tUrl = data.tunnel?.tunnelUrl || "";
+          setTunnelUrl(tUrl);
+          setTunnelPublicUrl(data.tunnel?.publicUrl || "");
+          setTunnelEnabled(tEnabled);
+          updateReachable(null, tunnelClientReachableRef, tunnelMissRef, setTunnelReachable, tunnelEverReachableRef, setTunnelEverReachable);
+
+          const tsEn = data.tailscale?.settingsEnabled ?? data.tailscale?.enabled ?? false;
+          const tsUrlVal = data.tailscale?.tunnelUrl || "";
+          setTsUrl(tsUrlVal);
+          setTsEnabled(tsEn);
+          updateReachable(null, tsClientReachableRef, tsMissRef, setTsReachable, tsEverReachableRef, setTsEverReachable);
+        }
+      } catch (error) {
+        console.log("Error loading settings:", error);
+      } finally {
+        if (!cancelled) setTunnelChecking(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [updateReachable]);
 
   // Status poll: only while degraded (not yet reachable). Stop once healthy to avoid spam.
   // Visibility re-check: refresh once when tab becomes visible.
@@ -118,7 +227,7 @@ export default function APIPageClient({ machineId }) {
       clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [tunnelEnabled, tsEnabled, tunnelReachable, tsReachable]);
+  }, [tunnelEnabled, tsEnabled, tunnelReachable, tsReachable, syncTunnelStatus]);
 
   // Browser-side periodic ping: probes tunnel/tailscale URLs directly so UI stays
   // "reachable" even when backend DNS (1.1.1.1) hiccups on *.ts.net or *.trycloudflare.com.
@@ -152,80 +261,6 @@ export default function APIPageClient({ machineId }) {
     const id = setInterval(probeBoth, CLIENT_PING_FAST_MS);
     return () => clearInterval(id);
   }, [tunnelEnabled, tunnelUrl, tunnelPublicUrl, tsEnabled, tsUrl, tunnelReachable, tsReachable]);
-
-  // Client-side reachable only (server no longer probes; watchdog handles backend health).
-  // Miss-debounce: only flip to false after N consecutive misses.
-  const updateReachable = useCallback((_unused, clientRef, missRef, setter, everRef, everSetter) => {
-    const reachable = clientRef.current;
-    if (reachable) {
-      missRef.current = 0;
-      setter(true);
-      if (!everRef.current) {
-        everRef.current = true;
-        everSetter(true);
-      }
-    } else {
-      missRef.current += 1;
-      if (missRef.current >= REACHABLE_MISS_THRESHOLD) setter(false);
-    }
-  }, []);
-
-  // Trust user intent (settingsEnabled): UI stays "enabled" while watchdog restarts process
-  const syncTunnelStatus = async () => {
-    try {
-      const statusRes = await fetch("/api/tunnel/status", { cache: "no-store" });
-      if (!statusRes.ok) return;
-      const data = await statusRes.json();
-      const tEnabled = data.tunnel?.settingsEnabled ?? data.tunnel?.enabled ?? false;
-      const tUrl = data.tunnel?.tunnelUrl || "";
-      setTunnelUrl(tUrl);
-      setTunnelPublicUrl(data.tunnel?.publicUrl || "");
-      setTunnelEnabled(tEnabled);
-      updateReachable(null, tunnelClientReachableRef, tunnelMissRef, setTunnelReachable, tunnelEverReachableRef, setTunnelEverReachable);
-
-      const tsEn = data.tailscale?.settingsEnabled ?? data.tailscale?.enabled ?? false;
-      const tsUrlVal = data.tailscale?.tunnelUrl || "";
-      setTsUrl(tsUrlVal);
-      setTsEnabled(tsEn);
-      updateReachable(null, tsClientReachableRef, tsMissRef, setTsReachable, tsEverReachableRef, setTsEverReachable);
-    } catch { /* ignore poll errors */ }
-  };
-
-  const loadSettings = async () => {
-    setTunnelChecking(true);
-    try {
-      const [settingsRes, statusRes] = await Promise.all([
-        fetch("/api/settings"),
-        fetch("/api/tunnel/status", { cache: "no-store" })
-      ]);
-      if (settingsRes.ok) {
-        const data = await settingsRes.json();
-        setRequireApiKey(data.requireApiKey || false);
-        setRequireLogin(data.requireLogin !== false);
-        setHasPassword(data.hasPassword || false);
-        setTunnelDashboardAccess(data.tunnelDashboardAccess || false);
-      }
-      if (statusRes.ok) {
-        const data = await statusRes.json();
-        const tEnabled = data.tunnel?.settingsEnabled ?? data.tunnel?.enabled ?? false;
-        const tUrl = data.tunnel?.tunnelUrl || "";
-        setTunnelUrl(tUrl);
-        setTunnelPublicUrl(data.tunnel?.publicUrl || "");
-        setTunnelEnabled(tEnabled);
-        updateReachable(null, tunnelClientReachableRef, tunnelMissRef, setTunnelReachable, tunnelEverReachableRef, setTunnelEverReachable);
-
-        const tsEn = data.tailscale?.settingsEnabled ?? data.tailscale?.enabled ?? false;
-        const tsUrlVal = data.tailscale?.tunnelUrl || "";
-        setTsUrl(tsUrlVal);
-        setTsEnabled(tsEn);
-        updateReachable(null, tsClientReachableRef, tsMissRef, setTsReachable, tsEverReachableRef, setTsEverReachable);
-      }
-    } catch (error) {
-      console.log("Error loading settings:", error);
-    } finally {
-      setTunnelChecking(false);
-    }
-  };
 
   const handleTunnelDashboardAccess = async (value) => {
     try {
@@ -700,9 +735,14 @@ export default function APIPageClient({ machineId }) {
 
   // Hydration fix: Only access window on client side
   useEffect(() => {
+    let cancelled = false;
     if (typeof window !== "undefined") {
-      setBaseUrl(`${window.location.origin}/v1`);
+      const nextBaseUrl = `${window.location.origin}/v1`;
+      (async () => {
+        if (!cancelled) setBaseUrl(nextBaseUrl);
+      })();
     }
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) {

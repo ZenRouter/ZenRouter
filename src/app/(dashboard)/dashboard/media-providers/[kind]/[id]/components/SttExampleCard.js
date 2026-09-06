@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card } from "@/shared/components";
 import { getProviderAlias } from "@/shared/constants/providers";
 import { getModelKind } from "@/shared/constants/models";
@@ -16,7 +16,10 @@ export function SttExampleCard({ providerId }) {
 
   const [selectedModel, setSelectedModel] = useState(builtinSttModels[0]?.id ?? "");
   const selectedModelObj = sttModels.find((m) => m.id === selectedModel);
-  const allowedParams = Array.isArray(selectedModelObj?.params) ? selectedModelObj.params : [];
+  const allowedParams = useMemo(
+    () => (Array.isArray(selectedModelObj?.params) ? selectedModelObj.params : []),
+    [selectedModelObj]
+  );
 
   const [audioFile, setAudioFile] = useState(null);
   const [language, setLanguage] = useState("");
@@ -35,7 +38,11 @@ export function SttExampleCard({ providerId }) {
   const { copied: copiedRes, copy: copyRes } = useCopyToClipboard();
 
   useEffect(() => {
-    setLocalEndpoint(window.location.origin);
+    let cancelled = false;
+    const nextEndpoint = window.location.origin;
+    (async () => {
+      if (!cancelled) setLocalEndpoint(nextEndpoint);
+    })();
     fetch("/api/keys")
       .then((r) => r.json())
       .then((d) => { setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || ""); })
@@ -57,20 +64,24 @@ export function SttExampleCard({ providerId }) {
     window.addEventListener("focus", loadCustom);
     window.addEventListener("customModelChanged", loadCustom);
     return () => {
+      cancelled = true;
       window.removeEventListener("focus", loadCustom);
       window.removeEventListener("customModelChanged", loadCustom);
     };
   }, [providerAlias]);
 
   const endpoint = useTunnel ? tunnelEndpoint : localEndpoint;
-  const modelFull = selectedModel ? `${providerAlias}/${selectedModel}` : "";
+  const modelFull = useMemo(
+    () => (selectedModel ? `${providerAlias}/${selectedModel}` : ""),
+    [providerAlias, selectedModel]
+  );
 
   const curlSnippet = `curl -X POST ${endpoint}/v1/audio/transcriptions \\
   -H "Authorization: Bearer ${apiKey || "YOUR_KEY"}" \\
   -F "file=@${audioFile?.name || "audio.mp3"}" \\
   -F "model=${modelFull}"${allowedParams.includes("language") && language ? ` \\\n  -F "language=${language}"` : ""}${allowedParams.includes("response_format") ? ` \\\n  -F "response_format=${responseFormat}"` : ""}${allowedParams.includes("temperature") && temperature ? ` \\\n  -F "temperature=${temperature}"` : ""}${allowedParams.includes("prompt") && prompt ? ` \\\n  -F "prompt=${prompt}"` : ""}`;
 
-  const handleRun = async () => {
+  const handleRun = useCallback(async () => {
     if (!audioFile || !modelFull) return;
     setRunning(true);
     setError("");
@@ -101,7 +112,7 @@ export function SttExampleCard({ providerId }) {
     } finally {
       setRunning(false);
     }
-  };
+  }, [audioFile, modelFull, allowedParams, language, responseFormat, temperature, prompt, apiKey]);
 
   const resultStr = typeof result === "string" ? result : (result ? JSON.stringify(result, null, 2) : `{\n  "text": "Hello world..."\n}`);
 

@@ -39,7 +39,12 @@ export default function EndpointPresetControl({
   const [selectedName, setSelectedName] = useState("");
 
   useEffect(() => {
-    setPresets(readPresets());
+    let cancelled = false;
+    const nextPresets = readPresets();
+    (async () => {
+      if (!cancelled) setPresets(nextPresets);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const selectedPreset = useMemo(

@@ -76,8 +76,15 @@ export default function BaseUrlSelect({
       });
     };
     sync();
-    setPresetsLoaded(true);
-    return subscribePresets(sync);
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) setPresetsLoaded(true);
+    })();
+    const unsubscribe = subscribePresets(sync);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, []);
 
   const options = useMemo(
@@ -95,12 +102,15 @@ export default function BaseUrlSelect({
       ? options.find((o) => o.saved && stripSlash(o.url) === current)
       : null;
     const target = matched || options.find((o) => o.value !== CUSTOM_VALUE);
-    if (target) {
-      setMode(target.value);
-      onChange(target.url);
-    } else {
-      setMode(CUSTOM_VALUE);
-    }
+    const nextMode = target ? target.value : CUSTOM_VALUE;
+    const nextUrl = target ? target.url : null;
+    let cancelled = false;
+    (async () => {
+      if (cancelled) return;
+      setMode(nextMode);
+      if (nextUrl) onChange(nextUrl);
+    })();
+    return () => { cancelled = true; };
   }, [presetsLoaded, options, onChange, currentUrl]);
 
   const handleSelect = (e) => {

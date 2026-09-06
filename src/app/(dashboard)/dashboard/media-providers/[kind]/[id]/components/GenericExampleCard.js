@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Card } from "@/shared/components";
 import { MEDIA_PROVIDER_KINDS, getProviderAlias, resolveProviderId } from "@/shared/constants/providers";
 import { getModelsByProviderId, getModelKind } from "@/shared/constants/models";
@@ -70,7 +71,11 @@ export function GenericExampleCard({ providerId, kind }) {
   const { copied: copiedRes, copy: copyRes } = useCopyToClipboard();
 
   useEffect(() => {
-    setLocalEndpoint(window.location.origin);
+    let cancelled = false;
+    const nextEndpoint = window.location.origin;
+    (async () => {
+      if (!cancelled) setLocalEndpoint(nextEndpoint);
+    })();
     fetch("/api/keys")
       .then((r) => r.json())
       .then((d) => { setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || ""); })
@@ -87,6 +92,7 @@ export function GenericExampleCard({ providerId, kind }) {
         setConnections(conns);
       })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, [providerId]);
 
   // Safe to early-return now that all hooks are declared
@@ -344,14 +350,15 @@ export function GenericExampleCard({ providerId, kind }) {
                 )}
               </div>
               {refImagePreviewSrc && (
-                <img
+                <Image
                   src={refImagePreviewSrc}
                   alt="Reference"
-                  className="max-h-40 rounded-lg border border-border object-contain bg-sidebar"
+                  width={640}
+                  height={160}
+                  unoptimized
+                  className="h-auto max-h-40 w-auto rounded-lg border border-border object-contain bg-sidebar"
                   onError={(e) => { e.currentTarget.style.display = "none"; }}
                   onLoad={(e) => { e.currentTarget.style.display = "block"; }}
-                loading="lazy"
-                decoding="async"
                 />
               )}
             </div>
@@ -379,14 +386,15 @@ export function GenericExampleCard({ providerId, kind }) {
                 )}
               </div>
               {maskImagePreviewSrc && (
-                <img
+                <Image
                   src={maskImagePreviewSrc}
                   alt="Mask"
-                  className="max-h-40 rounded-lg border border-border object-contain bg-sidebar"
+                  width={640}
+                  height={160}
+                  unoptimized
+                  className="h-auto max-h-40 w-auto rounded-lg border border-border object-contain bg-sidebar"
                   onError={(e) => { e.currentTarget.style.display = "none"; }}
                   onLoad={(e) => { e.currentTarget.style.display = "block"; }}
-                loading="lazy"
-                decoding="async"
                 />
               )}
             </div>
@@ -487,12 +495,13 @@ export function GenericExampleCard({ providerId, kind }) {
         {partialImage?.b64_json && !result && (
           <div>
             <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Partial preview</span>
-            <img
+            <Image
               src={`data:image/png;base64,${partialImage.b64_json}`}
               alt="Partial"
-              className="max-w-full rounded-lg border border-border mt-1.5 opacity-80"
-            loading="lazy"
-            decoding="async"
+              width={1024}
+              height={1024}
+              unoptimized
+              className="mt-1.5 h-auto w-auto max-w-full rounded-lg border border-border opacity-80"
             />
           </div>
         )}
@@ -531,12 +540,13 @@ export function GenericExampleCard({ providerId, kind }) {
                   Download
                 </a>
               </div>
-              <img
-                src={binaryImageUrl || (result?.data?.data?.[0]?.b64_json ? `data:image/png;base64,${result.data.data[0].b64_json}` : result?.data?.data?.[0]?.url)}
+              <Image
+                src={binaryImageUrl || (result?.data?.data?.[0]?.b64_json ? `data:image/png;base64,${result.data.data[0].b64_json}` : result?.data?.data?.[0]?.url) || ""}
                 alt="Generated"
-                className="max-w-full rounded-lg border border-border"
-              loading="lazy"
-              decoding="async"
+                width={1024}
+                height={1024}
+                unoptimized
+                className="h-auto w-auto max-w-full rounded-lg border border-border"
               />
             </div>
           )}

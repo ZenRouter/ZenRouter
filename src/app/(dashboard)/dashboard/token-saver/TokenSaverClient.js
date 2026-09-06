@@ -61,24 +61,6 @@ export default function TokenSaverClient() {
 
   const { copied, copy } = useCopyToClipboard();
 
-  useEffect(() => {
-    setLocale(getCurrentLocale());
-    return onLocaleChange(() => setLocale(getCurrentLocale()));
-  }, []);
-
-  const isWenyanLocale = WENYAN_LOCALES.includes(locale);
-  const visibleCavemanLevels = isWenyanLocale
-    ? CAVEMAN_LEVELS
-    : CAVEMAN_LEVELS.filter((lvl) => !lvl.wenyan);
-
-  useEffect(() => {
-    const current = CAVEMAN_LEVELS.find((lvl) => lvl.id === cavemanLevel);
-    if (current?.wenyan && !isWenyanLocale) {
-      setCavemanLevel("ultra");
-      patchSetting({ cavemanLevel: "ultra" });
-    }
-  }, [isWenyanLocale, cavemanLevel]);
-
   const patchSetting = async (patch) => {
     try {
       await fetch("/api/settings", {
@@ -90,6 +72,45 @@ export default function TokenSaverClient() {
       console.log("Error updating setting:", error);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    const nextLocale = getCurrentLocale();
+    (async () => {
+      if (!cancelled) setLocale(nextLocale);
+    })();
+    const unsubscribe = onLocaleChange(() => setLocale(getCurrentLocale()));
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  const isWenyanLocale = WENYAN_LOCALES.includes(locale);
+  const visibleCavemanLevels = isWenyanLocale
+    ? CAVEMAN_LEVELS
+    : CAVEMAN_LEVELS.filter((lvl) => !lvl.wenyan);
+
+  useEffect(() => {
+    const current = CAVEMAN_LEVELS.find((lvl) => lvl.id === cavemanLevel);
+    if (current?.wenyan && !isWenyanLocale) {
+      let cancelled = false;
+      (async () => {
+        if (cancelled) return;
+        setCavemanLevel("ultra");
+        try {
+          await fetch("/api/settings", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cavemanLevel: "ultra" }),
+          });
+        } catch (error) {
+          console.log("Error updating setting:", error);
+        }
+      })();
+      return () => { cancelled = true; };
+    }
+  }, [isWenyanLocale, cavemanLevel]);
 
   const handleRtkEnabled = async (value) => {
     try {

@@ -22,37 +22,6 @@ export default function CopilotToolCard({ tool, isExpanded, onToggle, baseUrl, a
   const [modalOpen, setModalOpen] = useState(false);
   const selectedModelsRef = useRef([]);
 
-  useEffect(() => {
-    selectedModelsRef.current = selectedModels;
-  }, [selectedModels]);
-
-  useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey) {
-      setSelectedApiKey(apiKeys[0].key);
-    }
-  }, [apiKeys, selectedApiKey]);
-
-  useEffect(() => {
-    if (initialStatus) setStatus(initialStatus);
-  }, [initialStatus]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      if (!status) checkStatus();
-      fetchModelAliases();
-    }
-  }, [isExpanded]);
-
-  // Pre-fill from existing config
-  useEffect(() => {
-    if (status?.config && Array.isArray(status.config) && selectedModels.length === 0) {
-      const entry = status.config.find((e) => e.name === "ZenRouter");
-      if (entry?.models?.length > 0) {
-        setSelectedModels(entry.models.map((m) => m.id));
-      }
-    }
-  }, [status]);
-
   const fetchModelAliases = async () => {
     try {
       const res = await fetch("/api/models/alias");
@@ -62,6 +31,89 @@ export default function CopilotToolCard({ tool, isExpanded, onToggle, baseUrl, a
       console.log("Error fetching model aliases:", error);
     }
   };
+
+  const checkStatus = async () => {
+    setChecking(true);
+    try {
+      const res = await fetch("/api/cli-tools/copilot-settings");
+      const data = await res.json();
+      setStatus(data);
+    } catch (error) {
+      setStatus({ error: error.message });
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  useEffect(() => {
+    selectedModelsRef.current = selectedModels;
+  }, [selectedModels]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (apiKeys?.length > 0 && !selectedApiKey) {
+      const nextApiKey = apiKeys[0].key;
+      (async () => {
+        if (!cancelled) setSelectedApiKey(nextApiKey);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [apiKeys, selectedApiKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (initialStatus) {
+      const nextStatus = initialStatus;
+      (async () => {
+        if (!cancelled) setStatus(nextStatus);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [initialStatus]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    let cancelled = false;
+    if (!status) {
+      (async () => {
+        setChecking(true);
+        try {
+          const res = await fetch("/api/cli-tools/copilot-settings");
+          const data = await res.json();
+          if (!cancelled) setStatus(data);
+        } catch (error) {
+          if (!cancelled) setStatus({ error: error.message });
+        } finally {
+          if (!cancelled) setChecking(false);
+        }
+      })();
+    }
+    (async () => {
+      try {
+        const res = await fetch("/api/models/alias");
+        const data = await res.json();
+        if (res.ok && !cancelled) setModelAliases(data.aliases || {});
+      } catch (error) {
+        console.log("Error fetching model aliases:", error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded, status]);
+
+  // Pre-fill from existing config
+  useEffect(() => {
+    let cancelled = false;
+    if (status?.config && Array.isArray(status.config) && selectedModels.length === 0) {
+      const entry = status.config.find((e) => e.name === "ZenRouter");
+      if (entry?.models?.length > 0) {
+        const nextModels = entry.models.map((m) => m.id);
+        (async () => {
+          if (!cancelled) setSelectedModels(nextModels);
+        })();
+      }
+    }
+    return () => { cancelled = true; };
+  }, [status, selectedModels.length]);
 
   const saveModels = async (models) => {
     try {
@@ -97,19 +149,6 @@ export default function CopilotToolCard({ tool, isExpanded, onToggle, baseUrl, a
   const getDisplayUrl = () => customBaseUrl || `${baseUrl}/v1`;
 
   const removeModel = (id) => setSelectedModels((prev) => prev.filter((m) => m !== id));
-
-  const checkStatus = async () => {
-    setChecking(true);
-    try {
-      const res = await fetch("/api/cli-tools/copilot-settings");
-      const data = await res.json();
-      setStatus(data);
-    } catch (error) {
-      setStatus({ error: error.message });
-    } finally {
-      setChecking(false);
-    }
-  };
 
   const handleApply = async () => {
     setApplying(true);

@@ -52,23 +52,6 @@ export default function DroidToolCard({
 
   const configStatus = getConfigStatus();
 
-  useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey) {
-      setSelectedApiKey(apiKeys[0].key);
-    }
-  }, [apiKeys, selectedApiKey]);
-
-  useEffect(() => {
-    if (initialStatus) setDroidStatus(initialStatus);
-  }, [initialStatus]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      if (!droidStatus) checkDroidStatus();
-      fetchModelAliases();
-    }
-  }, [isExpanded]);
-
   const fetchModelAliases = async () => {
     try {
       const res = await fetch("/api/models/alias");
@@ -78,26 +61,6 @@ export default function DroidToolCard({
       console.log("Error fetching model aliases:", error);
     }
   };
-
-  // Pre-fill model list from existing config (supports multi-model)
-  useEffect(() => {
-    if (droidStatus?.installed && !hasInitializedModel.current) {
-      hasInitializedModel.current = true;
-      const existingModels = (droidStatus.settings?.customModels || [])
-        .filter(m => m.id?.startsWith("custom:ZenRouter"))
-        .sort((a, b) => (a.index || 0) - (b.index || 0))
-        .map(m => m.model);
-      if (existingModels.length > 0) {
-        setModelList(existingModels);
-      } else {
-        // Legacy: single model stored as custom:ZenRouter-0
-        const legacy = droidStatus.settings?.customModels?.find(m => m.id === "custom:ZenRouter-0");
-        if (legacy?.model) {
-          setModelList([legacy.model]);
-        }
-      }
-    }
-  }, [droidStatus]);
 
   const checkDroidStatus = async () => {
     setCheckingDroid(true);
@@ -111,6 +74,84 @@ export default function DroidToolCard({
       setCheckingDroid(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    if (apiKeys?.length > 0 && !selectedApiKey) {
+      const nextApiKey = apiKeys[0].key;
+      (async () => {
+        if (!cancelled) setSelectedApiKey(nextApiKey);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [apiKeys, selectedApiKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (initialStatus) {
+      const nextStatus = initialStatus;
+      (async () => {
+        if (!cancelled) setDroidStatus(nextStatus);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [initialStatus]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    let cancelled = false;
+    if (!droidStatus) {
+      (async () => {
+        setCheckingDroid(true);
+        try {
+          const res = await fetch("/api/cli-tools/droid-settings");
+          const data = await res.json();
+          if (!cancelled) setDroidStatus(data);
+        } catch (error) {
+          if (!cancelled) setDroidStatus({ installed: false, error: error.message });
+        } finally {
+          if (!cancelled) setCheckingDroid(false);
+        }
+      })();
+    }
+    (async () => {
+      try {
+        const res = await fetch("/api/models/alias");
+        const data = await res.json();
+        if (res.ok && !cancelled) setModelAliases(data.aliases || {});
+      } catch (error) {
+        console.log("Error fetching model aliases:", error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded, droidStatus]);
+
+  // Pre-fill model list from existing config (supports multi-model)
+  useEffect(() => {
+    let cancelled = false;
+    if (droidStatus?.installed && !hasInitializedModel.current) {
+      hasInitializedModel.current = true;
+      const existingModels = (droidStatus.settings?.customModels || [])
+        .filter(m => m.id?.startsWith("custom:ZenRouter"))
+        .sort((a, b) => (a.index || 0) - (b.index || 0))
+        .map(m => m.model);
+      if (existingModels.length > 0) {
+        (async () => {
+          if (!cancelled) setModelList(existingModels);
+        })();
+      } else {
+        // Legacy: single model stored as custom:ZenRouter-0
+        const legacy = droidStatus.settings?.customModels?.find(m => m.id === "custom:ZenRouter-0");
+        if (legacy?.model) {
+          const nextModels = [legacy.model];
+          (async () => {
+            if (!cancelled) setModelList(nextModels);
+          })();
+        }
+      }
+    }
+    return () => { cancelled = true; };
+  }, [droidStatus]);
 
   const getEffectiveBaseUrl = () => {
     const url = customBaseUrl || baseUrl;

@@ -24,23 +24,6 @@ export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, api
   const [showManualConfigModal, setShowManualConfigModal] = useState(false);
   const [customBaseUrl, setCustomBaseUrl] = useState("");
 
-  useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey) {
-      setSelectedApiKey(apiKeys[0].key);
-    }
-  }, [apiKeys, selectedApiKey]);
-
-  useEffect(() => {
-    if (initialStatus) setCodexStatus(initialStatus);
-  }, [initialStatus]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      if (!codexStatus) checkCodexStatus();
-      fetchModelAliases();
-    }
-  }, [isExpanded]);
-
   const fetchModelAliases = async () => {
     try {
       const res = await fetch("/api/models/alias");
@@ -51,16 +34,92 @@ export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, api
     }
   };
 
+  const checkCodexStatus = async () => {
+    setCheckingCodex(true);
+    try {
+      const res = await fetch("/api/cli-tools/codex-settings");
+      const data = await res.json();
+      setCodexStatus(data);
+    } catch (error) {
+      setCodexStatus({ installed: false, error: error.message });
+    } finally {
+      setCheckingCodex(false);
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    if (apiKeys?.length > 0 && !selectedApiKey) {
+      const nextApiKey = apiKeys[0].key;
+      (async () => {
+        if (!cancelled) setSelectedApiKey(nextApiKey);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [apiKeys, selectedApiKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (initialStatus) {
+      const nextStatus = initialStatus;
+      (async () => {
+        if (!cancelled) setCodexStatus(nextStatus);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [initialStatus]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    let cancelled = false;
+    if (!codexStatus) {
+      (async () => {
+        setCheckingCodex(true);
+        try {
+          const res = await fetch("/api/cli-tools/codex-settings");
+          const data = await res.json();
+          if (!cancelled) setCodexStatus(data);
+        } catch (error) {
+          if (!cancelled) setCodexStatus({ installed: false, error: error.message });
+        } finally {
+          if (!cancelled) setCheckingCodex(false);
+        }
+      })();
+    }
+    (async () => {
+      try {
+        const res = await fetch("/api/models/alias");
+        const data = await res.json();
+        if (res.ok && !cancelled) setModelAliases(data.aliases || {});
+      } catch (error) {
+        console.log("Error fetching model aliases:", error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded, codexStatus]);
+
   // Parse model and subagent settings from config content
   useEffect(() => {
+    let cancelled = false;
     if (codexStatus?.config) {
       const modelMatch = codexStatus.config.match(/^model\s*=\s*"([^"]+)"/m);
-      if (modelMatch) setSelectedModel(modelMatch[1]);
+      if (modelMatch) {
+        const nextModel = modelMatch[1];
+        (async () => {
+          if (!cancelled) setSelectedModel(nextModel);
+        })();
+      }
 
       // Parse subagent settings
       const subagentModelMatch = codexStatus.config.match(/^default_subagent_model\s*=\s*"([^"]+)"/m);
-      if (subagentModelMatch) setSubagentModel(subagentModelMatch[1]);
+      if (subagentModelMatch) {
+        const nextSubagentModel = subagentModelMatch[1];
+        (async () => {
+          if (!cancelled) setSubagentModel(nextSubagentModel);
+        })();
+      }
     }
+    return () => { cancelled = true; };
   }, [codexStatus]);
 
   const getCurrentBaseUrl = () => {
@@ -85,19 +144,6 @@ export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, api
   };
 
   const getDisplayUrl = () => customBaseUrl || `${baseUrl}/v1`;
-
-  const checkCodexStatus = async () => {
-    setCheckingCodex(true);
-    try {
-      const res = await fetch("/api/cli-tools/codex-settings");
-      const data = await res.json();
-      setCodexStatus(data);
-    } catch (error) {
-      setCodexStatus({ installed: false, error: error.message });
-    } finally {
-      setCheckingCodex(false);
-    }
-  };
 
   const handleApplySettings = async () => {
     setApplying(true);

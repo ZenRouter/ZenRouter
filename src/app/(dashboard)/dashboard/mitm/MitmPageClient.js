@@ -15,51 +15,45 @@ export default function MitmPageClient() {
   const [mitmStatus, setMitmStatus] = useState({ running: false, certExists: false, dnsStatus: {}, hasCachedPassword: false });
 
   useEffect(() => {
-    fetchConnections();
-    fetchApiKeys();
-    fetchAliases();
-    fetchCloudSettings();
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/providers");
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setConnections(data.connections || []);
+        }
+      } catch { /* ignore */ }
+    })();
+    (async () => {
+      try {
+        const res = await fetch("/api/keys");
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setApiKeys(data.keys || []);
+        }
+      } catch { /* ignore */ }
+    })();
+    (async () => {
+      try {
+        const res = await fetch("/api/models/alias");
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setModelAliases(data.aliases || {});
+        }
+      } catch { /* ignore */ }
+    })();
+    (async () => {
+      try {
+        const res = await fetch("/api/settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setCloudEnabled(data.cloudEnabled || false);
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
   }, []);
-
-  const fetchConnections = async () => {
-    try {
-      const res = await fetch("/api/providers");
-      if (res.ok) {
-        const data = await res.json();
-        setConnections(data.connections || []);
-      }
-    } catch { /* ignore */ }
-  };
-
-  const fetchApiKeys = async () => {
-    try {
-      const res = await fetch("/api/keys");
-      if (res.ok) {
-        const data = await res.json();
-        setApiKeys(data.keys || []);
-      }
-    } catch { /* ignore */ }
-  };
-
-  const fetchAliases = async () => {
-    try {
-      const res = await fetch("/api/models/alias");
-      if (res.ok) {
-        const data = await res.json();
-        setModelAliases(data.aliases || {});
-      }
-    } catch { /* ignore */ }
-  };
-
-  const fetchCloudSettings = async () => {
-    try {
-      const res = await fetch("/api/settings");
-      if (res.ok) {
-        const data = await res.json();
-        setCloudEnabled(data.cloudEnabled || false);
-      }
-    } catch { /* ignore */ }
-  };
 
   const getActiveProviders = () => connections.filter(c => c.isActive !== false);
 

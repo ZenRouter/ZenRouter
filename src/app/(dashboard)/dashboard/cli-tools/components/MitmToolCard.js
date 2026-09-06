@@ -41,18 +41,20 @@ export default function MitmToolCard({
   const canRunWithoutPassword = isWin || hasCachedPassword || needsSudoPassword === false;
 
   useEffect(() => {
-    if (isExpanded) loadSavedMappings();
-  }, [isExpanded]);
-
-  const loadSavedMappings = async () => {
-    try {
-      const res = await fetch(`/api/cli-tools/antigravity-mitm/alias?tool=${tool.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (Object.keys(data.aliases || {}).length > 0) setModelMappings(data.aliases);
-      }
-    } catch { /* ignore */ }
-  };
+    if (!isExpanded) return;
+    const toolId = tool.id;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/cli-tools/antigravity-mitm/alias?tool=${toolId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Object.keys(data.aliases || {}).length > 0 && !cancelled) setModelMappings(data.aliases);
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded, tool.id]);
 
   const saveMappings = useCallback(async (mappings) => {
     try {

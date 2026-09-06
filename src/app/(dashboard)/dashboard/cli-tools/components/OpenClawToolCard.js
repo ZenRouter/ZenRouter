@@ -49,23 +49,6 @@ export default function OpenClawToolCard({
 
   const configStatus = getConfigStatus();
 
-  useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey) {
-      setSelectedApiKey(apiKeys[0].key);
-    }
-  }, [apiKeys, selectedApiKey]);
-
-  useEffect(() => {
-    if (initialStatus) setOpenclawStatus(initialStatus);
-  }, [initialStatus]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      if (!openclawStatus) checkOpenclawStatus();
-      fetchModelAliases();
-    }
-  }, [isExpanded]);
-
   const fetchModelAliases = async () => {
     try {
       const res = await fetch("/api/models/alias");
@@ -75,27 +58,6 @@ export default function OpenClawToolCard({
       console.log("Error fetching model aliases:", error);
     }
   };
-
-  useEffect(() => {
-    if (openclawStatus?.installed && !hasInitializedModel.current) {
-      hasInitializedModel.current = true;
-      const provider = openclawStatus.settings?.models?.providers?.["zenrouter"];
-      if (provider) {
-        const primaryModel = openclawStatus.settings?.agents?.defaults?.model?.primary;
-        if (primaryModel) setSelectedModel(primaryModel.replace("zenrouter/", ""));
-        if (provider.apiKey && apiKeys?.some(k => k.key === provider.apiKey)) {
-          setSelectedApiKey(provider.apiKey);
-        }
-      }
-      // Init per-agent models from enriched agents list
-      const agentList = openclawStatus.agents || [];
-      const initAgentModels = {};
-      agentList.forEach((agent) => {
-        if (agent.currentModel) initAgentModels[agent.id] = agent.currentModel;
-      });
-      setAgentModels(initAgentModels);
-    }
-  }, [openclawStatus, apiKeys]);
 
   const checkOpenclawStatus = async () => {
     setCheckingOpenclaw(true);
@@ -109,6 +71,90 @@ export default function OpenClawToolCard({
       setCheckingOpenclaw(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    if (apiKeys?.length > 0 && !selectedApiKey) {
+      const nextApiKey = apiKeys[0].key;
+      (async () => {
+        if (!cancelled) setSelectedApiKey(nextApiKey);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [apiKeys, selectedApiKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (initialStatus) {
+      const nextStatus = initialStatus;
+      (async () => {
+        if (!cancelled) setOpenclawStatus(nextStatus);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [initialStatus]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    let cancelled = false;
+    if (!openclawStatus) {
+      (async () => {
+        setCheckingOpenclaw(true);
+        try {
+          const res = await fetch("/api/cli-tools/openclaw-settings");
+          const data = await res.json();
+          if (!cancelled) setOpenclawStatus(data);
+        } catch (error) {
+          if (!cancelled) setOpenclawStatus({ installed: false, error: error.message });
+        } finally {
+          if (!cancelled) setCheckingOpenclaw(false);
+        }
+      })();
+    }
+    (async () => {
+      try {
+        const res = await fetch("/api/models/alias");
+        const data = await res.json();
+        if (res.ok && !cancelled) setModelAliases(data.aliases || {});
+      } catch (error) {
+        console.log("Error fetching model aliases:", error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded, openclawStatus]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (openclawStatus?.installed && !hasInitializedModel.current) {
+      hasInitializedModel.current = true;
+      const provider = openclawStatus.settings?.models?.providers?.["zenrouter"];
+      if (provider) {
+        const primaryModel = openclawStatus.settings?.agents?.defaults?.model?.primary;
+        if (primaryModel) {
+          const nextModel = primaryModel.replace("zenrouter/", "");
+          (async () => {
+            if (!cancelled) setSelectedModel(nextModel);
+          })();
+        }
+        if (provider.apiKey && apiKeys?.some(k => k.key === provider.apiKey)) {
+          const nextApiKey = provider.apiKey;
+          (async () => {
+            if (!cancelled) setSelectedApiKey(nextApiKey);
+          })();
+        }
+      }
+      // Init per-agent models from enriched agents list
+      const agentList = openclawStatus.agents || [];
+      const initAgentModels = {};
+      agentList.forEach((agent) => {
+        if (agent.currentModel) initAgentModels[agent.id] = agent.currentModel;
+      });
+      (async () => {
+        if (!cancelled) setAgentModels(initAgentModels);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [openclawStatus, apiKeys]);
 
   const normalizeLocalhost = (url) => url.replace("://localhost", "://127.0.0.1");
 

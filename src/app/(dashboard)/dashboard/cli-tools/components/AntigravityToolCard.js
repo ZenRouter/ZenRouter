@@ -27,23 +27,6 @@ export default function AntigravityToolCard({
   const [currentEditingAlias, setCurrentEditingAlias] = useState(null);
   const [modelAliases, setModelAliases] = useState({});
 
-  useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey) {
-      setSelectedApiKey(apiKeys[0].key);
-    }
-  }, [apiKeys, selectedApiKey]);
-
-  useEffect(() => {
-    if (initialStatus) setStatus(initialStatus);
-  }, [initialStatus]);
-
-  useEffect(() => {
-    if (!isExpanded) return;
-    if (!status) fetchStatus();
-    loadSavedMappings();
-    fetchModelAliases();
-  }, [isExpanded]);
-
   const loadSavedMappings = async () => {
     try {
       const res = await fetch("/api/cli-tools/antigravity-mitm/alias?tool=antigravity");
@@ -82,6 +65,72 @@ export default function AntigravityToolCard({
       setStatus({ running: false });
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    if (apiKeys?.length > 0 && !selectedApiKey) {
+      const nextApiKey = apiKeys[0].key;
+      (async () => {
+        if (!cancelled) setSelectedApiKey(nextApiKey);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [apiKeys, selectedApiKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (initialStatus) {
+      const nextStatus = initialStatus;
+      (async () => {
+        if (!cancelled) setStatus(nextStatus);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [initialStatus]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    let cancelled = false;
+    if (!status) {
+      (async () => {
+        try {
+          const res = await fetch("/api/cli-tools/antigravity-mitm");
+          if (res.ok) {
+            const data = await res.json();
+            if (!cancelled) setStatus(data);
+          }
+        } catch (error) {
+          console.log("Error fetching status:", error);
+          if (!cancelled) setStatus({ running: false });
+        }
+      })();
+    }
+    (async () => {
+      try {
+        const res = await fetch("/api/cli-tools/antigravity-mitm/alias?tool=antigravity");
+        if (res.ok) {
+          const data = await res.json();
+          const aliases = data.aliases || {};
+
+          if (Object.keys(aliases).length > 0 && !cancelled) {
+            setModelMappings(aliases);
+          }
+        }
+      } catch (error) {
+        console.log("Error loading saved mappings:", error);
+      }
+    })();
+    (async () => {
+      try {
+        const res = await fetch("/api/models/alias");
+        const data = await res.json();
+        if (res.ok && !cancelled) setModelAliases(data.aliases || {});
+      } catch (error) {
+        console.log("Error fetching model aliases:", error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded, status]);
 
   // MITM elevation is decided by the server OS, not by this browser's OS.
   const serverIsWindows = status?.isWin === true;

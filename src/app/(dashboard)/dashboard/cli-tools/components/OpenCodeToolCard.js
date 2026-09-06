@@ -27,42 +27,6 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
   const [activeModel, setActiveModel] = useState("");
   const selectedModelsRef = useRef([]);
 
-  useEffect(() => {
-    selectedModelsRef.current = selectedModels;
-  }, [selectedModels]);
-
-  useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey) {
-      setSelectedApiKey(apiKeys[0].key);
-    }
-  }, [apiKeys, selectedApiKey]);
-
-  useEffect(() => {
-    if (initialStatus) setStatus(initialStatus);
-  }, [initialStatus]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      if (!status) checkStatus();
-      fetchModelAliases();
-    }
-  }, [isExpanded]);
-
-  // Sync models from existing config
-  useEffect(() => {
-    if (status?.opencode?.models) {
-      setSelectedModels(status.opencode.models);
-    }
-    if (status?.opencode?.activeModel) {
-      setActiveModel(status.opencode.activeModel);
-    }
-
-    // Parse subagent settings from agent.explorer if exists
-    if (status?.config?.agent?.explorer?.model?.startsWith("zenrouter/")) {
-      setSubagentModel(status.config.agent.explorer.model.replace("zenrouter/", ""));
-    }
-  }, [status]);
-
   const fetchModelAliases = async () => {
     try {
       const res = await fetch("/api/models/alias");
@@ -72,6 +36,100 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
       console.log("Error fetching model aliases:", error);
     }
   };
+
+  const checkStatus = async () => {
+    setChecking(true);
+    try {
+      const res = await fetch("/api/cli-tools/opencode-settings");
+      const data = await res.json();
+      setStatus(data);
+    } catch (error) {
+      setStatus({ installed: false, error: error.message });
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  useEffect(() => {
+    selectedModelsRef.current = selectedModels;
+  }, [selectedModels]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (apiKeys?.length > 0 && !selectedApiKey) {
+      const nextApiKey = apiKeys[0].key;
+      (async () => {
+        if (!cancelled) setSelectedApiKey(nextApiKey);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [apiKeys, selectedApiKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (initialStatus) {
+      const nextStatus = initialStatus;
+      (async () => {
+        if (!cancelled) setStatus(nextStatus);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [initialStatus]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    let cancelled = false;
+    if (!status) {
+      (async () => {
+        setChecking(true);
+        try {
+          const res = await fetch("/api/cli-tools/opencode-settings");
+          const data = await res.json();
+          if (!cancelled) setStatus(data);
+        } catch (error) {
+          if (!cancelled) setStatus({ installed: false, error: error.message });
+        } finally {
+          if (!cancelled) setChecking(false);
+        }
+      })();
+    }
+    (async () => {
+      try {
+        const res = await fetch("/api/models/alias");
+        const data = await res.json();
+        if (res.ok && !cancelled) setModelAliases(data.aliases || {});
+      } catch (error) {
+        console.log("Error fetching model aliases:", error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded, status]);
+
+  // Sync models from existing config
+  useEffect(() => {
+    let cancelled = false;
+    if (status?.opencode?.models) {
+      const nextModels = status.opencode.models;
+      (async () => {
+        if (!cancelled) setSelectedModels(nextModels);
+      })();
+    }
+    if (status?.opencode?.activeModel) {
+      const nextActiveModel = status.opencode.activeModel;
+      (async () => {
+        if (!cancelled) setActiveModel(nextActiveModel);
+      })();
+    }
+
+    // Parse subagent settings from agent.explorer if exists
+    if (status?.config?.agent?.explorer?.model?.startsWith("zenrouter/")) {
+      const nextSubagentModel = status.config.agent.explorer.model.replace("zenrouter/", "");
+      (async () => {
+        if (!cancelled) setSubagentModel(nextSubagentModel);
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [status]);
 
   const saveModels = async (models) => {
     try {
@@ -113,19 +171,6 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
   };
 
   const getDisplayUrl = () => customBaseUrl || `${baseUrl}/v1`;
-
-  const checkStatus = async () => {
-    setChecking(true);
-    try {
-      const res = await fetch("/api/cli-tools/opencode-settings");
-      const data = await res.json();
-      setStatus(data);
-    } catch (error) {
-      setStatus({ installed: false, error: error.message });
-    } finally {
-      setChecking(false);
-    }
-  };
 
   const handleApply = async () => {
     setApplying(true);
