@@ -3,9 +3,15 @@
 All notable changes to ZenRouter (fork of 9Router) will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional Commits.
 
-## [Unreleased]
+## [0.6.1] - 2026-09-07
 
 ### Added / Fixed
+
+#### Security & Stability Hotfixes
+- **fix(security): allow cdn.jsdelivr.net in CSP for Monaco Editor on translator page**
+  - Added `https://cdn.jsdelivr.net` to `script-src`, `style-src`, `font-src`, and `connect-src` in `next.config.mjs` Content Security Policy, resolving Monaco Editor load blockage and unhandled runtime exceptions on `/dashboard/translator`.
+- **fix(ui): defensive string handling in model & combo search filter**
+  - Safely handle models and combos with undefined or missing `name` in `ModelSelectModal.js`, preventing `TypeError: can't access property "toLowerCase", t.name is undefined` and `localeCompare` crashes during search and sorting.
 
 #### 9Router critical backports (#3782, #3784, #3764, #3786, #3833)
 - **fix(security,translator,dashboard): backport 5 critical 9router fixes**
@@ -14,7 +20,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - `ensureToolCallIds` / `generateToolCallId` skip null entries and coerce non-string tool names.
   - `claude-adaptive` maps `auto` effort to `high` instead of writing literal `auto` into `output_config` (400 + account backoff).
   - Concurrent per-model Test buttons via `testingModelIds` Set on `ModelsCard` + `CompatibleModelsSection`.
-  - Tests: `tests/unit/cowork-mcp-ssrf-guard.test.js`, `tests/unit/translator-toolcall-null-guards.test.js`, expanded `thinking-unified` + `reasoningContentInjector` suites. Full suite 2347 passed, build clean.
+  - Tests: `tests/unit/cowork-mcp-ssrf-guard.test.js`, `tests/unit/translator-toolcall-null-guards.test.js`, expanded `thinking-unified` + `reasoningContentInjector` suites. Full suite 2352 passed, build clean.
 
 #### GPT-6 Astra official mapping
 - **feat(models): add GPT-6 Astra official mapping**
@@ -28,7 +34,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - React-compiler violations fixed: used-before-declared loaders moved up, impure calls memoized, ref reads moved out of render.
   - `<img>` migrated to `next/image`, entities escaped, `exhaustive-deps` completed.
   - `import/no-anonymous-default-export` scoped off for `open-sse/**` + `src/lib/**` (single-descriptor modules by design); cli build output ignored; 3 stale disables removed.
-  - Verified: `npx eslint` 0 errors 0 warnings, 2348 tests passed, `npm run build` clean.
+  - Verified: `npx eslint` 0 errors, 2352 tests passed, `npm run build` clean.
 
 #### Database fail-closed on corruption (#3817)
 - **fix(db): fail closed before migrating corrupted databases**
