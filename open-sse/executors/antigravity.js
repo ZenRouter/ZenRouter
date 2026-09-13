@@ -8,6 +8,7 @@ import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { cleanJSONSchemaForAntigravity } from "../translator/formats/gemini.js";
 import { sanitizeAntigravitySystemPrompt } from "../translator/request/openai-to-gemini.js";
 import { DEFAULT_THINKING_AG_SIGNATURE } from "../config/defaultThinkingSignature.js";
+import { isValidBase64 } from "../translator/concerns/thoughtSignature.js";
 
 // Sanitize function name: Gemini requires [a-zA-Z_][a-zA-Z0-9_.:\-]{0,63}
 function sanitizeFunctionName(name) {
@@ -206,7 +207,14 @@ export class AntigravityExecutor extends BaseExecutor {
           return true;
         })
         .map(p => {
-          if (p.functionCall && !p.thoughtSignature) {
+          if (p.functionCall) {
+            const hasValidSig = p.thoughtSignature && isValidBase64(p.thoughtSignature);
+            return {
+              ...p,
+              thoughtSignature: hasValidSig ? p.thoughtSignature : DEFAULT_THINKING_AG_SIGNATURE
+            };
+          }
+          if (p.thoughtSignature && !isValidBase64(p.thoughtSignature)) {
             return { ...p, thoughtSignature: DEFAULT_THINKING_AG_SIGNATURE };
           }
           return p;

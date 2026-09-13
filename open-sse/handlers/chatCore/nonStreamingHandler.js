@@ -13,7 +13,7 @@ import { appendRequestLog, saveRequestDetail } from "@/lib/usageDb.js";
 import { decloakToolNames } from "../../utils/claudeCloaking.js";
 import { decloakOpenAIChunk } from "../../utils/toolCompressor.js";
 import { ROLE, RESPONSES_ITEM } from "../../translator/schema/index.js";
-import { buildToolCallId } from "../../translator/concerns/thoughtSignature.js";
+import { buildToolCallId, cacheSignature } from "../../translator/concerns/thoughtSignature.js";
 
 const DEFAULT_THOUGHT_SIGNATURE = "";
 
@@ -24,6 +24,9 @@ function extractGeminiThoughtSignature(part, pending = DEFAULT_THOUGHT_SIGNATURE
 function buildGeminiToolCall(part, index, pendingSignature) {
   const signature = extractGeminiThoughtSignature(part, pendingSignature);
   const rawId = part.functionCall.id;
+  if (rawId && signature) {
+    cacheSignature(rawId, signature);
+  }
   // Preserve the upstream Gemini call id when present, else derive a stable one.
   const id = rawId
     ? (signature ? `${rawId}_TSIG_${Buffer.from(signature, "utf8").toString("base64url")}` : rawId)

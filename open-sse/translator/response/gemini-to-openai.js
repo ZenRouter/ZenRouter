@@ -67,6 +67,7 @@ export function geminiToOpenAIResponse(chunk, state) {
       
       // Handle thought signature (thinking mode)
       if (hasThoughtSig) {
+        state.pendingThoughtSignature = hasThoughtSig;
         const hasTextContent = part.text !== undefined && part.text !== "";
         const hasFunctionCall = !!part.functionCall;
         

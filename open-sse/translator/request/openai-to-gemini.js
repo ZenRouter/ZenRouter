@@ -27,7 +27,7 @@ import {
 } from "../formats/gemini.js";
 import { deriveSessionId, toNumericSessionId } from "../../utils/sessionManager.js";
 import { ROLE, GEMINI_ROLE, OPENAI_BLOCK, CLAUDE_BLOCK } from "../schema/index.js";
-import { splitToolCallId } from "../concerns/thoughtSignature.js";
+import { splitToolCallId, isValidBase64 } from "../concerns/thoughtSignature.js";
 
 // Sanitize function names for Gemini API.
 // Gemini requires: starts with [a-zA-Z_], followed by [a-zA-Z0-9_.:\-], max 64 chars.
@@ -179,8 +179,9 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
 
               const args = tryParseJSON(tc.function?.arguments || "{}");
             const { rawId, thoughtSignature } = splitToolCallId(tc.id);
+            const validSig = isValidBase64(thoughtSignature) ? thoughtSignature : signature;
             parts.push({
-              ...(thoughtSignature ? { thoughtSignature } : { thoughtSignature: signature }),
+              thoughtSignature: validSig,
               functionCall: {
                 id: rawId,
                 name: sanitizeGeminiFunctionName(tc.function.name, existingToolNames, toolNameMap),

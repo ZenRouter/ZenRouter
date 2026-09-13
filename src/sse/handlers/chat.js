@@ -374,7 +374,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       
       // Fast-fail circuit breaker: if multiple accounts fail with the exact same systemic error,
       // stop endless retries and return error immediately to save time and sockets.
-      if (lastStatus === result.status && (Number(result.status) === 402 || Number(result.status) === 403 || Number(result.status) >= 500)) {
+      if (lastStatus === result.status && (Number(result.status) === 400 || Number(result.status) === 402 || Number(result.status) === 403 || Number(result.status) >= 500)) {
         consecutiveSameErrors++;
       } else {
         consecutiveSameErrors = 1;

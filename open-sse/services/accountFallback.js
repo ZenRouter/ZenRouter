@@ -117,6 +117,13 @@ export function checkFallbackError(status, errorText, backoffLevel = 0, response
     }
   }
 
+  // Client payload errors (400 Bad Request, 422 Unprocessable Entity) without account-specific
+  // text matches (balance_zero, quota, rate limit, etc.) are invalid payloads or client issues,
+  // not account health failures. Do not trigger account fallback or lock healthy accounts.
+  if (status === 400 || status === 422) {
+    return { shouldFallback: false, cooldownMs: 0 };
+  }
+
   // Default: transient cooldown for any unmatched error
   return { shouldFallback: true, cooldownMs: TRANSIENT_COOLDOWN_MS };
 }
