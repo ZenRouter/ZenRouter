@@ -51,6 +51,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 #### Stream Handling & Usage Analytics
 - **fix(stream): stop blocking Ollama upstream's NDJSON as a non-SSE body (#3985)**
   - Allowed `application/x-ndjson` for Ollama-format upstreams in `handleStreamingResponse` while continuing to block HTML/text error pages.
+- **fix(stream): recognize delta.reasoning in SSE-to-JSON aggregation to prevent non-streaming 500 (#3796)**
+  - Accumulated `delta.reasoning` alongside `delta.reasoning_content` in `parseSSEToOpenAIResponse` and `nonStreamingHandler.js`, preventing reasoning-heavy models (e.g. GLM, DeepSeek) from triggering false 500 empty response errors in non-streaming mode.
 - **fix(claude): surface prompt-cache reads to chat/completions clients and stop double-counting in usage logs (#3984)**
   - Recorded `state.usage` in canonical OpenAI format (`prompt_tokens` + `cached_tokens` + `prompt_tokens_details`).
   - Fixed `canonicalizeUsage` double-counting cached tokens in usage logs.
