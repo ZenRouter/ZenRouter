@@ -141,10 +141,17 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
       const content = msg.content;
 
       if (role === ROLE.SYSTEM && body.messages.length > 1) {
-        result.systemInstruction = {
-          role: GEMINI_ROLE.USER,
-          parts: [{ text: sanitizeAntigravitySystemPrompt(typeof content === "string" ? content : extractTextContent(content)) }]
-        };
+        const text = sanitizeAntigravitySystemPrompt(typeof content === "string" ? content : extractTextContent(content));
+        if (text) {
+          if (!result.systemInstruction) {
+            result.systemInstruction = {
+              role: GEMINI_ROLE.USER,
+              parts: [{ text }]
+            };
+          } else {
+            result.systemInstruction.parts.push({ text });
+          }
+        }
       } else if (role === ROLE.USER || (role === ROLE.SYSTEM && body.messages.length === 1)) {
         const parts = convertOpenAIContentToParts(content);
         if (parts.length > 0) {
