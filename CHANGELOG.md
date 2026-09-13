@@ -3,6 +3,55 @@
 All notable changes to ZenRouter (fork of 9Router) will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional Commits.
 
+## [Unreleased]
+
+### Added / Fixed
+
+#### Gemini & Antigravity Resilience
+- **fix(translator): harden Gemini thought signatures against truncation and stop cascading account locks on 400**
+  - Added `isValidBase64` validation for thought signatures before forwarding to Google Cloud Code / Antigravity.
+  - Implemented in-memory signature recovery cache (`signatureCache`) to handle client-side `tool_call_id` truncation (e.g. 60/64 character limits in SDKs/agents).
+  - Safe fallback to `DEFAULT_THINKING_AG_SIGNATURE` on truncated or invalid signatures, preventing Google API 400 Base64 decoding errors.
+  - Prevented unhandled client payload errors (400, 422) from triggering account fallback and locking out healthy accounts across the pool.
+- **fix(gemini): expand shorthand string subschemas and isolate schema maps in tool declarations (#3999)**
+  - Expanded shorthand string subschemas (e.g. `{ value: 'object' }`) into proper Schema objects with required placeholders.
+  - Protected schema maps (`properties`, `patternProperties`, `$defs`, `definitions`) from recursive mutation when tools declare properties named `properties` or `items`.
+- **fix(translator): preserve all system messages in OpenAI -> Gemini request translation (#3972)**
+  - Collected multiple system messages as parts under `systemInstruction` instead of silently overwriting with the last one.
+- **fix(antigravity): ensure maxOutputTokens > thinkingBudget and inject thinkingConfig (#3979)**
+  - Ensured `maxOutputTokens` strictly exceeds `thinkingBudget` and injected `thinkingConfig` into `generationConfig` to prevent Google Cloud Code 400 `INVALID_ARGUMENT`.
+
+#### Proxy & Security Hardening
+- **fix(proxy): forward strictProxy flag to prevent direct bypass on chat routes (#4007)**
+  - Propagated `strictProxy` through `auth.js`, `chatCore.js`, `chat.js`, `tokenRefresh.js`, and `quotaAutoPing.js` so proxy pools configured with `strictProxy: true` fail closed instead of leaking the operator's real IP to upstreams.
+
+#### Video & Multi-Model Account Isolation
+- **fix(video): scope video polling failure lock to __video__ and ignore 404 (#4009)**
+  - Scoped `handleVideoGet` failure locks to `__video__` instead of `null` (preventing account-wide `modelLock___all` that takes down chat models like Grok).
+  - Ignored 404 client errors on dead or expired video request IDs.
+
+#### Token Refresh & OAuth Lifecycle
+- **fix(oauth): parse numeric epoch expiresAt so imported connections still refresh (#4000)**
+  - Accepted numeric epoch strings in `parseTimeMs` and normalized them in `normalizeExpiresAt`, preventing imported connections from silently skipping proactive and background token refresh sweeps.
+
+#### Stream Handling & Usage Analytics
+- **fix(stream): stop blocking Ollama upstream's NDJSON as a non-SSE body (#3985)**
+  - Allowed `application/x-ndjson` for Ollama-format upstreams in `handleStreamingResponse` while continuing to block HTML/text error pages.
+- **fix(claude): surface prompt-cache reads to chat/completions clients and stop double-counting in usage logs (#3984)**
+  - Recorded `state.usage` in canonical OpenAI format (`prompt_tokens` + `cached_tokens` + `prompt_tokens_details`).
+  - Fixed `canonicalizeUsage` double-counting cached tokens in usage logs.
+
+#### Tool Schema Compatibility
+- **fix(codex): strip Unicode-property tool schema patterns Codex rejects (#3922)**
+  - Added copy-on-write `stripCodexUnsupportedPatterns` to strip `\p{...}` patterns that Codex's regex validator rejects with 400.
+- **fix(kiro): never send top-level systemPrompt to prevent 400 REQUEST_BODY_INVALID (#3641)**
+  - Appended repair instructions and RTK system prompts to user turn content instead of writing top-level `systemPrompt`.
+
+#### Dashboard & UI Integrity
+- **fix(dashboard): reset credential modals on close so reopened forms start clean (#4026)**
+  - Reset form states and validation results on close in `AddApiKeyModal`, `AddCompatibleModal`, `ConnectionsCard`, `CursorAuthModal`, and `KiroAuthModal`.
+  - Fixed Kiro CLI proxy modal not closing on import completion (`import-cli-proxy`).
+
 ## [0.6.1] - 2026-09-07
 
 ### Added / Fixed
