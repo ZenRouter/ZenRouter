@@ -1,7 +1,14 @@
 import crypto from "crypto";
 import { BaseExecutor } from "./base.js";
 import { PROVIDERS } from "../config/providers.js";
-import { OAUTH_ENDPOINTS, ANTIGRAVITY_HEADERS, AG_DEFAULT_TOOLS, AG_TOOL_SUFFIX, ANTIGRAVITY_PROMPT_REWRITES } from "../config/appConstants.js";
+import {
+  OAUTH_ENDPOINTS,
+  ANTIGRAVITY_HEADERS,
+  AG_DEFAULT_TOOLS,
+  AG_TOOL_SUFFIX,
+  ANTIGRAVITY_PROMPT_REWRITES,
+  ANTIGRAVITY_TELEMETRY_KEYS,
+} from "../config/appConstants.js";
 import { HTTP_STATUS } from "../config/runtimeConfig.js";
 import { resolveSessionId } from "../utils/sessionManager.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
@@ -55,6 +62,37 @@ const ANTIGRAVITY_REQUEST_BLACKLIST = [
 const stripBlacklisted = obj => {
   for (const key of ANTIGRAVITY_REQUEST_BLACKLIST) delete obj[key];
 };
+
+function stripHarnessTelemetry(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+
+  let changed = false;
+  const cleaned = { ...value };
+  for (const key of ANTIGRAVITY_TELEMETRY_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(cleaned, key)) {
+      delete cleaned[key];
+      changed = true;
+    }
+  }
+
+  const labels = cleaned.labels;
+  if (labels && typeof labels === "object" && !Array.isArray(labels)) {
+    let labelsChanged = false;
+    const cleanedLabels = { ...labels };
+    for (const key of ANTIGRAVITY_TELEMETRY_KEYS) {
+      if (Object.prototype.hasOwnProperty.call(cleanedLabels, key)) {
+        delete cleanedLabels[key];
+        labelsChanged = true;
+      }
+    }
+    if (labelsChanged) {
+      cleaned.labels = cleanedLabels;
+      changed = true;
+    }
+  }
+
+  return changed ? cleaned : value;
+}
 
 // Image generation model name patterns
 const IMAGE_MODEL_PATTERNS = [
@@ -128,11 +166,15 @@ export class AntigravityExecutor extends BaseExecutor {
   // sessionId comes from transformRequest output; base.execute runs transformRequest before
   // buildHeaders, so we read it from instance state cached there (fallback: explicit arg).
   buildHeaders(credentials, stream = true, sessionId = null) {
-    return {
+    const headers = {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${credentials.accessToken}`,
       "User-Agent": this.config.headers?.["User-Agent"] || ANTIGRAVITY_HEADERS["User-Agent"],
     };
+    if (credentials?.projectId) {
+      headers["x-goog-user-project"] = credentials.projectId;
+    }
+    return headers;
   }
 
   transformRequest(model, body, stream, credentials) {
@@ -325,16 +367,19 @@ export class AntigravityExecutor extends BaseExecutor {
     // Strip blacklisted thinking fields from top-level body (set by thinkingUnified.js at root, not body.request)
     stripBlacklisted(body);
 
-    this._lastSessionId = transformedRequest.sessionId; // cached for buildHeaders (base.execute order)
+    const cleanedBody = stripHarnessTelemetry(body);
+    const cleanedRequest = stripHarnessTelemetry(transformedRequest);
 
+    this._lastSessionId = cleanedRequest.sessionId; // cached for buildHeaders (base.execute order)
+
+    // Omit top-level requestType="agent" to prevent false upstream 429 quota exhaustion (#3986)
     return {
-      ...body,
+      ...cleanedBody,
       project: projectId,
-      model: body.model || model,
+      model: cleanedBody.model || model,
       userAgent: "antigravity",
-      requestType: "agent",
-      requestId: buildIdeRequestId({ body, request: transformedRequest, credentials, model, requestType: "agent" }),
-      request: transformedRequest
+      requestId: buildIdeRequestId({ body: cleanedBody, request: cleanedRequest, credentials, model, requestType: "agent" }),
+      request: cleanedRequest
     };
   }
 

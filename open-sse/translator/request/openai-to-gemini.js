@@ -338,10 +338,8 @@ function wrapInCloudCodeEnvelope(model, geminiCLI, credentials = null, isAntigra
     }
   };
 
-  // Antigravity specific fields
-  if (isAntigravity) {
-    envelope.requestType = "agent";
-  } else {
+  // Antigravity specific fields: omit requestType="agent" to prevent false upstream 429 quota exhaustion (#3986)
+  if (!isAntigravity) {
     // Keep safetySettings for Gemini CLI
     envelope.request.safetySettings = geminiCLI.safetySettings;
   }
@@ -370,7 +368,6 @@ function wrapInCloudCodeEnvelopeForClaude(model, claudeRequest, credentials = nu
     model: model,
     userAgent: "antigravity",
     requestId: `agent-${generateUUID()}`,
-    requestType: "agent",
     request: {
       sessionId: toNumericSessionId(credentials?._clientSessionId) || deriveSessionId(credentials?.email || credentials?.connectionId),
       contents: [],
