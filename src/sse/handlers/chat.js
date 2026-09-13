@@ -286,6 +286,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
         connectionProxyUrl: refreshedCredentials.providerSpecificData?.connectionProxyUrl || "",
         connectionNoProxy: refreshedCredentials.providerSpecificData?.connectionNoProxy || "",
         vercelRelayUrl: refreshedCredentials.providerSpecificData?.vercelRelayUrl || "",
+        strictProxy: refreshedCredentials.providerSpecificData?.strictProxy === true,
       };
       const pid = await getProjectIdForConnection(credentials.connectionId, refreshedCredentials.accessToken, provider, connProxyOptions);
       if (pid) {

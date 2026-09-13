@@ -265,6 +265,7 @@ export async function checkAndRefreshToken(provider, credentials, options = {}) 
         connectionProxyUrl: creds.providerSpecificData?.connectionProxyUrl || "",
         connectionNoProxy: creds.providerSpecificData?.connectionNoProxy || "",
         vercelRelayUrl: creds.providerSpecificData?.vercelRelayUrl || "",
+        strictProxy: creds.providerSpecificData?.strictProxy === true,
       };
       _refreshProjectId(provider, creds.connectionId, creds.accessToken, refreshProxyOptions);
     }

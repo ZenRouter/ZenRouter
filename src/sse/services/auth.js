@@ -118,6 +118,7 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
           connectionNoProxy: resolvedProxy.connectionNoProxy,
           connectionProxyPoolId: resolvedProxy.proxyPoolId || null,
           vercelRelayUrl: resolvedProxy.vercelRelayUrl || "",
+          strictProxy: resolvedProxy.strictProxy === true,
         },
       };
     }
@@ -208,7 +209,7 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
           connectionProxyUrl: proxy.connectionProxyUrl || "",
           connectionNoProxy: proxy.connectionNoProxy || "",
           vercelRelayUrl: proxy.vercelRelayUrl || "",
-          strictProxy: false,
+          strictProxy: proxy.strictProxy === true,
         };
         const snap = await cache.getOrFetch(conn.id, async () => {
           const usage = await fetchUsage(conn.accessToken, proxyOptions, { force: false });
@@ -334,6 +335,7 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
         connectionNoProxy: resolvedProxy.connectionNoProxy,
         connectionProxyPoolId: resolvedProxy.proxyPoolId || null,
         vercelRelayUrl: resolvedProxy.vercelRelayUrl || "",
+        strictProxy: resolvedProxy.strictProxy === true,
       },
       connectionId: connection.id,
       // Include current status for optimization check
