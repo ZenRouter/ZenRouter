@@ -80,7 +80,7 @@ function openAICompletionToClaudeMessage(responseBody) {
   const message = choice.message || {};
   const content = [];
 
-  const reasoning = message.reasoning_content || message.provider_specific_fields?.reasoning_content || "";
+  const reasoning = message.reasoning_content || message.reasoning || message.provider_specific_fields?.reasoning_content || "";
   if (reasoning) {
     content.push({ type: "thinking", thinking: reasoning });
   }
