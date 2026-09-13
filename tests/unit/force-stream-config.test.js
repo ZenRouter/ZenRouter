@@ -77,6 +77,7 @@ vi.mock("../../open-sse/rtk/headroom.js", () => ({
 
 vi.mock("../../open-sse/providers/capabilities.js", () => ({
   getCapabilitiesForModel: vi.fn(() => ({})),
+  withDeclaredCapabilities: vi.fn((base) => base),
 }));
 
 vi.mock("../../open-sse/translator/concerns/modality.js", () => ({
