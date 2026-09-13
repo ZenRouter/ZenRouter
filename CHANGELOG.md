@@ -20,10 +20,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Collected multiple system messages as parts under `systemInstruction` instead of silently overwriting with the last one.
 - **fix(antigravity): ensure maxOutputTokens > thinkingBudget and inject thinkingConfig (#3979)**
   - Ensured `maxOutputTokens` strictly exceeds `thinkingBudget` and injected `thinkingConfig` into `generationConfig` to prevent Google Cloud Code 400 `INVALID_ARGUMENT`.
+- **fix(antigravity): omit requestType=agent, strip telemetry, and normalize harness tags (#3986, #3987)**
+  - Omitted `requestType: 'agent'` to prevent Google Cloud Code from triggering separate agent quota bucket and false 429 RESOURCE_EXHAUSTED.
+  - Normalized competing harness tags (`<system-conventions>`, `<critical>`, Oh My Pi) in system instructions.
+  - Stripped `used_claude` telemetry flags before forwarding upstream.
+  - Injected `x-goog-user-project` in headers when projectId is present.
 
 #### Proxy & Security Hardening
 - **fix(proxy): forward strictProxy flag to prevent direct bypass on chat routes (#4007)**
   - Propagated `strictProxy` through `auth.js`, `chatCore.js`, `chat.js`, `tokenRefresh.js`, and `quotaAutoPing.js` so proxy pools configured with `strictProxy: true` fail closed instead of leaking the operator's real IP to upstreams.
+- **fix(providers): surface underlying DNS, timeout, and OAuth error details during test connection (#4015)**
+  - Surfaced descriptive error message and OAuth error detail on connection test failure instead of masking with static generic labels.
 
 #### Video & Multi-Model Account Isolation
 - **fix(video): scope video polling failure lock to __video__ and ignore 404 (#4009)**
