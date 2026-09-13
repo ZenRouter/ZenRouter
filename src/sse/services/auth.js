@@ -1,7 +1,7 @@
 import { getProviderConnections, validateApiKey, updateProviderConnection, getSettings, getProxyPools } from "@/lib/localDb";
 import { resolveConnectionProxyConfig, pickProxyPoolId } from "@/lib/network/connectionProxy";
 import { formatRetryAfter, checkFallbackError, isModelLockActive, buildModelLockUpdate, getEarliestModelLockUntil } from "open-sse/services/accountFallback.js";
-import { MAX_RATE_LIMIT_COOLDOWN_MS } from "open-sse/config/errorConfig.js";
+import { MAX_RATE_LIMIT_COOLDOWN_MS, GOOGLE_QUOTA_PROJECT_ERROR_PATTERNS } from "open-sse/config/errorConfig.js";
 import { resolveProviderId, FREE_PROVIDERS } from "@/shared/constants/providers.js";
 import { getAntigravityQuotaCache } from "./antigravityQuota.js";
 import { getClaudeUsage } from "open-sse/services/usage/claude.js";
@@ -361,6 +361,14 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
  */
 export async function markAccountUnavailable(connectionId, status, errorText, provider = null, model = null, resetsAtMs = null) {
   if (!connectionId || connectionId === "noauth") return { shouldFallback: false, cooldownMs: 0 };
+  // A Cloud Code quota-project IAM error is configuration, not account health.
+  // Keep this guard here: the shared classifier must still allow combo fallback.
+  if (resolveProviderId(provider) === "antigravity" && Number(status) === 403) {
+    const message = typeof errorText === "string" ? errorText : errorText?.error?.message || errorText?.message || "";
+    if (typeof message === "string" && GOOGLE_QUOTA_PROJECT_ERROR_PATTERNS.some(pattern => message.toLowerCase().includes(pattern))) {
+      return { shouldFallback: false, cooldownMs: 0 };
+    }
+  }
   const connections = await getProviderConnections({ provider });
   const conn = connections.find(c => c.id === connectionId);
   const backoffLevel = conn?.backoffLevel || 0;

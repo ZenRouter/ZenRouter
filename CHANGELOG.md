@@ -24,7 +24,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Omitted `requestType: 'agent'` to prevent Google Cloud Code from triggering separate agent quota bucket and false 429 RESOURCE_EXHAUSTED.
   - Normalized competing harness tags (`<system-conventions>`, `<critical>`, Oh My Pi) in system instructions.
   - Stripped `used_claude` telemetry flags before forwarding upstream.
-  - Injected `x-goog-user-project` in headers when projectId is present.
+- **fix(antigravity): remove inferred quota-project header and avoid IAM-error account lock cascades**
+  - Removed `x-goog-user-project` introduced in `729bc535`: the Cloud Code resource project is not a quota/billing project selected by the operator. Inferring the header from `projectId` triggered 403 `serviceusage.services.use` permission errors for `aicode-consumers`.
+  - Kept the resource `project` in the request body. No IAM permissions, stored credentials, or proxy configuration are changed.
+  - Antigravity quota-project IAM errors stop account rotation without writing model locks; the shared combo classifier still allows the next model/provider.
+  - Regression tests cover the absent header, provider aliases, string/object errors, no DB writes, and unchanged handling of other 403/429 errors.
 - **fix(translator): support IMAGE and DOCUMENT blocks for Antigravity Claude envelope (#3968)**
   - Converted `CLAUDE_BLOCK.DOCUMENT` to `OPENAI_BLOCK.FILE` in `claudeToOpenAIRequest`.
   - Forwarded `CLAUDE_BLOCK.IMAGE` and `DOCUMENT` as `inlineData` in `wrapInCloudCodeEnvelopeForClaude` to unblock vision and PDF reading on Antigravity Claude models.

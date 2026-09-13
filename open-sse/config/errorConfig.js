@@ -35,6 +35,12 @@ export const BACKOFF_CONFIG = {
   maxLevel: 15
 };
 
+// Cloud Code's resource project is not an operator-selected quota project.
+export const GOOGLE_QUOTA_PROJECT_ERROR_PATTERNS = [
+  "required permission to use project",
+  "serviceusage.services.use",
+];
+
 // Default cooldown for transient/unknown errors
 export const TRANSIENT_COOLDOWN_MS = 30 * 1000;
 

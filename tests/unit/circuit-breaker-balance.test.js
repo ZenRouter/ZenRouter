@@ -17,4 +17,11 @@ describe("Circuit breaker & balance_zero error rules", () => {
     expect(res.shouldFallback).toBe(true);
     expect(res.cooldownMs).toBe(15 * 60 * 1000);
   });
+
+  it("still allows combo model fallback for a Google quota-project IAM error", () => {
+    const error = "Caller does not have required permission to use project aicode-consumers. Grant roles/serviceusage.serviceUsageConsumer with serviceusage.services.use permission.";
+    const res = checkFallbackError(403, error);
+
+    expect(res.shouldFallback).toBe(true);
+  });
 });

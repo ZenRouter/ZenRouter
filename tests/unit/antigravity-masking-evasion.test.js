@@ -94,13 +94,16 @@ describe("Antigravity detection evasion & harness normalization (#3986, #3987)",
     expect(sanitized).toContain("<important>Do this</important>");
   });
 
-  it("attaches x-goog-user-project in headers when projectId is present", () => {
+  it("does not send x-goog-user-project from the payload project id", () => {
     const headers = executor.buildHeaders({
       accessToken: "ya29.secret",
-      projectId: "custom-project-id",
+      projectId: "aicode-consumers",
     });
 
-    expect(headers["x-goog-user-project"]).toBe("custom-project-id");
+    // x-goog-user-project is a Google quota/billing-project selector, not an
+    // identity header. Sending it makes Google require serviceusage.services.use
+    // IAM permission on that project and rejects every account with 403.
+    expect(headers["x-goog-user-project"]).toBeUndefined();
     expect(headers["Authorization"]).toBe("Bearer ya29.secret");
   });
 });
