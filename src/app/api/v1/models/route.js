@@ -18,7 +18,7 @@ import { resolveZedModels } from "open-sse/shared/zedAuth.js";
 import { fetchProviderLiveModels } from "@/shared/utils/providerLiveModels";
 import { updateProviderCredentials } from "@/sse/services/tokenRefresh";
 import { resolveConnectionProxyConfig } from "@/lib/network/connectionProxy";
-import { capabilitiesFromServiceKind, getCapabilitiesForModel } from "open-sse/providers/capabilities.js";
+import { capabilitiesFromServiceKind, getCapabilitiesForModel, withDeclaredCapabilities } from "open-sse/providers/capabilities.js";
 
 // Per-provider live model resolvers. Each receives a connection record and
 // returns { models: [{ id, name? }, ...] } | null on failure.
@@ -422,6 +422,7 @@ export async function buildModelsList(kindFilter) {
         .filter((modelId) => typeof modelId === "string" && modelId.trim() !== "");
 
       const customModelKindById = new Map();
+      const customModelCapsById = new Map();
       const customCapabilitiesById = new Map();
       const customModelIds = customModels
         .filter((m) => {
@@ -437,6 +438,7 @@ export async function buildModelsList(kindFilter) {
           const modelId = String(m.id).trim();
           if (modelId) {
             customModelKindById.set(modelId, getModelKind(m) || LLM_KIND);
+            if (m.caps && typeof m.caps === "object") customModelCapsById.set(modelId, m.caps);
             const cw = Number(m.contextWindow || m.context_length);
             const mo = Number(m.maxOutput || m.max_completion_tokens);
             if ((Number.isFinite(cw) && cw > 0) || (Number.isFinite(mo) && mo > 0)) {
@@ -494,10 +496,11 @@ export async function buildModelsList(kindFilter) {
         // { id, name } — no per-model capability data. Fall back to the same
         // pattern-matched capabilities the dashboard uses (useModelCaps.js) so
         // dynamically-discovered LLM models still surface vision/reasoning/search/tools.
-        const caps = liveCapabilitiesById.get(modelId)
+        const baseCaps = liveCapabilitiesById.get(modelId)
           || customCapabilitiesById.get(modelId)
           || capabilitiesFromServiceKind(customKind || liveKind)
           || (kind === LLM_KIND ? getCapabilitiesForModel(providerId, modelId) : null);
+        const caps = withDeclaredCapabilities(baseCaps, customModelCapsById.get(modelId));
         if (caps) model.capabilities = caps;
         // Token limits under the snake_case names the OpenAI/OpenRouter
         // convention uses. `capabilities.contextWindow` is camelCase and nested,
