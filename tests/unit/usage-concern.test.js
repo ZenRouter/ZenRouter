@@ -62,6 +62,23 @@ describe("toOpenAIUsage", () => {
     expect(u.total_tokens).toBe(99);
   });
 
+  it("commandcode: preserves cachedInputTokens and reasoningTokens details without double-counting", () => {
+    const u = toOpenAIUsage({
+      inputTokens: 22044,
+      inputTokenDetails: { noCacheTokens: 156, cacheReadTokens: 21888 },
+      outputTokens: 16,
+      totalTokens: 22060,
+      cachedInputTokens: 21888,
+      outputTokenDetails: { reasoningTokens: 5 },
+    }, "commandcode");
+
+    expect(u.prompt_tokens).toBe(22044);
+    expect(u.completion_tokens).toBe(16);
+    expect(u.total_tokens).toBe(22060);
+    expect(u.prompt_tokens_details).toEqual({ cached_tokens: 21888 });
+    expect(u.completion_tokens_details).toEqual({ reasoning_tokens: 5 });
+  });
+
   it("unknown kind / null raw -> null", () => {
     expect(toOpenAIUsage({}, "nope")).toBeNull();
     expect(toOpenAIUsage(null, "claude")).toBeNull();
