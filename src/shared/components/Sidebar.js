@@ -119,14 +119,14 @@ export default function Sidebar({ onClose }) {
         {/* Logo */}
         <div className="px-6 py-4 flex flex-col gap-2">
           <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div className="flex items-center justify-center size-9 rounded-[10px] bg-surface-2 border border-border p-1.5 shadow-[var(--shadow-warm)] group-hover:scale-105 transition-transform">
+            <div className="flex items-center justify-center size-9 rounded-xl bg-surface border border-border p-1.5 shadow-[var(--shadow-hard-sm)] group-hover:scale-105 group-hover:-rotate-3 transition-transform">
               <Image src="/icons/logo.svg" alt="ZenRouter Logo" width={24} height={24} className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-lg font-semibold tracking-tight text-text-main">
+              <h1 className="text-lg font-bold tracking-tight text-text-main">
                 {APP_CONFIG.name}
               </h1>
-              <span className="text-xs text-text-muted">v{APP_CONFIG.version}</span>
+              <span className="text-[11px] font-mono text-text-muted">v{APP_CONFIG.version}</span>
             </div>
           </Link>
           {updateInfo && (
@@ -156,34 +156,37 @@ export default function Sidebar({ onClose }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-2 space-y-0.5 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-3.5 py-2 space-y-1 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={onClose}
               className={cn(
-                "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
+                "flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-120 group",
                 isActive(item.href)
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                  ? "bg-primary/15 text-primary font-bold border border-primary/30 shadow-xs translate-x-0.5"
+                  : "text-text-muted hover:bg-surface-2 hover:text-text-main hover:translate-x-0.5"
               )}
             >
               <span
                 className={cn(
-                  "material-symbols-outlined text-[19px] transition-colors",
-                  isActive(item.href) ? "text-primary" : "group-hover:text-primary"
+                  "material-symbols-outlined text-[19px] transition-transform group-hover:scale-110",
+                  isActive(item.href) ? "text-primary fill-1" : "group-hover:text-primary"
                 )}
               >
                 {item.icon}
               </span>
-              <span className="text-[13px]">{item.label}</span>
+              <span className="text-[13px] flex-1">{item.label}</span>
+              {isActive(item.href) && (
+                <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+              )}
             </Link>
           ))}
 
           {/* System section */}
-          <div className="pt-3 mt-2 space-y-0.5">
-            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">
+          <div className="pt-3 mt-2 space-y-1">
+            <p className="px-3 text-[11px] font-mono font-bold text-text-muted/70 uppercase tracking-wider mb-2">
               System
             </p>
 
@@ -191,13 +194,13 @@ export default function Sidebar({ onClose }) {
             <button
               onClick={() => setMediaOpen((v) => !v)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
+                "w-full flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-120 group",
                 pathname.startsWith("/dashboard/media-providers")
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                  ? "bg-primary/15 text-primary font-bold border border-primary/30 shadow-xs translate-x-0.5"
+                  : "text-text-muted hover:bg-surface-2 hover:text-text-main hover:translate-x-0.5"
               )}
             >
-              <span className={cn("material-symbols-outlined text-[19px] transition-colors", pathname.startsWith("/dashboard/media-providers") ? "text-primary" : "group-hover:text-primary")}>perm_media</span>
+              <span className={cn("material-symbols-outlined text-[19px] transition-transform group-hover:scale-110", pathname.startsWith("/dashboard/media-providers") ? "text-primary fill-1" : "group-hover:text-primary")}>perm_media</span>
               <span className="text-[13px] flex-1 text-left">Media Providers</span>
               <span className="material-symbols-outlined text-[14px] transition-transform" style={{ transform: mediaOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
                 expand_more
@@ -244,21 +247,24 @@ export default function Sidebar({ onClose }) {
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
+                  "flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-120 group",
                   isActive(item.href)
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                    ? "bg-primary/15 text-primary font-bold border border-primary/30 shadow-xs translate-x-0.5"
+                    : "text-text-muted hover:bg-surface-2 hover:text-text-main hover:translate-x-0.5"
                 )}
               >
                 <span
                   className={cn(
-                    "material-symbols-outlined text-[19px] transition-colors",
-                    isActive(item.href) ? "text-primary" : "group-hover:text-primary"
+                    "material-symbols-outlined text-[19px] transition-transform group-hover:scale-110",
+                    isActive(item.href) ? "text-primary fill-1" : "group-hover:text-primary"
                   )}
                 >
                   {item.icon}
                 </span>
-                <span className="text-[13px]">{item.label}</span>
+                <span className="text-[13px] flex-1">{item.label}</span>
+                {isActive(item.href) && (
+                  <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+                )}
               </Link>
             ))}
 
@@ -271,21 +277,24 @@ export default function Sidebar({ onClose }) {
                   href={item.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
+                    "flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-120 group",
                     isActive(item.href)
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                      ? "bg-primary/15 text-primary font-bold border border-primary/30 shadow-xs translate-x-0.5"
+                      : "text-text-muted hover:bg-surface-2 hover:text-text-main hover:translate-x-0.5"
                   )}
                 >
                   <span
                     className={cn(
-                      "material-symbols-outlined text-[19px] transition-colors",
-                      isActive(item.href) ? "text-primary" : "group-hover:text-primary"
+                      "material-symbols-outlined text-[19px] transition-transform group-hover:scale-110",
+                      isActive(item.href) ? "text-primary fill-1" : "group-hover:text-primary"
                     )}
                   >
                     {item.icon}
                   </span>
-                  <span className="text-[13px]">{item.label}</span>
+                  <span className="text-[13px] flex-1">{item.label}</span>
+                  {isActive(item.href) && (
+                    <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+                  )}
                 </Link>
               ) : null;
             })}

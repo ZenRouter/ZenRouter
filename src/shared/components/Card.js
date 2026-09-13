@@ -11,6 +11,7 @@ export default function Card({
   padding = "md",
   hover = false,
   elev = false,
+  tone = "paper",
   className,
   ...props
 }) {
@@ -18,16 +19,28 @@ export default function Card({
     none: "",
     xs: "p-3",
     sm: "p-4",
-    md: "p-6",
-    lg: "p-8",
+    md: "p-5 sm:p-6",
+    lg: "p-6 sm:p-8",
+  };
+
+  const tones = {
+    paper: "bg-surface",
+    sky: "bg-sky/40 dark:bg-sky/20",
+    mint: "bg-mint/15 dark:bg-mint/10",
+    lavender: "bg-lavender/25 dark:bg-lavender/15",
+    sunburst: "bg-sunburst/20 dark:bg-sunburst/15",
+    ember: "bg-ember/15 dark:bg-ember/10",
   };
 
   return (
     <div
       className={cn(
-        "bg-surface border border-border-subtle",
-        elev ? "rounded-[14px] shadow-[var(--shadow-elev)]" : "rounded-[14px] shadow-[var(--shadow-soft)]",
-        hover && "hover:shadow-[var(--shadow-warm)] hover:border-brand-500/30 transition-all cursor-pointer",
+        tones[tone] || "bg-surface",
+        "border border-border/80 dark:border-border",
+        elev
+          ? "rounded-2xl shadow-[var(--shadow-hard)]"
+          : "rounded-2xl shadow-[var(--shadow-soft)]",
+        hover && "transition-all duration-150 hover:-translate-y-1 hover:shadow-[var(--shadow-hard-lg)] cursor-pointer",
         paddings[padding],
         className
       )}
@@ -37,16 +50,16 @@ export default function Card({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className="p-2 rounded-[10px] bg-bg text-text-muted">
+              <div className="p-2 rounded-xl bg-surface-2 border border-border-subtle text-text-muted shadow-sm flex items-center justify-center">
                 <span className="material-symbols-outlined text-[20px]">{icon}</span>
               </div>
             )}
             <div>
               {title && (
-                <h3 className="text-text-main font-semibold">{title}</h3>
+                <h3 className="text-text-main font-bold tracking-tight">{title}</h3>
               )}
               {subtitle && (
-                <p className="text-sm text-text-muted">{subtitle}</p>
+                <p className="text-xs text-text-muted mt-0.5">{subtitle}</p>
               )}
             </div>
           </div>
