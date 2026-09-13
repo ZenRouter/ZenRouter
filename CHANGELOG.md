@@ -76,6 +76,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Prevents hand-declared vision-capable custom models from having images stripped before upstream dispatch.
 
 #### Dashboard & UI Integrity
+- **feat(ui): enhance dashboard with bykitsune-inspired pop neo-brutalism and animated usage indicators**
+  - Added ByKitsune pop accent palette tokens (`mint`, `sunburst`, `electric`, `ember`, `lavender`, `sky`, `mist`) in both light and dark mode.
+  - Implemented tactile neo-brutalist shadows (`shadow-hard`, `shadow-hard-sm`, `shadow-hard-lg`) and arcade-style button press states.
+  - Upgraded `QuotaProgressBar` with animated diagonal gradient stripes (`animate-progress-stripes`) and rounded border styling.
+  - Redesigned `OverviewCards` with distinctive color-coded pop headers, bold typography, and micro-hover lifts.
+  - Enhanced `Button` with tactile active press and new pop variants (`mint`, `sunburst`, `electric`, `ember`).
+  - Upgraded `Card` with tone presets (`paper`, `mint`, `lavender`, `sunburst`, `sky`, `ember`) and sticker hover effects.
+  - Upgraded `Badge` with monospace uppercase tracking and high-contrast pill styling.
+  - Polished `Sidebar` navigation with active pill indicators, glowing active dots, and tactile hover states.
 - **fix(dashboard): reset credential modals on close so reopened forms start clean (#4026)**
   - Reset form states and validation results on close in `AddApiKeyModal`, `AddCompatibleModal`, `ConnectionsCard`, `CursorAuthModal`, and `KiroAuthModal`.
   - Fixed Kiro CLI proxy modal not closing on import completion (`import-cli-proxy`).
