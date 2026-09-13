@@ -23,6 +23,7 @@ import {
   getRefreshLeadMs as _getRefreshLeadMs
 } from "open-sse/services/tokenRefresh.js";
 import {
+  parseTimeMs,
   refreshProviderCredentials as _refreshProviderCredentials,
   shouldRefreshCredentials as _shouldRefreshCredentials,
 } from "open-sse/services/oauthCredentialManager.js";
@@ -97,10 +98,9 @@ function toExpiresAt(expiresIn) {
 }
 
 function normalizeExpiresAt(expiresAt) {
-  if (!expiresAt) return null;
-  const date = new Date(expiresAt);
-  if (!Number.isFinite(date.getTime())) return null;
-  return date.toISOString();
+  const ms = parseTimeMs(expiresAt);
+  if (ms === null) return null;
+  return new Date(ms).toISOString();
 }
 
 /**
