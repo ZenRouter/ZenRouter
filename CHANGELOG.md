@@ -76,15 +76,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Prevents hand-declared vision-capable custom models from having images stripped before upstream dispatch.
 
 #### Dashboard & UI Integrity
-- **feat(ui): enhance dashboard with bykitsune-inspired pop neo-brutalism and animated usage indicators**
-  - Added ByKitsune pop accent palette tokens (`mint`, `sunburst`, `electric`, `ember`, `lavender`, `sky`, `mist`) in both light and dark mode.
-  - Implemented tactile neo-brutalist shadows (`shadow-hard`, `shadow-hard-sm`, `shadow-hard-lg`) and arcade-style button press states.
-  - Upgraded `QuotaProgressBar` with animated diagonal gradient stripes (`animate-progress-stripes`) and rounded border styling.
-  - Redesigned `OverviewCards` with distinctive color-coded pop headers, bold typography, and micro-hover lifts.
-  - Enhanced `Button` with tactile active press and new pop variants (`mint`, `sunburst`, `electric`, `ember`).
-  - Upgraded `Card` with tone presets (`paper`, `mint`, `lavender`, `sunburst`, `sky`, `ember`) and sticker hover effects.
-  - Upgraded `Badge` with monospace uppercase tracking and high-contrast pill styling.
-  - Polished `Sidebar` navigation with active pill indicators, glowing active dots, and tactile hover states.
+- **feat(ui): comprehensive bykitsune pop neo-brutalist overhaul across all components**
+  - Adopted `Plus_Jakarta_Sans` for primary typography and `JetBrains_Mono` for codes, tags, and metrics across the entire application.
+  - Re-architected `Card.js` with 1.5px solid borders, rounded-2xl geometry, hard drop shadows (`shadow-hard`), and tactile hover lifts.
+  - Overhauled `Button.js` into tactile neo-brutalist pill buttons with physical active press displacement (`translate(2px, 2px)`).
+  - Transformed `Select.js`, `Input.js`, and `Toggle.js` into tactile controls with hard-shadow focus states.
+  - Modernized `Modal.js` with 2px solid borders, rounded-2xl container, and tactile close button.
+  - Upgraded `Sidebar.js` and `Header.js` with sunburst active pill nav, glowing indicators, and sticker controls.
+  - Overhauled `SegmentedControl`, `ThemeToggle`, `HeaderLanguage`, and `HeaderMenu` with pill styling.
+  - Redesigned `DashboardLayout` toasts into neo-brutalist pop notifications (`mint`, `sunburst`, `ember`, `electric`).
+  - Polished `Endpoint`, `Providers`, `Combos`, `Quota`, and `Usage` dashboards with cohesive ByKitsune aesthetics.
 - **fix(dashboard): reset credential modals on close so reopened forms start clean (#4026)**
   - Reset form states and validation results on close in `AddApiKeyModal`, `AddCompatibleModal`, `ConnectionsCard`, `CursorAuthModal`, and `KiroAuthModal`.
   - Fixed Kiro CLI proxy modal not closing on import completion (`import-cli-proxy`).
