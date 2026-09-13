@@ -3,22 +3,22 @@
 import { cn } from "@/shared/utils/cn";
 
 const variants = {
-  primary: "bg-brand-500 hover:bg-brand-600 text-white shadow-[var(--shadow-hard-sm)] border border-black/70 dark:border-white/20 disabled:bg-surface-3 disabled:text-text-muted disabled:shadow-none disabled:border-border",
-  secondary: "bg-surface hover:bg-surface-2 text-text-main border border-black/70 dark:border-white/20 shadow-[var(--shadow-hard-sm)] disabled:opacity-50 disabled:shadow-none",
-  outline: "border border-border text-text-main hover:bg-surface-2 hover:border-brand-500/40",
-  ghost: "text-text-muted hover:bg-surface-2 hover:text-text-main",
-  danger: "bg-red-500 hover:bg-red-600 text-white shadow-[var(--shadow-hard-sm)] border border-black/70 dark:border-white/20 disabled:bg-surface-3 disabled:text-text-muted disabled:shadow-none",
-  success: "bg-green-600 hover:bg-green-700 text-white shadow-[var(--shadow-hard-sm)] border border-black/70 dark:border-white/20 disabled:bg-surface-3 disabled:text-text-muted disabled:shadow-none",
-  mint: "bg-mint hover:brightness-105 text-slate-900 shadow-[var(--shadow-hard-sm)] border border-black/70 dark:border-white/20 disabled:opacity-50 disabled:shadow-none font-bold",
-  sunburst: "bg-sunburst hover:brightness-105 text-slate-900 shadow-[var(--shadow-hard-sm)] border border-black/70 dark:border-white/20 disabled:opacity-50 disabled:shadow-none font-bold",
-  electric: "bg-electric hover:brightness-105 text-white shadow-[var(--shadow-hard-sm)] border border-black/70 dark:border-white/20 disabled:opacity-50 disabled:shadow-none font-bold",
-  ember: "bg-ember hover:brightness-105 text-white shadow-[var(--shadow-hard-sm)] border border-black/70 dark:border-white/20 disabled:opacity-50 disabled:shadow-none font-bold",
+  primary: "bg-slate-950 hover:bg-black text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950 shadow-[var(--shadow-hard-sm)] border-[1.5px] border-black dark:border-white/30 disabled:opacity-50 disabled:shadow-none",
+  secondary: "bg-surface hover:bg-surface-2 text-text-main border-[1.5px] border-black/85 dark:border-white/25 shadow-[var(--shadow-hard-sm)] disabled:opacity-50 disabled:shadow-none",
+  outline: "border-[1.5px] border-black/80 dark:border-white/25 text-text-main hover:bg-surface-2",
+  ghost: "text-text-muted hover:bg-surface-2 hover:text-text-main border border-transparent",
+  danger: "bg-ember hover:brightness-105 text-white shadow-[var(--shadow-hard-sm)] border-[1.5px] border-black dark:border-white/20 disabled:opacity-50 disabled:shadow-none",
+  success: "bg-mint hover:brightness-105 text-slate-950 shadow-[var(--shadow-hard-sm)] border-[1.5px] border-black dark:border-white/20 disabled:opacity-50 disabled:shadow-none font-bold",
+  mint: "bg-mint hover:brightness-105 text-slate-950 shadow-[var(--shadow-hard-sm)] border-[1.5px] border-black dark:border-white/20 disabled:opacity-50 disabled:shadow-none font-bold",
+  sunburst: "bg-sunburst hover:brightness-105 text-slate-950 shadow-[var(--shadow-hard-sm)] border-[1.5px] border-black dark:border-white/20 disabled:opacity-50 disabled:shadow-none font-bold",
+  electric: "bg-electric hover:brightness-105 text-white shadow-[var(--shadow-hard-sm)] border-[1.5px] border-black dark:border-white/20 disabled:opacity-50 disabled:shadow-none font-bold",
+  ember: "bg-ember hover:brightness-105 text-white shadow-[var(--shadow-hard-sm)] border-[1.5px] border-black dark:border-white/20 disabled:opacity-50 disabled:shadow-none font-bold",
 };
 
 const sizes = {
-  sm: "h-7 px-3 text-xs rounded-full",
-  md: "h-9 px-4 text-sm rounded-full",
-  lg: "h-11 px-6 text-sm rounded-full",
+  sm: "h-7 px-3.5 text-[11px] rounded-full",
+  md: "h-9 px-4 text-xs sm:text-sm rounded-full",
+  lg: "h-11 px-6 text-sm sm:text-base rounded-full",
 };
 
 export default function Button({
@@ -37,7 +37,7 @@ export default function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-120 ease-out cursor-pointer",
+        "inline-flex items-center justify-center gap-2 font-bold uppercase tracking-wider transition-all duration-120 ease-out cursor-pointer",
         isPill && "hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hard)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
         "disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none",
         variants[variant],

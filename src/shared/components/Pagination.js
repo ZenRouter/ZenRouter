@@ -59,8 +59,8 @@ export default function Pagination({
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
               className={cn(
-                "h-9 rounded-lg border border-black/10 dark:border-white/10 bg-surface",
-                "text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20",
+                "h-8 px-2.5 rounded-full border-[1.5px] border-black/85 dark:border-white/25 bg-surface shadow-[var(--shadow-hard-sm)]",
+                "text-xs font-mono font-bold text-text-main focus:outline-none",
                 "cursor-pointer"
               )}
               style={{ colorScheme: 'auto' }}

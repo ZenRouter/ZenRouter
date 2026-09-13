@@ -713,13 +713,14 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
   return (
     <Link href={`/dashboard/providers/${providerId}`} className="group min-w-0">
       <Card
-        padding="xs"
-        className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
+        padding="sm"
+        hover
+        className={`h-full transition-all cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div
-              className="size-8 shrink-0 rounded-lg flex items-center justify-center"
+              className="size-9 shrink-0 rounded-xl border border-black/80 dark:border-white/20 shadow-xs flex items-center justify-center p-1"
               style={{
                 backgroundColor: `${provider.color?.length > 7 ? provider.color : provider.color + "15"}`,
               }}
@@ -728,7 +729,7 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
                 src={`/providers/${provider.id}.png`}
                 alt={provider.name}
                 size={30}
-                className="object-contain rounded-lg max-w-[32px] max-h-[32px]"
+                className="object-contain rounded-lg max-w-[28px] max-h-[28px]"
                 fallbackText={
                   provider.textIcon || provider.id.slice(0, 2).toUpperCase()
                 }
@@ -736,8 +737,8 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
               />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate font-semibold">{provider.name}</h3>
-              <div className="flex min-w-0 items-center gap-1.5 text-xs flex-wrap">
+              <h3 className="truncate font-extrabold text-sm sm:text-base tracking-tight">{provider.name}</h3>
+              <div className="flex min-w-0 items-center gap-1.5 text-xs flex-wrap mt-0.5">
                 {allDisabled ? (
                   <Badge variant="default" size="sm">
                     <span className="flex items-center gap-1">
@@ -841,13 +842,14 @@ function ApiKeyProviderCard({
   return (
     <Link href={`/dashboard/providers/${providerId}`} className="group min-w-0">
       <Card
-        padding="xs"
-        className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
+        padding="sm"
+        hover
+        className={`h-full transition-all cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div
-              className="size-8 shrink-0 rounded-lg flex items-center justify-center"
+              className="size-9 shrink-0 rounded-xl border border-black/80 dark:border-white/20 shadow-xs flex items-center justify-center p-1"
               style={{
                 backgroundColor: `${provider.color?.length > 7 ? provider.color : provider.color + "15"}`,
               }}
@@ -856,7 +858,7 @@ function ApiKeyProviderCard({
                 src={getIconPath()}
                 alt={provider.name}
                 size={30}
-                className="object-contain rounded-lg max-w-[30px] max-h-[30px]"
+                className="object-contain rounded-lg max-w-[28px] max-h-[28px]"
                 fallbackText={
                   provider.textIcon || provider.id.slice(0, 2).toUpperCase()
                 }
@@ -864,8 +866,8 @@ function ApiKeyProviderCard({
               />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate font-semibold">{provider.name}</h3>
-              <div className="flex min-w-0 items-center gap-1.5 text-xs flex-wrap">
+              <h3 className="truncate font-extrabold text-sm sm:text-base tracking-tight">{provider.name}</h3>
+              <div className="flex min-w-0 items-center gap-1.5 text-xs flex-wrap mt-0.5">
                 {allDisabled ? (
                   <Badge variant="default" size="sm">
                     <span className="flex items-center gap-1">

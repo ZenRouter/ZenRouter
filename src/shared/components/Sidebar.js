@@ -108,45 +108,45 @@ export default function Sidebar({ onClose }) {
 
   return (
     <>
-      <aside className="flex w-72 flex-col border-r border-border-subtle bg-vibrancy backdrop-blur-xl transition-colors duration-300 min-h-full">
+      <aside className="flex w-72 flex-col border-r-[1.5px] border-black/85 dark:border-white/20 bg-surface transition-colors duration-300 min-h-full">
         {/* Traffic lights */}
         <div className="flex items-center gap-2 px-6 pt-5 pb-2">
-          <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
-          <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
-          <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
+          <div className="w-3 h-3 rounded-full bg-[#FF5F56] border border-black/60 dark:border-white/20" />
+          <div className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-black/60 dark:border-white/20" />
+          <div className="w-3 h-3 rounded-full bg-[#27C93F] border border-black/60 dark:border-white/20" />
         </div>
 
         {/* Logo */}
         <div className="px-6 py-4 flex flex-col gap-2">
           <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div className="flex items-center justify-center size-9 rounded-xl bg-surface border border-border p-1.5 shadow-[var(--shadow-hard-sm)] group-hover:scale-105 group-hover:-rotate-3 transition-transform">
-              <Image src="/icons/logo.svg" alt="ZenRouter Logo" width={24} height={24} className="w-full h-full object-contain" />
+            <div className="flex items-center justify-center size-10 rounded-2xl bg-surface border-[1.5px] border-black dark:border-white/20 p-2 shadow-[var(--shadow-hard)] group-hover:scale-105 group-hover:-rotate-3 transition-transform">
+              <Image src="/icons/logo.svg" alt="ZenRouter Logo" width={28} height={28} className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-lg font-bold tracking-tight text-text-main">
+              <h1 className="text-xl font-black tracking-tight text-text-main leading-tight">
                 {APP_CONFIG.name}
               </h1>
-              <span className="text-[11px] font-mono text-text-muted">v{APP_CONFIG.version}</span>
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-text-muted">v{APP_CONFIG.version}</span>
             </div>
           </Link>
           {updateInfo && (
-            <div className="flex flex-col gap-1.5 rounded p-1 -m-1">
-              <span className="text-xs font-semibold text-green-600 dark:text-amber-500">
-                ↑ New version available: v{updateInfo.latestVersion}
+            <div className="flex flex-col gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-2">
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                ↑ New version: v{updateInfo.latestVersion}
               </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowUpdateModal(true)}
-                  className="px-2 py-1 rounded bg-brand-600 hover:bg-brand-700 text-white text-[11px] font-semibold transition-colors cursor-pointer"
+                  className="px-2.5 py-1 rounded-full bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-[11px] font-bold uppercase tracking-wider border border-black dark:border-white/30 transition-colors cursor-pointer"
                 >
-                  Update now
+                  Update
                 </button>
                 <button
                   onClick={() => copy(INSTALL_CMD)}
                   title="Copy install command"
                   className="flex-1 text-left hover:opacity-80 transition-opacity cursor-pointer min-w-0"
                 >
-                  <code className="block text-[10px] text-brand-600/80 dark:text-brand-300 font-mono truncate">
+                  <code className="block text-[10px] text-text-main font-mono truncate">
                     {copied ? "✓ copied!" : INSTALL_CMD}
                   </code>
                 </button>
@@ -156,37 +156,37 @@ export default function Sidebar({ onClose }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3.5 py-2 space-y-1 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-3.5 py-2 space-y-1.5 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={onClose}
               className={cn(
-                "flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-120 group",
+                "flex items-center gap-3 px-4 py-2 rounded-full transition-all duration-120 group font-bold text-xs uppercase tracking-wider",
                 isActive(item.href)
-                  ? "bg-primary/15 text-primary font-bold border border-primary/30 shadow-xs translate-x-0.5"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main hover:translate-x-0.5"
+                  ? "bg-sunburst text-slate-950 border-[1.5px] border-black shadow-[var(--shadow-hard-sm)] translate-x-1"
+                  : "text-text-muted hover:bg-mist dark:hover:bg-surface-2 hover:text-text-main border-[1.5px] border-transparent"
               )}
             >
               <span
                 className={cn(
                   "material-symbols-outlined text-[19px] transition-transform group-hover:scale-110",
-                  isActive(item.href) ? "text-primary fill-1" : "group-hover:text-primary"
+                  isActive(item.href) ? "text-slate-950 fill-1" : "group-hover:text-primary"
                 )}
               >
                 {item.icon}
               </span>
-              <span className="text-[13px] flex-1">{item.label}</span>
+              <span className="flex-1 truncate">{item.label}</span>
               {isActive(item.href) && (
-                <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="size-2 rounded-full bg-black animate-pulse" />
               )}
             </Link>
           ))}
 
           {/* System section */}
-          <div className="pt-3 mt-2 space-y-1">
-            <p className="px-3 text-[11px] font-mono font-bold text-text-muted/70 uppercase tracking-wider mb-2">
+          <div className="pt-4 mt-3 space-y-1.5 border-t border-black/10 dark:border-white/10">
+            <p className="px-4 text-[10px] font-mono font-black text-text-muted/80 uppercase tracking-widest mb-2">
               System
             </p>
 
@@ -194,34 +194,34 @@ export default function Sidebar({ onClose }) {
             <button
               onClick={() => setMediaOpen((v) => !v)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-120 group",
+                "w-full flex items-center gap-3 px-4 py-2 rounded-full transition-all duration-120 group font-bold text-xs uppercase tracking-wider cursor-pointer",
                 pathname.startsWith("/dashboard/media-providers")
-                  ? "bg-primary/15 text-primary font-bold border border-primary/30 shadow-xs translate-x-0.5"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main hover:translate-x-0.5"
+                  ? "bg-sunburst text-slate-950 border-[1.5px] border-black shadow-[var(--shadow-hard-sm)] translate-x-1"
+                  : "text-text-muted hover:bg-mist dark:hover:bg-surface-2 hover:text-text-main border-[1.5px] border-transparent"
               )}
             >
-              <span className={cn("material-symbols-outlined text-[19px] transition-transform group-hover:scale-110", pathname.startsWith("/dashboard/media-providers") ? "text-primary fill-1" : "group-hover:text-primary")}>perm_media</span>
-              <span className="text-[13px] flex-1 text-left">Media Providers</span>
-              <span className="material-symbols-outlined text-[14px] transition-transform" style={{ transform: mediaOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+              <span className={cn("material-symbols-outlined text-[19px] transition-transform group-hover:scale-110", pathname.startsWith("/dashboard/media-providers") ? "text-slate-950 fill-1" : "group-hover:text-primary")}>perm_media</span>
+              <span className="flex-1 text-left truncate">Media Providers</span>
+              <span className="material-symbols-outlined text-[15px] transition-transform font-bold" style={{ transform: mediaOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
                 expand_more
               </span>
             </button>
             {mediaOpen && (
-              <div className="pl-4">
+              <div className="pl-3 space-y-1">
                 {MEDIA_PROVIDER_KINDS.filter((k) => VISIBLE_MEDIA_KINDS.includes(k.id)).map((kind) => (
                   <Link
                     key={kind.id}
                     href={`/dashboard/media-providers/${kind.id}`}
                     onClick={onClose}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
+                      "flex items-center gap-2.5 px-3 py-1.5 rounded-full transition-all text-xs font-bold uppercase tracking-wider",
                       pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                        ? "bg-mint text-slate-950 border border-black shadow-xs"
+                        : "text-text-muted hover:bg-mist dark:hover:bg-surface-2 hover:text-text-main"
                     )}
                   >
                     <span className="material-symbols-outlined text-[16px]">{kind.icon}</span>
-                    <span className="text-sm">{kind.label}</span>
+                    <span className="truncate">{kind.label}</span>
                   </Link>
                 ))}
                 <Link
@@ -229,14 +229,14 @@ export default function Sidebar({ onClose }) {
                   href={COMBINED_WEB_ITEM.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
+                    "flex items-center gap-2.5 px-3 py-1.5 rounded-full transition-all text-xs font-bold uppercase tracking-wider",
                     pathname.startsWith(COMBINED_WEB_ITEM.href)
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                      ? "bg-mint text-slate-950 border border-black shadow-xs"
+                      : "text-text-muted hover:bg-mist dark:hover:bg-surface-2 hover:text-text-main"
                   )}
                 >
                   <span className="material-symbols-outlined text-[16px]">{COMBINED_WEB_ITEM.icon}</span>
-                  <span className="text-sm">{COMBINED_WEB_ITEM.label}</span>
+                  <span className="truncate">{COMBINED_WEB_ITEM.label}</span>
                 </Link>
               </div>
             )}
@@ -247,23 +247,23 @@ export default function Sidebar({ onClose }) {
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-120 group",
+                  "flex items-center gap-3 px-4 py-2 rounded-full transition-all duration-120 group font-bold text-xs uppercase tracking-wider",
                   isActive(item.href)
-                    ? "bg-primary/15 text-primary font-bold border border-primary/30 shadow-xs translate-x-0.5"
-                    : "text-text-muted hover:bg-surface-2 hover:text-text-main hover:translate-x-0.5"
+                    ? "bg-sunburst text-slate-950 border-[1.5px] border-black shadow-[var(--shadow-hard-sm)] translate-x-1"
+                    : "text-text-muted hover:bg-mist dark:hover:bg-surface-2 hover:text-text-main border-[1.5px] border-transparent"
                 )}
               >
                 <span
                   className={cn(
                     "material-symbols-outlined text-[19px] transition-transform group-hover:scale-110",
-                    isActive(item.href) ? "text-primary fill-1" : "group-hover:text-primary"
+                    isActive(item.href) ? "text-slate-950 fill-1" : "group-hover:text-primary"
                   )}
                 >
                   {item.icon}
                 </span>
-                <span className="text-[13px] flex-1">{item.label}</span>
+                <span className="flex-1 truncate">{item.label}</span>
                 {isActive(item.href) && (
-                  <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+                  <span className="size-2 rounded-full bg-black animate-pulse" />
                 )}
               </Link>
             ))}
@@ -277,23 +277,23 @@ export default function Sidebar({ onClose }) {
                   href={item.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-120 group",
+                    "flex items-center gap-3 px-4 py-2 rounded-full transition-all duration-120 group font-bold text-xs uppercase tracking-wider",
                     isActive(item.href)
-                      ? "bg-primary/15 text-primary font-bold border border-primary/30 shadow-xs translate-x-0.5"
-                      : "text-text-muted hover:bg-surface-2 hover:text-text-main hover:translate-x-0.5"
+                      ? "bg-sunburst text-slate-950 border-[1.5px] border-black shadow-[var(--shadow-hard-sm)] translate-x-1"
+                      : "text-text-muted hover:bg-mist dark:hover:bg-surface-2 hover:text-text-main border-[1.5px] border-transparent"
                   )}
                 >
                   <span
                     className={cn(
                       "material-symbols-outlined text-[19px] transition-transform group-hover:scale-110",
-                      isActive(item.href) ? "text-primary fill-1" : "group-hover:text-primary"
+                      isActive(item.href) ? "text-slate-950 fill-1" : "group-hover:text-primary"
                     )}
                   >
                     {item.icon}
                   </span>
-                  <span className="text-[13px] flex-1">{item.label}</span>
+                  <span className="flex-1 truncate">{item.label}</span>
                   {isActive(item.href) && (
-                    <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="size-2 rounded-full bg-black animate-pulse" />
                   )}
                 </Link>
               ) : null;

@@ -9,13 +9,13 @@ function MenuItem({ icon, label, onClick, trailing, danger }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors ${
+      className={`flex items-center gap-3 w-full px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-120 cursor-pointer ${
         danger
-          ? "text-red-500 hover:bg-red-500/10"
-          : "text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+          ? "text-ember hover:bg-ember/15"
+          : "text-text-main hover:bg-mist dark:hover:bg-surface-2"
       }`}
     >
-      <span className={`material-symbols-outlined text-[20px] ${danger ? "" : "text-text-muted"}`}>
+      <span className={`material-symbols-outlined text-[18px] ${danger ? "text-ember" : "text-text-muted"}`}>
         {icon}
       </span>
       <span className="flex-1 text-left">{label}</span>
@@ -69,14 +69,14 @@ export default function HeaderMenu({ onLogout }) {
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setIsOpen((v) => !v)}
-          className="flex items-center justify-center p-2 rounded-lg text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+          className="flex items-center justify-center size-8 sm:size-9 rounded-full border-[1.5px] border-black/85 dark:border-white/25 bg-surface text-text-main shadow-[var(--shadow-hard-sm)] hover:shadow-[var(--shadow-hard)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
           title="Menu"
         >
-          <span className="material-symbols-outlined">grid_view</span>
+          <span className="material-symbols-outlined text-[18px]">grid_view</span>
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-full mt-2 w-60 bg-surface border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 overflow-hidden py-1">
+          <div className="absolute right-0 top-full mt-2 w-56 bg-surface border-[1.5px] border-black/85 dark:border-white/25 rounded-2xl shadow-[var(--shadow-hard-lg)] z-50 animate-in fade-in zoom-in-95 duration-150 overflow-hidden p-1.5 flex flex-col gap-0.5">
             <MenuItem
               icon={isDark ? "light_mode" : "dark_mode"}
               label="Theme"

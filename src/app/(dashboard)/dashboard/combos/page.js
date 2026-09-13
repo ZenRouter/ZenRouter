@@ -331,27 +331,27 @@ function ComboCard({ combo, getCaps, activeProviders = [], copied, onCopy, onEdi
   const isFusion = current === "fusion";
 
   return (
-    <Card padding="sm" className="group">
+    <Card padding="sm" hover className="group">
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
-          <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
+          <div className="size-10 rounded-xl bg-surface border-[1.5px] border-black/85 dark:border-white/20 shadow-[var(--shadow-hard-sm)] flex items-center justify-center shrink-0 text-text-main">
+            <span className="material-symbols-outlined text-[20px]">layers</span>
           </div>
           <div className="min-w-0 flex-1">
-            <code className="block truncate font-mono text-sm font-medium">{combo.name}</code>
-            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1">
+            <code className="block truncate font-mono text-sm sm:text-base font-black text-text-main">{combo.name}</code>
+            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
               {combo.models.length === 0 ? (
                 <span className="text-xs text-text-muted italic">No models</span>
               ) : (
                 combo.models.slice(0, 3).map((model, index) => (
-                  <code key={index} className="inline-flex items-center gap-1 rounded bg-black/5 px-1.5 py-0.5 font-mono text-xs text-text-muted dark:bg-white/5">
+                  <code key={index} className="inline-flex items-center gap-1.5 rounded-full border border-black/70 dark:border-white/20 bg-surface px-2.5 py-0.5 font-mono text-[11px] font-bold shadow-xs text-text-main">
                     <span>{model}</span>
                     <CapacityBadges caps={getCaps?.(model)} />
                   </code>
                 ))
               )}
               {combo.models.length > 3 && (
-                <span className="text-[10px] text-text-muted">+{combo.models.length - 3} more</span>
+                <span className="text-[11px] font-mono font-bold text-text-muted">+{combo.models.length - 3} more</span>
               )}
             </div>
             {/* Fusion: judge picker (Auto = first model) */}

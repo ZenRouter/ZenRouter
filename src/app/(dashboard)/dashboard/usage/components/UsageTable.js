@@ -148,18 +148,18 @@ export default function UsageTable({
   const totalColSpan = columns.length + valueColumns.length;
 
   return (
-    <Card className="overflow-hidden">
-      <div className="p-4 border-b border-border bg-bg-subtle/50">
-        <h3 className="font-semibold">{title}</h3>
+    <Card padding="none" className="overflow-hidden">
+      <div className="px-5 py-3.5 border-b-[1.5px] border-black/85 dark:border-white/20 bg-surface-2/40 flex items-center justify-between">
+        <h3 className="text-base font-black tracking-tight text-text-main">{title}</h3>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-bg-subtle/30 text-text-muted uppercase text-xs">
+        <table className="w-full text-sm text-left border-collapse">
+          <thead className="bg-surface-2/60 text-text-main font-mono uppercase text-[11px] font-bold tracking-wider border-b-[1.5px] border-black/85 dark:border-white/20">
             <tr>
               {columns.map((col) => (
                 <th
                   key={col.field}
-                  className={`px-6 py-3 cursor-pointer hover:bg-bg-subtle/50 ${col.align === "right" ? "text-right" : ""}`}
+                  className={`px-5 py-3 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${col.align === "right" ? "text-right" : ""}`}
                   onClick={() => onToggleSort(tableType, col.field)}
                 >
                   {col.label}{" "}
@@ -169,7 +169,7 @@ export default function UsageTable({
               {valueColumns.map((col) => (
                 <th
                   key={col.field}
-                  className="px-6 py-3 text-right cursor-pointer hover:bg-bg-subtle/50"
+                  className="px-5 py-3 text-right cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                   onClick={() => onToggleSort(tableType, col.field)}
                 >
                   {col.label}{" "}
@@ -178,12 +178,12 @@ export default function UsageTable({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className="divide-y divide-border/60">
             {groupedData.map((group) => (
               <Fragment key={group.groupKey}>
                 {/* Group summary row */}
                 <tr
-                  className="group-summary cursor-pointer hover:bg-bg-subtle/50 transition-colors"
+                  className="group-summary cursor-pointer hover:bg-mist/80 dark:hover:bg-surface-2/80 transition-colors font-medium"
                   onClick={() => toggleGroup(group.groupKey)}
                 >
                   <td className="px-6 py-3">

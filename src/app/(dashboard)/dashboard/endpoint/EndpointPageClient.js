@@ -760,8 +760,10 @@ export default function APIPageClient({ machineId }) {
     <div className="flex flex-col gap-8">
       {/* Endpoint Card */}
       <Card>
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary">api</span>
+        <h2 className="text-xl font-black tracking-tight mb-4 flex items-center gap-2.5 text-text-main">
+          <div className="size-8 rounded-xl bg-surface border-[1.5px] border-black/85 dark:border-white/20 shadow-[var(--shadow-hard-sm)] flex items-center justify-center text-text-main">
+            <span className="material-symbols-outlined text-[18px]">api</span>
+          </div>
           API Endpoint
         </h2>
 
@@ -1006,8 +1008,10 @@ export default function APIPageClient({ machineId }) {
       {/* API Keys */}
       <Card id="require-api-key">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">vpn_key</span>
+          <h2 className="text-xl font-black tracking-tight flex items-center gap-2.5 text-text-main">
+            <div className="size-8 rounded-xl bg-surface border-[1.5px] border-black/85 dark:border-white/20 shadow-[var(--shadow-hard-sm)] flex items-center justify-center text-text-main">
+              <span className="material-symbols-outlined text-[18px]">vpn_key</span>
+            </div>
             API Keys
           </h2>
           <Button icon="add" onClick={() => setShowAddModal(true)}>
@@ -1015,10 +1019,10 @@ export default function APIPageClient({ machineId }) {
           </Button>
         </div>
 
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-border">
+        <div className="flex items-center justify-between pb-4 mb-4 border-b border-black/10 dark:border-white/10">
           <div>
-            <p className="font-medium">Require API key</p>
-            <p className="text-sm text-text-muted">
+            <p className="font-bold text-sm text-text-main">Require API key</p>
+            <p className="text-xs text-text-muted">
               Requests without a valid key will be rejected
             </p>
           </div>
@@ -1036,54 +1040,57 @@ export default function APIPageClient({ machineId }) {
 
         {keys.length === 0 ? (
           <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
+            <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-sunburst border-[1.5px] border-black shadow-[var(--shadow-hard)] text-slate-950 mb-4">
               <span className="material-symbols-outlined text-[32px]">vpn_key</span>
             </div>
-            <p className="text-text-main font-medium mb-1">No API keys yet</p>
-            <p className="text-sm text-text-muted mb-4">Create your first API key to get started</p>
+            <p className="text-text-main font-bold mb-1">No API keys yet</p>
+            <p className="text-xs text-text-muted mb-4">Create your first API key to get started</p>
             <Button icon="add" onClick={() => setShowAddModal(true)}>
               Create Key
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col">
+          <div className="flex flex-col divide-y divide-black/10 dark:divide-white/10">
             {keys.map((key) => (
               <div
                 key={key.id}
-                className={`group flex items-center justify-between py-3 border-b border-black/[0.03] dark:border-white/[0.03] last:border-b-0 ${key.isActive === false ? "opacity-60" : ""}`}
+                className={`group flex items-center justify-between py-3.5 ${key.isActive === false ? "opacity-60" : ""}`}
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{key.name}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <code className="text-xs text-text-muted font-mono">
+                <div className="flex-1 min-w-0 pr-4">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-extrabold text-text-main">{key.name}</p>
+                    {key.isActive === false && (
+                      <span className="text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40">Paused</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <code className="text-xs text-text-main font-mono px-2.5 py-1 rounded-lg bg-surface-2 border border-black/20 dark:border-white/20 font-bold">
                       {visibleKeys.has(key.id) ? key.key : maskKey(key.key)}
                     </code>
                     <button
                       onClick={() => toggleKeyVisibility(key.id)}
-                      className="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary transition-all"
+                      className="size-7 rounded-full border border-black/40 dark:border-white/20 hover:bg-mist dark:hover:bg-surface-2 flex items-center justify-center text-text-muted hover:text-text-main transition-all cursor-pointer"
                       title={visibleKeys.has(key.id) ? "Hide key" : "Show key"}
                     >
-                      <span className="material-symbols-outlined text-[14px]">
+                      <span className="material-symbols-outlined text-[15px]">
                         {visibleKeys.has(key.id) ? "visibility_off" : "visibility"}
                       </span>
                     </button>
                     <button
                       onClick={() => copy(key.key, key.id)}
-                      className="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary transition-all"
+                      className="size-7 rounded-full border border-black/40 dark:border-white/20 hover:bg-mist dark:hover:bg-surface-2 flex items-center justify-center text-text-muted hover:text-text-main transition-all cursor-pointer"
+                      title="Copy key"
                     >
-                      <span className="material-symbols-outlined text-[14px]">
+                      <span className="material-symbols-outlined text-[15px]">
                         {copied === key.id ? "check" : "content_copy"}
                       </span>
                     </button>
                   </div>
-                  <p className="text-xs text-text-muted mt-1">
+                  <p className="text-[11px] font-mono text-text-muted mt-1.5">
                     Created {new Date(key.createdAt).toLocaleDateString()}
                   </p>
-                  {key.isActive === false && (
-                    <p className="text-xs text-orange-500 mt-1">Paused</p>
-                  )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <Toggle
                     size="sm"
                     checked={key.isActive ?? true}
@@ -1105,9 +1112,10 @@ export default function APIPageClient({ machineId }) {
                   />
                   <button
                     onClick={() => handleDeleteKey(key.id)}
-                    className="p-2 hover:bg-red-500/10 rounded text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+                    className="size-8 rounded-full border border-red-500/30 hover:bg-red-500/10 text-red-500 transition-all flex items-center justify-center cursor-pointer"
+                    title="Delete key"
                   >
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                    <span className="material-symbols-outlined text-[17px]">delete</span>
                   </button>
                 </div>
               </div>

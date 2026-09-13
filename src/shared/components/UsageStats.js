@@ -42,43 +42,43 @@ function TimeAgo({ timestamp }) {
 
 function RecentRequests({ requests = [] }) {
   return (
-    <Card className="flex min-w-0 flex-col overflow-hidden" padding="sm" style={{ height: 480 }}>
+    <Card className="flex min-w-0 flex-col overflow-hidden" padding="none" style={{ height: 480 }}>
       {/* Header */}
-      <div className="px-1 py-2 border-b border-border shrink-0">
-        <span className="text-xs font-semibold text-text-muted uppercase tracking-wide">Recent Requests</span>
+      <div className="px-4 py-3 border-b-[1.5px] border-black/85 dark:border-white/20 bg-surface-2/40 shrink-0">
+        <span className="text-xs font-mono font-black text-text-main uppercase tracking-wider">Recent Requests</span>
       </div>
 
       {!requests.length ? (
-        <div className="flex-1 flex items-center justify-center text-text-muted text-sm">No requests yet.</div>
+        <div className="flex-1 flex items-center justify-center text-text-muted text-sm font-medium">No requests yet.</div>
       ) : (
         <div className="flex-1 overflow-y-auto">
           <table className="w-full min-w-[300px] border-collapse text-xs">
-            <thead className="sticky top-0 bg-bg z-10">
-              <tr className="border-b border-border">
-                <th className="py-1.5 text-left font-semibold text-text-muted w-2"></th>
-                <th className="py-1.5 text-left font-semibold text-text-muted">Model</th>
-                <th className="py-1.5 text-right font-semibold text-text-muted whitespace-nowrap">In / Out</th>
-                <th className="py-1.5 text-right font-semibold text-text-muted">When</th>
+            <thead className="sticky top-0 bg-surface-2/90 backdrop-blur-xs border-b-[1.5px] border-black/85 dark:border-white/20 z-10">
+              <tr>
+                <th className="py-2 px-3 text-left font-mono font-bold text-text-muted w-2"></th>
+                <th className="py-2 text-left font-mono font-bold text-text-main uppercase tracking-wider">Model</th>
+                <th className="py-2 text-right font-mono font-bold text-text-main uppercase tracking-wider whitespace-nowrap">In / Out</th>
+                <th className="py-2 pr-4 text-right font-mono font-bold text-text-main uppercase tracking-wider">When</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/50">
+            <tbody className="divide-y divide-border/60">
               {requests.map((r, i) => {
                 const ok = !r.status || r.status === "ok" || r.status === "success";
                 return (
-                  <tr key={i} className="hover:bg-bg-subtle transition-colors">
-                    <td className="py-1.5">
-                      <span className={`block w-1.5 h-1.5 rounded-full ${ok ? "bg-success" : "bg-error"}`} />
+                  <tr key={i} className="hover:bg-mist/80 dark:hover:bg-surface-2/80 transition-colors">
+                    <td className="py-2 px-3">
+                      <span className={`block size-2 rounded-full border border-black/40 dark:border-white/20 ${ok ? "bg-mint" : "bg-ember"}`} />
                     </td>
-                    <td className="py-1.5 font-mono truncate max-w-[120px]" title={r.model}>{r.model}</td>
-                    <td className="py-1.5 text-right whitespace-nowrap">
+                    <td className="py-2 font-mono font-bold truncate max-w-[120px] text-text-main" title={r.model}>{r.model}</td>
+                    <td className="py-2 text-right whitespace-nowrap font-mono font-bold">
                       <Tooltip text={`${fmt(r.promptTokens)} in / ${fmt(r.completionTokens)} out`} position="left">
                         <span className="inline-flex items-baseline gap-1 tabular-nums">
-                          <span className="text-primary">{fmtCompact(r.promptTokens)}↑</span>
-                          <span className="text-success">{fmtCompact(r.completionTokens)}↓</span>
+                          <span className="text-electric">{fmtCompact(r.promptTokens)}↑</span>
+                          <span className="text-mint">{fmtCompact(r.completionTokens)}↓</span>
                         </span>
                       </Tooltip>
                     </td>
-                    <td className="py-1.5 text-right text-text-muted whitespace-nowrap"><TimeAgo timestamp={r.timestamp} /></td>
+                    <td className="py-2 pr-4 text-right text-text-muted whitespace-nowrap font-medium"><TimeAgo timestamp={r.timestamp} /></td>
                   </tr>
                 );
               })}

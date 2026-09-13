@@ -60,27 +60,28 @@ export default function ProviderLimitCard({
         <div className="flex items-center gap-3">
           {/* Provider Logo */}
           <div
-            className="size-10 rounded-lg flex items-center justify-center p-1.5"
+            className="size-11 rounded-2xl border-[1.5px] border-black/85 dark:border-white/20 shadow-[var(--shadow-hard-sm)] flex items-center justify-center p-1.5"
             style={{ backgroundColor: `${providerColor}15` }}
           >
             <ProviderIcon
               src={`/providers/${provider}.png`}
               alt={provider || "Provider"}
               size={40}
-              className="object-contain rounded-lg"
+              className="object-contain rounded-xl"
               fallbackText={provider?.slice(0, 2).toUpperCase() || "PR"}
               fallbackColor={providerColor}
             />
           </div>
 
           <div>
-            <h3 className="font-semibold text-text-primary">
+            <h3 className="font-black text-base text-text-main tracking-tight">
               {name || provider}
             </h3>
             {plan && (
               <Badge
                 variant={planVariants[plan?.toLowerCase()] || "default"}
-                size="xs"
+                size="sm"
+                className="mt-0.5"
               >
                 {plan}
               </Badge>
@@ -92,11 +93,11 @@ export default function ProviderLimitCard({
         <button
           onClick={handleRefresh}
           disabled={refreshing || loading}
-          className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="size-8 rounded-full border-[1.5px] border-black/85 dark:border-white/25 bg-surface text-text-main shadow-[var(--shadow-hard-sm)] hover:shadow-[var(--shadow-hard)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           title="Refresh quota"
         >
           <span
-            className={`material-symbols-outlined text-[20px] text-text-muted ${
+            className={`material-symbols-outlined text-[18px] text-text-main font-bold ${
               refreshing || loading ? "animate-spin" : ""
             }`}
           >

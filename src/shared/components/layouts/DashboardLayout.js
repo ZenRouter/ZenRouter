@@ -10,24 +10,24 @@ import PasswordOnboardingModal from "../PasswordOnboardingModal";
 function getToastStyle(type) {
   if (type === "success") {
     return {
-      wrapper: "border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400",
+      wrapper: "border-[1.5px] border-black dark:border-white/30 bg-mint text-slate-950 shadow-[var(--shadow-hard)] font-bold",
       icon: "check_circle",
     };
   }
   if (type === "error") {
     return {
-      wrapper: "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400",
+      wrapper: "border-[1.5px] border-black dark:border-white/30 bg-ember text-white shadow-[var(--shadow-hard)] font-bold",
       icon: "error",
     };
   }
   if (type === "warning") {
     return {
-      wrapper: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      wrapper: "border-[1.5px] border-black dark:border-white/30 bg-sunburst text-slate-950 shadow-[var(--shadow-hard)] font-bold",
       icon: "warning",
     };
   }
   return {
-    wrapper: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    wrapper: "border-[1.5px] border-black dark:border-white/30 bg-electric text-white shadow-[var(--shadow-hard)] font-bold",
     icon: "info",
   };
 }
@@ -40,28 +40,28 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-bg">
-      <div className="fixed top-4 right-4 z-[80] flex w-[min(92vw,380px)] flex-col gap-2">
+      <div className="fixed top-4 right-4 z-[80] flex w-[min(92vw,380px)] flex-col gap-2.5">
         {notifications.map((n) => {
           const style = getToastStyle(n.type);
           return (
             <div
               key={n.id}
-              className={`rounded-lg border px-3 py-2 shadow-lg backdrop-blur-sm ${style.wrapper}`}
+              className={`rounded-2xl px-4 py-3 ${style.wrapper} animate-in fade-in slide-in-from-top-3 duration-150`}
             >
-              <div className="flex items-start gap-2">
-                <span className="material-symbols-outlined text-[18px] leading-5">{style.icon}</span>
+              <div className="flex items-start gap-2.5">
+                <span className="material-symbols-outlined text-[20px] leading-5 shrink-0">{style.icon}</span>
                 <div className="min-w-0 flex-1">
-                  {n.title ? <p className="text-xs font-semibold mb-0.5">{n.title}</p> : null}
-                  <p className="text-xs whitespace-pre-wrap break-words">{n.message}</p>
+                  {n.title ? <p className="text-xs font-black uppercase tracking-wider mb-0.5">{n.title}</p> : null}
+                  <p className="text-xs font-semibold whitespace-pre-wrap break-words opacity-95">{n.message}</p>
                 </div>
                 {n.dismissible ? (
                   <button
                     type="button"
                     onClick={() => removeNotification(n.id)}
-                    className="text-current/70 hover:text-current"
+                    className="shrink-0 size-6 rounded-full border border-current/40 hover:bg-black/10 flex items-center justify-center transition-colors cursor-pointer"
                     aria-label="Dismiss notification"
                   >
-                    <span className="material-symbols-outlined text-[16px]">close</span>
+                    <span className="material-symbols-outlined text-[14px]">close</span>
                   </button>
                 ) : null}
               </div>

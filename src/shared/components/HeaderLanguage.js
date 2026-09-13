@@ -31,11 +31,11 @@ export default function HeaderLanguage() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center justify-center p-2 rounded-lg text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+        className="flex items-center justify-center size-8 sm:size-9 rounded-full border-[1.5px] border-black/85 dark:border-white/25 bg-surface text-text-main shadow-[var(--shadow-hard-sm)] hover:shadow-[var(--shadow-hard)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
         title="Language"
         data-i18n-skip="true"
       >
-        <span className="text-lg leading-none">{LOCALE_FLAGS[locale] || "🌐"}</span>
+        <span className="text-base leading-none">{LOCALE_FLAGS[locale] || "🌐"}</span>
       </button>
 
       <LanguageSwitcher

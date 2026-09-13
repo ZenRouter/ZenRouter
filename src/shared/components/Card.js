@@ -36,11 +36,10 @@ export default function Card({
     <div
       className={cn(
         tones[tone] || "bg-surface",
-        "border border-border/80 dark:border-border",
-        elev
-          ? "rounded-2xl shadow-[var(--shadow-hard)]"
-          : "rounded-2xl shadow-[var(--shadow-soft)]",
-        hover && "transition-all duration-150 hover:-translate-y-1 hover:shadow-[var(--shadow-hard-lg)] cursor-pointer",
+        "border-[1.5px] border-black/85 dark:border-white/20",
+        "rounded-2xl shadow-[var(--shadow-hard)]",
+        "transition-all duration-150",
+        hover && "hover:-translate-y-1 hover:shadow-[var(--shadow-hard-lg)] cursor-pointer",
         paddings[padding],
         className
       )}
@@ -50,16 +49,16 @@ export default function Card({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className="p-2 rounded-xl bg-surface-2 border border-border-subtle text-text-muted shadow-sm flex items-center justify-center">
+              <div className="size-9 rounded-xl bg-surface border-[1.5px] border-black/85 dark:border-white/20 text-text-main shadow-[var(--shadow-hard-sm)] flex items-center justify-center">
                 <span className="material-symbols-outlined text-[20px]">{icon}</span>
               </div>
             )}
             <div>
               {title && (
-                <h3 className="text-text-main font-bold tracking-tight">{title}</h3>
+                <h3 className="text-text-main text-lg font-black tracking-tight">{title}</h3>
               )}
               {subtitle && (
-                <p className="text-xs text-text-muted mt-0.5">{subtitle}</p>
+                <p className="text-xs font-semibold text-text-muted mt-0.5">{subtitle}</p>
               )}
             </div>
           </div>

@@ -161,14 +161,14 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in-95 duration-300">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-surface border border-border p-3 mb-4 shadow-[var(--shadow-warm)] hover:scale-105 transition-transform duration-300">
+          <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-surface border-[2px] border-black dark:border-white/25 p-3 mb-4 shadow-[var(--shadow-hard-lg)] hover:-rotate-3 hover:scale-105 transition-all duration-300">
             <Image src="/icons/logo.svg" alt="ZenRouter" width={40} height={40} className="h-full w-full object-contain" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-text-main mb-1.5 flex items-center justify-center gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-text-main mb-1.5 flex items-center justify-center gap-2">
             ZenRouter
-            <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">Gateway</span>
+            <span className="text-[10px] font-mono font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-sunburst text-slate-950 border border-black shadow-xs">Gateway</span>
           </h1>
-          <p className="text-sm text-text-muted max-w-xs mx-auto">
+          <p className="text-sm font-semibold text-text-muted max-w-xs mx-auto">
             {samlAvailable
               ? "Sign in with SAML 2.0 Single Sign-On"
               : oidcAvailable
@@ -177,7 +177,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="bg-surface/85 backdrop-blur-xl border border-border rounded-2xl p-6 sm:p-8 shadow-[var(--shadow-elev)]">
+        <div className="bg-surface border-[2px] border-black dark:border-white/25 rounded-2xl p-6 sm:p-8 shadow-[var(--shadow-hard-lg)]">
           {mustChange ? (
             <form onSubmit={handleSetNewPassword} className="flex flex-col gap-4">
               <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">

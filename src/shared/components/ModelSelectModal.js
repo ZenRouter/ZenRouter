@@ -515,36 +515,36 @@ export default function ModelSelectModal({
       footer={null}
     >
       {/* Info bar */}
-      <div className="flex items-center gap-2 mb-3 px-2.5 py-2 bg-primary/8 border border-primary/20 rounded-lg text-xs text-text-muted">
-        <span className="material-symbols-outlined text-primary shrink-0" style={{ fontSize: "14px" }}>info</span>
+      <div className="flex items-center gap-2 mb-3.5 px-3 py-2 bg-mint/15 border border-emerald-500/40 rounded-xl text-xs font-semibold text-slate-900 dark:text-mint">
+        <span className="material-symbols-outlined text-emerald-600 dark:text-mint shrink-0 text-[16px]">info</span>
         <span>Click to add, click again to remove. Changes are saved automatically.</span>
       </div>
 
       {/* Search - compact */}
-      <div className="mb-3">
+      <div className="mb-3.5">
         <div className="relative">
-          <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted text-[16px]">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]">
             search
           </span>
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search models or providers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 bg-surface border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+            className="w-full pl-9 pr-3 py-2 bg-surface border-[1.5px] border-black/80 dark:border-white/25 rounded-full text-xs font-mono font-bold text-text-main focus:outline-none focus:shadow-[var(--shadow-hard-sm)] transition-all"
           />
         </div>
       </div>
 
       {/* Models grouped by provider - compact */}
-      <div className="max-h-[400px] overflow-y-auto space-y-3">
+      <div className="max-h-[400px] overflow-y-auto space-y-3.5 custom-scrollbar pr-1">
         {/* Combos section - always first */}
         {filteredCombos.length > 0 && (
           <div>
-            <div className="flex items-center gap-1.5 mb-1.5 sticky top-0 bg-surface py-0.5">
-              <span className="material-symbols-outlined text-primary text-[14px]">layers</span>
-              <span className="text-xs font-medium text-primary">Combos</span>
-              <span className="text-[10px] text-text-muted">({filteredCombos.length})</span>
+            <div className="flex items-center gap-1.5 mb-2 sticky top-0 bg-surface/95 backdrop-blur-xs py-1 z-10">
+              <span className="material-symbols-outlined text-primary text-[15px]">layers</span>
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-primary">Combos</span>
+              <span className="text-[10px] font-mono text-text-muted">({filteredCombos.length})</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {filteredCombos.map((combo) => {
@@ -554,17 +554,15 @@ export default function ModelSelectModal({
                     key={combo.id}
                     onClick={() => handleSelect({ id: combo.name, name: combo.name, value: combo.name })}
                     className={`
-                      px-2 py-1 rounded-xl text-xs font-medium transition-all border hover:cursor-pointer flex items-center gap-1
-                      ${isSelected
-                        ? "bg-primary text-white border-primary"
-                        : addedModelValues.includes(combo.name)
-                          ? "bg-primary border-primary text-white hover:bg-primary-hover"
-                          : "bg-surface border-border text-text-main hover:border-primary/50 hover:bg-primary/5"
+                      px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider transition-all duration-120 border-[1.5px] hover:cursor-pointer flex items-center gap-1.5 shadow-xs
+                      ${isSelected || addedModelValues.includes(combo.name)
+                        ? "bg-sunburst text-slate-950 border-black shadow-[var(--shadow-hard-sm)]"
+                        : "bg-surface border-black/70 dark:border-white/20 text-text-main hover:bg-mist dark:hover:bg-surface-2 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hard-sm)]"
                       }
                     `}
                   >
                     {addedModelValues.includes(combo.name) && (
-                      <span className="material-symbols-outlined leading-none" style={{ fontSize: "10px" }}>check</span>
+                      <span className="material-symbols-outlined leading-none font-bold" style={{ fontSize: "11px" }}>check</span>
                     )}
                     {combo.name}
                   </button>
@@ -604,30 +602,28 @@ export default function ModelSelectModal({
                     onClick={() => handleSelect(model)}
                     title={isPlaceholder ? "Select to pre-fill, then edit model ID in the input" : undefined}
                     className={`
-                      px-2 py-1 rounded-xl text-xs font-medium transition-all border hover:cursor-pointer
+                      px-3 py-1.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider transition-all duration-120 border-[1.5px] hover:cursor-pointer flex items-center gap-1.5 shadow-xs
                       ${isPlaceholder
                         ? "border-dashed border-border text-text-muted hover:border-primary/50 hover:text-primary bg-surface italic"
-                        : isSelected
-                          ? "bg-primary text-white border-primary"
-                          : addedModelValues.includes(model.value)
-                            ? "bg-primary border-primary text-white hover:bg-primary-hover"
-                            : "bg-surface border-border text-text-main hover:border-primary/50 hover:bg-primary/5"
+                        : isSelected || addedModelValues.includes(model.value)
+                          ? "bg-sunburst text-slate-950 border-black shadow-[var(--shadow-hard-sm)]"
+                          : "bg-surface border-black/70 dark:border-white/20 text-text-main hover:bg-mist dark:hover:bg-surface-2 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hard-sm)]"
                       }
                     `}
                   >
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1.5">
                       {addedModelValues.includes(model.value) && !isPlaceholder && (
-                        <span className="material-symbols-outlined leading-none" style={{ fontSize: "10px" }}>check</span>
+                        <span className="material-symbols-outlined leading-none font-bold" style={{ fontSize: "11px" }}>check</span>
                       )}
                       {isPlaceholder ? (
                         <>
-                          <span className="material-symbols-outlined text-[11px]">edit</span>
+                          <span className="material-symbols-outlined text-[12px]">edit</span>
                           {model.name}
                         </>
                       ) : model.isCustom ? (
                         <>
                           {model.name}
-                          <span className="text-[9px] opacity-60 font-normal">custom</span>
+                          <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-black/10 dark:bg-white/10 font-mono uppercase">custom</span>
                           <CapacityBadges caps={getCaps(model.value)} />
                         </>
                       ) : (
