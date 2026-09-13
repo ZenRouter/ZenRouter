@@ -25,12 +25,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Normalized competing harness tags (`<system-conventions>`, `<critical>`, Oh My Pi) in system instructions.
   - Stripped `used_claude` telemetry flags before forwarding upstream.
   - Injected `x-goog-user-project` in headers when projectId is present.
+- **fix(translator): support IMAGE and DOCUMENT blocks for Antigravity Claude envelope (#3968)**
+  - Converted `CLAUDE_BLOCK.DOCUMENT` to `OPENAI_BLOCK.FILE` in `claudeToOpenAIRequest`.
+  - Forwarded `CLAUDE_BLOCK.IMAGE` and `DOCUMENT` as `inlineData` in `wrapInCloudCodeEnvelopeForClaude` to unblock vision and PDF reading on Antigravity Claude models.
 
 #### Proxy & Security Hardening
 - **fix(proxy): forward strictProxy flag to prevent direct bypass on chat routes (#4007)**
   - Propagated `strictProxy` through `auth.js`, `chatCore.js`, `chat.js`, `tokenRefresh.js`, and `quotaAutoPing.js` so proxy pools configured with `strictProxy: true` fail closed instead of leaking the operator's real IP to upstreams.
 - **fix(providers): surface underlying DNS, timeout, and OAuth error details during test connection (#4015)**
   - Surfaced descriptive error message and OAuth error detail on connection test failure instead of masking with static generic labels.
+- **fix(mitm): guarantee hosts cleanup on shutdown/crash and guard tool DNS restore (#4014)**
+  - Cleaned all MITM tool hosts from system hosts file on CLI shutdown, process exit, and PID file cleanup.
+  - Added hosts file cleanup on uncaughtException, exit, and EADDRINUSE in `mitm/server.js`.
+  - Guarded `restoreToolDNS` to verify MITM server is running before attempting restoration, preventing `127.0.0.1:443` connection refused errors in official IDE extensions.
 
 #### Video & Multi-Model Account Isolation
 - **fix(video): scope video polling failure lock to __video__ and ignore 404 (#4009)**
@@ -47,6 +54,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 - **fix(claude): surface prompt-cache reads to chat/completions clients and stop double-counting in usage logs (#3984)**
   - Recorded `state.usage` in canonical OpenAI format (`prompt_tokens` + `cached_tokens` + `prompt_tokens_details`).
   - Fixed `canonicalizeUsage` double-counting cached tokens in usage logs.
+- **fix(commandcode): record prompt-cache reads and reasoning tokens in usage extractor (#4025)**
+  - Passed `cachedTokens` and `reasoningTokens` through as details in CommandCode `USAGE_EXTRACTORS` without double-counting `inputTokens`.
+  - Enables prompt-cache pricing rates for CommandCode models instead of billing cache reads at full input cost.
 
 #### Tool Schema Compatibility
 - **fix(codex): strip Unicode-property tool schema patterns Codex rejects (#3922)**
