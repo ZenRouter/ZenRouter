@@ -14,6 +14,7 @@ import { FORMATS } from "../formats.js";
 import { randomUUID } from "crypto";
 import { ROLE, OPENAI_BLOCK } from "../schema/index.js";
 import { DEFAULT_MAX_TOKENS } from "../../config/runtimeConfig.js";
+import { parseDataUri } from "../concerns/image.js";
 
 function flattenText(content) {
   if (content == null) return "";
@@ -29,6 +30,26 @@ function flattenText(content) {
   return String(content);
 }
 
+// OpenAI image block -> CommandCode (Anthropic-style) image block.
+// Accepts OpenAI `image_url` ({url}) and AI SDK `image` ({image}) shapes.
+// Returns null when the URL is neither an inline data URI nor a fetchable
+// http(s) URL, so callers can fall back to a placeholder.
+function toImageBlock(part) {
+  const raw = typeof part.image_url === "string" ? part.image_url : part.image_url?.url;
+  const url = raw || part.source?.url || (typeof part.image === "string" ? part.image : part.image?.url) || part.url || "";
+  const parsed = parseDataUri(url);
+  if (parsed) {
+    return {
+      type: OPENAI_BLOCK.IMAGE,
+      source: { type: "base64", media_type: parsed.mimeType, data: parsed.base64 },
+    };
+  }
+  if (typeof url === "string" && (url.startsWith("http://") || url.startsWith("https://"))) {
+    return { type: OPENAI_BLOCK.IMAGE, source: { type: "url", url } };
+  }
+  return null;
+}
+
 function toContentBlocks(content) {
   if (content == null) return [{ type: OPENAI_BLOCK.TEXT, text: "" }];
   if (typeof content === "string") return [{ type: OPENAI_BLOCK.TEXT, text: content }];
@@ -41,7 +62,9 @@ function toContentBlocks(content) {
         if (part.type === OPENAI_BLOCK.TEXT && typeof part.text === "string") {
           blocks.push({ type: OPENAI_BLOCK.TEXT, text: part.text });
         } else if (part.type === OPENAI_BLOCK.IMAGE_URL || part.type === OPENAI_BLOCK.IMAGE) {
-          blocks.push({ type: OPENAI_BLOCK.TEXT, text: "[image omitted]" });
+          const img = toImageBlock(part);
+          if (img) blocks.push(img);
+          else blocks.push({ type: OPENAI_BLOCK.TEXT, text: "[image omitted]" });
         } else if (typeof part.text === "string") {
           blocks.push({ type: OPENAI_BLOCK.TEXT, text: part.text });
         }
