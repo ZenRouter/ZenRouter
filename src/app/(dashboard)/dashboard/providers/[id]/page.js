@@ -806,13 +806,12 @@ export default function ProviderDetailPage() {
       if (res.ok) {
         await fetchConnections();
         await fetchCustomModels();
-        setShowAddApiKeyModal(false);
         if (providerId === "qoder") {
           setTimeout(() => {
             handleImportQoderModels();
           }, 300);
         }
-        return;
+        return true;
       }
 
       setAddConnectionError(data?.error || "Failed to save connection");
@@ -820,6 +819,7 @@ export default function ProviderDetailPage() {
       console.log("Error saving connection:", error);
       setAddConnectionError("Failed to save connection");
     }
+    return false;
   };
 
   const handleUpdateConnection = async (formData) => {

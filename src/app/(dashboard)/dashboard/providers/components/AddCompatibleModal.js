@@ -71,6 +71,15 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
     return () => { cancelled = true; };
   }, [hasApiType, defaultBaseUrl, apiType, isOpen]);
 
+  // Reset state and close
+  const handleClose = () => {
+    setFormData(initialFormData());
+    setCheckKey("");
+    setCheckModelId("");
+    setValidationResult(null);
+    onClose();
+  };
+
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.prefix.trim() || !formData.baseUrl.trim()) return;
     setSubmitting(true);
@@ -89,9 +98,7 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
       const data = await res.json();
       if (res.ok) {
         onCreated(data.node);
-        setFormData(initialFormData());
-        setCheckKey("");
-        setValidationResult(null);
+        handleClose();
       }
     } catch (error) {
       console.log(`Error creating ${config.errorLabel} node:`, error);
@@ -144,7 +151,7 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
   };
 
   return (
-    <Modal isOpen={isOpen} title={config.title} onClose={onClose}>
+    <Modal isOpen={isOpen} title={config.title} onClose={handleClose}>
       <div className="flex flex-col gap-4">
         <Input
           label="Name"
@@ -212,7 +219,7 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
           >
             {submitting ? "Creating..." : "Create"}
           </Button>
-          <Button onClick={onClose} variant="ghost" fullWidth>
+          <Button onClick={handleClose} variant="ghost" fullWidth>
             Cancel
           </Button>
         </div>

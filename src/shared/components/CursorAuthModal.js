@@ -74,6 +74,15 @@ export default function CursorAuthModal({ isOpen, onSuccess, onClose }) {
     return () => { cancelled = true; };
   }, [isOpen]);
 
+  // Reset state and close
+  const handleClose = () => {
+    setAccessToken("");
+    setMachineId("");
+    setAutoDetected(false);
+    setError(null);
+    onClose();
+  };
+
   const handleImportToken = async () => {
     if (!accessToken.trim()) {
       setError("Please enter an access token");
@@ -105,7 +114,7 @@ export default function CursorAuthModal({ isOpen, onSuccess, onClose }) {
       }
 
       onSuccess?.();
-      onClose();
+      handleClose();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -114,7 +123,7 @@ export default function CursorAuthModal({ isOpen, onSuccess, onClose }) {
   };
 
   return (
-    <Modal isOpen={isOpen} title="Connect Cursor IDE" onClose={onClose}>
+    <Modal isOpen={isOpen} title="Connect Cursor IDE" onClose={handleClose}>
       <div className="flex flex-col gap-4">
         {/* Auto-detecting state */}
         {autoDetecting && (
@@ -219,7 +228,7 @@ export default function CursorAuthModal({ isOpen, onSuccess, onClose }) {
               >
                 {importing ? "Importing..." : "Import Token"}
               </Button>
-              <Button onClick={onClose} variant="ghost" fullWidth>
+              <Button onClick={handleClose} variant="ghost" fullWidth>
                 Cancel
               </Button>
             </div>
