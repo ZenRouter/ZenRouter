@@ -27,6 +27,6 @@ export async function POST(request, { params }) {
     });
   } catch (error) {
     console.log("Error testing connection:", error);
-    return NextResponse.json({ error: "Test failed" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Test failed" }, { status: 500 });
   }
 }

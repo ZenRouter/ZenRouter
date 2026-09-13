@@ -242,7 +242,11 @@ async function refreshOAuthToken(connection) {
           refresh_token: refreshToken,
         }),
       });
-      if (!response.ok) return null;
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const desc = errData.error_description || errData.error || `HTTP ${response.status}`;
+        return { error: `Token refresh failed: ${desc}` };
+      }
       const data = await response.json();
       return { accessToken: data.access_token, expiresIn: data.expires_in, refreshToken: data.refresh_token || refreshToken };
     }
@@ -261,7 +265,11 @@ async function refreshOAuthToken(connection) {
           client_id: CLAUDE_CONFIG.clientId,
         }),
       });
-      if (!response.ok) return null;
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const desc = errData.error_description || errData.error || `HTTP ${response.status}`;
+        return { error: `Token refresh failed: ${desc}` };
+      }
       const data = await response.json();
       return { accessToken: data.access_token, expiresIn: data.expires_in, refreshToken: data.refresh_token || refreshToken };
     }
@@ -369,7 +377,7 @@ async function testOAuthConnection(connection, effectiveProxy = null) {
         if (retry.valid) return { valid: true, error: null, refreshed: true, newTokens: tokens };
         return { valid: false, error: retry.error, refreshed: true, newTokens: tokens };
       }
-      return { valid: false, error: "Token invalid or revoked", refreshed: false };
+      return { valid: false, error: tokens?.error || "Token invalid or revoked", refreshed: false };
     }
 
     return { valid: false, error: initial.error, refreshed };
