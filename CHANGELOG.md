@@ -64,6 +64,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 - **fix(kiro): never send top-level systemPrompt to prevent 400 REQUEST_BODY_INVALID (#3641)**
   - Appended repair instructions and RTK system prompts to user turn content instead of writing top-level `systemPrompt`.
 
+#### Model Capabilities & Custom Models
+- **fix(deepseek): register canonical deepseek-flash id, vision capabilities, and scope capacity adapter pools (#3994, #3995)**
+  - Added `deepseek-flash` and updated `deepseek-v4-flash` in `MODEL_CAPABILITIES` with 1M context, 384k output, vision + reasoning.
+  - Registered `deepseek-flash` in `deepseek.js` registry and pointed legacy IDs to upstreamModelId `deepseek-flash`.
+  - Scoped `getCapacityAdapterModels` by `requiredCapabilities` to prevent unrelated pools (e.g. empty audio pool) from injecting models into vision requests.
+- **fix(capabilities): honour operator-declared caps on custom models (#3974)**
+  - Layered operator-declared capabilities (`caps`) over inferred capabilities in `/v1/models` and `chatCore.js` modality stripping.
+  - Prevents hand-declared vision-capable custom models from having images stripped before upstream dispatch.
+
 #### Dashboard & UI Integrity
 - **fix(dashboard): reset credential modals on close so reopened forms start clean (#4026)**
   - Reset form states and validation results on close in `AddApiKeyModal`, `AddCompatibleModal`, `ConnectionsCard`, `CursorAuthModal`, and `KiroAuthModal`.
