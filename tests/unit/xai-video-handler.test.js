@@ -209,13 +209,25 @@ describe("handleVideoGet", () => {
     expect(global.fetch.mock.calls[0][0]).toBe("https://api.x.ai/v1/videos/req-1");
   });
 
-  it("records the failure when polling hits a terminal auth error", async () => {
+  it("records the failure when polling hits a terminal auth error with scoped __video__ model", async () => {
     authMocks.getProviderCredentials.mockResolvedValueOnce(account({ refreshToken: null }));
     global.fetch.mockResolvedValueOnce(jsonResponse({ error: "unauthorized" }, 401));
 
     const res = await handleVideoGet(new Request("http://localhost/v1/videos/req-1"), "req-1");
 
     expect(res.status).toBe(401);
-    expect(authMocks.markAccountUnavailable).toHaveBeenCalled();
+    expect(authMocks.markAccountUnavailable).toHaveBeenCalledWith(
+      "conn-1", 401, expect.any(String), "xai", "__video__"
+    );
+  });
+
+  it("does not call markAccountUnavailable on 404 for unknown video id (#4009)", async () => {
+    authMocks.getProviderCredentials.mockResolvedValueOnce(account({ refreshToken: "tok" }));
+    global.fetch.mockResolvedValueOnce(jsonResponse({ error: "not found" }, 404));
+
+    const res = await handleVideoGet(new Request("http://localhost/v1/videos/nonexistent-id"), "nonexistent-id");
+
+    expect(res.status).toBe(404);
+    expect(authMocks.markAccountUnavailable).not.toHaveBeenCalled();
   });
 });

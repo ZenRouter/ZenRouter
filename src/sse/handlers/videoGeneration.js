@@ -212,12 +212,22 @@ export async function handleVideoGet(request, requestId) {
   });
 
   if (result.success) {
-    await clearAccountError(credentials.connectionId, credentials, null);
+    await clearAccountError(credentials.connectionId, credentials, "__video__");
     return withConnectionHeader(result.response, credentials.connectionId);
   }
 
-  await markAccountUnavailable(
-    credentials.connectionId, result.status, sanitizeSecrets(result.error, refreshedCredentials), provider, null
-  );
+  // Issue #4009: Do not lock the whole account on client polling errors (e.g. 404 for an
+  // unknown/expired video id, or 400 bad request). Scope any real lock to video ("__video__")
+  // so failed video polling does not take down chat, embeddings, or image models.
+  const LOCKABLE_POLL_STATUSES = new Set([401, 403, 429]);
+  if (LOCKABLE_POLL_STATUSES.has(result.status) || result.status >= 500) {
+    await markAccountUnavailable(
+      credentials.connectionId,
+      result.status,
+      sanitizeSecrets(result.error, refreshedCredentials),
+      provider,
+      "__video__"
+    );
+  }
   return result.response;
 }
