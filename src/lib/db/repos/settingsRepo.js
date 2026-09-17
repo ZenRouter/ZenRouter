@@ -189,6 +189,16 @@ export async function getSettings() {
   return mergeWithDefaults(raw);
 }
 
+// REQUIRE_API_KEY env bridge (#2834): README/.env.example document this
+// variable as enforcing Bearer keys on /v1/* for internet-exposed deploys,
+// but nothing in the runtime read it — operators got no enforcement and no
+// warning. The env var acts as a one-way override evaluated alongside the
+// dashboard setting: it can only ever turn enforcement ON, never off.
+export function isApiKeyRequired(settings) {
+  if (settings?.requireApiKey === true) return true;
+  return process.env.REQUIRE_API_KEY === "true";
+}
+
 // Atomic read-merge-write inside transaction (prevents losing concurrent updates)
 export async function updateSettings(updates) {
   const db = await getAdapter();

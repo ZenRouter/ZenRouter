@@ -76,9 +76,77 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Prevents hand-declared vision-capable custom models from having images stripped before upstream dispatch.
 
 #### Dashboard & UI Integrity
+- **fix(auth): hide the default-password hint once a custom password is set**
+  - `/api/auth/status` now reports `usesDefaultPassword` (no stored hash AND no real `INITIAL_PASSWORD` env — shared helper in `dashboardSession.js`). The login page renders the `12345678` hint only when that flag is true, so rotated passwords no longer advertise the default; fetch failures default to hidden (fail-closed).
+  - Test: `tests/unit/auth-status.test.js` extended (route flag matrix + real-helper env matrix).
 - **fix(dashboard): reset credential modals on close so reopened forms start clean (#4026)**
   - Reset form states and validation results on close in `AddApiKeyModal`, `AddCompatibleModal`, `ConnectionsCard`, `CursorAuthModal`, and `KiroAuthModal`.
   - Fixed Kiro CLI proxy modal not closing on import completion (`import-cli-proxy`).
+
+#### Auth, Providers & Usage Fixes
+- **fix(security): honor REQUIRE_API_KEY env on all /v1 enforcement points (#2834)**
+  - The variable was documented in README/`.env.example` as enforcing Bearer keys on `/v1/*` for internet-exposed deploys, but no runtime code read it — operators got neither enforcement nor warning on services holding provider OAuth tokens.
+  - New `isApiKeyRequired(settings)` helper (`settingsRepo.js`, re-exported via DB barrel + `localDb` shim): dashboard setting OR env `=== "true"`. One-way by design — the env var can only turn enforcement ON, never off. Wired into all 9 enforcement points (chat, fetch, search, embeddings, tts, stt, video, image, v1beta models route) plus a clarifying `.env.example` comment.
+  - Test: `tests/unit/require-api-key-env.test.js` (5/5: setting×env matrix, exact-`"true"` matching, barrel exports).
+- **fix(observability): record in-stream upstream failures instead of success (#4104)**
+  - An upstream can end an HTTP-200 stream with a failure inside the event body (Responses `response.failed` / `error` event). Completion logging never inspected the terminal event, so `requestDetails`/dashboard showed `success` with billed-looking usage for failed requests.
+  - `stream.js` now tracks failed terminal events in passthrough and translated Responses streams and passes `{ failed, error }` through `onStreamComplete`; `buildOnStreamComplete` writes `status: "failed"` with the upstream message in `response.error` (abort path and clean-success path unchanged).
+  - Test: `tests/unit/stream-failure-status.test.js` (5/5: passthrough failed/completed meta, translated Responses.failed, failed vs success record shape).
+  - Audit notes (no action needed): tunnel/operational-endpoint auth is covered by `dashboardGuard` LOCAL_ONLY + dual-auth gates; default-password remote gate is enforced at login; request payloads are hard-redacted so the #2472-class log-bloat OOM cannot occur; pending-request counters self-clean with timeout reset.
+- **fix(auth): set 24h maxAge on dashboard session cookie**
+  - `setDashboardAuthCookie` now sets `maxAge` via `SESSION_MAX_AGE_SEC` (86400s), matching the JWT `exp` (`createDashboardAuthToken` already used 24h). Previously the cookie was session-scoped while the token expired, causing silent auth drops on browser restore.
+- **fix(providers): clear stale locks after validation (#3830)**
+  - `resetHealthStateOnActivation` in `connectionsRepo.js` clears `modelLock_*`, `backoffLevel`, `rateLimitedUntil`, and `errorCode` whenever a connection is marked `active` after successful validation or OAuth re-login, so recovered accounts stop being routed around forever.
+- **fix(usage): parse Fable weekly limit from limits[] instead of fabricating a row (#3847)**
+  - `getClaudeUsage` reads `weekly_scoped` entries in `data.limits[]` (`scope.model.display_name` + `percent`) for model-scoped windows like Fable. No limits entry means no row — never fabricates a 100% quota row.
+- **fix(tools): scope Claude tool type defaulting to gateways that need it (#3905)**
+  - `type: "custom"` default now runs only when the provider declares the `requireClaudeToolType` quirk (MiniMax, MiniMax-CN). DeepSeek's Anthropic-compatible endpoint rejects `custom` with 400, which previously surfaced as a persistent 503 on every Claude-format request routed there — now restored to the legacy typeless shape.
+  - Test: `tests/translator/bugs-3905-deepseek-tool-type.test.js` (3/3 passed).
+- **fix(claude): cap re-anchored cache_control at the 4-marker budget and keep single-object content turns**
+  - `anchorClaudeCache` normalizes bare-object content, strips `cache_control` from `defer_loading` tools first, pins the 1h head anchors (last system block + last cacheable tool), then trims over-budget bodies to 4 markers. Previously a spent budget produced a 5th marker that 400s non-retryably and the failure path retried the same malformed body across the pool until every account locked.
+  - `convertClaudeMessage` (claude-to-openai) normalizes single-block-object content before the role branch so bare-object system turns are no longer dropped.
+  - `hasValidContent` keeps single-object content turns.
+- **chore(baseline): sync providers snapshot to centralized Claude fingerprint 2.1.258**
+  - `providers-baseline.json` still expected `claude-cli/2.1.257` while `open-sse/config/clientVersions.js` already shipped 2.1.258 — one-line sync, `verify-providers.mjs` green again (81 providers). Alias and OAuth baselines verified unchanged.
+
+#### Client Fingerprint Refresh (all versions re-verified 2026-09-17 against first-party sources)
+- **chore(versions): bump all client fingerprints to current stable**
+  - `open-sse/config/clientVersions.js` (single source — registry UA, image `Version` header, connection-test headers, and billing header all derive from it; audit found no hardcoded versions left in `open-sse/`/`src/`/`cli/`):
+  - Claude Code 2.1.258 → **2.1.274** (anthropics/claude-code GitHub release, published Sep 17; stays inside the allowed-range gate — outdated clients get hard 400s on new models).
+  - Codex CLI 0.149.1 → **0.154.0** (npm `latest`).
+  - Gemini CLI 0.56.0 → **0.60.0** (npm `latest`; core still pins `@google/genai@1.30.0` exact at v0.60.0, so the `apiClient` pair is unchanged).
+  - Kiro IDE 1.0.337 → **1.0.437**, CLI 2.19.1 → **2.21.0** (kiro.dev/changelog, Sep 1).
+  - Antigravity IDE 2.11.0 → **2.12.2** (antigravity.google/changelog, Sep 3; CLI line now 1.1.25).
+  - VSCode 1.134.0 → **1.137.0**, copilot-chat 0.63.0 → **0.65.0** (pair verified from `extensions/copilot/package.json` at vscode tag `1.137.0`, released Sep 9).
+  - Trae 3.5.87 → **3.5.91** (trae docs, Aug 19 hotfix range 3.5.89–3.5.91).
+  - CodeBuddy 2.138.0 → **2.151.0** (npm `@tencent-ai/codebuddy-code` latest).
+  - Grok Build 1.0.5 → **1.0.34** (`https://x.ai/cli/stable` channel pointer; pager/shell UA assumed to track the CLI release train — re-capture HAR if Grok 400s appear).
+  - Kimchi 1.0.3 → **1.1.23** (getkimchi/kimchi GitHub latest, Sep 16; note upstream added a real model-deprecation protocol in 1.1.x — watch for server-side model retirements).
+  - Zed 1.16.2 → **1.18.1** (stable channel, Sep 4).
+  - Fingerprint policy: every spoofed version is a real, currently-supported public release (never fabricate future versions); one constant per client so registry, image, test, and billing headers cannot drift apart.
+  - Tests/baselines: `claude-cloaking` + `claude-header-forwarding` expectations bumped; `golden-url-header` snapshots regenerated (version-strings only: claude/codebuddy/grok/kimchi); `providers-baseline.json` synced (codex/gemini/claude/antigravity/copilot/kiro/codebuddy/kimchi/grok UAs); alias + OAuth baselines green.
+
+#### Antigravity Location-Gate Hardening
+- **fix(antigravity): stable fallback project id per connection (stop random id per request)**
+  - `transformRequest` fell back to `this.generateProjectId()` — a NEW random id on every request — whenever a connection had no stored `projectId`. Google evaluates quota/eligibility per project, so a rotating id looks abusive and breaks project-scoped checks.
+  - Now via `resolveAntigravityProjectId`: a provisioned `projectId` always wins; the fallback is ONE stable id per connection identity (bounded in-memory cache, `MAX_STABLE_PROJECTS = 500`).
+  - Test: `tests/unit/antigravity-project-stability.test.js` (7/7).
+- **fix(error): actionable hint for Google "User location is not supported"**
+  - This 400 `FAILED_PRECONDITION` is decided by Google from the server's egress IP region (the Antigravity free tier enforces its own regional allowlist) — retrying or reshaping the payload cannot help. `withLocationGateHint` (`open-sse/utils/error.js`, applied on both `parseUpstreamError` paths) appends remediation steps to the error message delivered to clients.
+  - The hint avoids `ERROR_RULES` trigger phrases, so the fail-fast classification holds: no fallback, no cooldown, accounts stay safe. Test: `tests/unit/error-location-hint.test.js` (7/7, including classification guard).
+- **docs: `docs/antigravity-location-error.md`** — root cause, evidence (official clients affected; Germany/Slovakia/Vietnam/Indonesia reporters; Gemini-only outage), isolation ladder (run the official CLI on the same machine), workarounds (per-connection proxy egress in SG/US, Claude models, disable TUN/IPv6), and what cannot be fixed client-side.
+
+#### New-Model Fixes
+- **fix(thinking): never emit `reasoning_effort:"none"` to upstreams that reject it (#4031, gpt-6-astra)**
+  - Root cause: a provider-level thinking default (or an explicit client `"none"`) was written verbatim to the OpenAI wire, but the Astra upstream only accepts low/medium/high — so every tools request failed with 400.
+  - `*gpt-6-astra*` now declares `thinkingCanDisable:false` (same pattern as Fable 5.1); the `openai` branch of `thinkingUnified.js` omits the field when `none` meets a model that cannot disable (upstream default applies) — same precedent as the `tokenrouter` branch. Models that can disable (e.g. gpt-5) still receive explicit `"none"`, unchanged.
+  - Test: `tests/translator/bugs-4031-astra-reasoning-effort.test.js` (6/6: omit on none/suffix/injected, low-medium-high passthrough, canDisable guard).
+  - Note: native `/v1/responses` proxying (#4031 §3) is a separate architectural feature and out of scope — with this fix the chat/completions path goes out clean, without any value the upstream rejects.
+- **feat(cline): expose `cline-free/muse-spark-1.3-contributor` (#3946)**
+  - The Cline Free catalog model was missing from the `cline` provider list, so it could not be selected or connection-tested — added to `registry/cline.js` with an exact caps entry (vision + reasoning, OpenAI format, 1M context / 131k output, same profile as the OpenCode Free variant).
+  - Test: `tests/unit/cline-muse-spark-13.test.js` (3/3: registry listing, caps resolution, profile parity).
+  - Note: the 401 "use latest version of Cline" half of the issue is an upstream entitlement gate that cannot be verified without live credentials — the ZenRouter UA is deliberately not spoofed as Cline (fabricated client versions risk account flags, against fingerprint policy).
+- Verified: full vitest suite 2463 passed / 0 failed, eslint clean on all touched files.
 
 ## [0.6.1] - 2026-09-07
 

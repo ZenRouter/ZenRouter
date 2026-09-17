@@ -168,13 +168,19 @@ export async function handleStreamingResponse({ providerResponse, provider, mode
 export function buildOnStreamComplete({ provider, model, connectionId, apiKey, requestStartTime, body, stream, finalBody, translatedBody, clientRawRequest, pxpipe, reqTag, log }) {
   const streamDetailId = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 
-  const onStreamComplete = (contentObj, usage, ttftAt) => {
+  const onStreamComplete = (contentObj, usage, ttftAt, streamMeta) => {
     const latency = {
       ttft: ttftAt ? ttftAt - requestStartTime : Date.now() - requestStartTime,
       total: Date.now() - requestStartTime
     };
     const safeContent = contentObj?.content || "[Empty streaming response]";
     const safeThinking = contentObj?.thinking || null;
+    // In-stream upstream failure (e.g. Responses response.failed on an
+    // HTTP-200 stream) must not be logged as success (#4104).
+    const failed = streamMeta?.failed === true;
+    const streamError = failed
+      ? (typeof streamMeta?.error === "string" && streamMeta.error.trim() ? streamMeta.error.trim() : "upstream stream failed")
+      : null;
 
     saveRequestDetail(buildRequestDetail({
       provider, model, connectionId,
@@ -183,9 +189,14 @@ export function buildOnStreamComplete({ provider, model, connectionId, apiKey, r
       request: extractRequestConfig(body, stream),
       providerRequest: finalBody || translatedBody || null,
       providerResponse: safeContent,
-      response: { content: safeContent, thinking: safeThinking, type: "streaming" },
+      response: {
+        content: safeContent,
+        thinking: safeThinking,
+        type: "streaming",
+        ...(failed ? { error: streamError } : {}),
+      },
       pxpipe,
-      status: "success"
+      status: failed ? "failed" : "success"
     }, { id: streamDetailId })).catch(err => {
       console.error("[RequestDetail] Failed to update streaming content:", err.message);
     });

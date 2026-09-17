@@ -141,6 +141,8 @@ export const MODEL_CAPABILITIES = {
   // OpenCode Free Muse Spark — OpenAI Responses reasoning supports up to xhigh.
   "muse-spark-1.2-contributor-free": { vision: true, reasoning: true, thinkingFormat: "openai", contextWindow: 1048576, maxOutput: 131072 },
   "muse-spark-1.3-contributor-free": { vision: true, reasoning: true, thinkingFormat: "openai", contextWindow: 1048576, maxOutput: 131072 },
+  // Cline Free Muse Spark 1.3 — cline provider ids carry the cline-free/ prefix (#3946).
+  "cline-free/muse-spark-1.3-contributor": { vision: true, reasoning: true, thinkingFormat: "openai", contextWindow: 1048576, maxOutput: 131072 },
 };
 
 const KIRO_GPT_5_6_CAPABILITIES = { vision: true, reasoning: true, search: true, thinkingFormat: "openai", contextWindow: 272000, maxOutput: 128000 };
@@ -282,7 +284,9 @@ export const PATTERN_CAPABILITIES = [
   { pattern: "*nanobanana*",    caps: { vision: true, imageOutput: true } },
 
   // ── OpenAI GPT-6 Astra (flagship, 1.05M ctx, 128k out) ──────────
-  { pattern: "*gpt-6-astra*",   caps: { vision: true, reasoning: true, search: true, thinkingFormat: "openai", contextWindow: 1050000, maxOutput: 128000 } },
+  // thinkingCanDisable:false — upstream rejects reasoning_effort:"none"
+  // (low/medium/high only, #4031); "none" is omitted so the default applies.
+  { pattern: "*gpt-6-astra*",   caps: { vision: true, reasoning: true, search: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 1050000, maxOutput: 128000 } },
   { pattern: "*gpt-6*",         caps: { vision: true, reasoning: true, search: true, thinkingFormat: "openai", contextWindow: 1050000, maxOutput: 128000 } },
 
   // ── OpenAI GPT-5.x (vision + thinking + web search) ──────────────

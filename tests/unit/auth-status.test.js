@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { usesDefaultPassword as realUsesDefaultPassword } from "../../src/lib/auth/dashboardSession.js";
 
 const mocks = vi.hoisted(() => ({
   json: vi.fn((body, init) => ({
@@ -27,7 +28,8 @@ vi.mock("@/lib/auth/oidc", () => ({
   isOidcConfigured: mocks.isOidcConfigured,
 }));
 
-vi.mock("@/lib/auth/dashboardSession", () => ({
+vi.mock("@/lib/auth/dashboardSession", async (importOriginal) => ({
+  ...(await importOriginal()),
   getDashboardAuthSession: mocks.getDashboardAuthSession,
 }));
 
@@ -65,5 +67,58 @@ describe("GET /api/auth/status", () => {
 
     expect(response.body.authenticated).toBe(false);
     expect(response.body.requireLogin).toBe(true);
+    expect(response.body.usesDefaultPassword).toBe(false);
+  });
+
+  it("reports usesDefaultPassword true when no stored hash and no custom env", async () => {
+    mocks.getSettings.mockResolvedValue({ requireLogin: true });
+    mocks.getDashboardAuthSession.mockResolvedValue(null);
+    delete process.env.INITIAL_PASSWORD;
+
+    const response = await GET();
+
+    expect(response.body.hasPassword).toBe(false);
+    expect(response.body.usesDefaultPassword).toBe(true);
+  });
+
+  it("reports usesDefaultPassword false when a custom hash is stored", async () => {
+    mocks.getSettings.mockResolvedValue({ requireLogin: true, password: "bcrypt-hash" });
+    mocks.getDashboardAuthSession.mockResolvedValue(null);
+
+    const response = await GET();
+
+    expect(response.body.hasPassword).toBe(true);
+    expect(response.body.usesDefaultPassword).toBe(false);
+  });
+});
+
+describe("usesDefaultPassword helper (real implementation)", () => {
+  beforeEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("true when no stored hash and no custom INITIAL_PASSWORD", () => {
+    delete process.env.INITIAL_PASSWORD;
+    expect(realUsesDefaultPassword({})).toBe(true);
+    expect(realUsesDefaultPassword(null)).toBe(true);
+  });
+
+  it("false when a custom hash is stored, regardless of env", () => {
+    delete process.env.INITIAL_PASSWORD;
+    expect(realUsesDefaultPassword({ password: "bcrypt-hash" })).toBe(false);
+    vi.stubEnv("INITIAL_PASSWORD", "s3cret-env");
+    expect(realUsesDefaultPassword({ password: "bcrypt-hash" })).toBe(false);
+  });
+
+  it("false when a real INITIAL_PASSWORD env is set", () => {
+    vi.stubEnv("INITIAL_PASSWORD", "s3cret-env");
+    expect(realUsesDefaultPassword({})).toBe(false);
+  });
+
+  it("true for placeholder env values (treated as unset)", () => {
+    for (const v of ["change-me", "change-me-to-a-long-random-secret", "  "]) {
+      vi.stubEnv("INITIAL_PASSWORD", v);
+      expect(realUsesDefaultPassword({})).toBe(true);
+    }
   });
 });

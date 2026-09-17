@@ -243,6 +243,10 @@ function applyFormat(fmt, body, cfg, caps, supportedLevels) {
   switch (fmt) {
     case "openai": {
       if (none && canDisable) { body.reasoning_effort = "none"; break; }
+      // Upstreams that reject "none" (e.g. gpt-6-astra accepts only
+      // low/medium/high, #4031) must never receive it — omit the field so the
+      // upstream default applies. Same precedent as the tokenrouter branch.
+      if (none) break;
       const level = toLevel(eff);
       if (level) body.reasoning_effort = normalizeOpenAILevel(level, supportedLevels);
       break;

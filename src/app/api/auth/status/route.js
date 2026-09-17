@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { getSettings } from "@/lib/localDb";
 import { isOidcConfigured } from "@/lib/auth/oidc";
 import { isSamlConfigured } from "@/lib/auth/saml.js";
-import { getDashboardAuthSession } from "@/lib/auth/dashboardSession";
+import { getDashboardAuthSession, usesDefaultPassword } from "@/lib/auth/dashboardSession";
 
 export async function GET() {
   try {
@@ -36,6 +36,7 @@ export async function GET() {
       samlConfigured: isSamlConfigured(settings),
       samlLoginLabel: (settings.samlLoginLabel || "Sign in with SAML SSO").trim() || "Sign in with SAML SSO",
       hasPassword: !!settings.password,
+      usesDefaultPassword: usesDefaultPassword(settings),
       displayName,
       loginMethod,
       authenticated: !!session,
@@ -56,6 +57,7 @@ export async function GET() {
       samlConfigured: false,
       samlLoginLabel: "Sign in with SAML SSO",
       hasPassword: false,
+      usesDefaultPassword: false,
       displayName: "Password user",
       loginMethod: "Password",
       authenticated: false,

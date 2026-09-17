@@ -29,6 +29,7 @@ vi.mock("@/sse/services/auth.js", () => authMocks);
 vi.mock("@/sse/services/tokenRefresh.js", () => tokenMocks);
 vi.mock("@/lib/localDb", () => ({
   getSettings: vi.fn(async () => ({ requireApiKey: false })),
+  isApiKeyRequired: (s) => s?.requireApiKey === true,
   getComboByName: vi.fn(async () => null),
   getModelAliases: vi.fn(async () => ({})),
   getProviderNodes: vi.fn(async () => []),

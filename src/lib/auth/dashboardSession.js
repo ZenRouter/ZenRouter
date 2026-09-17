@@ -3,6 +3,24 @@ import bcrypt from "bcryptjs";
 import { getSettings } from "@/lib/localDb";
 
 const DEFAULT_PASSWORD = "12345678";
+const SESSION_MAX_AGE_SEC = 24 * 60 * 60;
+
+// Values that mean "no real INITIAL_PASSWORD was provided" — the effective
+// login password is then the public default above.
+const INITIAL_PASSWORD_PLACEHOLDERS = new Set([
+  "change-me",
+  "change-me-to-a-long-random-secret",
+  "change-me-to-a-long-random-secret-change-me-in-production-min-32-chars",
+]);
+
+// True when the effective login password is still the public default:
+// no custom hash stored in settings AND no real INITIAL_PASSWORD env set.
+// The login page uses this to hide the default-password hint once rotated.
+export function usesDefaultPassword(settings) {
+  if (settings?.password) return false;
+  const raw = process.env.INITIAL_PASSWORD?.trim();
+  return !raw || INITIAL_PASSWORD_PLACEHOLDERS.has(raw);
+}
 
 /**
  * The dashboard's auth-token signing key.
@@ -110,6 +128,7 @@ export async function setDashboardAuthCookie(cookieStore, request, claims = {}) 
     secure: shouldUseSecureCookie(request),
     sameSite: "lax",
     path: "/",
+    maxAge: SESSION_MAX_AGE_SEC,
   });
 }
 

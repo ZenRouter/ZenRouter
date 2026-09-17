@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [retryAfter, setRetryAfter] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasPassword, setHasPassword] = useState(null);
+  const [usesDefaultPassword, setUsesDefaultPassword] = useState(false);
   const [authMode, setAuthMode] = useState("password");
   const [ssoType, setSsoType] = useState("oidc");
   const [oidcConfigured, setOidcConfigured] = useState(false);
@@ -46,6 +47,7 @@ export default function LoginPage() {
             return;
           }
           setHasPassword(!!data.hasPassword);
+          setUsesDefaultPassword(data.usesDefaultPassword === true);
           setAuthMode(data.authMode || "password");
           setSsoType(data.ssoType || "oidc");
           setOidcConfigured(data.oidcConfigured === true);
@@ -55,10 +57,12 @@ export default function LoginPage() {
         } else {
           // Safe fallback on non-OK response to avoid infinite loading state.
           setHasPassword(true);
+          setUsesDefaultPassword(false);
         }
       } catch (err) {
         clearTimeout(timeoutId);
         setHasPassword(true);
+        setUsesDefaultPassword(false);
       }
     }
     checkAuth();
@@ -271,11 +275,13 @@ export default function LoginPage() {
                   {retryAfter > 0 ? `Wait ${retryAfter}s` : "Sign In to Dashboard"}
                 </Button>
 
-                <div className="text-center pt-1">
-                  <p className="text-xs text-text-muted">
-                    Default password is <code className="bg-surface-2 border border-border px-1.5 py-0.5 rounded font-mono font-medium text-text-main">12345678</code>
-                  </p>
-                </div>
+                {usesDefaultPassword === true && (
+                  <div className="text-center pt-1">
+                    <p className="text-xs text-text-muted">
+                      Default password is <code className="bg-surface-2 border border-border px-1.5 py-0.5 rounded font-mono font-medium text-text-main">12345678</code>
+                    </p>
+                  </div>
+                )}
                 {hasPassword === false && (
                   <p className="text-xs text-center text-amber-600 dark:text-amber-400">
                     Security notice: default password active. You will be prompted to update it on remote access.

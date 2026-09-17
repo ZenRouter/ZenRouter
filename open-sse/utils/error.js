@@ -117,6 +117,23 @@ export function extractResetsAtMs(response, message) {
   return null;
 }
 
+// Google Cloud Code Assist regional allowlist rejection (Antigravity/Gemini
+// free tier): "User location is not supported for the API use."
+// (FAILED_PRECONDITION). Google evaluates this from the SERVER's egress IP
+// region (plus account signals) — not from anything in the request body — so
+// reshaping the payload or retrying can never help. The hint below is worded
+// to avoid ERROR_RULES trigger phrases so this error keeps its fail-fast,
+// no-cooldown, no-fallback classification in accountFallback.js.
+const GOOGLE_LOCATION_GATE_RE = /user location is not supported/i;
+const ZEN_LOCATION_GATE_HINT = "[ZenRouter hint: Google decided this from your server's egress IP region (the Antigravity free tier enforces its own regional allowlist) — not from your request content, account, or quota. Options: (1) send this connection through a proxy/VPN exiting in a supported region, (2) use Claude models on the same Antigravity account (unaffected), (3) turn off TUN-mode VPN / IPv6 egress to Google and retry. Details: docs/antigravity-location-error.md]";
+
+export function withLocationGateHint(message) {
+  if (typeof message !== "string" || message.length === 0) return message;
+  if (!GOOGLE_LOCATION_GATE_RE.test(message)) return message;
+  if (message.includes("[ZenRouter hint:")) return message;
+  return `${message} ${ZEN_LOCATION_GATE_HINT}`;
+}
+
 /**
  * Parse upstream provider error response
  * @param {Response} response - Fetch response from provider
@@ -141,7 +158,7 @@ export async function parseUpstreamError(response, executor = null) {
         const resetsAtMs = parsed.resetsAtMs ?? (response.status === 429 ? extractResetsAtMs(response, msg) : null);
         return {
           statusCode: parsed.status || response.status,
-          message: msg,
+          message: withLocationGateHint(msg),
           type: safeDiagnostic(parsed.type),
           param: safeDiagnostic(parsed.param),
           code: safeDiagnostic(parsed.code),
@@ -169,7 +186,7 @@ export async function parseUpstreamError(response, executor = null) {
   }
 
   const messageStr = safeDiagnostic(message);
-  const finalMessage = messageStr || DEFAULT_ERROR_MESSAGES[response.status] || `Upstream error: ${response.status}`;
+  const finalMessage = withLocationGateHint(messageStr || DEFAULT_ERROR_MESSAGES[response.status] || `Upstream error: ${response.status}`);
 
   // Generic reset-time extraction for rate limits (GLM "reset at ...", Retry-After, ...) — PR #3612
   if (response.status === 429) {

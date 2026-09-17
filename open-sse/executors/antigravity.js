@@ -101,6 +101,42 @@ const IMAGE_MODEL_PATTERNS = [
   /image-generation/i,
 ];
 
+// Stable per-connection fallback project id.
+//
+// Google evaluates quota/eligibility per project. When the connection has no
+// stored projectId (e.g. loadCodeAssist provisioning failed — which is exactly
+// what happens behind Google's "User location is not supported" geo-gate),
+// minting a FRESH RANDOM id on every request looks abusive, breaks any
+// project-scoped check, and makes logs undebuggable. So generate once per
+// connection identity and reuse for process lifetime. A real stored
+// projectId (provisioned via loadCodeAssist and persisted to the connection)
+// always wins — this cache is strictly a last-resort fallback.
+const stableProjectCache = new Map(); // connectionKey -> projectId
+const MAX_STABLE_PROJECTS = 500;
+
+function connectionProjectKey(credentials) {
+  return credentials?.connectionId || credentials?.email || "anonymous";
+}
+
+export function resolveAntigravityProjectId(credentials, generate) {
+  if (credentials?.projectId) return credentials.projectId;
+  const key = connectionProjectKey(credentials);
+  let id = stableProjectCache.get(key);
+  if (!id) {
+    id = generate();
+    if (stableProjectCache.size >= MAX_STABLE_PROJECTS) {
+      stableProjectCache.delete(stableProjectCache.keys().next().value);
+    }
+    stableProjectCache.set(key, id);
+  }
+  return id;
+}
+
+// Test-only: reset the fallback cache between cases.
+export function _resetAntigravityProjectCache() {
+  stableProjectCache.clear();
+}
+
 // Detect if a model is an image generation model
 function isImageModel(model) {
   if (!model) return false;
@@ -178,7 +214,10 @@ export class AntigravityExecutor extends BaseExecutor {
   }
 
   transformRequest(model, body, stream, credentials) {
-    const projectId = credentials?.projectId || this.generateProjectId();
+    // Prefer the real provisioned projectId (chat.js resolves + persists it via
+    // loadCodeAssist before dispatch). Fall back to ONE stable id per connection
+    // — never a fresh random id per request (see resolveAntigravityProjectId).
+    const projectId = resolveAntigravityProjectId(credentials, () => this.generateProjectId());
 
     // OpenAI clients may include stream_options even for non-streaming calls.
     // Google generateContent rejects that combination before processing the request.

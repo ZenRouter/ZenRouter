@@ -79,6 +79,24 @@ export function createSSEStream(options = {}) {
   let passthroughDoneSent = false;    // passthrough: upstream already sent [DONE]
   let finalized = false;
 
+  // In-stream failure tracking (#4104): an upstream can end an HTTP-200 stream
+  // with a failure INSIDE the event body (Responses response.failed / error
+  // event). Without tracking, usage/logging records the request as "success".
+  let streamFailed = false;
+  let streamErrorMessage = null;
+  const markStreamFailed = (msg) => {
+    if (streamFailed) return;
+    streamFailed = true;
+    if (typeof msg === "string" && msg.trim()) streamErrorMessage = msg.trim().slice(0, 500);
+  };
+  // Extract a human message from a failure-shaped chunk ({response.error} or {error}).
+  const extractStreamErrorMessage = (parsed, fallback) => {
+    const err = parsed?.response?.error ?? parsed?.error;
+    const msg = typeof err === "string" ? err : err?.message;
+    if (typeof msg === "string" && msg.trim()) return msg.trim().slice(0, 500);
+    return fallback;
+  };
+
   // Usage/logging tail, callable from transform() as well as flush(): a client that
   // closes right after the terminal event cancels the reader, and flush() never runs.
   const finalizeStream = () => {
@@ -103,7 +121,7 @@ export function createSSEStream(options = {}) {
       onStreamComplete({
         content: contentChunks.join(""),
         thinking: thinkingChunks.join("")
-      }, finalUsage, ttftAt);
+      }, finalUsage, ttftAt, { failed: streamFailed, error: streamErrorMessage });
     }
   };
 
@@ -165,6 +183,14 @@ export function createSSEStream(options = {}) {
           if (trimmed.startsWith("data:") && trimmed.slice(5).trim() !== "[DONE]") {
             try {
               const parsed = JSON.parse(trimmed.slice(5).trim());
+
+              // In-stream failure forwarded verbatim (e.g. Responses
+              // response.failed / error event on an HTTP-200 stream): the
+              // status line says 200, only the event body tells us it
+              // failed — record it so logs don't claim "success" (#4104).
+              if (parsed?.response?.status === "failed" || parsed?.type === "error") {
+                markStreamFailed(extractStreamErrorMessage(parsed, "upstream stream failed"));
+              }
 
               const idFixed = fixInvalidId(parsed);
 
@@ -300,6 +326,12 @@ export function createSSEStream(options = {}) {
 
         if (isOpenAIResponsesStream && isOpenAIResponsesTerminalEvent(openAIResponsesEventName, parsed)) {
           openAIResponsesTerminalSeen = true;
+        }
+
+        // In-stream failure on a translated Responses stream (#4104): a
+        // response.failed / error terminal event must not be logged as success.
+        if (isOpenAIResponsesStream && (openAIResponsesEventName === "response.failed" || openAIResponsesEventName === "error")) {
+          markStreamFailed(extractStreamErrorMessage(parsed, `upstream ${openAIResponsesEventName}`));
         }
 
         // For Ollama: done=true is the final chunk with finish_reason/usage, must translate

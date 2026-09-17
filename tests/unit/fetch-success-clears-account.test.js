@@ -23,6 +23,7 @@ vi.mock("@/sse/services/auth.js", () => ({
 vi.mock("@/lib/localDb", () => ({
   getSettings: mocks.getSettings,
   getCombos: mocks.getCombos,
+  isApiKeyRequired: (s) => s?.requireApiKey === true,
 }));
 
 vi.mock("open-sse/handlers/fetch/index.js", () => ({
