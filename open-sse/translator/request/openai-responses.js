@@ -8,6 +8,7 @@ import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
 import { normalizeResponsesInput } from "../formats/responsesApi.js";
 import { ROLE, OPENAI_BLOCK, RESPONSES_ITEM } from "../schema/index.js";
+import { generateToolCallId } from "../concerns/toolCall.js";
 
 // Responses API enforces max 64 chars on call_id (#393)
 const MAX_CALL_ID_LEN = 64;
@@ -34,6 +35,8 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
   let pendingReasoningEncrypted = "";
   const additionalTools = [];
   const customToolNames = new Set();
+  const pendingToolCallIds = [];
+  let toolCallSeq = 0;
 
   const inputItems = normalizeResponsesInput(body.input);
   if (!inputItems) return body;
@@ -91,6 +94,15 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
         })
         : item.content;
       const msg = { role: item.role, content };
+      if (item.role === ROLE.TOOL && !item.tool_call_id) {
+        const repairedToolId = pendingToolCallIds.shift();
+        if (repairedToolId) {
+          msg.tool_call_id = repairedToolId;
+        } else {
+          msg.role = ROLE.USER;
+          msg.content = `[Tool result: ${typeof item.content === "string" ? item.content : JSON.stringify(item.content)}]`;
+        }
+      }
       // Attach buffered reasoning to assistant turn (required by xiaomi-mimo + store=false continuity)
       if (item.role === ROLE.ASSISTANT) attachPendingReasoning(msg);
       else {
@@ -115,14 +127,16 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
       const toolInput = itemType === RESPONSES_ITEM.CUSTOM_TOOL_CALL
         ? { input: typeof item.input === "string" ? item.input : JSON.stringify(item.input ?? "") }
         : item.arguments;
+      const callId = item.call_id || generateToolCallId(toolCallSeq++, currentAssistantMsg.tool_calls.length, item.name);
       currentAssistantMsg.tool_calls.push({
-        id: item.call_id,
+        id: callId,
         type: OPENAI_BLOCK.FUNCTION,
         function: {
           name: item.name,
           arguments: typeof toolInput === "string" ? toolInput : JSON.stringify(toolInput ?? {})
         }
       });
+      pendingToolCallIds.push(callId);
     }
     else if (itemType === RESPONSES_ITEM.FUNCTION_CALL_OUTPUT || itemType === RESPONSES_ITEM.CUSTOM_TOOL_CALL_OUTPUT) {
       // Flush assistant message first if exists
@@ -139,12 +153,19 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
         }
         pendingToolResults = [];
       }
-      // Add tool result immediately
-      result.messages.push({
-        role: ROLE.TOOL,
-        tool_call_id: item.call_id,
-        content: typeof item.output === "string" ? item.output : JSON.stringify(item.output)
-      });
+      const outputContent = typeof item.output === "string" ? item.output : JSON.stringify(item.output);
+      let outputCallId = typeof item.call_id === "string" && item.call_id ? item.call_id : "";
+      if (outputCallId) {
+        const queued = pendingToolCallIds.indexOf(outputCallId);
+        if (queued >= 0) pendingToolCallIds.splice(queued, 1);
+      } else {
+        outputCallId = pendingToolCallIds.shift() || "";
+      }
+      // True orphan outputs have no valid call to answer; drop them rather
+      // than emit a role:tool message every strict upstream rejects.
+      if (outputCallId) {
+        result.messages.push({ role: ROLE.TOOL, tool_call_id: outputCallId, content: outputContent });
+      }
     }
     else if (itemType === RESPONSES_ITEM.ADDITIONAL_TOOLS) {
       if (Array.isArray(item.tools)) additionalTools.push(...item.tools);

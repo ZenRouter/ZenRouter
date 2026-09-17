@@ -76,6 +76,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Prevents hand-declared vision-capable custom models from having images stripped before upstream dispatch.
 
 #### Dashboard & UI Integrity
+- **fix(oauth): automatically use the public dashboard domain for compatible provider callbacks (#4054)**
+  - Authorization-code providers that accept web callbacks (`claude`, `cline`, `clinepass`, `gitlab`, `iflow`, `kimchi`) now return to `${window.location.origin}/callback` when the dashboard is opened through an HTTPS tunnel, reverse proxy, custom domain, or subdomain. The popup then completes through same-origin `postMessage`/BroadcastChannel without manual URL rewriting.
+  - Installed-app providers keep their required loopback callbacks (`antigravity`/`gemini-cli` and similar); Codex and xAI keep their fixed ports. These providers retain the manual-paste/proxy fallback because replacing a registered loopback callback with an arbitrary domain would cause upstream `redirect_uri_mismatch`.
+  - Added a server-side same-origin/loopback redirect guard for both authorize and exchange endpoints. Hardened callback `postMessage` validation with strict URL/hostname checks plus popup source validation (no substring trust such as `localhost.attacker.example`).
+  - Test: `tests/unit/oauth-public-callback.test.js` (12/12: public domains/subdomains/ports, fixed loopback providers, installed-app fallback, strict message origins, server redirect validation).
 - **fix(auth): hide the default-password hint once a custom password is set**
   - `/api/auth/status` now reports `usesDefaultPassword` (no stored hash AND no real `INITIAL_PASSWORD` env — shared helper in `dashboardSession.js`). The login page renders the `12345678` hint only when that flag is true, so rotated passwords no longer advertise the default; fetch failures default to hidden (fail-closed).
   - Test: `tests/unit/auth-status.test.js` extended (route flag matrix + real-helper env matrix).
@@ -146,7 +151,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - The Cline Free catalog model was missing from the `cline` provider list, so it could not be selected or connection-tested — added to `registry/cline.js` with an exact caps entry (vision + reasoning, OpenAI format, 1M context / 131k output, same profile as the OpenCode Free variant).
   - Test: `tests/unit/cline-muse-spark-13.test.js` (3/3: registry listing, caps resolution, profile parity).
   - Note: the 401 "use latest version of Cline" half of the issue is an upstream entitlement gate that cannot be verified without live credentials — the ZenRouter UA is deliberately not spoofed as Cline (fabricated client versions risk account flags, against fingerprint policy).
-- Verified: full vitest suite 2463 passed / 0 failed, eslint clean on all touched files.
+- **fix(opencode): compliant Zen identity headers for free-tier models (#4101)**
+  - The backend gates free-tier calls on client identity: bare `User-Agent: opencode` and non-canonical `x-opencode-session` values fail with 403 FreeTierError. `OPENCODE_UA` is now `opencode/1.18.31` (real release, above the 1.17.0 minimum); sessions are minted as `ses_` + 12 hex timestamp digits + 14 Base62 chars, with real client sessions passed through byte-identical and derived ids mapped once to a stable canonical value (no per-request churn against per-session quota accounting).
+  - `x-opencode-request` is deterministic per turn (session + last user message hash, same `msg_` shape) instead of random per request.
+  - Test: `tests/unit/opencode-zen-identity.test.js` (7/7: format, passthrough, per-identity stability, downstream preservation).
+- **fix(antigravity): keep inlineData on image-model requests; forward all input images (#4112)**
+  - The image branch rebuilt contents text-only, silently degrading edits to text-to-image; the image handler forwarded only `images[0]`. Now `inlineData`/`inline_data` parts are preserved (normalized to camelCase) and every entry of `images[]` is forwarded. `gemini-3.1-flash-image` advertises `edit` + `multiImage`.
+  - Test: 2 new cases in `tests/translator/bugs-antigravity.test.js` (camelCase + snake_case).
+- **fix(kiro): preserve underscores in tool names and restore originals on response (#4113)**
+  - `uniqueName` no longer collapses `__` (so `mcp__server__tool` reaches Kiro intact); request translators attach a `_toolNameMap` reverse map when sanitizing/deduping, and response translators restore the client-original name (streaming via state, non-streaming via payload map, plus the existing decloak layer).
+  - Test: `tests/translator/kiro-tool-name-roundtrip.test.js` (6/6).
+- **fix(kiro): neutral placeholder for tool-result-only turns (#4108)**
+  - Empty user turns carrying only tool results were filled with literal `"continue"`, which models answer as a new instruction and drop the in-progress task. Now `kiroEmptyUserContent()` emits `"Tool results provided."` when tool results are present (genuinely empty turns keep `"continue"`, which Kiro requires over empty content).
+  - Test: `tests/unit/kiro-tool-result-placeholder.test.js` (5/5); golden `OpenAI → Kiro` snapshot refreshed (1-line placeholder diff).
+- **fix(responses): repair missing `call_id` instead of exhausting every strict upstream (#4091)**
+  - Responses `function_call_output` / `custom_tool_call_output` items without `call_id` previously serialized as `role:"tool"` without `tool_call_id`; strict providers rejected the entire request with 400 and a combo could fail every member. Both Responses converters now queue pending calls and pair missing outputs in order; calls missing their own id receive deterministic ids; true orphan outputs are dropped; chat-style orphan tool items are downgraded to user context.
+  - `ensureToolCallIds` now also repairs an absent tool-message id by pairing the oldest unanswered assistant call (or minting a deterministic fallback).
+  - Test: `tests/unit/openai-responses-missing-tool-call-id.test.js` (8/8: missing/both-missing ids, parallel order, true orphan, custom tools, duplicate converter, chat repair/downgrade).
+- Verified: focused OAuth/model/translator tests 53/53 passed; full vitest suite 2509 passed / 0 failed, eslint clean on all touched files.
 
 ## [0.6.1] - 2026-09-07
 

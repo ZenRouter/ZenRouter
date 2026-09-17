@@ -37,6 +37,31 @@ import {
 import { detectIdeInstalled } from "@/lib/oauth/utils/ideDetect";
 import { ZED_HOSTED_CONFIG } from "@/lib/oauth/constants/oauth";
 
+export function originOf(value) {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+}
+
+export function isLoopbackRedirectUri(value) {
+  try {
+    const host = new URL(value).hostname.toLowerCase().replace(/^\[|\]$/g, "");
+    return host === "localhost" || host === "127.0.0.1" || host === "::1";
+  } catch {
+    return false;
+  }
+}
+
+// Public callbacks must return to the same origin that authorized the dashboard
+// request. This stops a forged /exchange body from sending a stolen code to a
+// different redirect URI. Fixed loopback providers are explicitly exempt.
+export function redirectUriMatchesRequest(request, redirectUri) {
+  if (isLoopbackRedirectUri(redirectUri)) return true;
+  return originOf(redirectUri) === originOf(request.url);
+}
+
 async function completeXaiManualCode(code, state) {
   const session = state ? getXaiSessionStatus(state) : null;
   if (!session) {
@@ -90,6 +115,9 @@ export async function GET(request, { params }) {
 
     if (action === "authorize") {
       const redirectUri = searchParams.get("redirect_uri") || "http://localhost:8080/callback";
+      if (!redirectUriMatchesRequest(request, redirectUri)) {
+        return NextResponse.json({ error: "redirect_uri must use this dashboard origin or loopback" }, { status: 400 });
+      }
       // Collect provider-specific meta params (e.g. gitlab passes baseUrl, clientId, clientSecret)
       const reservedParams = new Set(["redirect_uri"]);
       const meta = {};
@@ -267,6 +295,10 @@ export async function POST(request, { params }) {
 
     if (action === "exchange") {
       const { code, redirectUri, codeVerifier, state, meta } = body;
+
+      if (redirectUri && !redirectUriMatchesRequest(request, redirectUri)) {
+        return NextResponse.json({ error: "redirect_uri must use this dashboard origin or loopback" }, { status: 400 });
+      }
 
       // Trae/Windsurf: code is either a raw callback URL or a pasted token.
       // exchangeTokens() handles both paths; no PKCE, skip codex JWT extraction.

@@ -4,6 +4,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Modal, Button, Input } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
+import {
+  isTrustedOAuthMessageOrigin,
+  resolveOAuthRedirectUri,
+  supportsPublicOAuthCallback,
+} from "@/shared/utils/oauthRedirect";
 
 // Providers using the dynamic-port local callback proxy.
 // Browser OAuth: popup → auto callback → auto exchange → poll-status.
@@ -296,16 +301,13 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         return;
       }
 
-      // Authorization code flow - build redirect URI (some providers require fixed ports)
+      // Authorization-code callback policy:
+      // - public-capable providers return to the current public domain/subdomain
+      // - installed-app providers retain loopback (and manual-paste fallback)
+      // - Codex/xAI retain their fixed loopback ports
       const appPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
-      let redirectUri;
-      if (provider === "codex") {
-        redirectUri = "http://localhost:1455/auth/callback";
-      } else if (provider === "xai") {
-        redirectUri = "http://127.0.0.1:56121/callback";
-      } else {
-        redirectUri = `http://localhost:${appPort}/callback`;
-      }
+      const redirectUri = resolveOAuthRedirectUri(provider, window.location.origin);
+      const publicCallback = supportsPublicOAuthCallback(provider) && !isLocalhost;
 
       // Build authorize URL first to get codeVerifier/state for codex server-side mode
       const authorizeUrl = new URL(`/api/oauth/${provider}/authorize`, window.location.origin);
@@ -385,12 +387,13 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         if (!popupRef.current) {
           setStep("input");
         }
-      } else if (!isLocalhost || provider === "codex" || provider === "xai") {
-        // Non-localhost or proxy failed: manual input mode
+      } else if ((!isLocalhost && !publicCallback) || provider === "codex" || provider === "xai") {
+        // Provider requires loopback, or fixed-port proxy failed: manual input.
         setStep("input");
         window.open(data.authUrl, "_blank");
       } else {
-        // Localhost (non-Codex/xAI): Open popup and wait for message
+        // Localhost or public-domain callback: popup returns to our /callback
+        // page and relays the code via same-origin postMessage/BroadcastChannel.
         setStep("waiting");
         popupRef.current = window.open(data.authUrl, "oauth_popup", "width=600,height=700");
         if (!popupRef.current) {
@@ -522,10 +525,8 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
 
     // Method 1: postMessage from popup
     const handleMessage = (event) => {
-      // Allow messages from same origin or localhost (any port)
-      const isLocalhost = event.origin.includes("localhost") || event.origin.includes("127.0.0.1");
-      const isSameOrigin = event.origin === window.location.origin;
-      if (!isLocalhost && !isSameOrigin) return;
+      if (!isTrustedOAuthMessageOrigin(window.location.origin, event.origin)) return;
+      if (popupRef.current && event.source !== popupRef.current) return;
       
       if (event.data?.type === "oauth_callback") {
         handleCallback(event.data.data);

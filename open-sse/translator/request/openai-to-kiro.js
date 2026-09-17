@@ -23,6 +23,7 @@ import { ROLE, OPENAI_BLOCK, CLAUDE_BLOCK } from "../schema/index.js";
 import {
   canonicalizeKiroConversation,
   normalizeKiroToolSpecs,
+  kiroEmptyUserContent,
 } from "../concerns/kiroConversation.js";
 
 /**
@@ -51,7 +52,8 @@ function convertMessages(messages, model) {
 
   const flushPending = () => {
     if (currentRole === "user") {
-      const content = pendingUserContent.join("\n\n").trim() || "continue";
+      const content = pendingUserContent.join("\n\n").trim()
+        || kiroEmptyUserContent(pendingToolResults.length > 0);
       const userMsg = {
         userInputMessage: {
           content: content,
@@ -318,6 +320,10 @@ export function openaiToKiroRequest(model, body, stream, credentials) {
   const usesNativeGptEffort = usesKiroNativeGptEffort(thinkingBody, upstreamModel);
 
   const { specs: toolSpecs, nameMap } = normalizeKiroToolSpecs(tools);
+  const reverseToolNameMap = new Map();
+  for (const [raw, kiro] of nameMap.entries()) {
+    if (raw !== kiro) reverseToolNameMap.set(kiro, raw);
+  }
   const { history, currentMessage } = convertMessages(messages, upstreamModel);
 
   // API-key (headless) auth uses a raw CodeWhisperer credential whose profile is
@@ -436,6 +442,10 @@ export function openaiToKiroRequest(model, body, stream, credentials) {
     value: upstreamModel,
     enumerable: false
   });
+
+  if (reverseToolNameMap.size > 0) {
+    payload._toolNameMap = reverseToolNameMap;
+  }
 
   return payload;
 }
