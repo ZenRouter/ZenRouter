@@ -4,13 +4,15 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 const eslintConfig = defineConfig([
   ...nextVitals,
   // Override default ignores of eslint-config-next.
+  // Patterns are `**/`-prefixed so nested Next.js workspaces (e.g. gitbook/)
+  // have their build output ignored too — a bare `.next/**` only matches the
+  // repo root, which let generated turbopack chunks fail the lint run.
   globalIgnores([
     // Default ignores of eslint-config-next:
-    ".next/**",
-    ".next-cli-build/**",
-    "cli/app/.next-cli-build/**",
-    "out/**",
-    "build/**",
+    "**/.next/**",
+    "**/.next-cli-build/**",
+    "**/out/**",
+    "**/build/**",
     "next-env.d.ts",
   ]),
   // Data-definition modules intentionally use anonymous default exports:

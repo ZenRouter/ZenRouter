@@ -5,7 +5,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-17
+
 ### Added / Fixed
+
+#### Dependency Security Patches
+- **chore(deps): patch 4 advisories reported against the dependency tree (0 remaining)**
+  - `next` `^16.1.6` → `^16.3.5` (with `@next/third-parties` and `eslint-config-next` pinned to the same line), clearing both critical Next.js advisories (GHSA-p293-qw3h-jr36, GHSA-2xp9-vwfh-vxw4).
+  - Transitive high-severity fixes applied through `overrides`: `sharp` `^0.35.4` and `js-yaml` `^4.3.2` (staying on the 4.x line so no consumer breaks on the 5.x API change).
+  - Verified: `npm audit` reports 0 vulnerabilities at every severity; `gitbook/` and `tests/` workspaces already audit clean.
+- **chore(ci): refresh pinned GitHub Actions to current majors**
+  - `actions/checkout@v7`, `actions/setup-node@v7`, `softprops/action-gh-release@v3`, `docker/setup-buildx-action@v4`, `docker/login-action@v4`, `docker/metadata-action@v6`, `docker/build-push-action@v7`, `peter-evans/dockerhub-description@v5`.
+  - The release job now publishes the curated `RELEASE_NOTES_v0.7.0.md` as the release body instead of auto-generating notes from commit subjects.
 
 #### Gemini & Antigravity Resilience
 - **fix(translator): harden Gemini thought signatures against truncation and stop cascading account locks on 400**

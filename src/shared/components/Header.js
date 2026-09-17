@@ -217,6 +217,9 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (res.ok) {
+        // Full reload on purpose: the session cookie was cleared, so every
+        // cached RSC payload for the authenticated tree must be discarded.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.assign("/login");
       }
     } catch (err) {

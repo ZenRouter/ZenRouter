@@ -3,10 +3,12 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
-export default {
+const postcssConfig = {
   plugins: {
     "@tailwindcss/postcss": {
       base: projectRoot,
     },
   },
 };
+
+export default postcssConfig;
