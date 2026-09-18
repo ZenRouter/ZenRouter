@@ -207,9 +207,15 @@ export class AntigravityExecutor extends BaseExecutor {
       "Authorization": `Bearer ${credentials.accessToken}`,
       "User-Agent": this.config.headers?.["User-Agent"] || ANTIGRAVITY_HEADERS["User-Agent"],
     };
-    if (credentials?.projectId) {
-      headers["x-goog-user-project"] = credentials.projectId;
-    }
+    // NEVER send x-goog-user-project on chat requests. Google interprets its
+    // presence as "bill/attribute to this project" and enforces
+    // serviceusage.services.use on it — the shared free-tier project
+    // (aicode-consumers) rejects third-party OAuth callers with 403
+    // PERMISSION_DENIED. Without the header Google attributes the request to
+    // the user's own onboarded binding and the call succeeds (verified live:
+    // same envelope 403s with the header, 200s without). The project still
+    // travels in the body envelope (`project` field). Mirrors
+    // opencode-antigravity-auth, which strips this header for the same reason.
     return headers;
   }
 

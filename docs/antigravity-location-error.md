@@ -64,3 +64,6 @@ Bukti:
 - Melewati allowlist regional Google (keputusan server-side per IP/akun).
 - Menambah "param location" ke request — parameter seperti itu tidak ada di
   `generateContent`; `x-goog-user-project` adalah quota project, bukan lokasi.
+  Header itu bahkan sudah tidak dikirim pada chat request sejak fix 403
+  (Google menolak third-party caller dengan 403 saat header itu ada) —
+  project hanya dikirim di field `project` pada body envelope.

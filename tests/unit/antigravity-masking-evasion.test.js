@@ -94,13 +94,16 @@ describe("Antigravity detection evasion & harness normalization (#3986, #3987)",
     expect(sanitized).toContain("<important>Do this</important>");
   });
 
-  it("attaches x-goog-user-project in headers when projectId is present", () => {
+  it("never sends x-goog-user-project even when projectId is present", () => {
+    // Google treats the header as "bill to this project" and 403s third-party
+    // callers on the shared free-tier project; the project travels in the
+    // body envelope instead (verified live against daily-cloudcode-pa).
     const headers = executor.buildHeaders({
       accessToken: "ya29.secret",
       projectId: "custom-project-id",
     });
 
-    expect(headers["x-goog-user-project"]).toBe("custom-project-id");
+    expect(headers["x-goog-user-project"]).toBeUndefined();
     expect(headers["Authorization"]).toBe("Bearer ya29.secret");
   });
 });

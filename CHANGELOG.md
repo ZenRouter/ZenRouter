@@ -5,6 +5,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### Added / Fixed
+
+#### Antigravity 403 PERMISSION_DENIED Root-Cause Fix
+- **fix(antigravity): stop sending `x-goog-user-project` on chat requests**
+  - Every Antigravity account was failing with `403 Caller does not have required permission to use project aicode-consumers`, while token refresh, `loadCodeAssist` (200, free-tier), and `onboardUser` (done) all succeeded — the same signature as upstream reports `decolua/9router#1059`, `#2461`, `#2932`.
+  - Live A/B against `daily-cloudcode-pa` proved the header is the trigger: the identical envelope 403s with `x-goog-user-project: aicode-consumers` and passes the project gate without it (then resolves by model name). Google treats the header as "bill/attribute to this project" and enforces `serviceusage.services.use`, which the shared free-tier project denies to third-party OAuth callers. The project still travels in the body envelope's `project` field.
+  - Verified end-to-end on a live AI Pro connection: `gemini-3.8-flash-high` returns HTTP 200 without the header. Same approach as `opencode-antigravity-auth`, which strips this header to prevent 403 auth/license conflicts.
+  - Note: the `(tier)` suffix in registry `upstreamModelId` values (e.g. `gemini-3.8-flash-high(high)`) never reaches the wire — `chatCore.js` strips it via `stripThinkingSuffix` and conveys the tier as `thinkingLevel`, matching the exact model IDs returned by live `fetchAvailableModels`. No registry change needed.
+
 ## [0.7.0] - 2026-09-17
 
 ### Added / Fixed
