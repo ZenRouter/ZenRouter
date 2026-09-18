@@ -5,6 +5,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-18
+
 ### Added / Fixed
 
 #### Antigravity 403 PERMISSION_DENIED Root-Cause Fix
