@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { NextResponse } from "next/server";
 import {
   getProvider,
@@ -7,6 +8,7 @@ import {
   pollForToken
 } from "@/lib/oauth/providers";
 import { createProviderConnection } from "@/models";
+import { readDesktopPassToken } from "open-sse/shared/mimoAccount.js";
 import {
   startCodexProxy,
   stopCodexProxy,
@@ -33,93 +35,14 @@ import {
   registerZedSession,
   getZedSessionStatus,
   clearZedSession,
+  startXiaomiMimoProxy,
+  stopXiaomiMimoProxy,
+  registerXiaomiMimoSession,
+  getXiaomiMimoSessionStatus,
+  clearXiaomiMimoSession,
 } from "@/lib/oauth/utils/server";
 import { detectIdeInstalled } from "@/lib/oauth/utils/ideDetect";
 import { ZED_HOSTED_CONFIG } from "@/lib/oauth/constants/oauth";
-
-const LOOPBACK_OAUTH_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
-
-function canonicalOAuthHost(hostname) {
-  const host = String(hostname || "").toLowerCase().replace(/^\[|\]$/g, "");
-  return LOOPBACK_OAUTH_HOSTS.has(host) ? "localhost" : host;
-}
-
-// Normalize to scheme://host[:port] with loopback hosts unified, so
-// http://localhost:X ≡ http://127.0.0.1:X ≡ http://[::1]:X.
-export function normalizeOAuthOrigin(value) {
-  try {
-    const url = new URL(value);
-    const host = canonicalOAuthHost(url.hostname);
-    const bracketed = host.includes(":") && !host.startsWith("[") ? `[${host}]` : host;
-    // url.port is "" for default ports (80/443), matching URL.origin behavior.
-    return `${url.protocol}//${bracketed}${url.port ? `:${url.port}` : ""}`;
-  } catch {
-    return null;
-  }
-}
-
-// All origins that count as "this dashboard" for a given request.
-// Behind a TLS-terminating reverse proxy (e.g. cloudflared → plain HTTP to
-// 127.0.0.1:20128) request.url shows http://public-host while the browser
-// uses https://public-host, so the public host is accepted under both
-// schemes plus any explicit forwarding signals. Truly foreign hosts
-// (evil.example, sibling subdomains) are still rejected.
-export function getDashboardOrigins(request) {
-  const origins = new Set();
-  const push = (value) => {
-    const normalized = normalizeOAuthOrigin(value);
-    if (normalized) origins.add(normalized);
-  };
-
-  let requestUrl = null;
-  try {
-    requestUrl = new URL(request.url);
-  } catch {
-    return origins;
-  }
-  push(requestUrl.origin);
-  // Same host, flipped scheme (proxy terminated TLS without x-forwarded-proto).
-  const flipped = new URL(requestUrl.toString());
-  flipped.protocol = flipped.protocol === "https:" ? "http:" : "https:";
-  push(flipped.origin);
-
-  const headers = request.headers;
-  const forwardedHost = headers.get("x-forwarded-host")?.split(",")[0]?.trim();
-  if (forwardedHost) {
-    const forwardedProto = headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
-    const proto = forwardedProto === "http" || forwardedProto === "https" ? forwardedProto : requestUrl.protocol.replace(":", "");
-    push(`${proto}://${forwardedHost}`);
-  }
-  // Cloudflare edge/tunnel client-scheme signal (cloudflared does not send x-forwarded-proto).
-  try {
-    const scheme = JSON.parse(headers.get("cf-visitor") || "null")?.scheme;
-    if (scheme === "http" || scheme === "https") push(`${scheme}://${requestUrl.host}`);
-  } catch {
-    /* ignore malformed cf-visitor */
-  }
-  if (process.env.NEXT_PUBLIC_BASE_URL) push(process.env.NEXT_PUBLIC_BASE_URL);
-  return origins;
-}
-
-export function isLoopbackRedirectUri(value) {
-  try {
-    const host = new URL(value).hostname.toLowerCase().replace(/^\[|\]$/g, "");
-    return host === "localhost" || host === "127.0.0.1" || host === "::1";
-  } catch {
-    return false;
-  }
-}
-
-// Public callbacks must return to this dashboard (same host as the request,
-// allowing for TLS-terminating proxies and explicit forwarding headers).
-// This stops a forged /exchange body from sending a stolen code to a
-// different host. Loopback callbacks are explicitly exempt.
-export function redirectUriMatchesRequest(request, redirectUri) {
-  if (isLoopbackRedirectUri(redirectUri)) return true;
-  const normalized = normalizeOAuthOrigin(redirectUri);
-  if (!normalized) return false;
-  return getDashboardOrigins(request).has(normalized);
-}
 
 async function completeXaiManualCode(code, state) {
   const session = state ? getXaiSessionStatus(state) : null;
@@ -173,10 +96,33 @@ export async function GET(request, { params }) {
     const { searchParams } = new URL(request.url);
 
     if (action === "authorize") {
-      const redirectUri = searchParams.get("redirect_uri") || "http://localhost:8080/callback";
-      if (!redirectUriMatchesRequest(request, redirectUri)) {
-        return NextResponse.json({ error: "redirect_uri must use this dashboard origin or loopback" }, { status: 400 });
+      // Xiaomi Desktop: custom ECDH flow — generate keypair, start proxy, return authorize URL
+      if (provider === "xiaomi-mimo") {
+        const { generateKeyPair, buildAuthorizeUrl, getKeyName } = await import("@/lib/oauth/providers/xiaomi-mimo");
+        const { publicKey, privateKeyDer } = generateKeyPair();
+        const state = searchParams.get("state") || crypto.randomUUID();
+
+        // Start the callback proxy (or reuse if already running)
+        const proxyResult = await startXiaomiMimoProxy();
+        if (!proxyResult.success) {
+          return NextResponse.json({ error: `Failed to start callback server: ${proxyResult.reason}` }, { status: 500 });
+        }
+
+        // Register the session with the private key for decryption
+        registerXiaomiMimoSession({ state, privateKeyDer });
+
+        const redirectUri = proxyResult.callbackUrl;
+        const authorizeUrl = buildAuthorizeUrl(publicKey, redirectUri, getKeyName());
+
+        return NextResponse.json({
+          state,
+          authorizeUrl,
+          redirectUri,
+          port: proxyResult.port,
+        });
       }
+
+      const redirectUri = searchParams.get("redirect_uri") || "http://localhost:8080/callback";
       // Collect provider-specific meta params (e.g. gitlab passes baseUrl, clientId, clientSecret)
       const reservedParams = new Set(["redirect_uri"]);
       const meta = {};
@@ -205,6 +151,10 @@ export async function GET(request, { params }) {
         // Prefer ZED_HOSTED_CONFIG.defaultNativeAppPort (58443) so the browser redirect
         // matches what Zed expects; falls back to a random port if it's busy.
         const result = await startZedProxy(searchParams.get("native_app_port") || ZED_HOSTED_CONFIG.defaultNativeAppPort);
+        return NextResponse.json(result);
+      }
+      if (provider === "xiaomi-mimo") {
+        const result = await startXiaomiMimoProxy();
         return NextResponse.json(result);
       }
       if (!["codex", "xai"].includes(provider)) {
@@ -240,10 +190,21 @@ export async function GET(request, { params }) {
       else if (provider === "zed") session = getZedSessionStatus(state);
       else if (provider === "xai") session = getXaiSessionStatus(state);
       else if (provider === "codex") session = getCodexSessionStatus(state);
-      else return NextResponse.json({ error: "Poll only supported for codex/xai/trae/windsurf/zed" }, { status: 400 });
+      else if (provider === "xiaomi-mimo") session = getXiaomiMimoSessionStatus(state);
+      else return NextResponse.json({ error: "Poll only supported for codex/xai/trae/windsurf/zed/xiaomi-mimo" }, { status: 400 });
       if (!session) return NextResponse.json({ status: "unknown" });
       if (session.status === "done" || session.status === "error") {
         const payload = { ...session };
+        if (provider === "xiaomi-mimo") {
+          // Unlike the others this does not auto-exchange server-side, so a
+          // finished session must survive until the client POSTs /exchange —
+          // that call clears it. A failed one is cleared here instead.
+          if (session.status === "error") {
+            clearXiaomiMimoSession(state);
+            stopXiaomiMimoProxy();
+          }
+          return NextResponse.json(payload);
+        }
         if (provider === "trae") clearTraeSession(state);
         else if (provider === "windsurf") clearWindsurfSession(state);
         else if (provider === "zed") clearZedSession(state);
@@ -260,7 +221,8 @@ export async function GET(request, { params }) {
       else if (provider === "zed") stopZedProxy();
       else if (provider === "xai") stopXaiProxy();
       else if (provider === "codex") stopCodexProxy();
-      else return NextResponse.json({ error: "Proxy only supported for codex/xai/trae/windsurf/zed" }, { status: 400 });
+      else if (provider === "xiaomi-mimo") stopXiaomiMimoProxy();
+      else return NextResponse.json({ error: "Proxy only supported for codex/xai/trae/windsurf/zed/xiaomi-mimo" }, { status: 400 });
       return NextResponse.json({ success: true });
     }
 
@@ -347,16 +309,74 @@ export async function POST(request, { params }) {
       let ok = false;
       if (provider === "trae") ok = registerTraeSession({ state });
       else if (provider === "windsurf") ok = registerWindsurfSession({ state });
-      else if (provider === "zed") ok = registerZedSession({ state, codeVerifier: body?.codeVerifier });
+      else if (provider === "zed") ok = registerZedSession({ state, codeVerifier: body?.codeVerifier, systemId: body?.systemId });
       else return NextResponse.json({ error: "register-session only supported for trae/windsurf/zed" }, { status: 400 });
       return NextResponse.json({ success: ok });
     }
 
     if (action === "exchange") {
-      const { code, redirectUri, codeVerifier, state, meta } = body;
+      const { code, redirectUri, codeVerifier, state, meta, systemId } = body;
 
-      if (redirectUri && !redirectUriMatchesRequest(request, redirectUri)) {
-        return NextResponse.json({ error: "redirect_uri must use this dashboard origin or loopback" }, { status: 400 });
+      // Xiaomi MiMo: no token exchange needed — the callback already decrypted the sk.
+      // Just read the session result and create the connection.
+      if (provider === "xiaomi-mimo") {
+        if (!state) {
+          return NextResponse.json({ error: "Missing state" }, { status: 400 });
+        }
+        const session = getXiaomiMimoSessionStatus(state);
+        if (!session || session.status !== "done" || !session.result) {
+          return NextResponse.json(
+            { error: session?.error || "OAuth session not completed. Please restart the login flow." },
+            { status: 400 },
+          );
+        }
+        const { uid, accessToken, baseUrl } = session.result;
+
+        // Desktop-exclusive Preview models authenticate with the account-session
+        // passToken, which only lives in MiMo Desktop's cookie store — attach it
+        // to the connection so those models work right after OAuth.
+        let passToken = null;
+        try {
+          passToken = await readDesktopPassToken();
+        } catch {
+          // Desktop not installed / cookie DB locked — preview models stay unavailable.
+        }
+
+        try {
+          const connection = await createProviderConnection({
+            provider: "xiaomi-mimo",
+            authType: "oauth",
+            accessToken,
+            refreshToken: null,
+            expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            email: uid ? `${uid}@xiaomi` : null,
+            displayName: uid ? `Xiaomi ${uid}` : "Xiaomi MiMo",
+            providerSpecificData: {
+              uid: uid || null,
+              baseUrl: baseUrl || "https://api.xiaomimimo.com/v1",
+              authMethod: "oauth",
+              mimoPassToken: passToken?.passToken || null,
+              mimoUserId: passToken?.userId || null,
+              mimoCUserId: passToken?.cUserId || null,
+            },
+            testStatus: "active",
+          });
+          clearXiaomiMimoSession(state);
+          stopXiaomiMimoProxy();
+          return NextResponse.json({
+            success: true,
+            connection: {
+              id: connection.id,
+              provider: connection.provider,
+              email: connection.email,
+              displayName: connection.displayName,
+            },
+          });
+        } catch (err) {
+          clearXiaomiMimoSession(state);
+          stopXiaomiMimoProxy();
+          return NextResponse.json({ error: err.message }, { status: 500 });
+        }
       }
 
       // Trae/Windsurf: code is either a raw callback URL or a pasted token.
@@ -439,8 +459,13 @@ export async function POST(request, { params }) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
       }
 
-      // Exchange code for tokens (meta carries provider-specific params, e.g. gitlab clientId/baseUrl)
-      const tokenData = await exchangeTokens(provider, code, redirectUri, codeVerifier, state, meta);
+      // Exchange code for tokens (meta carries provider-specific params, e.g. gitlab clientId/baseUrl).
+      // systemId (Zed) is merged into meta so the login attempt's own id is
+      // used instead of a freshly prepared one. Ignored by other providers.
+      const tokenData = await exchangeTokens(provider, code, redirectUri, codeVerifier, state, {
+        ...(meta || {}),
+        ...(systemId ? { systemId } : {}),
+      });
 
       // Save to database
       const connection = await createProviderConnection({
