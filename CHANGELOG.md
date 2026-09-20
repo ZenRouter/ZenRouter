@@ -8,6 +8,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ### Added / Fixed
 
 #### Stream & SSE Enhancements
+- **fix(stream): synthesize terminal chunk on streams ending without finish_reason and log tool calls (#4079, #4080)**
+  - When an upstream SSE stream terminates without a `finish_reason`, synthesizes a terminal chunk (`finish_reason: "network_error"`) followed by `data: [DONE]` so clients like `pi` and agentic harnesses close the turn as a deliberate error instead of crashing.
+  - Accumulates streamed tool calls (both OpenAI and Claude shapes) into completion callbacks to eliminate deceptive `[Empty streaming response]` log records.
 - **fix(stream): preserve and symmetrically populate `delta.reasoning` and `delta.reasoning_content` (#4082)**
   - Downstream coding agents like Cline and OpenRouter SDK clients read reasoning chunks under `delta.reasoning`, while DeepSeek and newer models stream under `delta.reasoning_content`. Symmetrically populates both fields without stripping either, allowing all clients to render model thinking traces.
 

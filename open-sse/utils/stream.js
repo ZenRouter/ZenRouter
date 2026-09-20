@@ -14,6 +14,70 @@ export { SSE_DONE, SSE_HEADERS, SSE_HEADERS_NO_BUFFER };
 // sharedEncoder is stateless — safe to share across streams
 const sharedEncoder = new TextEncoder();
 
+// A truthy finish_reason tells an OpenAI client the turn is over.
+const hasOpenAITerminal = (chunk) => !!chunk?.choices?.[0]?.finish_reason;
+
+// Terminal chunk for a stream whose upstream ended without one (#4079, #4080).
+// "network_error" maps to a deliberate client-side error instead of presenting a truncated reply.
+function buildAbortedOpenAITerminal(model) {
+  return {
+    id: `chatcmpl-${Date.now()}`,
+    object: "chat.completion.chunk",
+    created: Math.floor(Date.now() / 1000),
+    ...(model ? { model } : {}),
+    choices: [{ index: 0, delta: {}, finish_reason: "network_error" }]
+  };
+}
+
+export function buildAbortedOpenAITerminalBytes(model) {
+  return sharedEncoder.encode(`data: ${JSON.stringify(buildAbortedOpenAITerminal(model))}\n\n${SSE_DONE}`);
+}
+
+function isUnusableTail(output) {
+  if (!output.startsWith("data:")) return false;
+  const payload = output.slice(5).trim();
+  if (!payload || payload === "[DONE]") return false;
+  try {
+    JSON.parse(payload);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+function accumulateToolCalls(store, parsed) {
+  const calls = parsed?.choices?.[0]?.delta?.tool_calls;
+  if (Array.isArray(calls)) {
+    for (const call of calls) {
+      const index = call.index ?? 0;
+      const entry = store.get(index) || { id: null, name: "", arguments: "" };
+      if (call.id) entry.id = call.id;
+      if (call.function?.name) entry.name += call.function.name;
+      if (call.function?.arguments) entry.arguments += call.function.arguments;
+      store.set(index, entry);
+    }
+    return;
+  }
+
+  const block = parsed?.content_block;
+  if (block?.type === "tool_use") {
+    const index = parsed.index ?? 0;
+    const entry = store.get(index) || { id: null, name: "", arguments: "" };
+    entry.id = block.id || entry.id;
+    entry.name += block.name || "";
+    store.set(index, entry);
+    return;
+  }
+
+  const delta = parsed?.delta;
+  if (delta?.type === "input_json_delta" && typeof delta.partial_json === "string") {
+    const index = parsed.index ?? 0;
+    const entry = store.get(index) || { id: null, name: "", arguments: "" };
+    entry.arguments += delta.partial_json;
+    store.set(index, entry);
+  }
+}
+
 /**
  * Stream modes
  */
@@ -65,6 +129,7 @@ export function createSSEStream(options = {}) {
   let totalContentLength = 0;
   const contentChunks = [];
   const thinkingChunks = [];
+  const toolCallStore = new Map();
   let ttftAt = null;
   let sseLineCount = 0;
   let sseEmittedCount = 0;
@@ -77,6 +142,8 @@ export function createSSEStream(options = {}) {
   let streamDoneSent = false;  // track duplicate [DONE] across transform + flush
   let passthroughFinishSeen = false;  // passthrough: duplicate finish chunks from upstream
   let passthroughDoneSent = false;    // passthrough: upstream already sent [DONE]
+  let passthroughAtEventBoundary = true;
+  let clientTerminalSeen = false;
   let finalized = false;
 
   // In-stream failure tracking (#4104): an upstream can end an HTTP-200 stream
@@ -120,7 +187,8 @@ export function createSSEStream(options = {}) {
     if (onStreamComplete) {
       onStreamComplete({
         content: contentChunks.join(""),
-        thinking: thinkingChunks.join("")
+        thinking: thinkingChunks.join(""),
+        toolCalls: [...toolCallStore.values()].filter((call) => call.name || call.arguments)
       }, finalUsage, ttftAt, { failed: streamFailed, error: streamErrorMessage });
     }
   };
@@ -257,6 +325,8 @@ export function createSSEStream(options = {}) {
                 thinkingChunks.push(reasoning);
               }
 
+              accumulateToolCalls(toolCallStore, parsed);
+
               const extracted = extractUsage(parsed);
               if (extracted) {
                 usage = mergeUsage(usage, extracted);
@@ -265,6 +335,7 @@ export function createSSEStream(options = {}) {
               responsesTerminal = isOpenAIResponsesTerminalEvent(currentOpenAIResponsesEvent, parsed);
 
               const isFinishChunk = parsed.choices?.[0]?.finish_reason;
+              if (isFinishChunk) clientTerminalSeen = true;
               const nativeReason = parsed.choices?.[0]?.native_finish_reason;
               // Detect upstream gateway errors masked as HTTP 200 (e.g. OpenRouter
               // sending finish_reason:"stop" with native_finish_reason:"network_error"
@@ -311,6 +382,7 @@ export function createSSEStream(options = {}) {
 
           reqLogger?.appendConvertedChunk?.(output);
           controller.enqueue(sharedEncoder.encode(output));
+          passthroughAtEventBoundary = output === "\n";
           // Responses clients (codex CLI) close on response.completed instead of [DONE]
           if (responsesTerminal) finalizeStream();
           continue;
@@ -401,6 +473,8 @@ export function createSSEStream(options = {}) {
           }
         }
 
+        accumulateToolCalls(toolCallStore, parsed);
+
         // Extract usage
         const extracted = extractUsage(parsed);
         if (extracted) state.usage = mergeUsage(state.usage, extracted); // Keep original usage for logging
@@ -438,6 +512,10 @@ export function createSSEStream(options = {}) {
               continue; // Skip this empty chunk
             }
 
+            if (sourceFormat === FORMATS.OPENAI && hasOpenAITerminal(item)) {
+              clientTerminalSeen = true;
+            }
+
             // Inject estimated usage if finish chunk has no valid usage
             const isFinishChunk = item.type === "message_delta" || item.choices?.[0]?.finish_reason;
             if (state.finishReason && isFinishChunk && !hasValidUsage(item.usage) && totalContentLength > 0) {
@@ -473,8 +551,14 @@ export function createSSEStream(options = {}) {
             if (buffer.startsWith("data:") && !buffer.startsWith("data: ")) {
               output = "data: " + buffer.slice(5);
             }
-            reqLogger?.appendConvertedChunk?.(output);
-            controller.enqueue(sharedEncoder.encode(output));
+            if (isUnusableTail(output)) {
+              buffer = "";
+            } else {
+              output += "\n\n";
+              reqLogger?.appendConvertedChunk?.(output);
+              controller.enqueue(sharedEncoder.encode(output));
+              passthroughAtEventBoundary = true;
+            }
           }
 
           // IMPORTANT: In passthrough mode we still must terminate the SSE stream.
@@ -483,10 +567,24 @@ export function createSSEStream(options = {}) {
           // Without it they can hang until timeout and trigger failover.
           // Gemini-family clients (Antigravity, Vertex, Gemini) reject this sentinel with 400 syntax errors.
           const isGeminiFamily = provider === "antigravity" || provider === "gemini" || provider === "vertex";
+
+          // The upstream ended without a finish_reason (empty response, or cut before terminal).
+          // Emit one so an OpenAI client closes the turn cleanly (#4079, #4080).
+          if (sourceFormat === FORMATS.OPENAI && !clientTerminalSeen && !isGeminiFamily) {
+            const separator = passthroughAtEventBoundary ? "" : "\n";
+            const terminal = separator + `data: ${JSON.stringify(buildAbortedOpenAITerminal(model))}\n\n`;
+            reqLogger?.appendConvertedChunk?.(terminal);
+            controller.enqueue(sharedEncoder.encode(terminal));
+            passthroughAtEventBoundary = true;
+            clientTerminalSeen = true;
+          }
+
           if (!streamDoneSent && !passthroughDoneSent && !isGeminiFamily) {
-            const doneOutput = "data: [DONE]\n\n";
+            const separator = passthroughAtEventBoundary ? "" : "\n";
+            const doneOutput = separator + "data: [DONE]\n\n";
             reqLogger?.appendConvertedChunk?.(doneOutput);
             controller.enqueue(sharedEncoder.encode(doneOutput));
+            streamDoneSent = true;
           }
 
           finalizeStream();
@@ -547,6 +645,20 @@ export function createSSEStream(options = {}) {
           }
         }
 
+        // A translator's flush is a no-op when the upstream never sent its terminal
+        // event. Emit one, plus the sentinel the client expects (#4079).
+        if (sourceFormat === FORMATS.OPENAI && !clientTerminalSeen) {
+          const terminal = formatSSE(buildAbortedOpenAITerminal(model), FORMATS.OPENAI);
+          reqLogger?.appendConvertedChunk?.(terminal);
+          controller.enqueue(sharedEncoder.encode(terminal));
+          if (!streamDoneSent) {
+            reqLogger?.appendConvertedChunk?.(SSE_DONE);
+            controller.enqueue(sharedEncoder.encode(SSE_DONE));
+            streamDoneSent = true;
+          }
+          clientTerminalSeen = true;
+        }
+
         // Synthesize response.failed if a Responses passthrough stream never reached a terminal event
         const keepsOpenAIResponsesFormat = targetFormat === FORMATS.OPENAI_RESPONSES && sourceFormat === FORMATS.OPENAI_RESPONSES;
         if (keepsOpenAIResponsesFormat && !openAIResponsesTerminalSeen) {
@@ -573,6 +685,9 @@ export function createSSEStream(options = {}) {
   });
 
   sseStream.getStreamSnapshot = getStreamSnapshot;
+  sseStream.abortTerminalBytes = sourceFormat === FORMATS.OPENAI
+    ? () => (clientTerminalSeen || streamDoneSent ? null : buildAbortedOpenAITerminalBytes(model))
+    : null;
   return sseStream;
 }
 
