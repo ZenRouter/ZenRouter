@@ -76,9 +76,12 @@ export function claudeToOpenAIRequest(model, body, stream) {
     }));
   }
 
-  // Tool choice
+  // Tool choice & parallel tool calls
   if (body.tool_choice) {
     result.tool_choice = convertToolChoice(body.tool_choice);
+    if (body.tool_choice.disable_parallel_tool_use === true) {
+      result.parallel_tool_calls = false;
+    }
   }
 
   if (body.reasoning_effort !== undefined) {
@@ -273,6 +276,7 @@ function convertToolChoice(choice) {
   switch (choice.type) {
     case "auto": return "auto";
     case "any": return "required";
+    case "none": return "none";
     case "tool": return { type: OPENAI_BLOCK.FUNCTION, function: { name: choice.name } };
     default: return "auto";
   }

@@ -171,11 +171,15 @@ Respond ONLY with the JSON object, no other text.`);
       // Store mapping for response translation (prefixed → original)
       toolNameMap.set(toolName, originalName);
 
-      result.tools.push({
+      const claudeTool = {
         name: toolName,
         description: toolData.description || "",
         input_schema: toolData.parameters || toolData.input_schema || { type: "object", properties: {}, required: [] }
-      });
+      };
+      if (toolData.strict !== undefined) {
+        claudeTool.strict = Boolean(toolData.strict);
+      }
+      result.tools.push(claudeTool);
     }
 
     if (result.tools.length > 0) {
@@ -186,9 +190,12 @@ Respond ONLY with the JSON object, no other text.`);
     }
   }
 
-  // Tool choice
-  if (body.tool_choice) {
+  // Tool choice & parallel tool calls (#4171)
+  if (body.tool_choice || body.parallel_tool_calls !== undefined) {
     result.tool_choice = convertOpenAIToolChoice(body.tool_choice);
+    if (body.parallel_tool_calls === false) {
+      result.tool_choice.disable_parallel_tool_use = true;
+    }
   }
 
   // Thinking is normalized centrally by applyThinking (thinkingUnified.js) after translation.
@@ -315,7 +322,8 @@ function convertOpenAIToolChoice(choice) {
   // OpenAI string forms: "auto" | "none" | "required"
   if (typeof choice === "string") {
     if (choice === "required") return { type: "any" };
-    return { type: "auto" }; // "auto", "none", or anything unexpected
+    if (choice === "none") return { type: "none" };
+    return { type: "auto" }; // "auto" or anything unexpected
   }
 
   if (typeof choice === "object") {

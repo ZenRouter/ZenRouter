@@ -35,6 +35,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Added `@cf` to aliases in `cloudflare-ai.js` so `@cf/...` model references trigger `flattenContent`.
   - Normalizes array content blocks (including raw strings and `input_text`), ensures `content` is never null or undefined, and rewrites `role: "tool"` to `"user"`.
 
+#### Tool Policy & Role Preservation
+- **fix(translator): preserve tool_choice "none", parallel_tool_calls, tool strict, and developer role (#4171, #4172)**
+  - `tool_choice: "none"` now translates correctly to Claude `{ type: "none" }` and vice versa instead of widening to `"auto"`.
+  - Maps `parallel_tool_calls: false` to Claude `tool_choice.disable_parallel_tool_use: true` and vice versa.
+  - Preserves `strict: true` property on tool definitions when translating OpenAI tools to Claude format.
+  - Preserves `role: "developer"` when target provider is OpenAI, only normalizing to `"system"` for providers that reject it.
+
 
 #### Claude Code Auto-Compaction & 1M Context
 - **feat(claude-code): drive auto-compact window via `CLAUDE_CODE_AUTO_COMPACT_WINDOW` and add 1M-context toggle**

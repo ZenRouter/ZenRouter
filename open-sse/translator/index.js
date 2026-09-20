@@ -133,6 +133,7 @@ export function translateRequest(sourceFormat, targetFormat, model, body, stream
   if (targetFormat === FORMATS.OPENAI) {
     result = filterToOpenAIFormat(result, {
       preserveCacheControl: !!PROVIDERS[provider]?.quirks?.preserveCacheControl,
+      preserveDeveloperRole: provider === "openai" || !!PROVIDERS[provider]?.quirks?.preserveDeveloperRole,
     });
     // Chat clients have always had prompt_cache_key forwarded verbatim (executors such
     // as opencode read it post-translation for session affinity). Only the

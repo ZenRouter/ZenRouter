@@ -7,9 +7,11 @@ export { VALID_OPENAI_CONTENT_TYPES, VALID_OPENAI_MESSAGE_TYPES };
 // Filter messages to OpenAI standard format
 // Remove: thinking, redacted_thinking, signature, and other non-OpenAI blocks
 // opts.preserveCacheControl: keep cache_control on content blocks (e.g. for DashScope/alicode)
+// opts.preserveDeveloperRole: keep developer role for providers like official OpenAI (#4172)
 export function filterToOpenAIFormat(body, opts = {}) {
   if (!body.messages || !Array.isArray(body.messages)) return body;
   const keepCache = !!opts.preserveCacheControl;
+  const keepDev = !!opts.preserveDeveloperRole;
 
   function stripBlock(block) {
     const { signature, cache_control, ...rest } = block;
@@ -17,8 +19,8 @@ export function filterToOpenAIFormat(body, opts = {}) {
   }
 
   body.messages = body.messages.map(msg => {
-    // Normalize developer role to system (many providers don't support developer)
-    if (msg.role === ROLE.DEVELOPER) msg = { ...msg, role: ROLE.SYSTEM };
+    // Normalize developer role to system unless target provider supports developer (#4172)
+    if (msg.role === ROLE.DEVELOPER && !keepDev) msg = { ...msg, role: ROLE.SYSTEM };
 
     // Keep tool messages as-is (OpenAI format)
     if (msg.role === ROLE.TOOL) return msg;
