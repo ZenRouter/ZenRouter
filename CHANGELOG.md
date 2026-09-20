@@ -7,7 +7,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Stream & SSE Enhancements
+- **fix(stream): preserve and symmetrically populate `delta.reasoning` and `delta.reasoning_content` (#4082)**
+  - Downstream coding agents like Cline and OpenRouter SDK clients read reasoning chunks under `delta.reasoning`, while DeepSeek and newer models stream under `delta.reasoning_content`. Symmetrically populates both fields without stripping either, allowing all clients to render model thinking traces.
+
 #### Gateway & Routing Reliability
+
 - **fix(errors): forward `Retry-After` header and classify terminal billing errors (#4147)**
   - Synthesizes and forwards `Retry-After: <seconds>` headers on 429 rate limit error responses to prevent client hammering.
   - Classifies permanent billing errors (`余额不足`, `请充值`, `insufficient balance`, HTTP 402) as `terminal: true` to halt futile retry loops.

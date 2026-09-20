@@ -234,12 +234,17 @@ export function createSSEStream(options = {}) {
               }
 
               const delta = parsed.choices?.[0]?.delta;
-              // OpenRouter-style gateways stream reasoning under `delta.reasoning`,
-              // normalize to `delta.reasoning_content`
-              if (delta && typeof delta.reasoning === "string" && delta.reasoning_content === undefined) {
-                delta.reasoning_content = delta.reasoning;
-                delete delta.reasoning;
-                fieldsInjected = true;
+              // Symmetrically populate delta.reasoning and delta.reasoning_content so both
+              // DeepSeek-style (reasoning_content) and OpenRouter/Cline-style (reasoning)
+              // downstream consumers receive the thinking stream intact (#4082).
+              if (delta) {
+                if (typeof delta.reasoning === "string" && delta.reasoning_content === undefined) {
+                  delta.reasoning_content = delta.reasoning;
+                  fieldsInjected = true;
+                } else if (typeof delta.reasoning_content === "string" && delta.reasoning === undefined) {
+                  delta.reasoning = delta.reasoning_content;
+                  fieldsInjected = true;
+                }
               }
               const content = delta?.content;
               const reasoning = delta?.reasoning_content || delta?.reasoning;
