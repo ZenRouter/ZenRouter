@@ -27,6 +27,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Strips `encrypted`, `cache_control`, `strict`, `$id`, and `example` from tool schemas before sending to Google Gemini / Antigravity, preventing 400 `INVALID_ARGUMENT` during agent tool calling.
   - Hardens object schema placeholder checks against non-object or array `properties`.
 
+#### Claude Code Auto-Compaction & 1M Context
+- **feat(claude-code): drive auto-compact window via `CLAUDE_CODE_AUTO_COMPACT_WINDOW` and add 1M-context toggle**
+  - Replaces obsolete `CLAUDE_CODE_MAX_CONTEXT_TOKENS` with `CLAUDE_CODE_AUTO_COMPACT_WINDOW` so Claude Code triggers compaction at the intended threshold instead of ignoring the setting for recognized models.
+  - Adds a "1M context" toggle that attaches `[1m]` marker to default models, preventing Claude Code from assuming a 200K window cap during long conversations.
+
+
 
 ## [0.7.1] - 2026-09-18
 
