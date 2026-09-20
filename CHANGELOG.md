@@ -7,6 +7,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Dependency Stability Upgrades
+- **chore(deps): bump dependencies for runtime stability and security**
+  - Updated `@xyflow/react` to `^12.11.6`, `jose` to `^6.2.12`, `undici` to `^7.29.1` (connection leak & proxy fixes), `marked` to `^18.0.13`, `material-symbols` to `^0.47.4`, `monaco-editor` to `^0.56.0`, `open` to `^11.0.4`, `uuid` to `^13.0.2`, `postcss` to `^8.5.28`, and `better-sqlite3` to `^12.11.1`.
+  - Updated `cli/package.json` with `esbuild` `^0.28.2` and aligned React versions to `19.2.4`.
+  - Preserved major API stability bounds (`next` on 16.3.5 line, `chalk` 5, `http-proxy-middleware` 3, `socks-proxy-agent` 8) to prevent runtime breaking changes.
+
 #### OAuth / Tunnel Callback Normalization
 - **fix(oauth): support TLS-terminating proxies, cloudflared tunnels, and loopback aliases in redirect_uri validation**
   - Public OAuth callbacks returning to `https://` URLs (e.g. `https://zen.hlcyn.xyz/callback`) no longer fail with `400 redirect_uri must use this dashboard origin or loopback` when deployed behind Cloudflare Tunnel, reverse proxies, or loopback forwarders.
