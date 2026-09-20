@@ -7,7 +7,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Gateway & Routing Reliability
+- **fix(api): default `stream` to `false` when omitted on `/v1/chat/completions` (#4122)**
+  - Adheres strictly to OpenAI Chat Completions API specification where `stream` defaults to `false`. Requests without the `stream` parameter now return a standard non-streaming `chat.completion` JSON object rather than unexpected SSE stream chunks, preventing downstream JSON parse failures.
+
 #### Proxy Security & Leak Prevention
+
 - **fix(security): enforce Strict Proxy on `/v1/chat/completions` to prevent IP leakage (#4007)**
   - When `strictProxy: true` is configured, requests will fail immediately if the proxy is unreachable or if no proxy URL is resolved, completely preventing silent fallbacks to the machine's direct public IP.
 

@@ -61,6 +61,13 @@ async function handleChatInternal(request, clientRawRequest = null, serverReques
   } else {
     clientRawRequest = { ...clientRawRequest, serverRequestId };
   }
+  // Per OpenAI Chat Completions API spec, stream defaults to false (#4122)
+  const endpointPath = clientRawRequest?.endpoint || (request?.url ? new URL(request.url).pathname : "");
+  if (endpointPath.includes("/chat/completions") && body.stream === undefined) {
+    body = { ...body, stream: false };
+    if (clientRawRequest?.body) clientRawRequest.body = { ...clientRawRequest.body, stream: false };
+  }
+
   let modelStr = body.model;
   // Claude Code 1M-context beta appends "[1m]" to model name (e.g. "claude-opus-5[1m]")
   // while the capability rides in anthropic-beta header. Strip the marker for routing
