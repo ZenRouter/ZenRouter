@@ -13,6 +13,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 #### Gateway & Routing Reliability
 
+- **fix(models): expose token limits and context length on combo entries in `/v1/models` (#3486, #4096)**
+  - Derives `context_length` and `max_completion_tokens` from combo members (taking the safe minimum envelope across members) so clients like Claude Code, Codex, and Cline do not prematurely trigger compacting loops. Supports both string and object member references.
 - **fix(errors): forward `Retry-After` header and classify terminal billing errors (#4147)**
   - Synthesizes and forwards `Retry-After: <seconds>` headers on 429 rate limit error responses to prevent client hammering.
   - Classifies permanent billing errors (`余额不足`, `请充值`, `insufficient balance`, HTTP 402) as `terminal: true` to halt futile retry loops.

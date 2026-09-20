@@ -240,26 +240,25 @@ export async function buildModelsList(kindFilter) {
     // largest member limit because fallback members may support more output.
     if (!combo.kind || combo.kind === LLM_KIND) {
       let minContext = Infinity;
-      let maxOutput = -Infinity;
+      let minMaxOutput = Infinity;
       let hasContext = false;
       let hasMaxOutput = false;
 
       for (const rawModel of combo.models || []) {
-        if (typeof rawModel !== "string") continue;
-        const trimmed = rawModel.trim();
-        if (!trimmed) continue;
-        const slashIndex = trimmed.indexOf("/");
-        const provider = slashIndex >= 0 ? trimmed.slice(0, slashIndex) : "";
-        const modelId = slashIndex >= 0 ? trimmed.slice(slashIndex + 1) : trimmed;
+        const memberId = typeof rawModel === "string" ? rawModel.trim() : String(rawModel?.model || rawModel?.id || "").trim();
+        if (!memberId) continue;
+        const slashIndex = memberId.indexOf("/");
+        const provider = slashIndex >= 0 ? memberId.slice(0, slashIndex) : "";
+        const modelId = slashIndex >= 0 ? memberId.slice(slashIndex + 1) : memberId;
         if (!modelId) continue;
 
         const caps = getCapabilitiesForModel(provider, modelId);
-        if (Number.isFinite(caps?.contextWindow)) {
+        if (Number.isFinite(caps?.contextWindow) && caps.contextWindow > 0) {
           minContext = Math.min(minContext, caps.contextWindow);
           hasContext = true;
         }
-        if (Number.isFinite(caps?.maxOutput)) {
-          maxOutput = Math.max(maxOutput, caps.maxOutput);
+        if (Number.isFinite(caps?.maxOutput) && caps.maxOutput > 0) {
+          minMaxOutput = Math.min(minMaxOutput, caps.maxOutput);
           hasMaxOutput = true;
         }
       }
@@ -272,7 +271,7 @@ export async function buildModelsList(kindFilter) {
       if (Number.isFinite(Number(combo.maxOutput || combo.max_completion_tokens))) {
         entry.max_completion_tokens = Number(combo.maxOutput || combo.max_completion_tokens);
       } else if (hasMaxOutput) {
-        entry.max_completion_tokens = maxOutput;
+        entry.max_completion_tokens = minMaxOutput;
       }
     }
     models.push(entry);
