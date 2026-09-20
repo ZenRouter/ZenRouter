@@ -19,6 +19,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Preserved major API stability bounds (`next` on 16.3.5 line, `chalk` 5, `http-proxy-middleware` 3, `socks-proxy-agent` 8) to prevent runtime breaking changes.
 
 #### OAuth / Tunnel Callback Normalization
+- **fix(oauth): support numeric epoch timestamps in proactive token refresh (#4000)**
+  - When `expiresAt` is stored or imported as a numeric string (epoch ms or seconds), `parseTimeMs` normalizes it safely across `tokenRefresh.js`, `chatCore.js`, and executor providers instead of producing `Invalid Date` / `NaN`, preventing silent refresh failures.
 - **fix(oauth): support TLS-terminating proxies, cloudflared tunnels, and loopback aliases in redirect_uri validation**
   - Public OAuth callbacks returning to `https://` URLs (e.g. `https://zen.hlcyn.xyz/callback`) no longer fail with `400 redirect_uri must use this dashboard origin or loopback` when deployed behind Cloudflare Tunnel, reverse proxies, or loopback forwarders.
   - Inspects `x-forwarded-host`, `x-forwarded-proto`, `cf-visitor`, and `NEXT_PUBLIC_BASE_URL` alongside `request.url`, allowing same-host HTTP/HTTPS transitions while preserving strict checks against external attackers.

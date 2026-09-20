@@ -1,6 +1,7 @@
 import { PROVIDERS, PROVIDER_OAUTH } from "../../config/providers.js";
 import { OAUTH_ENDPOINTS, GITHUB_COPILOT, buildKimiHeaders } from "../../config/appConstants.js";
 import { proxyAwareFetch } from "../../utils/proxyFetch.js";
+import { parseTimeMs } from "../oauthCredentialManager.js";
 import { dedupRefresh } from "./dedup.js";
 
 let _xaiServiceSingleton = null;
@@ -665,10 +666,9 @@ export async function refreshTraeToken(refreshToken, credentials, log) {
       const newRefresh = result?.RefreshToken || result?.refreshToken || refreshToken;
       const expiresAt = result?.ExpiresAt || result?.expiresAt;
       let expiresIn;
-      if (typeof expiresAt === "number") {
-        expiresIn = Math.max(1, expiresAt - Math.floor(Date.now() / 1000));
-      } else if (typeof expiresAt === "string") {
-        const ms = new Date(expiresAt).getTime() - Date.now();
+      const parsedExpiryMs = parseTimeMs(expiresAt);
+      if (parsedExpiryMs) {
+        const ms = parsedExpiryMs - Date.now();
         expiresIn = ms > 0 ? Math.floor(ms / 1000) : undefined;
       }
 

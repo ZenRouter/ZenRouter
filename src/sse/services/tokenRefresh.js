@@ -172,7 +172,8 @@ export async function updateProviderCredentials(connectionId, newCredentials) {
       const expiresAt = normalizeExpiresAt(newCredentials.expiresAt);
       if (expiresAt) {
         updates.expiresAt = expiresAt;
-        updates.expiresIn = Math.max(1, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
+        const expiresMs = parseTimeMs(expiresAt);
+        if (expiresMs) updates.expiresIn = Math.max(1, Math.floor((expiresMs - Date.now()) / 1000));
       }
     }
     if (newCredentials.providerSpecificData) {
@@ -227,7 +228,7 @@ export async function checkAndRefreshToken(provider, credentials, options = {}) 
 
   // ── 1. Regular access-token expiry ────────────────────────────────────────
   if (force || _shouldRefreshCredentials(provider, creds)) {
-    const expiresAt = creds.expiresAt ? new Date(creds.expiresAt).getTime() : null;
+    const expiresAt = parseTimeMs(creds.expiresAt);
     const remaining = expiresAt ? expiresAt - Date.now() : null;
     const refreshLead = _getRefreshLeadMs(provider);
 

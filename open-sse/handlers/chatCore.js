@@ -33,6 +33,7 @@ import { defaultClaudeToolType, shouldDefaultClaudeToolType } from "../translato
 import { clientRequestedStreaming } from "./chatCore/streamMode.js";
 import { resolveSessionId } from "../utils/sessionManager.js";
 import { normalizeToolSchemasForProvider } from "../utils/toolSchemaCompatibility.js";
+import { parseTimeMs } from "../services/oauthCredentialManager.js";
 
 /**
  * Core chat handler - shared between SSE and Worker
@@ -506,5 +507,6 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
 
 export function isTokenExpiringSoon(expiresAt, bufferMs = 5 * 60 * 1000) {
   if (!expiresAt) return false;
-  return new Date(expiresAt).getTime() - Date.now() < bufferMs;
+  const expiryMs = parseTimeMs(expiresAt);
+  return expiryMs !== null && expiryMs - Date.now() < bufferMs;
 }
