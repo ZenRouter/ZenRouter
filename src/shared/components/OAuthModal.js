@@ -631,14 +631,31 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         return;
       }
 
-      const url = new URL(input);
-      const code = url.searchParams.get("code");
-      const token = url.searchParams.get("token");
-      const state = url.searchParams.get("state");
-      const errorParam = url.searchParams.get("error");
+      let code = null;
+      let token = null;
+      let state = authData?.state || null;
 
-      if (errorParam) {
-        throw new Error(url.searchParams.get("error_description") || errorParam);
+      if (input.includes("://")) {
+        const url = new URL(input);
+        code = url.searchParams.get("code");
+        token = url.searchParams.get("token");
+        state = url.searchParams.get("state") || state;
+        const errorParam = url.searchParams.get("error");
+        if (errorParam) {
+          throw new Error(url.searchParams.get("error_description") || errorParam);
+        }
+      } else if (input.includes("code=")) {
+        const query = input.startsWith("?") ? input.slice(1) : input;
+        const params = new URLSearchParams(query);
+        code = params.get("code");
+        state = params.get("state") || state;
+        const errorParam = params.get("error");
+        if (errorParam) {
+          throw new Error(params.get("error_description") || errorParam);
+        }
+      } else {
+        // Raw authorization code pasted directly
+        code = input;
       }
 
       if (!code && !token) {

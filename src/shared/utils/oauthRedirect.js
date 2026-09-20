@@ -7,7 +7,6 @@
 // explicit instead of assuming every provider behaves the same.
 
 const PUBLIC_CALLBACK_PROVIDERS = new Set([
-  "claude",
   "cline",
   "clinepass",
   "gitlab",
@@ -51,9 +50,14 @@ export function resolveOAuthRedirectUri(provider, currentOrigin) {
     return new URL("/callback", origin.origin).toString();
   }
 
-  // Installed-app OAuth clients (notably Google/Antigravity/Gemini CLI)
-  // generally whitelist loopback and reject arbitrary public domains.
-  const port = origin.port || (origin.protocol === "https:" ? "443" : "80");
+  // Installed-app OAuth clients (notably Claude Code CLI, Google Antigravity, Gemini CLI)
+  // whitelist loopback and reject arbitrary public domains with "Redirect URI is not supported".
+  // If the dashboard itself runs on loopback, bind to its port for automatic popup messages;
+  // if accessed remotely (e.g. over a public tunnel/domain), use port 8080 so the URL matches
+  // the provider's registered loopback callback for manual code exchange.
+  const port = isLoopbackOAuthOrigin(origin.origin)
+    ? (origin.port || (origin.protocol === "https:" ? "443" : "80"))
+    : "8080";
   return `http://localhost:${port}/callback`;
 }
 

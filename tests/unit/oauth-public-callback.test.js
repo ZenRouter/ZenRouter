@@ -13,7 +13,7 @@ import {
 } from "../../src/app/api/oauth/[provider]/[action]/route.js";
 
 describe("smart OAuth callback routing (#4054)", () => {
-  it.each(["claude", "cline", "clinepass", "gitlab", "iflow", "kimchi"])(
+  it.each(["cline", "clinepass", "gitlab", "iflow", "kimchi"])(
     "%s returns to the current public domain",
     (provider) => {
       expect(supportsPublicOAuthCallback(provider)).toBe(true);
@@ -35,12 +35,15 @@ describe("smart OAuth callback routing (#4054)", () => {
     );
   });
 
-  it("retains loopback for installed-app Google OAuth providers", () => {
-    expect(resolveOAuthRedirectUri("antigravity", "https://ai.example.com")).toBe(
-      "http://localhost:443/callback",
+  it("retains loopback with port 8080 on remote access for installed-app OAuth providers (Claude, Antigravity, Gemini)", () => {
+    expect(resolveOAuthRedirectUri("claude", "https://ai.example.com")).toBe(
+      "http://localhost:8080/callback",
     );
-    expect(resolveOAuthRedirectUri("gemini-cli", "https://ai.example.com:8443")).toBe(
-      "http://localhost:8443/callback",
+    expect(resolveOAuthRedirectUri("antigravity", "https://ai.example.com")).toBe(
+      "http://localhost:8080/callback",
+    );
+    expect(resolveOAuthRedirectUri("gemini-cli", "https://ai.example.com")).toBe(
+      "http://localhost:8080/callback",
     );
   });
 

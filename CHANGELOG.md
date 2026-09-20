@@ -41,6 +41,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Preserved major API stability bounds (`next` on 16.3.5 line, `chalk` 5, `http-proxy-middleware` 3, `socks-proxy-agent` 8) to prevent runtime breaking changes.
 
 #### OAuth / Tunnel Callback Normalization
+- **fix(oauth): restrict public domain callback to web-registered providers only (#4054)**
+  - Removed `claude` from public callback list since Anthropic's official Claude Code CLI OAuth client (`9d1c250a-e61b-44d9-88ed-5944d1962f5e`) only permits loopback URLs, throwing `Redirect URI is not supported by client` on public domains.
+  - When accessed remotely over HTTPS/tunnel, installed-app providers (Claude, Antigravity, Gemini CLI) now default to `http://localhost:8080/callback` (rather than port 443) and support flexible manual code/URL pasting.
 - **fix(oauth): support numeric epoch timestamps in proactive token refresh (#4000)**
   - When `expiresAt` is stored or imported as a numeric string (epoch ms or seconds), `parseTimeMs` normalizes it safely across `tokenRefresh.js`, `chatCore.js`, and executor providers instead of producing `Invalid Date` / `NaN`, preventing silent refresh failures.
 - **fix(oauth): support TLS-terminating proxies, cloudflared tunnels, and loopback aliases in redirect_uri validation**
