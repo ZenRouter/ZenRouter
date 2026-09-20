@@ -5,6 +5,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-09-20
+
 ### Added / Fixed
 
 #### Stream & SSE Enhancements
