@@ -325,28 +325,47 @@ export default function ModelSelectModal({
         const displayName = matchedNode?.name || connection?.name || providerInfo.name;
         const nodePrefix = connection?.providerSpecificData?.prefix || matchedNode?.prefix || providerId;
 
-        // Aliases are stored using the raw providerId as key (e.g. "openai-compatible-chat-<uuid>/glm-4.7"),
-        // so we must filter by providerId, not by the display prefix.
+        // Aliases can be stored using raw providerId or nodePrefix
         const nodeModels = Object.entries(modelAliases)
-          .filter(([, fullModel]) => fullModel.startsWith(`${providerId}/`))
-          .map(([aliasName, fullModel]) => ({
-            id: fullModel.replace(`${providerId}/`, ""),
-            name: aliasName,
-            value: `${nodePrefix}/${fullModel.replace(`${providerId}/`, "")}`,
-          }));
+          .filter(([, fullModel]) => fullModel.startsWith(`${providerId}/`) || (nodePrefix && fullModel.startsWith(`${nodePrefix}/`)))
+          .map(([aliasName, fullModel]) => {
+            const modelId = fullModel.startsWith(`${providerId}/`)
+              ? fullModel.slice(providerId.length + 1)
+              : fullModel.slice(nodePrefix.length + 1);
+            return {
+              id: modelId,
+              name: aliasName,
+              value: `${nodePrefix}/${modelId}`,
+            };
+          });
 
         // Merge custom models registered via /api/models/custom for this provider
-        // providerAlias in DB uses the raw providerId, not the display prefix
+        // providerAlias in DB may use either the raw providerId or display prefix
         const registeredCustom = customModels
-          .filter((m) => m.providerAlias === providerId)
+          .filter((m) => m.providerAlias === providerId || (nodePrefix && m.providerAlias === nodePrefix))
           .map((m) => ({
             id: m.id,
             name: m.name || m.id,
             value: `${nodePrefix}/${m.id}`,
             isCustom: true,
           }));
-        const seen = new Set(nodeModels.map((m) => m.value));
-        const mergedModels = [...nodeModels, ...registeredCustom.filter((m) => !seen.has(m.value))];
+
+        // Merge live-discovered models from the provider endpoint (e.g. Ollama, LM Studio, vLLM) (#4177)
+        const liveModels = (liveModelsByProvider[providerId] || []).map((m) => ({
+          id: m.id,
+          name: m.name || m.id,
+          value: `${nodePrefix}/${m.id}`,
+          isCustom: true,
+        }));
+
+        const seen = new Set();
+        const mergedModels = [];
+        for (const m of [...nodeModels, ...registeredCustom, ...liveModels]) {
+          if (!seen.has(m.value)) {
+            seen.add(m.value);
+            mergedModels.push(m);
+          }
+        }
 
         // Always show compatible providers that are connected, even with no aliases.
         // When no aliases exist, show a placeholder so users know it's available.

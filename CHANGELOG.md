@@ -42,6 +42,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Preserves `strict: true` property on tool definitions when translating OpenAI tools to Claude format.
   - Preserves `role: "developer"` when target provider is OpenAI, only normalizing to `"system"` for providers that reject it.
 
+#### Custom Provider Live Model Discovery in Combos
+- **fix(combos): display live-discovered models from local and custom providers in Combo selector (#4177)**
+  - Newly configured custom providers (such as Ollama, vLLM, or LM Studio) had live models fetched by the dashboard, but the Combo model selector only inspected manual aliases and registered custom models, omitting live models.
+  - Merged `liveModelsByProvider` into custom provider model groups and supported aliases keyed by either `nodePrefix` or raw `providerId`.
+
+
 
 #### Claude Code Auto-Compaction & 1M Context
 - **feat(claude-code): drive auto-compact window via `CLAUDE_CODE_AUTO_COMPACT_WINDOW` and add 1M-context toggle**
