@@ -85,13 +85,29 @@ export function stripUnsupportedParams(provider, model, body) {
       }
       delete body.max_tokens;
     }
-    // CF Workers AI oneOf root schema only accepts content as plain string (#1926)
+    // CF Workers AI oneOf root schema only accepts content as plain string (#1926, #4180)
+    // and strictly requires each message to have both string 'role' and string 'content'.
     if (rule.flattenContent && Array.isArray(body.messages)) {
       for (const msg of body.messages) {
-        if (msg && Array.isArray(msg.content)) {
+        if (!msg || typeof msg !== "object") continue;
+        if (msg.role === "tool") {
+          msg.role = "user";
+        }
+        if (Array.isArray(msg.content)) {
           msg.content = msg.content
-            .map(b => (b?.type === "text" && typeof b.text === "string") ? b.text : "")
+            .map((b) => {
+              if (typeof b === "string") return b;
+              if (typeof b?.text === "string") return b.text;
+              if (typeof b?.input_text === "string") return b.input_text;
+              if (typeof b?.content === "string") return b.content;
+              if (Array.isArray(b?.content)) {
+                return b.content.map((c) => (typeof c === "string" ? c : c?.text || "")).join("");
+              }
+              return "";
+            })
             .join("");
+        } else if (msg.content == null || typeof msg.content !== "string") {
+          msg.content = "";
         }
       }
     }

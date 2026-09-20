@@ -27,6 +27,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Strips `encrypted`, `cache_control`, `strict`, `$id`, and `example` from tool schemas before sending to Google Gemini / Antigravity, preventing 400 `INVALID_ARGUMENT` during agent tool calling.
   - Hardens object schema placeholder checks against non-object or array `properties`.
 
+#### Cloudflare Workers AI Array Content & Schema Fix
+- **fix(cloudflare-ai): normalize array message content, enforce string content, and alias `@cf` prefix (#1926, #4180)**
+  - Cloudflare Workers AI models (such as `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b`) reject array message content with HTTP 400 `Type mismatch of '/messages/N/content', 'array' not in 'string'` and `required properties at '/messages/N' are 'role,content'`.
+  - Added `@cf` to aliases in `cloudflare-ai.js` so `@cf/...` model references trigger `flattenContent`.
+  - Normalizes array content blocks (including raw strings and `input_text`), ensures `content` is never null or undefined, and rewrites `role: "tool"` to `"user"`.
+
+
 #### Claude Code Auto-Compaction & 1M Context
 - **feat(claude-code): drive auto-compact window via `CLAUDE_CODE_AUTO_COMPACT_WINDOW` and add 1M-context toggle**
   - Replaces obsolete `CLAUDE_CODE_MAX_CONTEXT_TOKENS` with `CLAUDE_CODE_AUTO_COMPACT_WINDOW` so Claude Code triggers compaction at the intended threshold instead of ignoring the setting for recognized models.

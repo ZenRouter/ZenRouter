@@ -5,6 +5,7 @@ export default {
   alias: "cloudflare-ai",
   aliases: [
     "cf",
+    "@cf",
   ],
   uiAlias: "cf",
   display: {
