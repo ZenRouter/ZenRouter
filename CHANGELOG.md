@@ -8,6 +8,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ### Added / Fixed
 
 #### Gateway & Routing Reliability
+- **fix(combos): preserve explicit Fallback strategy override on combos (#4094)**
+  - When explicitly selecting Fallback on a combo, the override is now persisted rather than pruned from `comboStrategies`, preventing combos from silently inheriting the global Round Robin routing strategy.
 - **fix(api): default `stream` to `false` when omitted on `/v1/chat/completions` (#4122)**
   - Adheres strictly to OpenAI Chat Completions API specification where `stream` defaults to `false`. Requests without the `stream` parameter now return a standard non-streaming `chat.completion` JSON object rather than unexpected SSE stream chunks, preventing downstream JSON parse failures.
 
