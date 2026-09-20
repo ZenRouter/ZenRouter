@@ -5,6 +5,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-09-20
+
+### Changed / Reverted
+
+#### Standard 9Router OAuth Architecture Alignment
+- **revert(oauth): restore standard upstream 9Router OAuth flow and modal behavior**
+  - Reverted experimental tunnel/public domain OAuth callback routing in `OAuthModal.js` and `/api/oauth/[provider]/[action]/route.js`.
+  - Restored 100% standard upstream 9Router behavior: loopback port callback bindings (`http://localhost:${appPort}/callback`, fixed ports for Codex 1455 and xAI 56121), direct popup/manual paste fallbacks, and upstream route validation.
+  - Eliminated callback URI mismatch errors (`Redirect URI is not supported by client`) caused by custom public domain redirections on installed-app clients (Claude Code CLI, Google Antigravity/Gemini).
+
 ## [0.7.2] - 2026-09-20
 
 ### Added / Fixed
@@ -40,15 +50,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Updated `cli/package.json` with `esbuild` `^0.28.2` and aligned React versions to `19.2.4`.
   - Preserved major API stability bounds (`next` on 16.3.5 line, `chalk` 5, `http-proxy-middleware` 3, `socks-proxy-agent` 8) to prevent runtime breaking changes.
 
-#### OAuth / Tunnel Callback Normalization
-- **fix(oauth): restrict public domain callback to web-registered providers only (#4054)**
-  - Removed `claude` from public callback list since Anthropic's official Claude Code CLI OAuth client (`9d1c250a-e61b-44d9-88ed-5944d1962f5e`) only permits loopback URLs, throwing `Redirect URI is not supported by client` on public domains.
-  - When accessed remotely over HTTPS/tunnel, installed-app providers (Claude, Antigravity, Gemini CLI) now default to `http://localhost:8080/callback` (rather than port 443) and support flexible manual code/URL pasting.
+#### OAuth Token Refresh
 - **fix(oauth): support numeric epoch timestamps in proactive token refresh (#4000)**
   - When `expiresAt` is stored or imported as a numeric string (epoch ms or seconds), `parseTimeMs` normalizes it safely across `tokenRefresh.js`, `chatCore.js`, and executor providers instead of producing `Invalid Date` / `NaN`, preventing silent refresh failures.
-- **fix(oauth): support TLS-terminating proxies, cloudflared tunnels, and loopback aliases in redirect_uri validation**
-  - Public OAuth callbacks returning to `https://` URLs (e.g. `https://zen.hlcyn.xyz/callback`) no longer fail with `400 redirect_uri must use this dashboard origin or loopback` when deployed behind Cloudflare Tunnel, reverse proxies, or loopback forwarders.
-  - Inspects `x-forwarded-host`, `x-forwarded-proto`, `cf-visitor`, and `NEXT_PUBLIC_BASE_URL` alongside `request.url`, allowing same-host HTTP/HTTPS transitions while preserving strict checks against external attackers.
 
 #### Antigravity Fake 429 & Account Strike Prevention
 - **fix(antigravity): strip Claude Code billing header from system prompts (#4138, #4139)**
