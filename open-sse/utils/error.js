@@ -55,13 +55,17 @@ export function buildErrorBody(statusCode, message, diagnostics = {}) {
  * @param {string} message - Error message
  * @returns {Response} HTTP Response object
  */
-export function errorResponse(statusCode, message, diagnostics = {}) {
+export function errorResponse(statusCode, message, diagnostics = {}, retryAfterSec = null) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+  };
+  if (retryAfterSec && Number.isFinite(retryAfterSec) && retryAfterSec > 0) {
+    headers["Retry-After"] = String(Math.ceil(retryAfterSec));
+  }
   return new Response(JSON.stringify(buildErrorBody(statusCode, message, diagnostics)), {
     status: statusCode,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*"
-    }
+    headers,
   });
 }
 
@@ -216,12 +220,15 @@ function safeRequestId(response, value) {
  * @returns {{ success: false, status: number, error: string, response: Response, resetsAtMs?: number }}
  */
 export function createErrorResult(statusCode, message, resetsAtMs, diagnostics = {}) {
+  const retryAfterSec = resetsAtMs && resetsAtMs > Date.now()
+    ? Math.max(1, Math.ceil((resetsAtMs - Date.now()) / 1000))
+    : null;
   return {
     success: false,
     status: statusCode,
     error: message,
     resetsAtMs,
-    response: errorResponse(statusCode, message, diagnostics)
+    response: errorResponse(statusCode, message, diagnostics, retryAfterSec)
   };
 }
 

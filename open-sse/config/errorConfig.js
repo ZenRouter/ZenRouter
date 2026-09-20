@@ -58,12 +58,14 @@ const COOLDOWN = {
  *   - backoff: true = use exponential backoff (rate limit)
  */
 export const ERROR_RULES = [
-  // --- Text-based rules (checked first, order = priority) ---
-  { text: "balance is at $0",         cooldownMs: COOLDOWN.extended },
-  { text: "balance_zero",             cooldownMs: COOLDOWN.extended },
-  { text: "insufficient balance",     cooldownMs: COOLDOWN.extended },
-  { text: "insufficient funds",       cooldownMs: COOLDOWN.extended },
-  { text: "no credentials",           cooldownMs: COOLDOWN.long },
+  // --- Terminal billing rules (checked first, order = priority) (#4147) ---
+  { text: "余额不足",                 cooldownMs: COOLDOWN.extended, terminal: true },
+  { text: "请充值",                   cooldownMs: COOLDOWN.extended, terminal: true },
+  { text: "balance is at $0",         cooldownMs: COOLDOWN.extended, terminal: true },
+  { text: "balance_zero",             cooldownMs: COOLDOWN.extended, terminal: true },
+  { text: "insufficient balance",     cooldownMs: COOLDOWN.extended, terminal: true },
+  { text: "insufficient funds",       cooldownMs: COOLDOWN.extended, terminal: true },
+  { text: "no credentials",           cooldownMs: COOLDOWN.long, terminal: true },
   { text: "request not allowed",      cooldownMs: COOLDOWN.short },
   { text: "improperly formed request", cooldownMs: COOLDOWN.long },
   { text: "rate limit",               backoff: true },
@@ -81,8 +83,8 @@ export const ERROR_RULES = [
   { text: "commandcode error",         cooldownMs: COOLDOWN.short },
 
   // --- Status-based rules (fallback when text doesn't match) ---
-  { status: 401, cooldownMs: COOLDOWN.long },
-  { status: 402, cooldownMs: COOLDOWN.extended },
+  { status: 401, cooldownMs: COOLDOWN.long, terminal: true },
+  { status: 402, cooldownMs: COOLDOWN.extended, terminal: true },
   { status: 403, cooldownMs: COOLDOWN.long },
   { status: 404, cooldownMs: COOLDOWN.long },
   { status: 429, backoff: true },

@@ -8,6 +8,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ### Added / Fixed
 
 #### Gateway & Routing Reliability
+- **fix(errors): forward `Retry-After` header and classify terminal billing errors (#4147)**
+  - Synthesizes and forwards `Retry-After: <seconds>` headers on 429 rate limit error responses to prevent client hammering.
+  - Classifies permanent billing errors (`余额不足`, `请充值`, `insufficient balance`, HTTP 402) as `terminal: true` to halt futile retry loops.
 - **fix(combos): preserve explicit Fallback strategy override on combos (#4094)**
   - When explicitly selecting Fallback on a combo, the override is now persisted rather than pruned from `comboStrategies`, preventing combos from silently inheriting the global Round Robin routing strategy.
 - **fix(api): default `stream` to `false` when omitted on `/v1/chat/completions` (#4122)**
