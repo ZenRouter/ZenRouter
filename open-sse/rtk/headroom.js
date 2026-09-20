@@ -252,6 +252,74 @@ function textFromHeadroomMessage(message) {
   return parts.length > 0 ? parts.join("\n") : null;
 }
 
+function collectGeminiHeadroomMessages(body) {
+  const contents = body?.request?.contents || body?.contents;
+  if (!Array.isArray(contents) || contents.length === 0) return null;
+
+  const messages = [];
+  const targets = [];
+
+  for (const turn of contents) {
+    if (!turn || !Array.isArray(turn.parts)) continue;
+    const role = turn.role === "model" ? "assistant" : "user";
+
+    for (const part of turn.parts) {
+      if (!part || typeof part !== "object") continue;
+
+      // 1. Plain text parts
+      if (typeof part.text === "string" && part.text.trim()) {
+        messages.push({ role, content: part.text });
+        targets.push({ object: part, key: "text" });
+      }
+      // 2. Function responses (tool execution outputs)
+      else if (part.functionResponse && typeof part.functionResponse === "object") {
+        const resp = part.functionResponse.response;
+        if (resp && typeof resp === "object") {
+          // Look for text-bearing fields (output, result, content, text)
+          for (const key of ["output", "result", "content", "text"]) {
+            if (typeof resp[key] === "string" && resp[key].trim()) {
+              messages.push({ role: "tool", content: resp[key] });
+              targets.push({ object: resp, key });
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return messages.length > 0 ? { messages, targets } : null;
+}
+
+function applyGeminiHeadroomMessages(projection, compressedMessages, diagnostics) {
+  if (!Array.isArray(compressedMessages) || compressedMessages.length !== projection.messages.length) {
+    setDiagnostic(diagnostics, "proxy response did not match Gemini message count");
+    return false;
+  }
+
+  const updates = [];
+  for (let i = 0; i < projection.messages.length; i++) {
+    const expected = projection.messages[i];
+    const actual = compressedMessages[i];
+    if (!actual || actual.role !== expected.role) {
+      setDiagnostic(diagnostics, "proxy response did not preserve Gemini message order/role");
+      return false;
+    }
+
+    const text = textFromHeadroomMessage(actual);
+    if (text === null) {
+      setDiagnostic(diagnostics, "proxy response missing Gemini text content");
+      return false;
+    }
+    updates.push({ target: projection.targets[i], text });
+  }
+
+  for (const update of updates) {
+    update.target.object[update.target.key] = update.text;
+  }
+  return true;
+}
+
 function applyKiroHeadroomMessages(projection, compressedMessages, diagnostics) {
   if (!Array.isArray(compressedMessages) || compressedMessages.length !== projection.messages.length) {
     setDiagnostic(diagnostics, "proxy response did not match Kiro message count");
@@ -381,6 +449,23 @@ export async function compressWithHeadroom(body, { enabled, url, model, format, 
       return data;
     }
 
+    // Gemini / Antigravity shape: request.contents[].parts[] or contents[].parts[]
+    // Project plain text and functionResponse text leaves to messages[], then copy back (#4070).
+    const isGeminiShape = format === "gemini" || format === "antigravity"
+      || Array.isArray(body.request?.contents) || Array.isArray(body.contents);
+    if (isGeminiShape) {
+      const projection = collectGeminiHeadroomMessages(body);
+      if (!projection) {
+        setDiagnostic(diagnostics, "Gemini request did not project to messages[]");
+        return null;
+      }
+      const data = await callCompress(url, projection.messages, model, timeoutMs, compressUserMessages, diagnostics || {});
+      if (!data) return null;
+      if (!applyGeminiHeadroomMessages(projection, data.messages, diagnostics)) return null;
+      if (diagnostics) diagnostics.after = captureSizeSnapshot(body);
+      return data;
+    }
+
     // OpenAI shape: messages/input go straight to the proxy.
     const key = Array.isArray(body.messages) ? "messages"
       : Array.isArray(body.input) ? "input"
@@ -402,9 +487,9 @@ export async function compressWithHeadroom(body, { enabled, url, model, format, 
 
 export function formatHeadroomLog(stats) {
   if (!stats) return null;
-  const before = stats.tokens_before || 0;
-  const after = stats.tokens_after || 0;
-  const delta = stats.tokens_saved || 0;
+  const before = stats.tokens_before ?? stats.original_tokens ?? stats.stats?.original_tokens ?? stats.stats?.tokens_before ?? 0;
+  const after = stats.tokens_after ?? stats.compressed_tokens ?? stats.stats?.compressed_tokens ?? stats.stats?.tokens_after ?? 0;
+  const delta = stats.tokens_saved ?? stats.saved_tokens ?? stats.stats?.saved_tokens ?? stats.stats?.tokens_saved ?? (before > after ? before - after : 0);
   const pct = before > 0 ? ((delta / before) * 100).toFixed(1) : "0";
   return `reported token delta=${delta} before=${before}${after ? ` after=${after}` : ""} (${pct}%)`.trim();
 }

@@ -195,7 +195,7 @@ describe("compressWithHeadroom", () => {
 
   it("skips unknown shapes", async () => {
     global.fetch = vi.fn();
-    const body = { contents: [{ parts: [{ text: "long" }] }] };
+    const body = { unknownField: "long text that has no messages, input, or contents" };
 
     const stats = await compressWithHeadroom(body, { enabled: true, url: "http://localhost:8787" });
 

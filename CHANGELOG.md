@@ -57,6 +57,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 - **fix(commandcode): retry on transient stream errors and avoid fake stop chunks (upstream #092c84e)**
   - Retries transient 502/503/504 stream responses on CommandCode upstreams and throws real stream errors instead of emitting fake completion stop chunks.
 
+#### Token Saver Modules Synchronization & Upgrades
+- **feat(headroom): add Gemini and Antigravity request envelope compression adapter (#4070)**
+  - Projects plain text and `functionResponse` execution outputs from `request.contents[].parts[]` into temporary messages for Headroom `/v1/compress` and writes back compressed text in-place, eliminating "unsupported antigravity request shape" skips.
+  - Normalizes reported tokens from alternative `/v1/compress` endpoints (e.g. lean-ctx `#4120`) supporting `original_tokens` and nested stats formats.
+- **feat(caveman): synchronize rules with official Caveman v2.7.0**
+  - Incorporates ASD-STE100 Simplified Technical English standards (one idea per sentence, max 20 words, active voice, present tense, imperative directives).
+  - Explicitly forbids dropping essential negations (`not/never/no/only/except`), fake broken grammar insertion, invented abbreviations (`cfg/impl/req/res/fn`), and causal arrow characters (`→`), while firing tool calls directly with zero preamble.
+- **feat(ponytail): synchronize rules with official Ponytail v4.10.0**
+  - Incorporates the complete 7-rung ladder including codebase pattern reuse as Rung 2 to prevent common helper re-implementation.
+  - Adds the root-cause bug fix directive (fixing shared callers once rather than patching symptoms) and mandates comprehensive code reading before picking a ladder rung.
+- **feat(rtk): import official TOML output filters (`df`, `du`, `jq`, `ollama`, `gcc`)**
+  - Synchronized from upstream `rtk-ai/rtk` to compact CLI outputs and reduce input token consumption across more development tools.
+
+
 
 
 
