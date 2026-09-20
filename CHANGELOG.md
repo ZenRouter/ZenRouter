@@ -12,6 +12,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Public OAuth callbacks returning to `https://` URLs (e.g. `https://zen.hlcyn.xyz/callback`) no longer fail with `400 redirect_uri must use this dashboard origin or loopback` when deployed behind Cloudflare Tunnel, reverse proxies, or loopback forwarders.
   - Inspects `x-forwarded-host`, `x-forwarded-proto`, `cf-visitor`, and `NEXT_PUBLIC_BASE_URL` alongside `request.url`, allowing same-host HTTP/HTTPS transitions while preserving strict checks against external attackers.
 
+#### Antigravity Fake 429 & Account Strike Prevention
+- **fix(antigravity): strip Claude Code billing header from system prompts (#4138, #4139)**
+  - Claude Code prepends `x-anthropic-billing-header: ...` to system prompts. When passed through OpenAI-format translation to Antigravity, Google answers with fake `429 RESOURCE_EXHAUSTED`, triggering strike blocks on healthy accounts.
+  - Added regex stripper to `ANTIGRAVITY_PROMPT_REWRITES` in `open-sse/config/appConstants.js`.
+
 
 ## [0.7.1] - 2026-09-18
 
