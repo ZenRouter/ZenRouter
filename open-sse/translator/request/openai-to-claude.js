@@ -22,15 +22,16 @@ export function normalizeClaudeInputSchema(rawSchema) {
   const schema = { ...rawSchema };
   schema.type = "object";
 
-  if (!schema.properties || typeof schema.properties !== "object" || Array.isArray(schema.properties)) {
-    schema.properties = {};
-  }
-
   const branches = schema.anyOf || schema.oneOf || schema.allOf;
-  if (Array.isArray(branches) && Object.keys(schema.properties).length === 0) {
-    for (const branch of branches) {
-      if (branch && typeof branch === "object" && branch.properties && typeof branch.properties === "object") {
-        Object.assign(schema.properties, branch.properties);
+  if (Array.isArray(branches)) {
+    if (!schema.properties || typeof schema.properties !== "object" || Array.isArray(schema.properties)) {
+      schema.properties = {};
+    }
+    if (Object.keys(schema.properties).length === 0) {
+      for (const branch of branches) {
+        if (branch && typeof branch === "object" && branch.properties && typeof branch.properties === "object") {
+          Object.assign(schema.properties, branch.properties);
+        }
       }
     }
   }

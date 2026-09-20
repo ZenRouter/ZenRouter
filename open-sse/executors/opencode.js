@@ -115,10 +115,14 @@ function normalizeOpencodeReasoning(model, body) {
     else if (supportedLevels.includes("xhigh")) effort = "xhigh";
   }
 
-  // Muse Spark models on OpenCode free tier only accept minimal|low|medium|high;
-  // xhigh/max/ultra triggers 500/400 from the Console (#4149).
+  // Muse Spark models on OpenCode free tier with external tools (e.g. Claude Code)
+  // reject xhigh with HTTP 500 server_error (#4149). Clamp to high when custom tools present.
   if (cleanModel.includes("muse-spark")) {
-    if (effort === "xhigh" || effort === "max" || effort === "ultra") {
+    const hasExternalTools = Array.isArray(body.tools) && body.tools.some((t) => {
+      const name = t.name || t.function?.name;
+      return name && name !== "bash" && name !== "read";
+    });
+    if (hasExternalTools && (effort === "xhigh" || effort === "max" || effort === "ultra")) {
       effort = "high";
     }
   }

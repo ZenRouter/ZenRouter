@@ -17,7 +17,7 @@ describe("Claude tool input_schema normalization (#4075)", () => {
 
   it("handles empty or missing schema safely", () => {
     expect(normalizeClaudeInputSchema(null)).toEqual({ type: "object", properties: {}, required: [] });
-    expect(normalizeClaudeInputSchema({})).toEqual({ type: "object", properties: {} });
+    expect(normalizeClaudeInputSchema({})).toEqual({ type: "object" });
   });
 
   it("leaves standard object schema intact", () => {
