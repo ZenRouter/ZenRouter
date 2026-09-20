@@ -37,12 +37,68 @@ import {
 import { detectIdeInstalled } from "@/lib/oauth/utils/ideDetect";
 import { ZED_HOSTED_CONFIG } from "@/lib/oauth/constants/oauth";
 
-export function originOf(value) {
+const LOOPBACK_OAUTH_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+
+function canonicalOAuthHost(hostname) {
+  const host = String(hostname || "").toLowerCase().replace(/^\[|\]$/g, "");
+  return LOOPBACK_OAUTH_HOSTS.has(host) ? "localhost" : host;
+}
+
+// Normalize to scheme://host[:port] with loopback hosts unified, so
+// http://localhost:X ≡ http://127.0.0.1:X ≡ http://[::1]:X.
+export function normalizeOAuthOrigin(value) {
   try {
-    return new URL(value).origin;
+    const url = new URL(value);
+    const host = canonicalOAuthHost(url.hostname);
+    const bracketed = host.includes(":") && !host.startsWith("[") ? `[${host}]` : host;
+    // url.port is "" for default ports (80/443), matching URL.origin behavior.
+    return `${url.protocol}//${bracketed}${url.port ? `:${url.port}` : ""}`;
   } catch {
     return null;
   }
+}
+
+// All origins that count as "this dashboard" for a given request.
+// Behind a TLS-terminating reverse proxy (e.g. cloudflared → plain HTTP to
+// 127.0.0.1:20128) request.url shows http://public-host while the browser
+// uses https://public-host, so the public host is accepted under both
+// schemes plus any explicit forwarding signals. Truly foreign hosts
+// (evil.example, sibling subdomains) are still rejected.
+export function getDashboardOrigins(request) {
+  const origins = new Set();
+  const push = (value) => {
+    const normalized = normalizeOAuthOrigin(value);
+    if (normalized) origins.add(normalized);
+  };
+
+  let requestUrl = null;
+  try {
+    requestUrl = new URL(request.url);
+  } catch {
+    return origins;
+  }
+  push(requestUrl.origin);
+  // Same host, flipped scheme (proxy terminated TLS without x-forwarded-proto).
+  const flipped = new URL(requestUrl.toString());
+  flipped.protocol = flipped.protocol === "https:" ? "http:" : "https:";
+  push(flipped.origin);
+
+  const headers = request.headers;
+  const forwardedHost = headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  if (forwardedHost) {
+    const forwardedProto = headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+    const proto = forwardedProto === "http" || forwardedProto === "https" ? forwardedProto : requestUrl.protocol.replace(":", "");
+    push(`${proto}://${forwardedHost}`);
+  }
+  // Cloudflare edge/tunnel client-scheme signal (cloudflared does not send x-forwarded-proto).
+  try {
+    const scheme = JSON.parse(headers.get("cf-visitor") || "null")?.scheme;
+    if (scheme === "http" || scheme === "https") push(`${scheme}://${requestUrl.host}`);
+  } catch {
+    /* ignore malformed cf-visitor */
+  }
+  if (process.env.NEXT_PUBLIC_BASE_URL) push(process.env.NEXT_PUBLIC_BASE_URL);
+  return origins;
 }
 
 export function isLoopbackRedirectUri(value) {
@@ -54,12 +110,15 @@ export function isLoopbackRedirectUri(value) {
   }
 }
 
-// Public callbacks must return to the same origin that authorized the dashboard
-// request. This stops a forged /exchange body from sending a stolen code to a
-// different redirect URI. Fixed loopback providers are explicitly exempt.
+// Public callbacks must return to this dashboard (same host as the request,
+// allowing for TLS-terminating proxies and explicit forwarding headers).
+// This stops a forged /exchange body from sending a stolen code to a
+// different host. Loopback callbacks are explicitly exempt.
 export function redirectUriMatchesRequest(request, redirectUri) {
   if (isLoopbackRedirectUri(redirectUri)) return true;
-  return originOf(redirectUri) === originOf(request.url);
+  const normalized = normalizeOAuthOrigin(redirectUri);
+  if (!normalized) return false;
+  return getDashboardOrigins(request).has(normalized);
 }
 
 async function completeXaiManualCode(code, state) {

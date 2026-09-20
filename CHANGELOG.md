@@ -5,6 +5,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### Added / Fixed
+
+#### OAuth / Tunnel Callback Normalization
+- **fix(oauth): support TLS-terminating proxies, cloudflared tunnels, and loopback aliases in redirect_uri validation**
+  - Public OAuth callbacks returning to `https://` URLs (e.g. `https://zen.hlcyn.xyz/callback`) no longer fail with `400 redirect_uri must use this dashboard origin or loopback` when deployed behind Cloudflare Tunnel, reverse proxies, or loopback forwarders.
+  - Inspects `x-forwarded-host`, `x-forwarded-proto`, `cf-visitor`, and `NEXT_PUBLIC_BASE_URL` alongside `request.url`, allowing same-host HTTP/HTTPS transitions while preserving strict checks against external attackers.
+
+
 ## [0.7.1] - 2026-09-18
 
 ### Added / Fixed
