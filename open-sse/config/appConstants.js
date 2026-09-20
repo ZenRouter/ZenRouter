@@ -176,6 +176,7 @@ export const CLAUDE_SYSTEM_PROMPT = "You are Claude Code, Anthropic's official C
 export const ANTIGRAVITY_PROMPT_REWRITES = [
   { from: /^x-anthropic-billing-header:[^\n]*(?:\r?\n)*/gim, to: "" },
   { from: "You are a Claude agent, built on Anthropic's Claude Agent SDK.", to: "" },
+  { from: /You are Hermes Agent,\s*(an intelligent AI assistant)(?: created by Nous Research)?\./gi, to: "You are Hermes Agent. You are $1." },
   { from: /opencode/gi, to: (m) => (m === "OpenCode" ? "Antigravity" : m === "OPENCODE" ? "ANTIGRAVITY" : "antigravity") },
   { from: /<(\/?)system[-_]conventions>/gi, to: "<$1conventions>" },
   { from: /<(\/?)system[-_]directive>/gi, to: "<$1instructions>" },

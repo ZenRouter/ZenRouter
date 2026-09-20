@@ -47,6 +47,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Newly configured custom providers (such as Ollama, vLLM, or LM Studio) had live models fetched by the dashboard, but the Combo model selector only inspected manual aliases and registered custom models, omitting live models.
   - Merged `liveModelsByProvider` into custom provider model groups and supported aliases keyed by either `nodePrefix` or raw `providerId`.
 
+#### Upstream Stability & Routing Cherry-Picks
+- **fix(auth): don't cool down an account for request-scoped 4xx client errors (upstream #20a43f5)**
+  - Client-side payload errors (400, 405, 413, 415, 422) without rate-limit or quota wording no longer trigger transient account cooldowns or lockout cascades, keeping healthy accounts available.
+- **fix(antigravity): sanitize Hermes agent identity in system prompts (upstream #f642295)**
+  - Rewrites Nous Research Hermes branding in system instructions to avoid triggering Google Cloud Code 429 quota locks.
+- **fix(codex): route bare `codex-auto-review` model to Codex provider (upstream #efc80ba, #4135)**
+  - Registers `codex-auto-review` in Codex registry and model prefix inference so Codex CLI's auto-review model routes to OAuth Codex instead of falling through to `openai` (which failed with 404).
+- **fix(commandcode): retry on transient stream errors and avoid fake stop chunks (upstream #092c84e)**
+  - Retries transient 502/503/504 stream responses on CommandCode upstreams and throws real stream errors instead of emitting fake completion stop chunks.
+
+
 
 
 #### Claude Code Auto-Compaction & 1M Context

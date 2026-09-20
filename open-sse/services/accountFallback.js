@@ -117,10 +117,13 @@ export function checkFallbackError(status, errorText, backoffLevel = 0, response
     }
   }
 
-  // Client payload errors (400 Bad Request, 422 Unprocessable Entity) without account-specific
-  // text matches (balance_zero, quota, rate limit, etc.) are invalid payloads or client issues,
-  // not account health failures. Do not trigger account fallback or lock healthy accounts.
-  if (status === 400 || status === 422) {
+  // Request-scoped client errors that matched no rule above: a 4xx caused by the
+  // request itself (context overflow, malformed body, payload too large, unsupported parameter)
+  // says nothing about credential health, so cooling the account down only removes a
+  // healthy connection from rotation (#20a43f5a2).
+  // Account-scoped statuses keep their rules above (401/402/403/404/429), and the
+  // text rules still win for rate-limit / quota / capacity wording.
+  if (status >= 400 && status < 500 && status !== 401 && status !== 402 && status !== 403 && status !== 429) {
     return { shouldFallback: false, cooldownMs: 0 };
   }
 
