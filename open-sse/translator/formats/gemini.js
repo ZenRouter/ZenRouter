@@ -15,19 +15,21 @@ export const UNSUPPORTED_SCHEMA_CONSTRAINTS = [
   // 2020-12 keywords with no Gemini equivalent
   "unevaluatedProperties", "unevaluatedItems", "contentSchema", "prefixItems",
   // Claude rejects these in VALIDATED mode
-  "default", "examples",
+  "default", "examples", "example",
   // JSON Schema meta keywords
-  "$schema", "$defs", "definitions", "const", "$ref", "$comment",
+  "$schema", "$defs", "definitions", "const", "$ref", "$comment", "$id",
   // Annotation keywords (rejected by Gemini/Antigravity - e.g. MCP tool schemas set these)
   "deprecated", "readOnly", "writeOnly",
   // Object validation keywords (not supported)
-  "additionalProperties", "propertyNames", "patternProperties", "enumDescriptions",
+  "additionalProperties", "propertyNames", "patternProperties", "enumDescriptions", "strict",
   // Complex schema keywords (handled by flattenAnyOfOneOf/mergeAllOf)
   "anyOf", "oneOf", "allOf", "not",
   // Dependency keywords (not supported)
   "dependencies", "dependentSchemas", "dependentRequired",
   // Other unsupported keywords
-  "title", "optional", "deprecated", "if", "then", "else", "contentMediaType", "contentEncoding",
+  "title", "optional", "if", "then", "else", "contentMediaType", "contentEncoding",
+  // Vendor-specific extensions from OpenAI / Anthropic / MCP / Cursor
+  "encrypted", "cache_control",
   // UI/Styling properties (from Cursor tools - NOT JSON Schema standard)
   "cornerRadius", "fillColor", "fontFamily", "fontSize", "fontWeight",
   "gap", "padding", "strokeColor", "strokeThickness", "textColor"
@@ -448,7 +450,7 @@ export function cleanJSONSchemaForAntigravity(schema) {
     }
 
     if (obj.type === "object") {
-      if (!obj.properties || Object.keys(obj.properties).length === 0) {
+      if (!obj.properties || typeof obj.properties !== "object" || Array.isArray(obj.properties) || Object.keys(obj.properties).length === 0) {
         obj.properties = {
           reason: {
             type: "string",

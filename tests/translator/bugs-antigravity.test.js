@@ -115,6 +115,41 @@ describe("Antigravity executor", () => {
     expect(query).toEqual({ type: "string", description: "Search query" });
   });
 
+  it("strips encrypted, cache_control, strict, $id, and example from tool schemas (#4169, #4170)", () => {
+    const out = new AntigravityExecutor().transformRequest("gemini-2.5-pro", {
+      request: {
+        contents: [{ role: "user", parts: [{ text: "hi" }] }],
+        tools: [{
+          functionDeclarations: [{
+            name: "test_tool",
+            description: "Test tool",
+            parameters: {
+              $id: "schema://test",
+              type: "object",
+              strict: true,
+              encrypted: true,
+              cache_control: { type: "ephemeral" },
+              properties: {
+                data: {
+                  type: "string",
+                  example: "sample",
+                  encrypted: true,
+                },
+              },
+            },
+          }],
+        }],
+      },
+    }, true, { projectId: "project-1", connectionId: "conn-1" });
+
+    const params = out.request.tools[0].functionDeclarations[0].parameters;
+    expect(params.$id).toBeUndefined();
+    expect(params.strict).toBeUndefined();
+    expect(params.encrypted).toBeUndefined();
+    expect(params.cache_control).toBeUndefined();
+    expect(params.properties.data).toEqual({ type: "string" });
+  });
+
   // executors/antigravity.js image-model branch — contents were rebuilt text-only,
   // dropping inlineData → /v1/images/generations with `image` degraded to text2img
   it("image model request keeps inlineData parts (edit input)", () => {

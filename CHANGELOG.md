@@ -22,6 +22,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - OpenCode's free tier console validates agentic presence by checking for lowercase `bash` and `read` tools; requests from external coding agents (Claude Code, Cline) with N tools or PascalCase tools were rejected with `403 FreeTierError`.
   - Injects `bash` and `read` decoy tools unconditionally while preserving caller tools and defaulting missing `tool_choice` safely.
 
+#### Gemini & Antigravity Tool Schema Sanitization
+- **fix(translator): sanitize unsupported schema constraints and normalize empty object properties (#4169, #4170)**
+  - Strips `encrypted`, `cache_control`, `strict`, `$id`, and `example` from tool schemas before sending to Google Gemini / Antigravity, preventing 400 `INVALID_ARGUMENT` during agent tool calling.
+  - Hardens object schema placeholder checks against non-object or array `properties`.
+
 
 ## [0.7.1] - 2026-09-18
 
