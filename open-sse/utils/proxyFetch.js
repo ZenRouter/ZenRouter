@@ -480,6 +480,11 @@ export async function proxyAwareFetch(url, options = {}, proxyOptions = null) {
   const envProxyUrl = connectionProxyUrl ? null : normalizeProxyUrl(getEnvProxyUrl(targetUrl));
   const proxyUrl = connectionProxyUrl || envProxyUrl;
 
+  // Strict Proxy: fail immediately if strictProxy is set but no proxy is resolved (#4007)
+  if (proxyOptions?.strictProxy === true && !proxyUrl && !vercelRelayUrl) {
+    throw new Error(`[ProxyFetch] Proxy required but no proxy URL configured for ${targetUrl} (strictProxy=true)`);
+  }
+
   // MITM DNS bypass: for known MITM-intercepted hosts, resolve real IP to avoid DNS spoof
   if (shouldBypassMitmDns(targetUrl) && !isMitmBypassOnCooldown(targetUrl)) {
     if (proxyUrl) {

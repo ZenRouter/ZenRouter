@@ -7,7 +7,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### Added / Fixed
 
+#### Proxy Security & Leak Prevention
+- **fix(security): enforce Strict Proxy on `/v1/chat/completions` to prevent IP leakage (#4007)**
+  - When `strictProxy: true` is configured, requests will fail immediately if the proxy is unreachable or if no proxy URL is resolved, completely preventing silent fallbacks to the machine's direct public IP.
+
 #### Dependency Stability Upgrades
+
 - **chore(deps): bump dependencies for runtime stability and security**
   - Updated `@xyflow/react` to `^12.11.6`, `jose` to `^6.2.12`, `undici` to `^7.29.1` (connection leak & proxy fixes), `marked` to `^18.0.13`, `material-symbols` to `^0.47.4`, `monaco-editor` to `^0.56.0`, `open` to `^11.0.4`, `uuid` to `^13.0.2`, `postcss` to `^8.5.28`, and `better-sqlite3` to `^12.11.1`.
   - Updated `cli/package.json` with `esbuild` `^0.28.2` and aligned React versions to `19.2.4`.
