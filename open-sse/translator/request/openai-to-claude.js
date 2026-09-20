@@ -13,6 +13,31 @@ import { getCapabilitiesForModel } from "../../providers/capabilities.js";
 // Previously "proxy_" was used but this is a detectable fingerprint difference.
 const CLAUDE_OAUTH_TOOL_PREFIX = "";
 
+// Normalize input schema to satisfy Anthropic requirement: input_schema.type MUST be "object" (#4075)
+export function normalizeClaudeInputSchema(rawSchema) {
+  if (!rawSchema || typeof rawSchema !== "object" || Array.isArray(rawSchema)) {
+    return { type: "object", properties: {}, required: [] };
+  }
+
+  const schema = { ...rawSchema };
+  schema.type = "object";
+
+  if (!schema.properties || typeof schema.properties !== "object" || Array.isArray(schema.properties)) {
+    schema.properties = {};
+  }
+
+  const branches = schema.anyOf || schema.oneOf || schema.allOf;
+  if (Array.isArray(branches) && Object.keys(schema.properties).length === 0) {
+    for (const branch of branches) {
+      if (branch && typeof branch === "object" && branch.properties && typeof branch.properties === "object") {
+        Object.assign(schema.properties, branch.properties);
+      }
+    }
+  }
+
+  return schema;
+}
+
 // Convert OpenAI request to Claude format
 export function openaiToClaudeRequest(model, body, stream) {
   // Tool name mapping for Claude OAuth (capitalizedName → originalName)
@@ -174,7 +199,7 @@ Respond ONLY with the JSON object, no other text.`);
       const claudeTool = {
         name: toolName,
         description: toolData.description || "",
-        input_schema: toolData.parameters || toolData.input_schema || { type: "object", properties: {}, required: [] }
+        input_schema: normalizeClaudeInputSchema(toolData.parameters || toolData.input_schema),
       };
       if (toolData.strict !== undefined) {
         claudeTool.strict = Boolean(toolData.strict);
