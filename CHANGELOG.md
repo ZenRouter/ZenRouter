@@ -17,6 +17,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Claude Code prepends `x-anthropic-billing-header: ...` to system prompts. When passed through OpenAI-format translation to Antigravity, Google answers with fake `429 RESOURCE_EXHAUSTED`, triggering strike blocks on healthy accounts.
   - Added regex stripper to `ANTIGRAVITY_PROMPT_REWRITES` in `open-sse/config/appConstants.js`.
 
+#### OpenCode Free Tier 403 FreeTierError Prevention
+- **fix(opencode): inject cloaked decoy tools on all free tier requests with or without tools (#4101, #4146, #4165)**
+  - OpenCode's free tier console validates agentic presence by checking for lowercase `bash` and `read` tools; requests from external coding agents (Claude Code, Cline) with N tools or PascalCase tools were rejected with `403 FreeTierError`.
+  - Injects `bash` and `read` decoy tools unconditionally while preserving caller tools and defaulting missing `tool_choice` safely.
+
 
 ## [0.7.1] - 2026-09-18
 
