@@ -115,6 +115,14 @@ function normalizeOpencodeReasoning(model, body) {
     else if (supportedLevels.includes("xhigh")) effort = "xhigh";
   }
 
+  // Muse Spark models on OpenCode free tier only accept minimal|low|medium|high;
+  // xhigh/max/ultra triggers 500/400 from the Console (#4149).
+  if (cleanModel.includes("muse-spark")) {
+    if (effort === "xhigh" || effort === "max" || effort === "ultra") {
+      effort = "high";
+    }
+  }
+
   body.reasoning = { ...currentReasoning, effort };
   if (!body.reasoning.summary) body.reasoning.summary = "auto";
   delete body.reasoning_effort;

@@ -21,6 +21,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 - **fix(opencode): inject cloaked decoy tools on all free tier requests with or without tools (#4101, #4146, #4165)**
   - OpenCode's free tier console validates agentic presence by checking for lowercase `bash` and `read` tools; requests from external coding agents (Claude Code, Cline) with N tools or PascalCase tools were rejected with `403 FreeTierError`.
   - Injects `bash` and `read` decoy tools unconditionally while preserving caller tools and defaulting missing `tool_choice` safely.
+- **fix(opencode): clamp `xhigh`/`max`/`ultra` reasoning effort to `high` for muse-spark (#4149)**
+  - OpenCode's Responses console rejects `xhigh` with HTTP 500 and `max`/`ultra` with 400. Automatically clamps unsupported high-tier efforts to `high` for muse-spark models.
 
 #### Gemini & Antigravity Tool Schema Sanitization
 - **fix(translator): sanitize unsupported schema constraints and normalize empty object properties (#4169, #4170)**
