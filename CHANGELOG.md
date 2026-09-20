@@ -59,6 +59,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - Normalizes array content blocks (including raw strings and `input_text`), ensures `content` is never null or undefined, and rewrites `role: "tool"` to `"user"`.
 
 #### Tool Policy & Role Preservation
+- **feat(claude): pass through `safeguards` and `safeguard_results` for Claude Code auto-mode (#4173)**
+  - Claude Code v2.1.278+ relies on server-side classifier checks to provide free auto-mode execution. Loloskan top-level `safeguards` across request translation and preserve `safeguard_results` on streaming delta responses.
 - **fix(translator): preserve tool_choice "none", parallel_tool_calls, tool strict, and developer role (#4171, #4172)**
   - `tool_choice: "none"` now translates correctly to Claude `{ type: "none" }` and vice versa instead of widening to `"auto"`.
   - Maps `parallel_tool_calls: false` to Claude `tool_choice.disable_parallel_tool_use: true` and vice versa.

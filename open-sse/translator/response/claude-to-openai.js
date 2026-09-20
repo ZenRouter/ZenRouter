@@ -175,6 +175,10 @@ export function claudeToOpenAIResponse(chunk, state) {
           finalChunk.usage = clientUsage(state.usage);
         }
 
+        if (chunk.safeguard_results !== undefined || chunk.delta?.safeguard_results !== undefined) {
+          finalChunk.safeguard_results = chunk.safeguard_results || chunk.delta?.safeguard_results;
+        }
+
         results.push(finalChunk);
         state.finishReasonSent = true;
       }

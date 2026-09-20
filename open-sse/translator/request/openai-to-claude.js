@@ -200,6 +200,11 @@ Respond ONLY with the JSON object, no other text.`);
 
   // Thinking is normalized centrally by applyThinking (thinkingUnified.js) after translation.
 
+  // Claude Code auto-mode safeguards passthrough (#4173)
+  if (body.safeguards !== undefined) {
+    result.safeguards = body.safeguards;
+  }
+
   // Attach toolNameMap to result for response translation
   if (toolNameMap.size > 0) {
     result._toolNameMap = toolNameMap;

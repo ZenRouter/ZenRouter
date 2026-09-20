@@ -94,6 +94,11 @@ export function claudeToOpenAIRequest(model, body, stream) {
     result.reasoning = body.reasoning;
   }
 
+  // Claude Code auto-mode safeguards passthrough (#4173)
+  if (body.safeguards !== undefined) {
+    result.safeguards = body.safeguards;
+  }
+
   return result;
 }
 
