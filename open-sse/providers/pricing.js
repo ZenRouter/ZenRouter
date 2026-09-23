@@ -139,14 +139,23 @@ export const MODEL_PRICING = {
   "kimi-k2.6":                    { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
   "kimi-latest":                  { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
 
-  // === DeepSeek ===
-  "deepseek-chat":                { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
-  "deepseek-reasoner":            { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
-  "deepseek-r1":                  { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
-  "deepseek-v3.2-chat":           { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
-  "deepseek-v3.2-reasoner":       { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
-  "deepseek-v4-flash":            { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
-  "deepseek-v4-pro":              { input: 0.435, output: 0.87,  cached: 0.003625, reasoning: 0.87,  cache_creation: 0.435 },
+  // === DeepSeek (api-docs.deepseek.com, snapshot 2026-09-23) ===
+  // Off-peak cache-miss input / cache-hit / off-peak output. Peak = 2x input+output.
+  "deepseek-flash":                { input: 0.15,  output: 0.60,  cached: 0.003,  reasoning: 0.60,   cache_creation: 0.15  },
+  "deepseek-v4-pro":              { input: 0.66,  output: 1.98,  cached: 0.022,  reasoning: 1.98,   cache_creation: 0.66  },
+
+  // === xAI Grok (docs.x.ai, snapshot 2026-09-23; tiered ≥200k ctx = 2x, check docs) ===
+  "grok-4.7":                      { input: 2.00,  output: 6.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 2.00  },
+  "grok-4.6":                      { input: 2.00,  output: 6.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 2.00  },
+  "grok-4.5":                      { input: 2.00,  output: 6.00,  cached: 0.30,  reasoning: 6.00,   cache_creation: 2.00  },
+  "grok-4.3":                      { input: 1.25,  output: 2.50,  cached: 0.20,  reasoning: 2.50,   cache_creation: 1.25  },
+  "grok-build-0.1":                { input: 1.00,  output: 2.00,  cached: 0.20,  reasoning: 2.00,   cache_creation: 1.00  },
+
+  // === Mistral (docs.mistral.ai/inference/pricing, snapshot 2026-09-23) ===
+  "mistral-large-latest":          { input: 0.50,  output: 1.50,  cached: 0.05,  reasoning: 1.50,   cache_creation: 0.50  },
+  "mistral-medium-latest":         { input: 1.50,  output: 7.50,  cached: 0.15,  reasoning: 7.50,   cache_creation: 1.50  },
+  "mistral-small-latest":          { input: 0.15,  output: 0.60,  cached: 0.015, reasoning: 0.60,   cache_creation: 0.15  },
+  "codestral-latest":              { input: 0.30,  output: 0.90,  cached: 0.03,  reasoning: 0.90,   cache_creation: 0.30  },
 
   // === GLM ===
   "glm-4.6":                      { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },

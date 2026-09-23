@@ -22,8 +22,9 @@ export default {
   },
   models: [
     { id: "mistral-large-latest", name: "Mistral Large 3" },
+    { id: "mistral-small-latest", name: "Mistral Small 4" },
     { id: "codestral-latest", name: "Codestral" },
-    { id: "mistral-medium-latest", name: "Mistral Medium 3" },
+    { id: "mistral-medium-latest", name: "Mistral Medium 3.5" },
     { id: "mistral-embed", name: "Mistral Embed", kind: "embedding" },
   ],
   serviceKinds: ["llm","imageToText","embedding"],

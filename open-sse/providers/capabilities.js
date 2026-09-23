@@ -223,8 +223,8 @@ export const PROVIDER_CAPABILITIES = {
     "glm-5.3":            { reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 48000 },
     "glm-5.3-flash":      { reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 200000, maxOutput: 48000 },
     "kimi-k3-1":          { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 256000, maxOutput: 32000 },
-    "deepseek-v4-pro":    { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 50000 },
-    "deepseek-v4-flash":  { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 50000 },
+    "deepseek-v4-pro":    { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 384000 },
+    "deepseek-v4-flash":  { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 384000 },
     "deepseek-v3-2-volc": { reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 96000, maxOutput: 32000 },
   },
   // Poolside Laguna — OpenAI-compatible, all reasoning-capable (32K max output).
@@ -323,8 +323,8 @@ export const PATTERN_CAPABILITIES = [
   // ── Grok (vision + Live Search) ──────────────────────────────────
   { pattern: "*grok*image*",    caps: { imageOutput: true } },
   { pattern: "*grok-code*",     caps: { reasoning: true, thinkingFormat: "openai", contextWindow: 256000 } },
-  // Grok 4.6: 500k context, no text output limit (docs.x.ai/developers/grok-4-6)
-  { pattern: "*grok-4.6*",      caps: { vision: true, reasoning: true, search: true, thinkingFormat: "openai", contextWindow: 500000, maxOutput: 500000 } },
+  // Grok 4.6: 500k context, no documented text output limit (docs.x.ai/developers/grok-4-6)
+  { pattern: "*grok-4.6*",      caps: { vision: true, reasoning: true, search: true, thinkingFormat: "openai", contextWindow: 500000 } },
   // Grok 4.5 (Grok CLI / Grok Build): 500k context per cli-chat-proxy /v1/models
   { pattern: "*grok-4.5*",      caps: { vision: true, reasoning: true, search: true, thinkingFormat: "openai", contextWindow: 500000, maxOutput: 64000 } },
   { pattern: "*grok-4*",        caps: { vision: true, reasoning: true, search: true, thinkingFormat: "openai", contextWindow: 256000 } },
@@ -388,8 +388,8 @@ export const PATTERN_CAPABILITIES = [
   { pattern: "*llama-4*",       caps: { vision: true, contextWindow: 1000000 } },
   { pattern: "*llama*",         caps: { contextWindow: 128000 } },
 
-  // ── Mistral (Large 3 = vision/256K; codestral text) ──────────────
-  { pattern: "*codestral*",     caps: { contextWindow: 256000 } },
+  // ── Mistral (Large 3 = vision/256K; codestral 128K ctx per docs.mistral.ai) ──
+  { pattern: "*codestral*",     caps: { contextWindow: 128000 } },
   { pattern: "*mistral-large*", caps: { vision: true, contextWindow: 256000 } },
   { pattern: "*mistral*",       caps: { contextWindow: 128000 } },
 

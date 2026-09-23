@@ -337,11 +337,11 @@ amp --model "{{model}}"
     docsUrl: "https://github.com/DeepSeek-TUI/DeepSeek-TUI",
     configType: "custom",
     defaultCommand: "deepseek",
-    modelAliases: ["deepseek-v4-pro", "deepseek-v4-flash", "deepseek-chat", "deepseek-reasoner"],
+    modelAliases: ["deepseek-v4-pro", "deepseek-v4-flash", "deepseek-flash"],
     defaultModels: [
       { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro", alias: "deepseek-v4-pro" },
       { id: "deepseek-v4-flash", name: "DeepSeek V4 Flash", alias: "deepseek-v4-flash" },
-      { id: "deepseek-chat", name: "DeepSeek V3 Chat", alias: "deepseek-chat" },
+      { id: "deepseek-flash", name: "DeepSeek V4.1 Flash", alias: "deepseek-flash" },
     ],
     notes: [
       { type: "info", text: "DeepSeek TUI uses ~/.deepseek/config.toml for configuration. ZenRouter will update the provider to 'openai' mode with your base_url, api_key, and model." },
