@@ -5,6 +5,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### Fixed
+
+- **fix(auth): treat OAuth org-denial 403 as permanent, skip refresh storm**
+  - Classifies `oauth_not_allowed_for_organization` / `oauth_org_not_allowed` / org-disabled 403s as `terminal: true` with 15m cooldown (per Anthropic docs this is server-side org policy — refresh can never heal it).
+  - `chatCore` peeks the cloned error body and skips the 3x token-refresh + retry for permanent denials; the account is still locked and fallback proceeds once to the next account instead of N accounts × 4 upstream hits.
+  - New shared `isPermanentAuthDenial()` helper + `tests/unit/account-fallback-oauth-denial.test.js`.
+- **fix(pricing): exact current Claude prices, correct Haiku alias**
+  - Adds `MODEL_PRICING` for `claude-opus-5` (5/25), `claude-opus-5-5` + dated snapshot + dot alias (4/20, cache reads 5%), `claude-sonnet-5` (2/10); previously fell through to the 5/25 and 3/15 patterns.
+  - Fixes `claude-haiku-4.5` dot alias (was 0.5/2.5, now 1/5 matching the dated snapshot and official pricing).
+- **fix(provider): refresh anthropic API-key registry to current lineup**
+  - Adds Opus 5.5 / Opus 5 / Sonnet 5 / Haiku 4.5 / Fable 5.1 / Opus-Sonnet 4.6; keeps legacy dated IDs and plain API-key headers (no CLI fingerprint spoofing on this path).
+- **fix(translator): surface Claude mid-stream error events**
+  - `claude-to-openai` converts SSE `error` events (e.g. `overloaded_error`) into terminal content + STOP instead of swallowing them; inbound `ping` explicitly ignored.
+- **fix(stream): carry abort cause into terminal bytes**
+  - `pipeWithDisconnect` tracks `abortMessage` (upstream loss vs TTFT vs stall timeout) into `onAbortTerminal`, porting upstream 9Router diagnostics for undistinguishable terminal failures.
+
+### Known limitations
+- Preserved-thinking `signature_delta` is not forwarded across the OpenAI bridge (OpenAI has no signature field); multi-turn thinking replay across providers may 400 on Fable 5.1 / Opus 5.5 for post-2026-08-31 accounts.
+
 ## [0.7.3] - 2026-09-20
 
 ### Changed / Reverted
