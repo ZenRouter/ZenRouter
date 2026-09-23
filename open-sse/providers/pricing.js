@@ -125,19 +125,13 @@ export const MODEL_PRICING = {
   "kimi-k2.7-code-highspeed":     { input: 1.90,  output: 8.00,  cached: 0.38,  reasoning: 8.00,   cache_creation: 1.90  },
   "kimi-for-coding":              { input: 0.95,  output: 4.00,  cached: 0.19,  reasoning: 4.00,   cache_creation: 0.95  },
   "kimi-for-coding-highspeed":    { input: 1.90,  output: 8.00,  cached: 0.38,  reasoning: 8.00,   cache_creation: 1.90  },
-  "kimi-k2":                      { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
-  "kimi-k2-thinking":             { input: 1.50,  output: 6.00,  cached: 0.75,  reasoning: 9.00,   cache_creation: 1.50  },
-  "kimi-k2.5":                    { input: 1.20,  output: 4.80,  cached: 0.60,  reasoning: 7.20,   cache_creation: 1.20  },
   // codebuddy-cn refresh e014cb537 — hy / kimi-k3 family (Tencent Hy rates: ~0.066/0.26 per TokenRouter)
   "hy3-preview":                  { input: 0.30,  output: 1.20,  cached: 0.06,  reasoning: 1.80,   cache_creation: 0.30  },
   "hy3":                          { input: 0.30,  output: 1.20,  cached: 0.06,  reasoning: 1.80,   cache_creation: 0.30  },
   "hy3-x":                        { input: 0.30,  output: 1.20,  cached: 0.06,  reasoning: 1.80,   cache_creation: 0.30  },
   "hy4-preview":                  { input: 0.40,  output: 2.00,  cached: 0.08,  reasoning: 2.00,   cache_creation: 0.40  },
   "hy4-preview-x":                { input: 0.40,  output: 2.00,  cached: 0.08,  reasoning: 2.00,   cache_creation: 0.40  },
-  "kimi-k3-1":                    { input: 1.20,  output: 4.80,  cached: 0.60,  reasoning: 7.20,   cache_creation: 1.20  },
-  "kimi-k2.5-thinking":           { input: 1.80,  output: 7.20,  cached: 0.90,  reasoning: 10.80,  cache_creation: 1.80  },
-  "kimi-k2.6":                    { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
-  "kimi-latest":                  { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
+  "kimi-k2.6":                    { input: 0.95,  output: 4.00,  cached: 0.16,  reasoning: 4.00,   cache_creation: 0.95  },
 
   // === DeepSeek (api-docs.deepseek.com, snapshot 2026-09-23) ===
   // Off-peak cache-miss input / cache-hit / off-peak output. Peak = 2x input+output.
@@ -157,22 +151,36 @@ export const MODEL_PRICING = {
   "mistral-small-latest":          { input: 0.15,  output: 0.60,  cached: 0.015, reasoning: 0.60,   cache_creation: 0.15  },
   "codestral-latest":              { input: 0.30,  output: 0.90,  cached: 0.03,  reasoning: 0.90,   cache_creation: 0.30  },
 
-  // === GLM ===
-  "glm-4.6":                      { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
-  "glm-4.6v":                     { input: 0.75,  output: 3.00,  cached: 0.375, reasoning: 4.50,   cache_creation: 0.75  },
-  "glm-4.7":                      { input: 0.75,  output: 3.00,  cached: 0.375, reasoning: 4.50,   cache_creation: 0.75  },
-  "glm-5":                        { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
-  // codebuddy-cn refresh e014cb537 — explicit pricing for new 5.3 family (gateway bills same as 5.2)
-  "glm-5.3":                      { input: 1.05,  output: 3.50,  cached: 0.525, reasoning: 3.50,   cache_creation: 1.05  },
-  "glm-5.3-flash":                { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
+  // === GLM / Z.ai (docs.z.ai/guides/overview/pricing, snapshot 2026-09-23) ===
+  "glm-4.5-air":                 { input: 0.20,  output: 1.10,  cached: 0.04,  reasoning: 1.10,   cache_creation: 0.20  },
+  "glm-4.5":                     { input: 0.60,  output: 2.20,  cached: 0.11,  reasoning: 2.20,   cache_creation: 0.60  },
+  "glm-4.5v":                    { input: 0.60,  output: 1.80,  cached: 0.11,  reasoning: 1.80,   cache_creation: 0.60  },
+  "glm-4.6":                     { input: 0.60,  output: 2.20,  cached: 0.11,  reasoning: 2.20,   cache_creation: 0.60  },
+  "glm-4.6v":                    { input: 0.30,  output: 0.90,  cached: 0.06,  reasoning: 0.90,   cache_creation: 0.30  },
+  "glm-4.6v-flashx":             { input: 0.04,  output: 0.40,  cached: 0.01,  reasoning: 0.40,   cache_creation: 0.04  },
+  "glm-4.7":                     { input: 0.60,  output: 2.20,  cached: 0.11,  reasoning: 2.20,   cache_creation: 0.60  },
+  "glm-4.7-flash":               { input: 0.00,  output: 0.00,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
+  "glm-4.7-flashx":              { input: 0.07,  output: 0.40,  cached: 0.015, reasoning: 0.40,   cache_creation: 0.07  },
+  "glm-5":                       { input: 1.00,  output: 3.20,  cached: 0.20,  reasoning: 3.20,   cache_creation: 1.00  },
+  "glm-5-turbo":                 { input: 1.20,  output: 4.00,  cached: 0.24,  reasoning: 4.00,   cache_creation: 1.20  },
+  "glm-5.1":                     { input: 1.40,  output: 4.40,  cached: 0.26,  reasoning: 4.40,   cache_creation: 1.40  },
+  "glm-5.2":                     { input: 1.40,  output: 4.40,  cached: 0.26,  reasoning: 4.40,   cache_creation: 1.40  },
+  "glm-5.3":                     { input: 1.40,  output: 4.40,  cached: 0.26,  reasoning: 4.40,   cache_creation: 1.40  },
+  "glm-5.3-flash":               { input: 0.15,  output: 0.50,  cached: 0.03,  reasoning: 0.50,   cache_creation: 0.15  },
+  "glm-5.3-flashx":              { input: 0.37,  output: 1.25,  cached: 0.07,  reasoning: 1.25,   cache_creation: 0.37  },
 
-  // === MiniMax ===
-  "MiniMax-M3":                   { input: 0.30,  output: 1.20,  cached: 0.06,  reasoning: 1.80,   cache_creation: 0.30  },
-  "MiniMax-M2.1":                 { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
-  "MiniMax-M2.5":                 { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
-  "MiniMax-M2.7":                 { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
-  "minimax-m2.1":                 { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
-  "minimax-m2.5":                 { input: 0.60,  output: 2.40,  cached: 0.30,  reasoning: 3.60,   cache_creation: 0.60  },
+  // === MiniMax (platform.minimax.io/docs/guides/pricing-paygo, snapshot 2026-09-23) ===
+  // M3 standard tier (≤512k ctx; >512k = 2x). M2.x legacy but available.
+  "MiniMax-M3":                   { input: 0.30,  output: 1.20,  cached: 0.06,  reasoning: 1.20,   cache_creation: 0.30  },
+  "MiniMax-M2":                   { input: 0.30,  output: 1.20,  cached: 0.03,  reasoning: 1.20,   cache_creation: 0.30  },
+  "MiniMax-M2.1":                 { input: 0.30,  output: 1.20,  cached: 0.03,  reasoning: 1.20,   cache_creation: 0.30  },
+  "MiniMax-M2.1-highspeed":       { input: 0.60,  output: 2.40,  cached: 0.06,  reasoning: 2.40,   cache_creation: 0.60  },
+  "MiniMax-M2.5":                 { input: 0.30,  output: 1.20,  cached: 0.03,  reasoning: 1.20,   cache_creation: 0.30  },
+  "MiniMax-M2.5-highspeed":       { input: 0.60,  output: 2.40,  cached: 0.06,  reasoning: 2.40,   cache_creation: 0.60  },
+  "MiniMax-M2.7":                 { input: 0.30,  output: 1.20,  cached: 0.06,  reasoning: 1.20,   cache_creation: 0.30  },
+  "MiniMax-M2.7-highspeed":       { input: 0.60,  output: 2.40,  cached: 0.06,  reasoning: 2.40,   cache_creation: 0.60  },
+  "minimax-m2.1":                 { input: 0.30,  output: 1.20,  cached: 0.03,  reasoning: 1.20,   cache_creation: 0.30  },
+  "minimax-m2.5":                 { input: 0.30,  output: 1.20,  cached: 0.03,  reasoning: 1.20,   cache_creation: 0.30  },
 
   // === Grok ===
   "grok-code-fast-1":             { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
