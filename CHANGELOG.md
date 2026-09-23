@@ -20,6 +20,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
   - `claude-to-openai` converts SSE `error` events (e.g. `overloaded_error`) into terminal content + STOP instead of swallowing them; inbound `ping` explicitly ignored.
 - **fix(stream): carry abort cause into terminal bytes**
   - `pipeWithDisconnect` tracks `abortMessage` (upstream loss vs TTFT vs stall timeout) into `onAbortTerminal`, porting upstream 9Router diagnostics for undistinguishable terminal failures.
+  - New `tests/unit/stream-stall-cancels-upstream.test.js` proves the kill chain: watchdog fires once, AbortSignal aborts, errored body unblocks the hung pull, downstream closes gracefully.
 
 ### Known limitations
 - Preserved-thinking `signature_delta` is not forwarded across the OpenAI bridge (OpenAI has no signature field); multi-turn thinking replay across providers may 400 on Fable 5.1 / Opus 5.5 for post-2026-08-31 accounts.
