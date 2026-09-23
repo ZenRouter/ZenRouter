@@ -9,6 +9,8 @@ describe("getCapabilitiesForModel", () => {
     reasoning: true,
     vision: true,
     search: true,
+    pdf: true,
+    tools: true,
   };
 
   const kiroGpt56Expected = {
@@ -29,6 +31,22 @@ describe("getCapabilitiesForModel", () => {
       "claude-opus-5-thinking-agentic",
     ]) {
       expect(getCapabilitiesForModel("kiro", model)).toMatchObject(claudeSonnet5Expected);
+    }
+  });
+
+  it("reports Claude Opus 5.5 variants as permanent adaptive-thinking 1M models", () => {
+    for (const model of [
+      "claude-opus-5-5",
+      "anthropic/claude-opus-5-5",
+      "claude-opus-5.5",
+      "claude-opus-5-5-thinking",
+      "claude-opus-5-5-agentic",
+      "claude-opus-5-5-thinking-agentic",
+    ]) {
+      expect(getCapabilitiesForModel("claude", model)).toMatchObject({
+        ...claudeSonnet5Expected,
+        thinkingCanDisable: false,
+      });
     }
   });
 

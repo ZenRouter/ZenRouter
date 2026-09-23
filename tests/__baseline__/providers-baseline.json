@@ -29,7 +29,7 @@
     ],
     "format": "antigravity",
     "headers": {
-      "User-Agent": "antigravity/ide/2.12.2 darwin/arm64"
+      "User-Agent": "antigravity/ide/2.14.0 linux/x64"
     },
     "retry": {
       "429": {
@@ -43,7 +43,7 @@
       }
     },
     "usage": {
-      "quotaApiUrl": "https://cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels",
+      "quotaApiUrl": "https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels",
       "loadProjectApiUrl": "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist",
       "tokenUrl": "https://oauth2.googleapis.com/token"
     },
@@ -59,6 +59,9 @@
   "azure": {
     "baseUrl": "",
     "headers": {},
+    "quirks": {
+      "preservePromptCacheKey": true
+    },
     "format": "openai"
   },
   "blackbox": {
@@ -90,9 +93,9 @@
     "urlSuffix": "?beta=true",
     "headers": {
       "Anthropic-Version": "2023-06-01",
-      "Anthropic-Beta": "claude-code-20250219,oauth-2025-04-20,interleaved-thinking-2025-05-14,context-management-2025-06-27,prompt-caching-scope-2026-01-05,structured-outputs-2025-12-15,fast-mode-2026-02-01,redact-thinking-2026-02-12,token-efficient-tools-2026-03-28,advanced-tool-use-2025-11-20,effort-2025-11-24",
+      "Anthropic-Beta": "claude-code-20250219,oauth-2025-04-20,interleaved-thinking-2025-05-14,context-management-2025-06-27,prompt-caching-scope-2026-01-05,structured-outputs-2025-12-15,fast-mode-2026-02-01,redact-thinking-2026-02-12,token-efficient-tools-2026-03-28,tool-search-tool-2025-10-19,dangerous-tool-use-2026-09-03,timing-2026-09-09,inline-tools-2026-09-15,advanced-tool-use-2025-11-20,effort-2025-11-24",
       "Anthropic-Dangerous-Direct-Browser-Access": "true",
-      "User-Agent": "claude-cli/2.1.274 (external, sdk-cli)",
+      "User-Agent": "claude-cli/2.1.280 (external, sdk-cli)",
       "X-App": "cli",
       "X-Stainless-Helper-Method": "stream",
       "X-Stainless-Retry-Count": "0",
@@ -100,8 +103,8 @@
       "X-Stainless-Package-Version": "0.80.0",
       "X-Stainless-Runtime": "node",
       "X-Stainless-Lang": "js",
-      "X-Stainless-Arch": "arm64",
-      "X-Stainless-Os": "MacOS",
+      "X-Stainless-Arch": "x64",
+      "X-Stainless-Os": "Linux",
       "X-Stainless-Timeout": "600"
     },
     "quirks": {
@@ -194,12 +197,15 @@
     "forceStream": true,
     "headers": {
       "originator": "codex_cli_rs",
-      "User-Agent": "codex_cli_rs/0.154.0"
+      "User-Agent": "codex_cli_rs/0.156.1"
     },
     "usage": {
       "url": "https://chatgpt.com/backend-api/wham/usage",
       "resetCreditsUrl": "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits",
       "resetCreditsConsumeUrl": "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits/consume"
+    },
+    "quirks": {
+      "preservePromptCacheKey": true
     },
     "clientId": "app_EMoamEEZ73f0CkXaXp7hrann",
     "tokenUrl": "https://auth.openai.com/oauth/token"
@@ -322,13 +328,16 @@
       "Content-Type": "application/json"
     },
     "copilot": {
-    "vscodeVersion": "1.137.0",
-    "chatVersion": "0.65.0",
-    "userAgent": "GitHubCopilotChat/0.65.0",
+      "vscodeVersion": "1.137.0",
+      "chatVersion": "0.65.0",
+      "userAgent": "GitHubCopilotChat/0.65.0",
       "apiVersion": "2025-04-01"
     },
     "usage": {
       "url": "https://api.github.com/copilot_internal/user"
+    },
+    "quirks": {
+      "preservePromptCacheKey": true
     },
     "format": "openai",
     "clientId": "Iv1.b507a08c87ecfe98",
@@ -426,6 +435,9 @@
         "delayMs": 1500
       }
     },
+    "quirks": {
+      "preservePromptCacheKey": true
+    },
     "clientId": "b1a00492-073a-47ea-816f-4c329264a828",
     "tokenUrl": "https://auth.x.ai/oauth2/token"
   },
@@ -437,6 +449,9 @@
   "groq": {
     "baseUrl": "https://api.groq.com/openai/v1/chat/completions",
     "validateUrl": "https://api.groq.com/openai/v1/models",
+    "usage": {
+      "url": "https://api.groq.com/openai/v1/models"
+    },
     "format": "openai"
   },
   "hyperbolic": {
@@ -545,8 +560,8 @@
     "headers": {
       "Content-Type": "application/json",
       "Accept": "application/vnd.amazon.eventstream",
-      "User-Agent": "AWS-SDK-JS/3.0.0 kiro-ide/1.0.437",
-      "X-Amz-User-Agent": "aws-sdk-js/3.0.0 KiroIDE-1.0.437"
+      "User-Agent": "AWS-SDK-JS/3.0.0 kiro-ide/1.1.0",
+      "X-Amz-User-Agent": "aws-sdk-js/3.0.0 KiroIDE-1.1.0"
     },
     "tokenUrl": "https://prod.us-east-1.auth.desktop.kiro.dev/refreshToken",
     "authUrl": "https://prod.us-east-1.auth.desktop.kiro.dev",
@@ -570,7 +585,8 @@
       "Anthropic-Beta": "claude-code-20250219,interleaved-thinking-2025-05-14"
     },
     "quirks": {
-      "dropOutputConfig": true
+      "dropOutputConfig": true,
+      "requireClaudeToolType": true
     },
     "reasoningInject": {
       "scope": "all"
@@ -621,7 +637,8 @@
       "Anthropic-Beta": "claude-code-20250219,interleaved-thinking-2025-05-14"
     },
     "quirks": {
-      "dropOutputConfig": true
+      "dropOutputConfig": true,
+      "requireClaudeToolType": true
     },
     "reasoningInject": {
       "scope": "all"
@@ -703,6 +720,9 @@
   "openai": {
     "baseUrl": "https://api.openai.com/v1/chat/completions",
     "forceStream": true,
+    "quirks": {
+      "preservePromptCacheKey": true
+    },
     "format": "openai"
   },
   "opencode-go": {

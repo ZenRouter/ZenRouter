@@ -19,19 +19,27 @@ export function getDefaultModel(aliasOrId) {
 
 // Providers whose registry uses dots in version numbers (e.g. "claude-sonnet-4.5").
 // For these, we tolerate clients sending dashes ("claude-sonnet-4-5") by normalizing
-// digit-hyphen-digit to digit-dot-digit before lookup. Other providers are left untouched.
-const DOT_VERSION_PROVIDERS = new Set(["kr", "kiro"]);
+// digit-hyphen-digit to digit-dot-digit before lookup. Other providers also tolerate
+// dot/dash version interchange for Opus/Sonnet models.
+const DOT_VERSION_PROVIDERS = new Set(["kr", "kiro", "cc", "claude", "tokenrouter"]);
 
-// Find a registry entry by id. For Kiro models, tolerates dash/dot version separators
-// ("claude-sonnet-4-5" ~= "claude-sonnet-4.5"). Other providers use exact match only.
+// Find a registry entry by id. Tolerates dash/dot version separators
+// ("claude-sonnet-4-5" ~= "claude-sonnet-4.5", "claude-opus-5.5" ~= "claude-opus-5-5").
 function findModel(models, modelId, aliasOrId) {
   if (!models) return undefined;
   const found = models.find(m => m.id === modelId);
   if (found) return found;
-  if (!DOT_VERSION_PROVIDERS.has(aliasOrId)) return undefined;
   const normalized = normalizeModelId(modelId);
-  if (normalized === modelId) return undefined;
-  return models.find(m => m.id === normalized);
+  if (normalized !== modelId) {
+    const normFound = models.find(m => m.id === normalized);
+    if (normFound) return normFound;
+  }
+  const dashed = modelId.replace(/(\d)\.(\d)/g, "$1-$2");
+  if (dashed !== modelId) {
+    const dashFound = models.find(m => m.id === dashed);
+    if (dashFound) return dashFound;
+  }
+  return undefined;
 }
 
 export function isValidModel(aliasOrId, modelId, passthroughProviders = new Set()) {

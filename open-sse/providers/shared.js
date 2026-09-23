@@ -67,7 +67,7 @@ const ANTHROPIC_BETA_HEAVY_AGENT = [...CLAUDE_BETA_FLAGS_HEAVY_AGENT];
 // Heavy-agent beta flags are gated to opus/sonnet — cheaper models don't need them.
 export function selectAnthropicBeta(model = "") {
   const flags = [...ANTHROPIC_BETA_BASE];
-  if (/^claude-(opus|sonnet)/.test(model)) flags.push(...ANTHROPIC_BETA_HEAVY_AGENT);
+  if (/(?:^|\/)claude-(opus|sonnet)/.test(model)) flags.push(...ANTHROPIC_BETA_HEAVY_AGENT);
   return flags.join(",");
 }
 

@@ -39,6 +39,7 @@ export default {
     { id: "anthropic/claude-opus-4.8-fast", name: "Claude Opus 4.8 Fast" },
     { id: "anthropic/claude-opus-5", name: "Claude Opus 5" },
     { id: "anthropic/claude-opus-5-fast", name: "Claude Opus 5 Fast" },
+    { id: "anthropic/claude-opus-5-5", name: "Claude Opus 5.5" },
     { id: "anthropic/claude-sonnet-4", name: "Claude Sonnet 4" },
     { id: "anthropic/claude-sonnet-4.5", name: "Claude Sonnet 4.5" },
     { id: "anthropic/claude-sonnet-4.6", name: "Claude Sonnet 4.6" },
