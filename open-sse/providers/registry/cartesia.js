@@ -23,12 +23,20 @@ export default {
     format: "cartesia",
     models: [
       {
-        id: "sonic-2",
-        name: "Sonic 2"
+        id: "sonic-3.6",
+        name: "Sonic 3.6 (Flagship)"
+      },
+      {
+        id: "sonic-3.5",
+        name: "Sonic 3.5"
       },
       {
         id: "sonic-3",
         name: "Sonic 3"
+      },
+      {
+        id: "sonic-2",
+        name: "Sonic 2 (Sunsets 20 Oct 2026)"
       }
     ]
   },

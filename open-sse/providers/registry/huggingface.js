@@ -30,5 +30,7 @@ export default {
     { id: "openai/whisper-small", name: "Whisper Small (HF)", params: ["language"], kind: "stt" },
   ],
   serviceKinds: ["image", "stt"],
-  imageConfig: { baseUrl: "https://api-inference.huggingface.co/models" },
+  // Legacy api-inference.huggingface.co retired; Inference Providers router keeps
+  // the /hf-inference/models/{repo} path shape (same {inputs} body).
+  imageConfig: { baseUrl: "https://router.huggingface.co/hf-inference/models" },
 };

@@ -2,14 +2,16 @@ export default {
   id: "google-pse",
   alias: "gpse",
   display: {
-    name: "Google PSE",
+    name: "Google PSE (Sunsets Jan 2027)",
     icon: "search",
     color: "#4285F4",
     textIcon: "GP",
     website: "https://programmablesearchengine.google.com",
     notice: {
+      text: "Closed to new customers; discontinued Jan 1, 2027. Google directs new users to Vertex AI Search.",
       apiKeyUrl: "https://programmablesearchengine.google.com/controlpanel/create"
-    }
+    },
+    deprecated: true,
   },
   category: "apikey",
   authType: "apikey",

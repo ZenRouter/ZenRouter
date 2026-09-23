@@ -22,7 +22,8 @@ export default {
     authType: "apikey",
     authHeader: "x-api-key",
     costPerQuery: 0.005,
-    freeMonthlyQuota: 0,
+    // Official free tier exists: 100 queries/day + $100 credit (~3K/mo).
+    freeMonthlyQuota: 3000,
     searchTypes: [
       "web",
       "news"

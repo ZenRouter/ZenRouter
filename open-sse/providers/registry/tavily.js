@@ -38,6 +38,7 @@ export default {
     method: "POST",
     authType: "apikey",
     authHeader: "bearer",
+    // Official unit is per 5 URLs (1 credit basic / 2 advanced), not per query.
     costPerQuery: 0.008,
     freeMonthlyQuota: 1000,
     formats: [

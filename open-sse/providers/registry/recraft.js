@@ -16,6 +16,10 @@ export default {
   authType: "apikey",
   transport: null,
   models: [
+    { id: "recraftv4", name: "Recraft V4", params: ["n","size","style"], kind: "image" },
+    { id: "recraftv4_pro", name: "Recraft V4 Pro", params: ["n","size","style"], kind: "image" },
+    { id: "recraftv4_vector", name: "Recraft V4 Vector", params: ["n","size","style"], kind: "image" },
+    { id: "recraftv4_pro_vector", name: "Recraft V4 Pro Vector", params: ["n","size","style"], kind: "image" },
     { id: "recraftv3", name: "Recraft V3", params: ["n","size","style"], kind: "image" },
     { id: "recraftv2", name: "Recraft V2", params: ["n","size","style"], kind: "image" },
   ],

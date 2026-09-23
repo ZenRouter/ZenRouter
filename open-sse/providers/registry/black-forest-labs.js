@@ -21,6 +21,11 @@ export default {
   transport: null,
   models: [
     { id: "flux-pro-1.1", name: "FLUX Pro 1.1", params: ["n","size"], kind: "image" },
+    { id: "flux-2-pro", name: "FLUX.2 Pro", params: ["n","size"], kind: "image" },
+    { id: "flux-2-max", name: "FLUX.2 Max", params: ["n","size"], kind: "image" },
+    { id: "flux-2-flex", name: "FLUX.2 Flex", params: ["n","size"], kind: "image" },
+    { id: "flux-2-klein-9b", name: "FLUX.2 Klein 9B", params: ["n","size"], kind: "image" },
+    { id: "flux-2-klein-4b", name: "FLUX.2 Klein 4B", params: ["n","size"], kind: "image" },
     { id: "flux-pro-1.1-ultra", name: "FLUX Pro 1.1 Ultra", params: ["size"], kind: "image" },
     { id: "flux-pro", name: "FLUX Pro", params: ["n","size"], kind: "image" },
     { id: "flux-dev", name: "FLUX Dev", params: ["n","size"], kind: "image" },
