@@ -46,6 +46,7 @@ export default {
     { id: "deepseek-v4-pro-max", name: "DeepSeek V4 Pro Max", upstreamModelId: "deepseek-v4-pro" },
     { id: "deepseek-v4-pro-none", name: "DeepSeek V4 Pro No Thinking", upstreamModelId: "deepseek-v4-pro" },
     { id: "deepseek-v4-flash", name: "DeepSeek V4.1 Flash (legacy id)", upstreamModelId: "deepseek-flash" },
+    { id: "deepseek-v4-flash-vision-exp", name: "DeepSeek V4.1 Flash Vision (legacy id)", upstreamModelId: "deepseek-flash" },
   ],
   features: {
     usage: true,

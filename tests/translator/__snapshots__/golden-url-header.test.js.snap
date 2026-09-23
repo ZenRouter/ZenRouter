@@ -1685,8 +1685,8 @@ exports[`GOLDEN buildUrl (default executor providers) > nanobanana → url (stre
 
 exports[`GOLDEN buildUrl (default executor providers) > nebius → url (stream + non-stream) 1`] = `
 {
-  "nonStream": "https://api.studio.nebius.ai/v1/chat/completions",
-  "stream": "https://api.studio.nebius.ai/v1/chat/completions",
+  "nonStream": "https://api.tokenfactory.nebius.com/v1/chat/completions",
+  "stream": "https://api.tokenfactory.nebius.com/v1/chat/completions",
 }
 `;
 
