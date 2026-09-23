@@ -29,7 +29,15 @@ describe("DefaultExecutor.buildHeaders() — claude provider", () => {
       headers["Anthropic-Version"] === "2023-06-01" ||
       headers["anthropic-version"] === "2023-06-01";
     expect(hasVersion).toBe(true);
-    expect(headers["User-Agent"]).toBe("claude-cli/2.1.274 (external, sdk-cli)");
+    expect(headers["User-Agent"]).toBe("claude-cli/2.1.280 (external, sdk-cli)");
+  });
+
+  it("includes heavy-agent beta flags for claude-opus-5-5", () => {
+    const executor = new DefaultExecutor("claude");
+    const headers = executor.buildHeaders({ apiKey: "sk-test" }, true, undefined, "claude-opus-5-5");
+    const betaFlags = headers["Anthropic-Beta"].split(",").map(s => s.trim());
+    expect(betaFlags).toContain("advanced-tool-use-2025-11-20");
+    expect(betaFlags).toContain("effort-2025-11-24");
   });
 
   it("includes heavy-agent beta flags for claude-opus-5", () => {

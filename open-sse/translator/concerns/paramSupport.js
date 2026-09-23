@@ -21,8 +21,10 @@ const STRIP_RULES = [
   { match: /claude/i, drop: ["temperature"] },
   // GitHub Copilot gpt-5.4: temperature unsupported.
   { provider: "github", match: /gpt-5\.4/i, drop: ["temperature"] },
-  // GitHub Copilot Claude (except opus/sonnet 4.6): thinking + reasoning_effort rejected. #713
-  { provider: "github", match: (m) => /claude/i.test(m) && !/claude.*(opus|sonnet).*4\.6/i.test(m), drop: ["thinking", "reasoning_effort"] },
+  // GitHub Copilot Claude (opus/sonnet 4.6, 4.7, 4.8, 5, 5.5): allow thinking + reasoning_effort; drop on older. #713
+  { provider: "github", match: (m) => /claude/i.test(m) && !/claude.*(opus|sonnet).*(4\.[6-9]|5)/i.test(m), drop: ["thinking", "reasoning_effort"] },
+  // Non-Anthropic providers: drop context_management (Claude Code sends it, but third-party and non-Anthropic endpoints reject it with 400). #1468
+  { match: () => true, checkProvider: (p) => p !== "claude", drop: ["context_management"] },
   // Cloudflare Workers AI: content must be plain string, rejects OpenAI content-part array (#1926)
   { provider: "cloudflare-ai", flattenContent: true },
   { provider: "volcengine-ark", match: /glm-5/i, clampToModelMaxOutput: true },
@@ -75,6 +77,7 @@ export function stripUnsupportedParams(provider, model, body) {
   if (!model || !body || typeof body !== "object") return body;
   for (const rule of STRIP_RULES) {
     if (rule.provider && rule.provider !== provider) continue;
+    if (rule.checkProvider && !rule.checkProvider(provider)) continue;
     if (!matches(rule, model)) continue;
     for (const key of rule.drop || []) {
       if (body[key] !== undefined) delete body[key];
