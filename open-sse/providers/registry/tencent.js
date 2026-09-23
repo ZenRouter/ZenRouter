@@ -21,7 +21,8 @@ export default {
     validateUrl: "https://api.hunyuan.cloud.tencent.com/v1/models",
   },
   models: [
-    { id: "hunyuan-turbos-latest", name: "Hunyuan TurboS Latest", contextLength: 200000 },
-    { id: "hunyuan-t1-latest", name: "Hunyuan T1 Latest", contextLength: 256000 },
+    { id: "hy3-preview", name: "Hunyuan Hy3 Preview", contextLength: 262144 },
+    { id: "hunyuan-turbos-latest", name: "Hunyuan TurboS Latest (Legacy)", contextLength: 200000 },
+    { id: "hunyuan-t1-latest", name: "Hunyuan T1 Latest (Legacy)", contextLength: 256000 },
   ],
 };

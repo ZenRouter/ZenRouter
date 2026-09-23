@@ -334,6 +334,8 @@ export const PATTERN_CAPABILITIES = [
   // ── Qwen (3.5+ = native vision/video; coder & max = text-only; QwQ = thinking-only) ─
   { pattern: "*qwen*vl*",       caps: { vision: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 262144 } },
   { pattern: "*qwen*omni*",     caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 262144, maxOutput: 65536 } },
+  // qwen3-coder-next is a 256K model, not 1M (Model Studio) — specific first.
+  { pattern: "*qwen3-coder-next*", caps: { reasoning: true, thinkingFormat: "qwen", contextWindow: 262144 } },
   { pattern: "*qwen*coder*",    caps: { reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000 } },
   { pattern: "*qwen*max*",      caps: { reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000, maxOutput: 65536 } },
   { pattern: "*qwen3.5*",       caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000, maxOutput: 65536 } },
@@ -412,6 +414,14 @@ export const PATTERN_CAPABILITIES = [
   // ── Others ───────────────────────────────────────────────────────
   { pattern: "*hunyuan*",       caps: { reasoning: true, thinkingFormat: "hunyuan", contextWindow: 262144, maxOutput: 262144 } },
   { pattern: "hy3*",            caps: { reasoning: true, thinkingFormat: "hunyuan", contextWindow: 262144, maxOutput: 262144 } },
+  // ByteDance Doubao-Seed 2.x: 256K in / 128K out (Volcengine Ark / BytePlus).
+  { pattern: "*doubao-seed*",   caps: { vision: true, reasoning: true, search: true, contextWindow: 262144, maxOutput: 131072 } },
+  { pattern: "*seed-2*",        caps: { vision: true, reasoning: true, search: true, contextWindow: 262144, maxOutput: 131072 } },
+  // Baidu ERNIE (Qianfan): 5.x 128K/64K class; X1 smaller.
+  { pattern: "*ernie-5*",       caps: { vision: true, reasoning: true, search: true, contextWindow: 131072, maxOutput: 65536 } },
+  { pattern: "*ernie-4*",       caps: { vision: true, reasoning: true, search: true, contextWindow: 131072, maxOutput: 65536 } },
+  { pattern: "*ernie-x1*",      caps: { reasoning: true, contextWindow: 65536, maxOutput: 65536 } },
+  { pattern: "*ernie*",         caps: { reasoning: true, contextWindow: 131072, maxOutput: 65536 } },
   { pattern: "*step-3.7*",      caps: { vision: true, reasoning: true, thinkingFormat: "step", contextWindow: 128000 } },
   { pattern: "*step-*",         caps: { reasoning: true, thinkingFormat: "step", contextWindow: 128000 } },
   { pattern: "*nemotron*",      caps: { reasoning: true, contextWindow: 128000 } },

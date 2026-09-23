@@ -113,9 +113,21 @@ export const MODEL_PRICING = {
   "gemini-2.5-flash":             { input: 0.30,  output: 2.50,  cached: 0.03,  reasoning: 3.75,   cache_creation: 0.30  },
   "gemini-2.5-flash-lite":        { input: 0.10,  output: 0.40,  cached: 0.01,  reasoning: 0.40,   cache_creation: 0.10  },
 
-  // === Qwen ===
-  "qwen3-coder-plus":             { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
-  "qwen3-coder-flash":            { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
+  // === Qwen (Model Studio, base ≤32k tier; upper tiers up to 5-12x — see docs) ===
+  // NOTE: cache-hit rates below are the 10%-of-input convention where Model Studio
+  // publishes no cache price (not official figures); input/output are official base-tier.
+  "qwen3-coder-plus":             { input: 0.574, output: 2.294, cached: 0.057, reasoning: 2.294,  cache_creation: 0.574 },
+  "qwen3-coder-flash":            { input: 0.144, output: 0.574, cached: 0.014, reasoning: 0.574,  cache_creation: 0.144 },
+  "qwen3.6-flash":                { input: 0.165, output: 0.99,  cached: 0.017, reasoning: 0.99,   cache_creation: 0.165 },
+
+  // === Xiaomi MiMo (mimo.mi.com/docs/price/pay-as-you-go, snapshot 2026-09-23) ===
+  "mimo-v2.5-pro":                { input: 0.435, output: 0.87,  cached: 0.0036, reasoning: 0.87,  cache_creation: 0.435 },
+  "mimo-v2.5":                    { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
+
+  // === Baidu ERNIE (Qianfan billing, snapshot 2026-09-23; ≤32k tier; cached = 10% convention) ===
+  "ernie-5.1":                    { input: 0.56,  output: 2.53,  cached: 0.056, reasoning: 2.53,   cache_creation: 0.56  },
+  "ernie-5.0":                    { input: 0.84,  output: 3.38,  cached: 0.084, reasoning: 3.38,   cache_creation: 0.84  },
+  "ernie-x1-turbo-32k":           { input: 0.15,  output: 0.59,  cached: 0.015, reasoning: 0.59,   cache_creation: 0.15  },
 
   // === Kimi ===
   // Official platform.kimi.ai: cache-hit / cache-miss / output per 1M tokens
