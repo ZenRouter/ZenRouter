@@ -284,6 +284,11 @@ export function pipeWithDisconnect(
   let chunkCount = 0;
   let totalBytes = 0;
   let lastChunkAt = Date.now();
+  // Human-readable abort cause for the terminal payload. Defaults to a generic
+  // upstream loss; the stall watchdog overwrites it with the specific timeout
+  // so aborted Responses passthrough streams carry the real cause (upstream
+  // 9router #4072: undistinguishable "stream closed" terminal bytes).
+  let abortMessage = "upstream connection lost";
   const t0 = Date.now();
   const tag = "STREAM";
   const clearStall = () => {
@@ -306,6 +311,7 @@ export function pipeWithDisconnect(
       stallTimer = null;
       const isTtft = chunkCount === 0;
       const reason = isTtft ? `TTFT timeout (${firstChunkTimeoutMs}ms)` : `stream stall timeout (${stallTimeoutMs}ms)`;
+      abortMessage = reason;
       dbg(tag, `STALL TIMEOUT | isTtft=${isTtft} | chunks=${chunkCount} | bytes=${totalBytes} | sinceLast=${Date.now() - lastChunkAt}ms`);
       const timeoutError = new Error(reason);
       cancelUpstream(timeoutError);
@@ -383,7 +389,7 @@ export function pipeWithDisconnect(
   return createDisconnectAwareStream(
     { readable: transformedBody, writable: { getWriter: () => ({ abort: () => Promise.resolve() }) } },
     wrappedController,
-    onAbortTerminal,
+    onAbortTerminal ? () => onAbortTerminal(abortMessage) : null,
     keepaliveMs,
     sourceFormat
   );
