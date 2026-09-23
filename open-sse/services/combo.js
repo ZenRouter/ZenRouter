@@ -453,8 +453,17 @@ export async function peekStreamForContent(response, timeoutMs = 45000) {
     }
   })();
 
-  const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeoutMs));
+  let timerId = null;
+  const timeoutPromise = new Promise((resolve) => {
+    timerId = setTimeout(resolve, timeoutMs);
+  });
   await Promise.race([readPromise, timeoutPromise]);
+  if (timerId) clearTimeout(timerId);
+
+  // If timed out without any content, abort reader immediately to prevent background runaway/leak
+  if (!hasContent) {
+    try { await reader.cancel(new Error("peekStreamForContent timeout")); } catch {}
+  }
 
   const replayedStream = new ReadableStream({
     async start(controller) {
@@ -526,6 +535,8 @@ export async function handleComboChat({ body, models, handleSingleModel, log, co
           });
         }
         log.warn("COMBO", `Model ${modelStr} returned empty stream (no content frames) -> trying next model`);
+        try { await peek.body?.cancel?.(new Error("combo empty stream")); } catch {}
+        try { await result?.body?.cancel?.(new Error("combo empty stream")); } catch {}
         continue;
       }
 

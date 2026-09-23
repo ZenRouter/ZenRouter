@@ -35,6 +35,7 @@ export function createStreamController({ onDisconnect, onError, log, provider, m
   const startTime = Date.now();
   let disconnected = false;
   let abortTimeout = null;
+  let streamError = null;
 
   // Only abnormal terminations are logged; normal completion is covered by "📊 done".
   // isError uses errorLine (always shown, ignores LOG_LEVEL) so failures survive quiet levels.
@@ -50,6 +51,7 @@ export function createStreamController({ onDisconnect, onError, log, provider, m
     startTime,
 
     isConnected: () => !disconnected,
+    getError: () => streamError,
 
     // Call when client disconnects
     handleDisconnect: (reason = "client_closed") => {
@@ -60,10 +62,13 @@ export function createStreamController({ onDisconnect, onError, log, provider, m
       // socket on every completed request. "📊 done" is the authoritative outcome line.
       dbg("CTRL", `${provider}/${model} | disconnect=${reason} | dur=${Date.now() - startTime}ms`);
 
-      // Delay abort to allow cleanup
-      abortTimeout = setTimeout(() => {
-        abortController.abort();
-      }, 500);
+      if (abortTimeout) {
+        clearTimeout(abortTimeout);
+        abortTimeout = null;
+      }
+
+      // Immediately abort upstream to prevent orphan billing / background hangs
+      abortController.abort(new Error(reason));
 
       onDisconnect?.({ reason, duration: Date.now() - startTime });
     },
@@ -83,22 +88,28 @@ export function createStreamController({ onDisconnect, onError, log, provider, m
     handleError: (error) => {
       if (disconnected) return;
       disconnected = true;
+      streamError = error;
 
       if (abortTimeout) {
         clearTimeout(abortTimeout);
         abortTimeout = null;
       }
 
-      if (error.name === "AbortError") {
+      abortController.abort(error);
+
+      if (error?.name === "AbortError") {
         logStream("⚡", "ABORTED");
         return;
       }
 
-      logStream("✗", `ERROR: ${error.message}${error.stack ? `\n    ${error.stack}` : ""}`, true);
+      logStream("✗", `ERROR: ${error?.message || error}${error?.stack ? `\n    ${error.stack}` : ""}`, true);
       onError?.(error);
     },
 
-    abort: () => abortController.abort()
+    abort: (err) => {
+      if (err) streamError = err;
+      abortController.abort(err);
+    }
   };
 }
 
@@ -167,6 +178,14 @@ export function createDisconnectAwareStream(
     async pull(controller) {
       if (!streamController.isConnected()) {
         clearKeepalive();
+        const err = streamController.getError?.();
+        if (err && !onAbortTerminal) {
+          try {
+            emitTerminal(controller);
+            controller.error(err);
+          } catch {}
+          return;
+        }
         emitTerminal(controller);
         controller.close();
         return;
@@ -270,6 +289,16 @@ export function pipeWithDisconnect(
   const clearStall = () => {
     if (stallTimer) { clearTimeout(stallTimer); stallTimer = null; }
   };
+  const cancelUpstream = (err) => {
+    clearStall();
+    if (providerResponse?.body && !providerResponse.body.locked) {
+      try { providerResponse.body.cancel(err).catch(() => {}); } catch {}
+    }
+    if (transformStream?.writable && !transformStream.writable.locked) {
+      try { transformStream.writable.abort(err).catch(() => {}); } catch {}
+    }
+  };
+
   const armStall = () => {
     clearStall();
     const currentTimeout = chunkCount === 0 ? firstChunkTimeoutMs : stallTimeoutMs;
@@ -278,22 +307,53 @@ export function pipeWithDisconnect(
       const isTtft = chunkCount === 0;
       const reason = isTtft ? `TTFT timeout (${firstChunkTimeoutMs}ms)` : `stream stall timeout (${stallTimeoutMs}ms)`;
       dbg(tag, `STALL TIMEOUT | isTtft=${isTtft} | chunks=${chunkCount} | bytes=${totalBytes} | sinceLast=${Date.now() - lastChunkAt}ms`);
-      streamController.handleError?.(new Error(reason));
-      streamController.abort?.();
+      const timeoutError = new Error(reason);
+      cancelUpstream(timeoutError);
+      streamController.handleError?.(timeoutError);
+      streamController.abort?.(timeoutError);
     }, currentTimeout);
   };
 
-  // Wrap controller so every termination path clears the stall timer.
+  // Immediate upstream cancellation when caller's signal aborts
+  const onSignalAbort = () => {
+    const reason = streamController.signal?.reason || new Error("aborted");
+    cancelUpstream(reason);
+  };
+  if (streamController?.signal) {
+    if (streamController.signal.aborted) {
+      onSignalAbort();
+    } else {
+      streamController.signal.addEventListener("abort", onSignalAbort, { once: true });
+    }
+  }
+
+  // Wrap controller so every termination path clears the stall timer and aborts upstream.
   // Without this, abort/cancel/downstream-error paths leave the timer armed
   // and a stale abort could fire after the request has already ended.
   const wrappedController = {
     signal: streamController.signal,
     startTime: streamController.startTime,
     isConnected: () => streamController.isConnected(),
-    handleComplete: () => { dbg(tag, `complete | chunks=${chunkCount} | bytes=${totalBytes} | dur=${Date.now() - t0}ms`); clearStall(); streamController.handleComplete(); },
-    handleError: (e) => { dbg(tag, `error: ${e?.message} | chunks=${chunkCount} | bytes=${totalBytes} | dur=${Date.now() - t0}ms`); clearStall(); streamController.handleError(e); },
-    handleDisconnect: (r) => { dbg(tag, `disconnect: ${r} | chunks=${chunkCount} | bytes=${totalBytes} | dur=${Date.now() - t0}ms`); clearStall(); streamController.handleDisconnect(r); },
-    abort: () => { clearStall(); streamController.abort(); }
+    getError: () => streamController.getError?.(),
+    handleComplete: () => {
+      dbg(tag, `complete | chunks=${chunkCount} | bytes=${totalBytes} | dur=${Date.now() - t0}ms`);
+      clearStall();
+      streamController.handleComplete();
+    },
+    handleError: (e) => {
+      dbg(tag, `error: ${e?.message} | chunks=${chunkCount} | bytes=${totalBytes} | dur=${Date.now() - t0}ms`);
+      cancelUpstream(e);
+      streamController.handleError(e);
+    },
+    handleDisconnect: (r) => {
+      dbg(tag, `disconnect: ${r} | chunks=${chunkCount} | bytes=${totalBytes} | dur=${Date.now() - t0}ms`);
+      cancelUpstream(new Error(r));
+      streamController.handleDisconnect(r);
+    },
+    abort: (err) => {
+      cancelUpstream(err || new Error("aborted"));
+      streamController.abort?.(err);
+    }
   };
 
   armStall();
