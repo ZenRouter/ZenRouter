@@ -44,6 +44,11 @@ const PATTERN_THINKING = [
   { provider: "codex", pattern: "*gpt-5.6-terra*", levels: [...CODEX_GPT_5_6_LEVELS, "ultra"] },
   { provider: "codex", pattern: "*gpt-5.6-luna*", levels: CODEX_GPT_5_6_LEVELS },
   { pattern: "*codex*", levels: ["low", "medium", "high", "xhigh"] }, // codex cannot disable thinking
+  { pattern: "*mimo*v2.6*", levels: ["none", "low", "medium", "high", "xhigh"] },
+  // mimo-v2.5-pro on opencode-go rejects reasoning_effort "max" (probed live); v2.5 accepts it.
+  { pattern: "*mimo*v2.5-pro*", levels: ["none", "low", "medium", "high", "xhigh"] },
+  // DeepSeek v4.*: effort low|medium|high|xhigh|max
+  { pattern: "*deepseek-v4.*", levels: ["none", "low", "medium", "high", "xhigh", "max"] },
   // ── codebuddy-cn per-model effort sets (e014cb537) — read off the client picker
   // (server-delivered supportedEfforts), 2026-08-30. Gateway uses thinkingFormat "openai"
   // but rejects levels outside each model's set, so we must clamp per model, not per format.
