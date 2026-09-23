@@ -5,6 +5,58 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### Full ecosystem refresh — snapshot 23 September 2026
+
+10-provider-group research pass (official docs first: platform.openai.com,
+ai.google.dev, docs.x.ai, api-docs.deepseek.com, docs.mistral.ai,
+platform.kimi.ai, platform.minimax.io, docs.z.ai, Model Studio, Qianfan,
+Hunyuan, MiMo, console.groq.com, Cerebras, SambaNova, Together, Fireworks,
+Nebius, SiliconFlow, Chutes, Cloudflare, docs.cohere.com, docs.perplexity.ai,
+jina.ai, docs.voyageai.com, ElevenLabs, Cartesia, Deepgram, BFL, Recraft,
+fal.ai, Runway, Brave/Exa/Tavily/Serper docs, Copilot model table).
+
+#### Added
+- New routable models: GPT-6 Astra/Sol/Luna, GPT-5.6 trio, GPT-5.5/5.4-pro,
+  o1-pro, gpt-transcribe, gpt-image-2; Gemini 3.5-flash/3.1-flash-lite +
+  stable Nano-Banana image IDs; Grok 4.7/4.3/Build; Mistral Small 4;
+  MiniMax M2/highspeeds; GLM flashx/turbo/4.5/4.5v variants; Qwen
+  3.8/3.7-flash/3.6-plus/3.5-flash/coder-flash; MiMo v2.5-asr; ERNIE
+  5.1/5.0/4.5-turbo/X1; Hy3 preview; host seeds (gpt-oss-20b, Qwen3.8,
+  V4-dated, Kimi-K3, GLM-5.3, MiniMax-M3, Chutes TEE catalog); Cohere
+  Command R7B/A-family; Sonar reasoning-pro/deep-research; Voyage-4
+  embeddings; Jina v4; Eleven v3/Flash; Cartesia 3.5/3.6; FLUX.2 family;
+  Recraft V4 family; fal flux-2/ideogram-v3; Runway gen4.5/aleph;
+  Copilot current IDs; Ollama cloud current pins.
+
+#### Changed
+- Repricing to official schedules: OpenAI (GPT-5+ 10% cache, 5.6 promo,
+  o-series, 4.1 family), Gemini (2.5-pro/lite cuts, 3.5/3.1-lite, embedding),
+  DeepSeek off-peak schedule, Grok per-model, Mistral -latest slugs, Kimi
+  k2.6 hit rate, MiniMax M2 tier, full Z.ai GLM table, Qwen base tiers,
+  MiMo PAYG, Qianfan ERNIE, Sonar, Cohere, Voyage embeddings.
+- Context/caps corrections: GPT-5.4/5.5 1.05M, Gemini image 128K class,
+  Gemma-4 256K, DeepSeek 384K out, Codestral 128K, GLM-5.3 128K out,
+  qwen3-coder-next 256K, Seed/Doubao 256K/128K, ERNIE classes, Command A
+  256K, Sonar Pro 200K.
+- Transports/endpoints: Nebius → api.tokenfactory.nebius.com; HuggingFace
+  images → Inference Providers router (same path shape).
+
+#### Removed / deprecated
+- Retired IDs removed from routable lists: DALL-E 2/3, retired Codex slugs,
+  Gemini retired previews + PaLM embedding-001, DeepSeek chat/reasoner,
+  Grok 3/fast/code/image-1212, Kimi k2.5/k2/latest, MiMo V2 series,
+  Cerebras/Groq/Together/Nebius/Cloudflare retired serverside IDs,
+  Copilot retired models (4.5/4.6/5.2/grok-code), Ollama stale pins.
+- Flagged deprecated (kept, labelled): PlayHT (discontinued), Google PSE
+  (sunsets Jan 2027), Perplexity chat-completions transport (ends 27 Sep
+  2026 — migration tracked, not switched), AssemblyAI ID mapping,
+  GitLab Duo transport, Cohere/Jina rerank wiring.
+
+#### Tests
+- New: pricing-openai/gemini/xdm/ckm/asia/hosts/media-current,
+  registry-integrity (catalog-wide structural validation),
+  stream-stall-cancels-upstream kill-chain (prior session).
+
 ### Fixed
 
 - **fix(auth): treat OAuth org-denial 403 as permanent, skip refresh storm**

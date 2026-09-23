@@ -699,8 +699,8 @@
     "format": "openai"
   },
   "nebius": {
-    "baseUrl": "https://api.studio.nebius.ai/v1/chat/completions",
-    "validateUrl": "https://api.studio.nebius.ai/v1/models",
+    "baseUrl": "https://api.tokenfactory.nebius.com/v1/chat/completions",
+    "validateUrl": "https://api.tokenfactory.nebius.com/v1/models",
     "format": "openai"
   },
   "nvidia": {
