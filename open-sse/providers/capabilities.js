@@ -279,14 +279,19 @@ export const PATTERN_CAPABILITIES = [
   { pattern: "*claude*",        caps: { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-budget" } },
 
   // ── Gemini (all 2.0+ multimodal + google_search grounding, 1M ctx) ─
-  { pattern: "*gemini*image*",  caps: { vision: true, imageOutput: true, contextWindow: 1048576 } },
+  // Image models live in the 128K/65K class, not 1M (ai.google.dev/gemini-api/docs/gemini-3).
+  { pattern: "*gemini*image*",  caps: { vision: true, imageOutput: true, contextWindow: 131072, maxOutput: 32768 } },
   { pattern: "*gemini-3.8*",    caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, search: true, thinkingFormat: "gemini-level", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 65536 } },
   { pattern: "*gemini-3.7*",    caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, search: true, thinkingFormat: "gemini-level", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 65536 } },
-  { pattern: "*gemini-3*pro*",  caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, search: true, thinkingFormat: "gemini-level", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 65535 } },
+  { pattern: "*gemini-3*pro*",  caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, search: true, thinkingFormat: "gemini-level", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 65536 } },
   { pattern: "*gemini-3*",      caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, search: true, thinkingFormat: "gemini-level", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 65536 } },
   { pattern: "*gemini-2.5*",    caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, search: true, thinkingFormat: "gemini-budget", thinkingRange: { min: 0, max: 24576 }, contextWindow: 1048576, maxOutput: 65536 } },
   { pattern: "*gemini-2*",      caps: { vision: true, audioInput: true, videoInput: true, search: true, contextWindow: 1048576, maxOutput: 65536 } },
   { pattern: "*gemini*",        caps: { vision: true, search: true, contextWindow: 1048576 } },
+  // Gemma 4 12B/26B/31B = 256K ctx (E2B/E4B edge models stay 128K via the generic pattern).
+  { pattern: "*gemma-4-31b*",    caps: { vision: true, contextWindow: 256000 } },
+  { pattern: "*gemma-4-26b*",    caps: { vision: true, contextWindow: 256000 } },
+  { pattern: "*gemma-4-12b*",    caps: { vision: true, contextWindow: 256000 } },
   { pattern: "*gemma*",         caps: { vision: true, contextWindow: 128000 } },
   { pattern: "*nanobanana*",    caps: { vision: true, imageOutput: true } },
 
