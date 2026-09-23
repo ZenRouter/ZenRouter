@@ -27,13 +27,19 @@ describe("xAI current lineup", () => {
 });
 
 describe("DeepSeek current lineup", () => {
-  const ids = deepseekRegistry.models.map((m) => m.id);
-  it("dropped discontinued chat/reasoner and retired vision-exp IDs", () => {
-    for (const id of ["deepseek-chat", "deepseek-reasoner", "deepseek-v4-flash-vision-exp"]) {
+  const models = deepseekRegistry.models;
+  const ids = models.map((m) => m.id);
+  const byId = (id) => models.find((m) => m.id === id);
+  it("dropped discontinued chat/reasoner; retired flash IDs stay as legacy aliases", () => {
+    for (const id of ["deepseek-chat", "deepseek-reasoner"]) {
       expect(ids).not.toContain(id);
     }
     expect(ids).toContain("deepseek-flash");
     expect(ids).toContain("deepseek-v4-pro");
+    // both retired Sep 10 but still routed upstream → legacy aliases
+    for (const id of ["deepseek-v4-flash", "deepseek-v4-flash-vision-exp"]) {
+      expect(byId(id).upstreamModelId).toBe("deepseek-flash");
+    }
   });
   it("prices flash/pro at the official off-peak schedule", () => {
     expect(getPricingForModel("deepseek", "deepseek-flash")).toMatchObject({ input: 0.15, output: 0.6 });
