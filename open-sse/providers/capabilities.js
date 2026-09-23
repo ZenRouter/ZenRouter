@@ -396,10 +396,15 @@ export const PATTERN_CAPABILITIES = [
   { pattern: "*mistral*",       caps: { contextWindow: 128000 } },
 
   // ── Cohere (Command A Vision = vision; others text) ──────────────
+  // Command A (Mar 2025) and A Reasoning are 256K, not 128K (docs.cohere.com/docs/models).
+  { pattern: "*command-a-03-2025*", caps: { contextWindow: 256000 } },
+  { pattern: "*command-a-reasoning*", caps: { reasoning: true, contextWindow: 256000 } },
   { pattern: "*command-a-vision*", caps: { vision: true, contextWindow: 128000 } },
   { pattern: "*command*",       caps: { contextWindow: 128000 } },
 
   // ── Perplexity (web search native) ───────────────────────────────
+  // Sonar Pro is 200K ctx (docs.perplexity.ai); base/reasoning/deep-research are 128K.
+  { pattern: "*sonar-pro*",     caps: { search: true, contextWindow: 200000 } },
   { pattern: "*sonar*",         caps: { search: true, contextWindow: 128000 } },
   { pattern: "*pplx*",          caps: { search: true, contextWindow: 128000 } },
   { pattern: "*perplexity*",    caps: { search: true, contextWindow: 128000 } },

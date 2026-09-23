@@ -202,9 +202,30 @@ export const MODEL_PRICING = {
 
   // === Misc ===
   "oswe-vscode-prime":            { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
-  "gpt-oss-120b-medium":          { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
+  "gpt-oss-120b-medium":          { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 2.00,   cache_creation: 2.00  },
   "vision-model":                 { input: 1.50,  output: 6.00,  cached: 0.75,  reasoning: 9.00,   cache_creation: 1.50  },
   "coder-model":                  { input: 1.50,  output: 6.00,  cached: 0.75,  reasoning: 9.00,   cache_creation: 1.50  },
+
+  // === Cohere (cohere.com/pricing, snapshot 2026-09-23) ===
+  "command-a-03-2025":            { input: 2.50,  output: 10.00, cached: 0.25,  reasoning: 10.00,  cache_creation: 2.50  },
+  "command-r-08-2024":            { input: 0.15,  output: 0.60,  cached: 0.015, reasoning: 0.60,   cache_creation: 0.15  },
+  "command-r-plus-08-2024":       { input: 2.50,  output: 10.00, cached: 0.25,  reasoning: 10.00,  cache_creation: 2.50  },
+  "command-r7b-12-2024":          { input: 0.0375, output: 0.15, cached: 0.004, reasoning: 0.15,   cache_creation: 0.0375 },
+
+  // === Perplexity Sonar (docs.perplexity.ai, snapshot 2026-09-23; +per-request search fees) ===
+  "sonar":                        { input: 1.00,  output: 1.00,  cached: 0.10,  reasoning: 1.00,   cache_creation: 1.00  },
+  "sonar-pro":                    { input: 3.00,  output: 15.00, cached: 0.30,  reasoning: 15.00,  cache_creation: 3.00  },
+  "sonar-reasoning-pro":          { input: 2.00,  output: 8.00,  cached: 0.20,  reasoning: 8.00,   cache_creation: 2.00  },
+  "sonar-deep-research":          { input: 2.00,  output: 8.00,  cached: 0.20,  reasoning: 8.00,   cache_creation: 2.00  },
+
+  // === Voyage embeddings (docs.voyageai.com/docs/pricing, $/1M tokens) ===
+  "voyage-4-large":               { input: 0.12,  output: 0.00,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
+  "voyage-4":                     { input: 0.06,  output: 0.00,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
+  "voyage-4-lite":                { input: 0.02,  output: 0.00,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
+  "voyage-3-large":               { input: 0.18,  output: 0.00,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
+  "voyage-3.5":                   { input: 0.06,  output: 0.00,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
+  "voyage-3.5-lite":              { input: 0.02,  output: 0.00,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
+  "voyage-code-3":                { input: 0.18,  output: 0.00,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
 };
 
 /**

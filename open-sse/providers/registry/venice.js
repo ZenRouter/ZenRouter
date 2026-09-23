@@ -28,6 +28,10 @@ export default {
   models: [
     { id: "venice-uncensored-1-2", name: "Venice Uncensored 1.2" },
     { id: "zai-org-glm-5", name: "GLM-5" },
+    { id: "z-ai-glm-5-3", name: "GLM 5.3" },
+    { id: "z-ai-glm-5-3-flash", name: "GLM 5.3 Flash" },
+    { id: "kimi-k3", name: "Kimi K3" },
+    { id: "deepseek-v4-flash", name: "DeepSeek V4 Flash" },
     { id: "qwen3-235b-a22b-instruct-2507", name: "Qwen3 235B A22B Instruct" },
     { id: "qwen3-coder-480b-a35b-instruct-turbo", name: "Qwen3 Coder 480B A35B Turbo" },
     { id: "qwen3-vl-235b-a22b", name: "Qwen3 VL 235B A22B" },

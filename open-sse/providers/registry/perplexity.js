@@ -25,6 +25,8 @@ export default {
   models: [
     { id: "sonar-pro", name: "Sonar Pro" },
     { id: "sonar", name: "Sonar" },
+    { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro" },
+    { id: "sonar-deep-research", name: "Sonar Deep Research" },
   ],
   serviceKinds: ["llm","webSearch"],
   searchViaChat: {

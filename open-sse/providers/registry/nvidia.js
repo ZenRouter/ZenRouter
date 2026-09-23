@@ -26,6 +26,7 @@ export default {
     { id: "minimaxai/minimax-m3", name: "MiniMax M3" },
     { id: "z-ai/glm-5.2", name: "GLM 5.2" },
     { id: "deepseek-ai/deepseek-v4-pro", name: "DeepSeek V4 Pro" },
+    { id: "deepseek-ai/deepseek-v4-pro-0813", name: "DeepSeek V4 Pro (0813)" },
     { id: "deepseek-ai/deepseek-v4-flash", name: "DeepSeek V4 Flash" },
     { id: "moonshotai/kimi-k2.6", name: "Kimi K2.6" },
     { id: "nvidia/nemotron-3-ultra-550b-a55b", name: "Nemotron 3 Ultra" },

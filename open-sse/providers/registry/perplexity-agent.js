@@ -34,9 +34,9 @@ export default {
     { id: "anthropic/claude-opus-4-8", name: "Claude Opus 4.8" },
     { id: "google/gemini-3.1-pro-preview", name: "Gemini 3.1 Pro" },
     { id: "xai/grok-4.20-reasoning", name: "Grok 4.20 Reasoning" },
-    { id: "perplexity/glm-5.2", name: "GLM 5.2" },
+    { id: "perplexity/glm-5.3", name: "GLM 5.3" },
     { id: "perplexity/kimi-k2.7-code", name: "Kimi K2.7 Code" },
-    { id: "nvidia/nemotron-3-super-120b-a12b", name: "Nemotron 3 Super 120B" },
+    { id: "perplexity/nemotron-3-ultra-550b-a55b", name: "Nemotron 3 Ultra 550B" },
   ],
   serviceKinds: ["llm", "webSearch"],
   searchViaChat: {

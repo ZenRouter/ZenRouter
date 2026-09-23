@@ -26,9 +26,11 @@ export default {
   },
   models: [
     { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B" },
-    { id: "meta-llama/llama-4-maverick-17b-128e-instruct", name: "Llama 4 Maverick" },
-    { id: "qwen/qwen3-32b", name: "Qwen3 32B" },
+    { id: "llama-3.1-8b-instant", name: "Llama 3.1 8B Instant" },
     { id: "openai/gpt-oss-120b", name: "GPT-OSS 120B" },
+    { id: "openai/gpt-oss-20b", name: "GPT-OSS 20B" },
+    { id: "qwen/qwen3.8-27b", name: "Qwen3.8 27B (Preview)" },
+    { id: "minimaxai/minimax-m2.7", name: "MiniMax M2.7 (Preview)" },
     { id: "whisper-large-v3", name: "Whisper Large v3", params: ["language","response_format","temperature","prompt"], kind: "stt" },
     { id: "whisper-large-v3-turbo", name: "Whisper Large v3 Turbo", params: ["language","response_format","temperature","prompt"], kind: "stt" },
     { id: "distil-whisper-large-v3-en", name: "Distil Whisper Large v3 EN", params: ["language","response_format","temperature","prompt"], kind: "stt" },

@@ -23,18 +23,23 @@ export default {
     authHeader: "bearer",
     models: [
       {
+        id: "jina-embeddings-v4",
+        name: "Jina Embeddings v4 (Multimodal, non-commercial)",
+        dimensions: 2048
+      },
+      {
         id: "jina-embeddings-v3",
         name: "Jina Embeddings v3",
         dimensions: 1024
       },
       {
         id: "jina-embeddings-v2-base-en",
-        name: "Jina Embeddings v2 Base EN",
+        name: "Jina Embeddings v2 Base EN (Legacy)",
         dimensions: 768
       },
       {
         id: "jina-embeddings-v2-base-code",
-        name: "Jina Embeddings v2 Base Code",
+        name: "Jina Embeddings v2 Base Code (Legacy)",
         dimensions: 768
       }
     ]

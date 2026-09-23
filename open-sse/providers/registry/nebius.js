@@ -15,11 +15,12 @@ export default {
   category: "apikey",
   authType: "apikey",
   transport: {
-    baseUrl: "https://api.studio.nebius.ai/v1/chat/completions",
-    validateUrl: "https://api.studio.nebius.ai/v1/models",
+    baseUrl: "https://api.tokenfactory.nebius.com/v1/chat/completions",
+    validateUrl: "https://api.tokenfactory.nebius.com/v1/models",
   },
   models: [
-    { id: "meta-llama/Llama-3.3-70B-Instruct", name: "Llama 3.3 70B Instruct" },
+    { id: "deepseek-ai/DeepSeek-V4-Flash-0731", name: "DeepSeek V4 Flash" },
+    { id: "MiniMaxAI/MiniMax-M3", name: "MiniMax M3" },
     { id: "Qwen/Qwen3-Embedding-8B", name: "Qwen3 Embedding 8B", kind: "embedding" },
   ],
   serviceKinds: ["llm", "embedding"],

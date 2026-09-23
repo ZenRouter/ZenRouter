@@ -22,7 +22,8 @@ export default {
     authType: "apikey",
     authHeader: "bearer",
     costPerQuery: 0,
-    freeMonthlyQuota: 1000000,
+    // Official: 10M-token ONE-TIME signup grant (not monthly); field kept for UI compat.
+    freeMonthlyQuota: 10000000,
     formats: [
       "markdown",
       "text",
