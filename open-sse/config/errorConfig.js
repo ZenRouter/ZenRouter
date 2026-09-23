@@ -81,6 +81,15 @@ export const ERROR_RULES = [
   // CommandCode stream error interception (#3636)
   { text: "[commandcode error",        cooldownMs: COOLDOWN.short },
   { text: "commandcode error",         cooldownMs: COOLDOWN.short },
+  // Permanent OAuth/org-policy denials (Anthropic `oauth_not_allowed_for_organization`,
+  // Claude Code `oauth_org_not_allowed`). Server-side org policy — token refresh
+  // can never heal it, so mark terminal with a long cooldown and never retry
+  // aggressively. Fallback to the next account is still allowed (different org
+  // credentials may work), but the failing account stays locked.
+  { text: "oauth_not_allowed",          cooldownMs: COOLDOWN.extended, terminal: true },
+  { text: "oauth_org_not_allowed",      cooldownMs: COOLDOWN.extended, terminal: true },
+  { text: "oauth authentication is currently not allowed", cooldownMs: COOLDOWN.extended, terminal: true },
+  { text: "organization has disabled",  cooldownMs: COOLDOWN.extended, terminal: true },
 
   // --- Status-based rules (fallback when text doesn't match) ---
   { status: 401, cooldownMs: COOLDOWN.long, terminal: true },

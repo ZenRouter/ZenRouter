@@ -5,6 +5,7 @@ import { FORMATS } from "../translator/formats.js";
 import { normalizeClaudePassthrough, anchorClaudeCache } from "../translator/formats/claude.js";
 import { createStreamController } from "../utils/streamHandler.js";
 import { refreshWithRetry } from "../services/tokenRefresh.js";
+import { isPermanentAuthDenial } from "../services/accountFallback.js";
 import { createRequestLogger } from "../utils/requestLogger.js";
 import { getModelTargetFormat, getModelSupportedFormats, getModelStrip, getModelUpstreamId, getModelType, PROVIDER_ID_TO_ALIAS } from "../config/providerModels.js";
 import { PROVIDERS } from "../config/providers.js";
@@ -419,8 +420,21 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     return createErrorResult(HTTP_STATUS.BAD_GATEWAY, errMsg);
   }
 
-  // Handle 401/403 - try token refresh (skip for noAuth providers)
+  // Handle 401/403 - try token refresh (skip for noAuth providers).
+  // Permanent org-policy denials (Anthropic `oauth_not_allowed_for_organization`)
+  // can never be healed by refresh: skip the refresh+retry entirely so one
+  // denied credential doesn't burn refresh budget and lock every sibling
+  // account in turn. The normal error path below still locks this account
+  // (terminal, extended cooldown) and falls back once to the next account.
   if (!executor.noAuth && (providerResponse.status === HTTP_STATUS.UNAUTHORIZED || providerResponse.status === HTTP_STATUS.FORBIDDEN)) {
+    let permanentDenial = false;
+    try {
+      const peekText = await providerResponse.clone().text();
+      permanentDenial = isPermanentAuthDenial(providerResponse.status, peekText);
+    } catch { /* clone/peek failed — fall through to refresh as before */ }
+    if (permanentDenial) {
+      if (log?.line) log.line(reqTag, "⛔", `PERMANENT AUTH DENIAL · ${provider}/${model} · skipping token refresh`);
+    } else {
     try {
       // Mutate credentials after each successful refresh: rotating refresh_token
       // providers (xAI/grok-cli) issue a new RT on every refresh; without this,
@@ -454,6 +468,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     } catch (e) {
       log?.warn?.("TOKEN", `${provider.toUpperCase()} | refresh threw: ${e.message}`);
     }
+    } // end else (non-permanent 401/403 → refresh path)
   }
 
   // Provider returned error

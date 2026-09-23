@@ -73,6 +73,37 @@ export function parseRetryAfter(retryAfter) {
 }
 
 /**
+ * Permanent OAuth/org-policy denial substrings (lowercase). Mirrors the
+ * terminal ERROR_RULES entries above: a server-side policy decision that
+ * token refresh can never heal (Anthropic `oauth_not_allowed_for_organization`,
+ * Claude Code `oauth_org_not_allowed`). Matched against the lowercased
+ * error text; deliberately specific so ordinary quota/permission 403s
+ * keep their transient handling.
+ */
+export const PERMANENT_AUTH_DENIAL_TEXTS = [
+  "oauth_not_allowed",
+  "oauth_org_not_allowed",
+  "oauth authentication is currently not allowed",
+  "organization has disabled",
+];
+
+/**
+ * True when an upstream 401/403 carries a permanent org-policy denial.
+ * Callers must skip token refresh AND retry for these — refreshing a
+ * denied credential only burns rate-limit budget and locks every sibling
+ * account in turn (retry storm).
+ * @param {number} status - HTTP status code
+ * @param {string} errorText - Error message text (any shape)
+ * @returns {boolean}
+ */
+export function isPermanentAuthDenial(status, errorText) {
+  if (status !== 401 && status !== 403) return false;
+  if (!errorText) return false;
+  const lower = (typeof errorText === "string" ? errorText : JSON.stringify(errorText)).toLowerCase();
+  return PERMANENT_AUTH_DENIAL_TEXTS.some((t) => lower.includes(t));
+}
+
+/**
  * Check if error should trigger account fallback (switch to next account)
  * Config-driven: matches ERROR_RULES top-to-bottom (text rules first, then status)
  * @param {number} status - HTTP status code
