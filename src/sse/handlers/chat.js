@@ -9,6 +9,7 @@ import {
 } from "../services/auth.js";
 import { handleAntigravityQuotaError, clearAntigravityStrikes } from "../services/antigravityQuota.js";
 import { getSettings, isApiKeyRequired } from "@/lib/localDb";
+import { getDisabledByProvider } from "@/lib/disabledModelsDb";
 import { getModelInfo, getComboModels } from "../services/model.js";
 import { handleChatCore } from "open-sse/handlers/chatCore.js";
 import { DEFAULT_HEADROOM_URL } from "@/lib/headroom/detect";
@@ -246,6 +247,19 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
 
   const { provider, model } = modelInfo;
 
+  // Disabled models are gated at routing time, not just hidden in listings:
+  // a dashboard-disabled model must not reach an upstream account (#4249).
+  // Combo members funnel through here too, so each member is gated in turn.
+  try {
+    const disabled = await getDisabledByProvider(provider);
+    if (Array.isArray(disabled) && disabled.includes(model)) {
+      log.warn("CHAT", `Model disabled by operator: ${provider}/${model}`);
+      return errorResponse(HTTP_STATUS.FORBIDDEN, `Model ${provider}/${model} is disabled`);
+    }
+  } catch {
+    // Fail-open: a disabled-list read failure must not block routing.
+  }
+
   // Routing shown in the unified "▶" line (client model → provider/model)
 
   // Extract userAgent from request
@@ -253,6 +267,8 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
 
   // Try with available accounts (fallback on errors)
   const excludeConnectionIds = new Set();
+  // Accounts already granted one immediate retry for a sporadic 5xx.
+  const retriedConnectionIds = new Set();
   let lastError = null;
   let lastStatus = null;
   let consecutiveSameErrors = 0;
@@ -358,6 +374,18 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
     });
 
     if (result.success) return result.response;
+
+    // Sporadic upstream 5xx (9router #4277): grant one immediate same-account
+    // retry BEFORE locking/fallback. A single flaky 500 (identical request
+    // succeeds seconds later) must not poison the account for 30s while fast
+    // clients burn all retries on the cached lock error. Bounded: once per
+    // account per logical request, 5xx only, never after client abort.
+    const retryable5xx = [500, 502, 503, 504].includes(Number(result.status));
+    if (retryable5xx && !retriedConnectionIds.has(credentials.connectionId) && !request?.signal?.aborted) {
+      retriedConnectionIds.add(credentials.connectionId);
+      log.warn("RETRY", `transient ${result.status} on ACC:${credentials.connectionName} — one immediate retry before fallback`);
+      continue;
+    }
 
     // Antigravity 409/429: refresh live quota to get exact resetAt before locking
     let quotaResetMs = null;
