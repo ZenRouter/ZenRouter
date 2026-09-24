@@ -386,6 +386,11 @@ export async function markAccountUnavailable(connectionId, status, errorText, pr
   }
   if (!shouldFallback) return { shouldFallback: false, cooldownMs: 0 };
 
+  // Zero-cooldown fallback (model-scoped permanent errors, e.g. unentitled
+  // slug or retired id): route to the next model/account without touching
+  // connection health state — the credential itself is fine.
+  if (!cooldownMs) return { shouldFallback: true, cooldownMs: 0 };
+
   const reason = describeProviderError(errorText);
   const lockUpdate = buildModelLockUpdate(githubResetAtMs ? null : model, cooldownMs);
 

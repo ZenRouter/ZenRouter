@@ -73,8 +73,23 @@ export const ERROR_RULES = [
   { text: "quota exceeded",           backoff: true },
   { text: "capacity",                 backoff: true },
   { text: "overloaded",               backoff: true },
-  // Console provider: "Model is unavailable" wrapped in 403 (issue #3729)
-  { text: "model is unavailable",     cooldownMs: COOLDOWN.long },
+  // Model-scoped permanent failures (9router #4271/#4263): the account cannot
+  // serve THIS model (unentitled slug, retired/EOL id, client too old) but is
+  // otherwise healthy. Fall through to the next combo member / account WITHOUT
+  // cooling the account down — a cooldown here would lock a healthy credential
+  // for an unrelated model's problem. Cooldown 0 = no lock, still fallback.
+  { text: "unentitled",                 cooldownMs: 0 },
+  { text: "not entitled",               cooldownMs: 0 },
+  { text: "model_not_found",            cooldownMs: 0 },
+  { text: "no such model",              cooldownMs: 0 },
+  { text: "unknown model",              cooldownMs: 0 },
+  { text: "unsupported model",          cooldownMs: 0 },
+  { text: "version_too_old",            cooldownMs: 0 },
+  { text: "model has been retired",     cooldownMs: 0 },
+  { text: "has been retired",           cooldownMs: 0 },
+  { text: "end of life",                cooldownMs: 0 },
+  { text: "no longer supported",        cooldownMs: 0 },
+  { text: "model is unavailable",       cooldownMs: COOLDOWN.long },
   // AiHubMix free-tier abuse gate (#3602): "Sorry, to prevent abuse of free resources..."
   { text: "prevent abuse",            cooldownMs: COOLDOWN.extended },
   { text: "can only try",             cooldownMs: COOLDOWN.extended },
@@ -96,6 +111,8 @@ export const ERROR_RULES = [
   { status: 402, cooldownMs: COOLDOWN.extended, terminal: true },
   { status: 403, cooldownMs: COOLDOWN.long },
   { status: 404, cooldownMs: COOLDOWN.long },
+  // 410 Gone = retired/EOL model id: route around it, don't lock the account.
+  { status: 410, cooldownMs: 0 },
   { status: 429, backoff: true },
 ];
 
