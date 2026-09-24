@@ -7,44 +7,74 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ### 9router upstream cross-check (Sep 2026) — fixed in Zen
 
-Research terhadap issue/PR terbaru `decolua/9router` (models, security, streaming)
-dengan hasil per item — sudah-beres vs baru diperbaiki di Zen:
+Research into the latest `decolua/9router` issues/PRs (models, security,
+streaming) with per-item outcomes — already-fixed vs newly fixed in Zen:
 
 #### Fixed
 - **fix(models): deepseek-v4-1-flash vision (#4293)**
-  Upstream memetakan model ini text-only dari pola nama; upstream-nya sendiri
-  multimodal. Zen kini punya exact caps entry vision:true + 1M/384K.
-- **fix(auth): model-scoped 4xx permanen tanpa cooldown (#4271/#4263)**
-  Unentitled slug, unknown/retired/EOL model, client-too-old (termasuk gerbang
-  versi Claude Code), dan bare 410 kini fallback + 0ms: combo lanjut ke member
-  berikut tanpa mengunci akun yang sehat; tanpa DB write agar health jujur.
-- **fix(routing): disabled-model gate + retry 5xx tunggal (#4249/#4277)**
-  Model yang di-disable di dashboard kini ditolak (403) di routing, bukan cuma
-  disembunyikan dari listing; satu retry se-akun untuk 500/502/503/504 sporadis
-  sebelum lock/fallback 30s.
-- **fix(auth,cli): locks manual + process sweep (#4250/#4295)**
-  Aktivasi hanya menghapus cooldown berumur pendek; kill-switch manual (>24h)
-  dipertahankan. `killAllAppProcesses` parse pid-first + verifikasi /proc di
-  Linux; tak pernah kill saat ragu.
+  Upstream maps this model text-only from name patterns while its own upstream
+  is multimodal. Zen now carries an exact caps entry with vision:true + 1M/384K.
+- **fix(auth): model-scoped permanent 4xx without cooldown (#4271/#4263)**
+  Unentitled slug, unknown/retired/EOL model, too-old client (including the
+  Claude Code version gate), and bare 410 now fall back + 0ms: combos advance
+  to the next member without locking the healthy account, and no DB write
+  keeps connection health truthful.
+- **fix(routing): disabled-model gate + single 5xx retry (#4249/#4277)**
+  Dashboard-disabled models are now rejected (403) at routing time instead of
+  merely hidden from listings; one same-account retry for sporadic
+  500/502/503/504 precedes the 30s lock/fallback.
+- **fix(auth,cli): manual locks + process sweep (#4250/#4295)**
+  Activation only clears short-lived cooldowns; manual kill-switches (>24h)
+  survive. `killAllAppProcesses` parses pid-first output and re-verifies
+  candidates against /proc on Linux; never kills on doubt.
 
-#### Already fixed in Zen ( diverifikasi, tanpa perubahan )
-- **#4301 vision custom model**: Zen punya declared-caps overlay
-  (`getDeclaredModelCaps` + `withDeclaredCapabilities`) yang dipakai request
-  path maupun listing — deklarasi operator menang atas pola nama.
-- **#4289 placeholder credentials**: `change-me*` diperlakukan unset; remote
-  tetap 403 sampai password diganti.
-- **#4259 Claude version gate**: fingerprint sudah 2.1.280 (syarat Opus 5.5).
-- **#4273 tool-id collision**: openai-to-gemini sudah disambiguasi hash suffix.
-- **#4247 mimo thinking injection**: Zen tak punya pola `*mimo*v2.6*`
-  (generik tanpa thinkingFormat) — tak terdampak.
-- **#4277/.env/JWT/OAuth** lainnya: sesuai mapping masing-masing di atas.
+#### Already fixed in Zen (verified, no change)
+- **#4301 custom-model vision**: Zen has a declared-caps overlay
+  (`getDeclaredModelCaps` + `withDeclaredCapabilities`) honored by both the
+  request path and listings — operator declarations win over name patterns.
+- **#4289 placeholder credentials**: `change-me*` is treated as unset; remote
+  stays 403 until the password is changed.
+- **#4259 Claude version gate**: fingerprint is already 2.1.280 (Opus 5.5's
+  requirement).
+- **#4273 tool-id collision**: openai-to-gemini already disambiguates with a
+  hash suffix.
+- **#4247 mimo thinking injection**: Zen has no `*mimo*v2.6*` pattern
+  (generic one carries no thinkingFormat) — not affected.
+- Other #4277 / .env / JWT / OAuth items: per the mapping above.
 
-#### Known limitations (butuh tindak lanjut terpisah)
-- #4276 custom-tool `function_call` vs codex, #4270 auto-mode classifier,
-  #4297 session-affinity (feature), #4292 codex catalogs, #4268 pi-settings
-  (Zen belum punya writer Pi), #4248 NVIDIA 250s timeouts (upstream lambat),
-  #4251 ES warning (cek terpisah),Cursor/windsurf/trae wire-ID tak
-  terverifikasi resmi — tak diubah.
+#### Known limitations (separate follow-ups)
+- #4292 codex account-scoped catalog intersection (dashboard lists static
+  registry; per-account fetch already sends the Bearer token),
+  #4252 Cline App identity (no verifiable UA on record — not invented),
+  #4268 pi-settings (Zen has no Pi writer yet), #4264 opencode/go outage
+  (upstream "Endpoint is unavailable", not a router bug), #4251 ESM warning
+  (cosmetic; `type: module` is wrong for this mixed CJS/ESM repo),
+  #4248 NVIDIA 250s hangs (Zen aborts connects at 60s by design),
+  Cursor/Windsurf/Trae wire IDs not officially verifiable — left untouched.
+
+### Round 2 — remaining upstream items (same snapshot)
+
+#### Fixed
+- **fix(security): rightmost XFF hop (#4286)** — leftmost hop and bare
+  X-Real-IP are client-controlled behind a loopback tunnel; rate-limit
+  buckets now key on the proxy-appended hop.
+- **feat(routing): session-sticky strategy (#4297)** — stable-hash sessions
+  onto one account to preserve prompt caches; dashboard toggle included.
+- **feat(models): live Zed catalog (#4244)** — provider models route resolves
+  Zed's hosted catalog so combos can select current models.
+- **fix(translator): custom_tool_call round-trip (#4276)** — declared custom
+  tools come back as `custom_tool_call` items instead of `function_call`.
+- **fix(stream): truncated-into-nothing fails (#4254)** — Responses
+  `incomplete` / `length` with zero usable content returns 503 for fallback
+  instead of blank 200s.
+
+#### Already covered (verified, no change)
+- **#4270 auto-mode classifier**: safeguards/safeguard_results passthrough
+  already tested (#4173); unknown request fields are never stripped.
+- **#4239 Ollama usage**: dashboard already reads `/api/usage` session/weekly
+  ratios (tested in `ollama-usage.test.js`).
+- **SSRF posture (#4286 remainder)**: `fetchPublic` + DNS-pinned image
+  prefetch + size/mime caps all present; Dependabot/CodeQL skipped per scope.
 
 ### Full ecosystem refresh — snapshot 23 September 2026
 
