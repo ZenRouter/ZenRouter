@@ -367,8 +367,53 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
 /**
  * Handle non-streaming response from provider.
  */
-export async function handleNonStreamingResponse({ providerResponse, provider, model, sourceFormat, targetFormat, body, stream, translatedBody, finalBody, requestStartTime, connectionId, apiKey, clientRawRequest, onRequestSuccess, reqLogger, toolNameMap, customToolNames, trackDone, appendLog, pxpipe, reqTag, log }) {
-  trackDone();
+/**
+ * True when the upstream explicitly reports truncation AND the body carries
+ * zero usable content (no text, no tool calls, no refusal). Partial text or
+ * tool calls count as usable even when truncated. (9router #4254)
+ * @param {object} responseBody - Raw upstream JSON body
+ * @returns {boolean}
+ */
+export function isTruncatedEmptyCompletion(responseBody) {
+  if (!responseBody || typeof responseBody !== "object") return false;
+
+  let truncated = false;
+  let usable = false;
+
+  // OpenAI Chat shape
+  const choice = responseBody?.choices?.[0];
+  if (choice) {
+    if (choice.finish_reason === "length") truncated = true;
+    const msg = choice.message || {};
+    if (typeof msg.content === "string" && msg.content.length > 0) usable = true;
+    if (Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0) usable = true;
+    if (typeof msg.refusal === "string" && msg.refusal.length > 0) usable = true;
+  }
+
+  // OpenAI Responses shape
+  if (responseBody?.object === "response") {
+    if (responseBody.status === "incomplete") truncated = true;
+    for (const item of responseBody.output || []) {
+      if (item?.type === "function_call" || item?.type === "custom_tool_call") { usable = true; break; }
+      for (const part of item?.content || []) {
+        if ((part?.type === "output_text" || part?.type === "refusal") && typeof part?.text === "string" && part.text.length > 0) { usable = true; break; }
+      }
+      if (usable) break;
+    }
+  }
+
+  // Claude Messages shape
+  if (responseBody?.type === "message" && Array.isArray(responseBody?.content)) {
+    if (responseBody.stop_reason === "max_tokens") truncated = true;
+    for (const block of responseBody.content) {
+      if ((block?.type === "text" && block?.text) || block?.type === "tool_use") { usable = true; break; }
+    }
+  }
+
+  return truncated && !usable;
+}
+
+export async function handleNonStreamingResponse({ providerResponse, provider, model, sourceFormat, targetFormat, body, stream, translatedBody, finalBody, requestStartTime, connectionId, apiKey, clientRawRequest, onRequestSuccess, reqLogger, toolNameMap, customToolNames, trackDone, appendLog, pxpipe, reqTag, log }) {  trackDone();
   const contentType = providerResponse.headers.get("content-type") || "";
   let responseBody;
 
@@ -408,6 +453,20 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
   if (nativeReason && ["network_error", "error", "server_error", "timeout"].includes(nativeReason) && !hasContent) {
     appendLog({ status: `FAILED ${HTTP_STATUS.BAD_GATEWAY}` });
     return createErrorResult(HTTP_STATUS.BAD_GATEWAY, `Upstream provider error: ${nativeReason}`);
+  }
+
+  // Truncated-into-nothing (9router #4254): upstream spent the whole budget
+  // on reasoning and reports truncation with zero usable content (e.g.
+  // Responses `status: "incomplete"` + empty output, or finish_reason
+  // "length" with empty content and no tool calls). Handing that out as a
+  // blank 200 makes clients loop; fail instead so account/combo fallback
+  // engages. Responses WITH partial text or tool calls stay successful.
+  if (isTruncatedEmptyCompletion(responseBody)) {
+    appendLog({ status: `FAILED ${HTTP_STATUS.SERVICE_UNAVAILABLE}` });
+    return createErrorResult(
+      HTTP_STATUS.SERVICE_UNAVAILABLE,
+      "Upstream truncated the response with no usable content (output budget spent before any text)"
+    );
   }
 
   if (onRequestSuccess) {
