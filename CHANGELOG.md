@@ -5,6 +5,47 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### 9router upstream cross-check (Sep 2026) — fixed in Zen
+
+Research terhadap issue/PR terbaru `decolua/9router` (models, security, streaming)
+dengan hasil per item — sudah-beres vs baru diperbaiki di Zen:
+
+#### Fixed
+- **fix(models): deepseek-v4-1-flash vision (#4293)**
+  Upstream memetakan model ini text-only dari pola nama; upstream-nya sendiri
+  multimodal. Zen kini punya exact caps entry vision:true + 1M/384K.
+- **fix(auth): model-scoped 4xx permanen tanpa cooldown (#4271/#4263)**
+  Unentitled slug, unknown/retired/EOL model, client-too-old (termasuk gerbang
+  versi Claude Code), dan bare 410 kini fallback + 0ms: combo lanjut ke member
+  berikut tanpa mengunci akun yang sehat; tanpa DB write agar health jujur.
+- **fix(routing): disabled-model gate + retry 5xx tunggal (#4249/#4277)**
+  Model yang di-disable di dashboard kini ditolak (403) di routing, bukan cuma
+  disembunyikan dari listing; satu retry se-akun untuk 500/502/503/504 sporadis
+  sebelum lock/fallback 30s.
+- **fix(auth,cli): locks manual + process sweep (#4250/#4295)**
+  Aktivasi hanya menghapus cooldown berumur pendek; kill-switch manual (>24h)
+  dipertahankan. `killAllAppProcesses` parse pid-first + verifikasi /proc di
+  Linux; tak pernah kill saat ragu.
+
+#### Already fixed in Zen ( diverifikasi, tanpa perubahan )
+- **#4301 vision custom model**: Zen punya declared-caps overlay
+  (`getDeclaredModelCaps` + `withDeclaredCapabilities`) yang dipakai request
+  path maupun listing — deklarasi operator menang atas pola nama.
+- **#4289 placeholder credentials**: `change-me*` diperlakukan unset; remote
+  tetap 403 sampai password diganti.
+- **#4259 Claude version gate**: fingerprint sudah 2.1.280 (syarat Opus 5.5).
+- **#4273 tool-id collision**: openai-to-gemini sudah disambiguasi hash suffix.
+- **#4247 mimo thinking injection**: Zen tak punya pola `*mimo*v2.6*`
+  (generik tanpa thinkingFormat) — tak terdampak.
+- **#4277/.env/JWT/OAuth** lainnya: sesuai mapping masing-masing di atas.
+
+#### Known limitations (butuh tindak lanjut terpisah)
+- #4276 custom-tool `function_call` vs codex, #4270 auto-mode classifier,
+  #4297 session-affinity (feature), #4292 codex catalogs, #4268 pi-settings
+  (Zen belum punya writer Pi), #4248 NVIDIA 250s timeouts (upstream lambat),
+  #4251 ES warning (cek terpisah),Cursor/windsurf/trae wire-ID tak
+  terverifikasi resmi — tak diubah.
+
 ### Full ecosystem refresh — snapshot 23 September 2026
 
 10-provider-group research pass (official docs first: platform.openai.com,
