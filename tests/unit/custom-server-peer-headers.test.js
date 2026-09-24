@@ -65,7 +65,10 @@ describe("custom-server peer header sanitizing", () => {
     const headers = await get({ "x-forwarded-for": "203.0.113.9, 10.0.0.1" });
 
     expect(headers["x-zen-via-proxy"]).toBe("1");
-    expect(headers["x-zen-real-ip"]).toBe("203.0.113.9");
+    // Rightmost hop: appended by the trusted loopback proxy itself. The
+    // leftmost entry is client-controlled and must not key rate limits
+    // (a tunnel client could otherwise rotate its bucket at will).
+    expect(headers["x-zen-real-ip"]).toBe("10.0.0.1");
     expect(headers["x-forwarded-for"]).toBeUndefined();
   });
 
