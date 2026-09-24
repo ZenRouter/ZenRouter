@@ -132,6 +132,11 @@ export const MODEL_CAPABILITIES = {
   "deepseek-v4-flash": { vision: true, reasoning: true, thinkingFormat: "deepseek", contextWindow: 1000000, maxOutput: 384000 },
   "deepseek-v4-flash-vision-exp": { vision: true, reasoning: true, thinkingFormat: "deepseek", contextWindow: 1000000, maxOutput: 384000 },
 
+  // deepseek-v4-1-flash is natively multimodal upstream (modalities.input:
+  // ["text","image"]) while its v4-flash/v4-pro siblings are text-only —
+  // hence an exact entry instead of relying on the generic pattern (9router #4293).
+  "deepseek-v4-1-flash": { vision: true, reasoning: true, thinkingFormat: "deepseek", contextWindow: 1000000, maxOutput: 384000 },
+
   // Qwen plain coder/text (no vision) — registry "vision-model" / "coder-model" aliases
   "vision-model":      { vision: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000 },
   "coder-model":       { reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000 },
