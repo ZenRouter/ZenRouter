@@ -188,9 +188,14 @@ http.createServer = (...args) => {
     const xRealIp = req.headers["x-real-ip"];
     const viaProxy = !!(xff || xRealIp);
     const isLoopbackProxy = socketIp === "127.0.0.1" || socketIp === "::1" || socketIp === "::ffff:127.0.0.1";
-    // Trust forwarding headers only when the TCP peer is a local reverse proxy.
-    // Direct/public sockets remain keyed by the unspoofable peer address.
-    const proxyIp = xRealIp || (xff ? String(xff).split(",")[0].trim() : "");
+  // Trust forwarding headers only when the TCP peer is a local reverse proxy.
+  // Direct/public sockets remain keyed by the unspoofable peer address.
+  // Use the RIGHTMOST XFF hop: it is appended by the trusted loopback proxy
+  // itself, while leftmost entries (and a bare X-Real-IP with no XFF chain)
+  // are client-controlled — a tunnel client could otherwise rotate its
+  // rate-limit bucket at will and brute-force the login (9router #4286).
+  const xffHops = xff ? String(xff).split(",").map((h) => h.trim()).filter(Boolean) : [];
+  const proxyIp = xffHops.length > 0 ? xffHops[xffHops.length - 1] : (xRealIp || "");
     const ip = isLoopbackProxy && proxyIp ? proxyIp : socketIp;
     delete req.headers["x-zen-real-ip"];
     delete req.headers["x-zen-real-ip"];
