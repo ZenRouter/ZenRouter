@@ -81,7 +81,12 @@ export async function handleResponsesCore({ body, modelInfo, credentials, log, o
 
   // Case 2: Client wants streaming, got SSE - transform it
   if (clientRequestedStreaming && contentType.includes("text/event-stream")) {
-    const transformStream = createResponsesApiTransformStream(null);
+    // Tools the client declared as `type: "custom"` must come back as
+    // `custom_tool_call` items, not `function_call` (9router #4276).
+    const customToolNames = Array.isArray(body?.tools)
+      ? body.tools.filter((t) => t?.type === "custom" && typeof t?.name === "string").map((t) => t.name)
+      : [];
+    const transformStream = createResponsesApiTransformStream(null, { customToolNames });
     const transformedBody = response.body.pipeThrough(transformStream);
 
     return {
