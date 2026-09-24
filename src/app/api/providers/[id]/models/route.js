@@ -381,6 +381,28 @@ const PROVIDER_MODELS_CONFIG = {
       return { models: [], warning };
     },
   },
+  zed: {
+    // Zed serves a rotating hosted catalog; resolve it live through the LLM
+    // token exchange so combos can pick current models (9router #4244).
+    customResolver: async (connection) => {
+      if (!connection.accessToken) {
+        return { error: "No valid token found", status: 401 };
+      }
+      try {
+        const { resolveZedModels } = await import("open-sse/shared/zedAuth.js");
+        const entry = await resolveZedModels({
+          accessToken: connection.accessToken,
+          apiKey: connection.apiKey,
+          userId: connection.providerSpecificData?.userId,
+          providerSpecificData: connection.providerSpecificData || {},
+        }, { forceRefresh: true });
+        if (entry?.models?.length) return { models: entry.models };
+        return { error: "Zed returned no models", status: 502 };
+      } catch (error) {
+        return { error: `Failed to fetch Zed models: ${error.message}`, status: 500 };
+      }
+    },
+  },
   "gemini-cli": {
     customResolver: buildOAuthResolver({
       refreshFn: (conn) => refreshGoogleToken(conn.refreshToken, GEMINI_CONFIG.clientId, GEMINI_CONFIG.clientSecret),
