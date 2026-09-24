@@ -5,6 +5,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-24
+
+### Base: v0.7.4 stabilization (shipped in this release train)
+- **feat(anthropic): Claude Opus 5.5 launch support** — registry, 1M
+  capabilities, pricing, and bidirectional dot/dash aliasing across
+  claude/kiro/tokenrouter.
+- **feat(clients): signature bumps** — Claude Code 2.1.280, Codex 0.156.1,
+  Kiro 1.1.0, Gemini CLI 0.60.0, Codebuddy 2.156.0; upstream param fixes.
+- **fix(stream): abort upstream on stall timeout** — no more orphaned
+  background streams or 0-token spam after timeouts.
+- **fix(oauth): standard OAuth routing restored.**
+
 ### 9router upstream cross-check (Sep 2026) — fixed in Zen
 
 Research into the latest `decolua/9router` issues/PRs (models, security,
