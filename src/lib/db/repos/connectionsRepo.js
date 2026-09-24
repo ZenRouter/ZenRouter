@@ -12,7 +12,8 @@ const OPTIONAL_FIELDS = [
 
 const MODEL_LOCK_PREFIX = "modelLock_";
 
-function resetHealthStateOnActivation(existing, patch) {
+// Exported for unit tests (pure function, no DB access).
+export function resetHealthStateOnActivation(existing, patch) {
   if (patch?.testStatus !== "active") return patch;
 
   const normalized = {
@@ -25,8 +26,20 @@ function resetHealthStateOnActivation(existing, patch) {
     backoffLevel: 0,
   };
 
+  // Preserve manually-injected far-future locks (operator kill-switches for
+  // dead models, e.g. year 2099). Runtime cooldowns never exceed hours, so a
+  // lock expiring more than a day out is certainly manual, not a stale
+  // cooldown (9router #4250).
+  const MANUAL_LOCK_MS = 24 * 60 * 60 * 1000;
+  const now = Date.now();
   for (const key of Object.keys(existing || {})) {
-    if (key.startsWith(MODEL_LOCK_PREFIX)) normalized[key] = null;
+    if (!key.startsWith(MODEL_LOCK_PREFIX)) continue;
+    const until = new Date(existing[key]).getTime();
+    if (Number.isFinite(until) && until - now > MANUAL_LOCK_MS) {
+      normalized[key] = existing[key];
+    } else {
+      normalized[key] = null;
+    }
   }
 
   return normalized;

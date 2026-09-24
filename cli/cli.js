@@ -292,28 +292,44 @@ function killAllAppProcesses(appPort) {
           // No processes found or error - continue
         }
       } else {
-        // macOS/Linux: use ps to find all matching processes
+        // macOS/Linux: `ps -o pid=,args=` prints the pid first with no header
+        // and unwrapped args — immune to the column-shift / line-wrap hazard of
+        // parsing `ps aux` by token position (9router #4295). On Linux each
+        // candidate is additionally verified against /proc/<pid>/cmdline
+        // before any signal is sent.
         try {
-          const output = execSync('ps aux 2>/dev/null', {
+          const output = execSync('ps -ww -o pid=,args= 2>/dev/null', {
             encoding: 'utf8',
             timeout: 5000
           });
           const lines = output.split('\n');
 
           lines.forEach(line => {
+            const m = line.match(/^\s*(\d+)\s+(.*)$/);
+            if (!m) return;
+            const pid = m[1];
+            if (!pid || pid === process.pid.toString()) return;
             // Whitelist: real node process running zenrouter/cli.js, or next-server.
             // Avoids killing grep/strace/editors/cursor that incidentally match "zenrouter".
-            const cmd = line.toLowerCase();
+            const cmd = m[2].toLowerCase();
             const isAppProcess =
               (cmd.includes("node") && cmd.includes("zenrouter") && (cmd.includes("cli.js") || cmd.includes("/zenrouter")))
               || cmd.includes("next-server");
-            if (isAppProcess) {
-              const parts = line.trim().split(/\s+/);
-              const pid = parts[1];
-              if (pid && !isNaN(pid) && pid !== process.pid.toString()) {
-                pids.push(pid);
+            if (!isAppProcess) return;
+            if (platform !== "win32" && process.platform === "linux") {
+              // Verify the pid still belongs to that command: /proc is ground
+              // truth, the ps snapshot may be stale or wrapped.
+              try {
+                const cmdline = fs.readFileSync(`/proc/${pid}/cmdline`, "utf8").replace(/\0/g, " ").toLowerCase();
+                const verified =
+                  (cmdline.includes("node") && cmdline.includes("zenrouter") && (cmdline.includes("cli.js") || cmdline.includes("/zenrouter")))
+                  || cmdline.includes("next-server");
+                if (!verified) return;
+              } catch {
+                return; // pid gone or unreadable — never kill on doubt
               }
             }
+            pids.push(pid);
           });
         } catch (e) {
           // No processes found or error - continue
