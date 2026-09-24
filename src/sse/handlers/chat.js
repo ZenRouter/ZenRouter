@@ -22,6 +22,7 @@ import { handleBypassRequest } from "open-sse/utils/bypassHandler.js";
 import { HTTP_STATUS } from "open-sse/config/runtimeConfig.js";
 import { correlateResponse } from "../utils/requestCorrelation.js";
 import { detectFormatByEndpoint } from "open-sse/translator/formats.js";
+import { resolveSessionId } from "open-sse/utils/sessionManager.js";
 import * as log from "../utils/logger.js";
 import { updateProviderCredentials, checkAndRefreshToken } from "../services/tokenRefresh.js";
 import { getProjectIdForConnection } from "open-sse/services/projectId.js";
@@ -265,6 +266,15 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
   // Extract userAgent from request
   const userAgent = request?.headers?.get("user-agent") || "";
 
+  // Session key for the session-sticky account strategy (derived once per
+  // logical request; cheap and sync). Absent clients degrade to fill-first.
+  let sessionKey = "";
+  try {
+    sessionKey = resolveSessionId({ headers: clientRawRequest?.headers || {}, body, scope: provider }) || "";
+  } catch {
+    sessionKey = "";
+  }
+
   // Try with available accounts (fallback on errors)
   const excludeConnectionIds = new Set();
   // Accounts already granted one immediate retry for a sporadic 5xx.
@@ -280,7 +290,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       return errorResponse(499, "Client Closed Request");
     }
 
-    const credentials = await getProviderCredentials(provider, excludeConnectionIds, model);
+    const credentials = await getProviderCredentials(provider, excludeConnectionIds, model, { sessionKey });
 
     // All accounts unavailable
     if (!credentials || credentials.allRateLimited) {

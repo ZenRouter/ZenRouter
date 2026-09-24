@@ -1466,6 +1466,20 @@ export default function ProfilePage() {
               />
             </div>
 
+            <div className="flex items-start sm:items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm sm:text-base">Session Sticky</p>
+                <p className="text-xs sm:text-sm text-text-muted">
+                  Pin each conversation to one account to preserve prompt caches
+                </p>
+              </div>
+              <Toggle
+                checked={settings.fallbackStrategy === "session-sticky"}
+                onChange={() => updateFallbackStrategy(settings.fallbackStrategy === "session-sticky" ? "fill-first" : "session-sticky")}
+                disabled={loading}
+              />
+            </div>
+
             {/* Sticky Round Robin Limit */}
             {settings.fallbackStrategy === "round-robin" && (
               <div className="flex items-start sm:items-center justify-between gap-4 pt-2 border-t border-border/50">

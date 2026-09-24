@@ -262,14 +262,33 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
 
     let connection;
     // Pin to preferred connection if specified and available
-    if (preferredConnectionId) {
-      connection = selectable.find((c) => c.id === preferredConnectionId);
+    if (preferredConnectionId) {      connection = selectable.find((c) => c.id === preferredConnectionId);
       if (connection) {
         log.info("AUTH", `${provider} | pinned to ${connection.id?.slice(0, 8)} (${connection.name || connection.email || "unnamed"})`);
       }
     }
+    // Session-sticky (9router #4297): stable-hash the conversation session to
+    // one account so multi-turn prompt caches survive. No session key (or a
+    // single account) degrades to fill-first. Excluded/locked accounts are
+    // already filtered out of `selectable`, so a dead account is skipped and
+    // the session re-hashes onto the survivors.
     if (connection) {
       // skip strategy
+    } else if (strategy === "session-sticky") {
+      const sessionKey = options?.sessionKey || preferredConnectionId || "";
+      let idx = 0;
+      if (sessionKey && selectable.length > 1) {
+        let hash = 5381;
+        for (let i = 0; i < sessionKey.length; i++) {
+          hash = ((hash << 5) + hash + sessionKey.charCodeAt(i)) >>> 0;
+        }
+        idx = hash % selectable.length;
+      }
+      connection = selectable[idx];
+      await updateProviderConnection(connection.id, {
+        lastUsedAt: new Date().toISOString(),
+      });
+      log.debug("AUTH", `${providerId} | session-sticky → ${connection.id?.slice(0, 8)} (key ${sessionKey ? "set" : "empty"})`);
     } else if (strategy === "round-robin") {
       const stickyLimit = providerOverride.stickyRoundRobinLimit || settings.stickyRoundRobinLimit || 3;
 
