@@ -450,6 +450,12 @@ const MODALITY_KEYS = ["vision", "pdf", "audioInput", "videoInput"];
 
 // Catalog lookups, installed by the server at startup. Left as no-ops in the
 // browser bundle, where there is no file to read.
+//
+// The server bundles this module into every route chunk that needs it, and each
+// copy carries its own module state, so an install landing in the copy the
+// startup hook imported stays invisible to the copy resolving requests. The slot
+// lives on globalThis instead, and every read goes through it: caching it locally
+// would keep a reader alive in other copies after setCatalogSource(null).
 let catalogSource = null;
 
 /**
@@ -458,6 +464,15 @@ let catalogSource = null;
  */
 export function setCatalogSource(source) {
   catalogSource = source;
+  if (typeof globalThis !== "undefined") {
+    globalThis.__9rCatalogSource = source;
+    globalThis.__zenCatalogSource = source;
+  }
+}
+
+function getCatalogSource() {
+  if (typeof globalThis === "undefined") return catalogSource;
+  return globalThis.__zenCatalogSource || globalThis.__9rCatalogSource || catalogSource || null;
 }
 
 // Apply the synced catalog + name heuristic on top of a table-resolved result.
@@ -465,16 +480,17 @@ export function setCatalogSource(source) {
 // flips when an outside source positively declares support.
 function refine(base, provider, model) {
   const result = { ...DEFAULT_CAPABILITIES, ...base };
+  const source = getCatalogSource();
 
-  if (catalogSource) {
-    const modalities = catalogSource.getModalities(model);
+  if (source) {
+    const modalities = source.getModalities(model);
     if (modalities) {
       for (const key of MODALITY_KEYS) {
         if (modalities[key] === true) result[key] = true;
       }
     }
 
-    const limits = catalogSource.getLimits(provider, model);
+    const limits = source.getLimits(provider, model);
     if (limits) {
       if (limits.contextWindow > 0) result.contextWindow = limits.contextWindow;
       if (limits.maxOutput > 0) result.maxOutput = limits.maxOutput;
