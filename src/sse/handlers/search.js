@@ -92,11 +92,21 @@ export async function handleSearch(request) {
 
 async function handleSingleProviderSearch(body, providerInput, request, apiKey, settings) {
   const query = body.query;
-  const providerId = resolveProviderId(providerInput);
+
+  // Support "provider/model" format (e.g. "ag/gemini-3.8-flash" or "gemini/gemini-2.5-flash")
+  let requestedProvider = body.provider || providerInput;
+  let requestedModel = body.model;
+  if (providerInput && providerInput.includes("/")) {
+    const slashIdx = providerInput.indexOf("/");
+    requestedProvider = providerInput.slice(0, slashIdx);
+    requestedModel = providerInput.slice(slashIdx + 1);
+  }
+
+  const providerId = resolveProviderId(requestedProvider);
   const resolvedProvider = AI_PROVIDERS[providerId];
 
   if (!resolvedProvider) {
-    log.warn("SEARCH", "Unknown provider", { provider: providerInput });
+    log.warn("SEARCH", "Unknown provider", { provider: requestedProvider });
     return errorResponse(HTTP_STATUS.BAD_REQUEST, `Unknown provider: ${providerInput}`);
   }
 
@@ -109,15 +119,16 @@ async function handleSingleProviderSearch(body, providerInput, request, apiKey, 
   }
 
   if (providerInput !== providerId) {
-    log.info("ROUTING", `${providerInput} → ${providerId}`);
+    log.info("ROUTING", `${providerInput} → ${providerId}${requestedModel ? ` (${requestedModel})` : ""}`);
   } else {
-    log.info("ROUTING", `Provider: ${providerId}`);
+    log.info("ROUTING", `Provider: ${providerId}${requestedModel ? ` (${requestedModel})` : ""}`);
   }
 
   // Sanitized body forwarded to core
   const coreBody = {
     query: query.trim(),
     provider: providerId,
+    model: requestedModel,
     max_results: body.max_results,
     search_type: body.search_type,
     country: body.country,

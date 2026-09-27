@@ -144,6 +144,11 @@ export const MODEL_PRICING = {
   "qwen3-coder-plus":             { input: 0.574, output: 2.294, cached: 0.057, reasoning: 2.294,  cache_creation: 0.574 },
   "qwen3-coder-flash":            { input: 0.144, output: 0.574, cached: 0.014, reasoning: 0.574,  cache_creation: 0.144 },
   "qwen3.6-flash":                { input: 0.165, output: 0.99,  cached: 0.017, reasoning: 0.99,   cache_creation: 0.165 },
+  "qwen3.6-plus":                 { input: 0.165, output: 0.99,  cached: 0.017, reasoning: 0.99,   cache_creation: 0.165 },
+  "qwen3.7-max":                  { input: 1.25,  output: 3.75,  cached: 0.25,  reasoning: 3.75,   cache_creation: 1.25  },
+  "qwen3.7-plus":                 { input: 0.574, output: 2.294, cached: 0.057, reasoning: 2.294,  cache_creation: 0.574 },
+  "qwen3.8-max":                  { input: 2.00,  output: 6.00,  cached: 0.20,  reasoning: 6.00,   cache_creation: 2.00  },
+  "qwen3.8-flash":                { input: 0.16,  output: 0.47,  cached: 0.016, reasoning: 0.47,   cache_creation: 0.16  },
 
   // === Xiaomi MiMo (mimo.mi.com/docs/price/pay-as-you-go, snapshot 2026-09-23) ===
   "mimo-v2.6-flash":              { input: 0.10,  output: 0.20,  cached: 0.0028, reasoning: 0.20,  cache_creation: 0.10  },
@@ -175,7 +180,9 @@ export const MODEL_PRICING = {
   // === DeepSeek (api-docs.deepseek.com, snapshot 2026-09-23) ===
   // Off-peak cache-miss input / cache-hit / off-peak output. Peak = 2x input+output.
   "deepseek-flash":                { input: 0.15,  output: 0.60,  cached: 0.003,  reasoning: 0.60,   cache_creation: 0.15  },
-  "deepseek-v4-pro":              { input: 0.66,  output: 1.98,  cached: 0.022,  reasoning: 1.98,   cache_creation: 0.66  },
+  "deepseek-v4.1-flash":           { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
+  "deepseek-v4-flash":             { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
+  "deepseek-v4-pro":               { input: 0.66,  output: 1.98,  cached: 0.022,  reasoning: 1.98,   cache_creation: 0.66  },
 
   // === xAI Grok (docs.x.ai, snapshot 2026-09-23; tiered ≥200k ctx = 2x, check docs) ===
   "grok-4.7":                      { input: 2.00,  output: 6.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 2.00  },
@@ -418,6 +425,8 @@ export const PATTERN_PRICING = [
 
   // --- GPT (specific first, generic last) ---
   { pattern: "gpt-6-astra*",    pricing: { input: 10.00, output: 50.00, cached: 1.00,  reasoning: 50.00,  cache_creation: 12.50 } },
+  { pattern: "gpt-6-sol*",      pricing: { input: 2.00,  output: 10.00, cached: 0.20,  reasoning: 10.00,  cache_creation: 2.00  } },
+  { pattern: "gpt-6-luna*",     pricing: { input: 0.10,  output: 0.50,  cached: 0.01,  reasoning: 0.50,   cache_creation: 0.10  } },
   { pattern: "gpt-6*",          pricing: { input: 10.00, output: 50.00, cached: 1.00,  reasoning: 50.00,  cache_creation: 12.50 } },
   { pattern: "gpt-5.6-*",       pricing: { input: 2.50,  output: 15.00, cached: 0.25,  reasoning: 15.00,  cache_creation: 2.50  } },
   { pattern: "gpt-5.3-*",       pricing: { input: 1.75,  output: 14.00, cached: 0.175, reasoning: 14.00,  cache_creation: 1.75  } },
@@ -436,6 +445,11 @@ export const PATTERN_PRICING = [
   { pattern: "o4-*",            pricing: { input: 1.10,  output: 4.40,  cached: 0.275, reasoning: 4.40,   cache_creation: 1.10  } },
 
   // --- Qwen ---
+  { pattern: "qwen3.8-max*",    pricing: { input: 2.00,  output: 6.00,  cached: 0.20,  reasoning: 6.00,   cache_creation: 2.00  } },
+  { pattern: "qwen3.8-flash*",  pricing: { input: 0.16,  output: 0.47,  cached: 0.016, reasoning: 0.47,   cache_creation: 0.16  } },
+  { pattern: "qwen3.7-max*",    pricing: { input: 1.25,  output: 3.75,  cached: 0.25,  reasoning: 3.75,   cache_creation: 1.25  } },
+  { pattern: "qwen3.7-plus*",   pricing: { input: 0.574, output: 2.294, cached: 0.057, reasoning: 2.294,  cache_creation: 0.574 } },
+  { pattern: "qwen3.6-plus*",   pricing: { input: 0.165, output: 0.99,  cached: 0.017, reasoning: 0.99,   cache_creation: 0.165 } },
   { pattern: "qwen3-coder-*",   pricing: { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  } },
   { pattern: "qwen*-coder-*",   pricing: { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  } },
   { pattern: "qwen*",           pricing: { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  } },
@@ -453,9 +467,15 @@ export const PATTERN_PRICING = [
   { pattern: "deepseek-*",      pricing: { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  } },
 
   // --- GLM ---
+  { pattern: "glm-5.3-flash*",  pricing: { input: 0.15,  output: 0.50,  cached: 0.03,  reasoning: 0.50,   cache_creation: 0.15  } },
+  { pattern: "glm-5.3*",        pricing: { input: 1.40,  output: 4.40,  cached: 0.26,  reasoning: 4.40,   cache_creation: 1.40  } },
   { pattern: "glm-5*",          pricing: { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  } },
   { pattern: "glm-4*",          pricing: { input: 0.75,  output: 3.00,  cached: 0.375, reasoning: 4.50,   cache_creation: 0.75  } },
   { pattern: "glm-*",           pricing: { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  } },
+
+  // --- OpenCode / Free models ---
+  { pattern: "*space-bunny*",   pricing: { input: 0.00,  output: 0.00,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  } },
+  { pattern: "*omen-alpha*",    pricing: { input: 0.00,  output: 0.00,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  } },
 
   // --- MiniMax ---
   { pattern: "MiniMax-*",       pricing: { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  } },

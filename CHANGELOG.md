@@ -5,6 +5,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### Latest 2026 Model Catalog & Web Search Enhancements
+- **feat(models): add latest OpenAI GPT-6 (Astra, Sol, Luna) and GPT-5.6 models** — mapped capabilities and pricing for `gpt-6-astra` ($10/$50, 1.05M ctx), `gpt-6-sol` ($2/$10, 1.05M ctx), `gpt-6-luna` ($0.10/$0.50, 1.05M ctx), `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.6-luna`.
+- **feat(models): add Z.ai GLM-5.3 & GLM-5.3-Flash** — registered 1M context capabilities and pricing for `glm-5.3` ($1.40/$4.40) and native multimodal `glm-5.3-flash` ($0.15/$0.50).
+- **feat(models): add Qwen 3.8 (Max, Flash) & Qwen 3.7 series** — registered capabilities and pricing for `qwen3.8-max` ($2/$6, 1M ctx), multimodal `qwen3.8-flash` ($0.16/$0.47, 1M ctx), `qwen3.7-max`, and `qwen3.6-plus`.
+- **feat(models): add DeepSeek V4.1 Flash** — registered native multimodal capabilities (1M ctx / 384k output) and pricing for `deepseek-v4.1-flash`.
+- **fix(search): support provider/model slash syntax and custom search models in Antigravity web search** — enhanced `search.js` and `open-sse/handlers/search/index.js` to parse `provider/model` inputs (e.g. `ag/gemini-3.8-flash`) and forward the custom model to `handleChatSearch`.
+
 ### Prompt Caching Detection & Cost Calculation Accuracy (#4191)
 - **fix(pricing): eliminate double-counting of reasoning tokens** — subtracted reasoning tokens from total completion tokens before calculating base output cost, charging reasoning only once at its dedicated or output rate.
 - **feat(pricing): exact per-component cost calculation and dashboard breakdown (#4191)** — added `calculateCostBreakdown()` calculating exact non-cached input, cached read, cache creation, base output, and reasoning costs. Recorded and aggregated component costs in `usageRepo` and updated `UsageStats` to display exact component costs instead of blended average token shares.

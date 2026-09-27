@@ -81,7 +81,7 @@ describe("getCapabilitiesForModel", () => {
     expect(getCapabilitiesForModel("kiro", "gpt-5.6-sol-thinking-agentic")).toMatchObject(kiroGpt56Expected);
   });
 
-  it("reports GPT-6 Astra with official 1.05M context / 128k output limits", () => {
+  it("reports GPT-6 Astra, Sol, and Luna with official 1.05M context / 128k output limits", () => {
     const expected = {
       contextWindow: 1050000,
       maxOutput: 128000,
@@ -90,8 +90,29 @@ describe("getCapabilitiesForModel", () => {
       vision: true,
       search: true,
     };
-    for (const model of ["gpt-6-astra", "openai/gpt-6-astra", "luo/luo/gpt-6-astra"]) {
+    for (const model of ["gpt-6-astra", "openai/gpt-6-astra", "gpt-6-sol", "gpt-6-luna"]) {
       expect(getCapabilitiesForModel("codex", model)).toMatchObject(expected);
     }
+  });
+
+  it("reports Qwen 3.8 Max and Flash with multimodal reasoning capabilities", () => {
+    const maxCaps = getCapabilitiesForModel("qwen", "qwen3.8-max");
+    expect(maxCaps.contextWindow).toBe(1000000);
+    expect(maxCaps.reasoning).toBe(true);
+    expect(maxCaps.thinkingCanDisable).toBe(false);
+
+    const flashCaps = getCapabilitiesForModel("qwen", "qwen3.8-flash");
+    expect(flashCaps.contextWindow).toBe(1000000);
+    expect(flashCaps.vision).toBe(true);
+    expect(flashCaps.videoInput).toBe(true);
+    expect(flashCaps.reasoning).toBe(true);
+  });
+
+  it("reports DeepSeek V4.1 Flash with 1M context and vision", () => {
+    const caps = getCapabilitiesForModel("deepseek", "deepseek-v4.1-flash");
+    expect(caps.contextWindow).toBe(1000000);
+    expect(caps.maxOutput).toBe(384000);
+    expect(caps.vision).toBe(true);
+    expect(caps.reasoning).toBe(true);
   });
 });
