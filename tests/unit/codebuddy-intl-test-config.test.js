@@ -12,16 +12,16 @@
 
 import { describe, it, expect } from "vitest";
 import fs from "fs";
-import path from "path";
+import { fileURLToPath } from "node:url";
 
 // Read the source file and verify the config entry is present.
 // testUtils.js is a Next.js server file so we inspect the source text
 // rather than importing it (avoids next/server bootstrap requirements).
 
-const src = fs.readFileSync(
-  path.resolve("../src/app/api/providers/[id]/test/testUtils.js"),
-  "utf-8"
+const testUtilsPath = fileURLToPath(
+  new URL("../../src/app/api/providers/[id]/test/testUtils.js", import.meta.url)
 );
+const src = fs.readFileSync(testUtilsPath, "utf-8");
 
 describe("OAUTH_TEST_CONFIG — codebuddy-intl (#4232)", () => {
   it('contains "codebuddy-intl" entry', () => {
