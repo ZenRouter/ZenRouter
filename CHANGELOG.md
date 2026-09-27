@@ -5,6 +5,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### Upstream Fixes & Enhancements (decolua/9router Cherry-Picks)
+- **perf(providers): make POST /api/providers O(1) and refuse silent key overwrite (#4311, #4350)** (by @nikan-wystaf) — eliminated full-pool priority renumbering per insert and prevented silent key overwrites on name collisions.
+- **fix(capabilities): stop caching catalog source per module copy (#4344, #4351)** (by @Mohammad-Hijjawi) — ensured `setCatalogSource(null)` clears the shared `globalThis` slot across all bundled module chunks.
+- **fix(commandcode): replay raw byte chunks to preserve all NDJSON lines (#4326)** (by @Christian-Gennari) — resolved dropped NDJSON events when multiple lines arrive within a single TCP packet.
+- **fix(gemini): guard terminal model turns and unresponded functionCalls in normalizeGeminiContents** (by @akmal-safari-pellu) — avoided Gemini 400 errors when conversations end on model turns or have dangling tool calls.
+- **fix(claude): decloak tool names when toolNameMap misses (#4342)** (by @dragongesa, @decolua) — added suffix-stripping fallback for tool name decloaking when exact map lookup fails.
+- **fix(oauth): stop Zed paste-token crash and add IDE auto-import (#4359)** (by @amh-seify) — added `ZedAuthModal` with local IDE keyring auto-import, browser OAuth flow, and paste-token safeguards.
+- **fix(cli-tools): refresh Codex settings after apply and keep existing auth token (#4347)** (by @kalfian, @decolua) — preserved existing `ANTHROPIC_AUTH_TOKEN` on Claude setup and forced non-cached Codex settings revalidation.
+- **feat(cline): expose the cline-free/* tier and price it at zero (#4334)** (by @nicknyanjui) — surfaced Cline recommended models' free tier into the catalog and priced at zero.
+- **fix(responses): carry streamed output items in response.completed (#4307)** (by @aniruddhaadak80) — ensured completed response event includes the accumulated output items for client consumption.
+- **fix(stream): terminate OpenAI SSE with done sentinel (#4356, #4375)** (by @semihisikman) — ensured translated OpenAI-compatible streams always end with `data: [DONE]`, resolving stream termination errors in Cline SDK.
+- **fix(translator): rename tool parameter named 'properties' to avoid Gemini 400 (#4382)** (by @semihisikman) — recursively renamed parameter collisions named `properties` to `properties_` to prevent Gemini JSON schema rejection on tools like Notion and Jira.
+- **fix(translator): preserve message when content has unknown block types (#4383)** (by @semihisikman) — prevented dropping user messages when encountering unknown content blocks like `container_upload`.
+- **fix(translator): strip errorMessage and non-standard keywords from Gemini tool schemas (#4391)** (by @semihisikman) — removed non-standard error and annotation keywords to prevent 400 INVALID_ARGUMENT from Gemini API.
+- **fix(test): add codebuddy-intl to OAUTH_TEST_CONFIG with tokenExists strategy (#4394)** (by @semihisikman) — added missing test config for codebuddy-intl accounts.
+
 ### Security & Hardening
 - **fix(security): restrict PXPIPE process execution routes to localhost** — added `/api/pxpipe/*` (install, start, restart, stop) to `LOCAL_ONLY_PATHS` in `dashboardGuard.js` to prevent remote callers over reverse proxies/tunnels from triggering arbitrary npm package installations or process management on the server host.
 - **fix(security): prevent shell injection in DNS hosts config** — eliminated shell string interpolation in `src/mitm/dns/dnsConfig.js` by safely writing hosts content to a temporary file and atomically updating `/etc/hosts` via direct file copying without shell command construction (`sh -c`).
