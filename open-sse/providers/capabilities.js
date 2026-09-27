@@ -483,7 +483,7 @@ function refine(base, provider, model) {
   const source = getCatalogSource();
 
   if (source) {
-    const modalities = source.getModalities(model);
+    const modalities = source.getModalities(provider, model);
     if (modalities) {
       for (const key of MODALITY_KEYS) {
         if (modalities[key] === true) result[key] = true;

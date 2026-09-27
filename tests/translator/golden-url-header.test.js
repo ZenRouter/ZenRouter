@@ -38,6 +38,7 @@ function sanitize(headers) {
     // Host OS/arch fingerprints vary per machine — normalize for portable snapshots.
     else if (k === "X-Stainless-Arch") out[k] = "<ARCH>";
     else if (k === "X-Stainless-Os") out[k] = "<OS>";
+    else if (k === "X-Msh-Device-Model") out[k] = "Linux x64";
     else if (["X-CLIENT-VERSION", "X-CORE-VERSION", "X-Msh-Version"].includes(k)
       && typeof normalized === "string") out[k] = normalized.replace(/\d+\.\d+\.\d+(?:[-+][\w.-]+)?/g, "<VERSION>");
     else if (k === "User-Agent" && typeof normalized === "string" && /^ZenRouter\//i.test(normalized)) {

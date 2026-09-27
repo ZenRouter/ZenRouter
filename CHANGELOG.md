@@ -20,10 +20,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 - **feat(cline): expose the cline-free/* tier and price it at zero (#4334)** (by @nicknyanjui) — surfaced Cline recommended models' free tier into the catalog and priced at zero.
 - **fix(responses): carry streamed output items in response.completed (#4307)** (by @aniruddhaadak80) — ensured completed response event includes the accumulated output items for client consumption.
 - **fix(stream): terminate OpenAI SSE with done sentinel (#4356, #4375)** (by @semihisikman) — ensured translated OpenAI-compatible streams always end with `data: [DONE]`, resolving stream termination errors in Cline SDK.
-- **fix(translator): rename tool parameter named 'properties' to avoid Gemini 400 (#4382)** (by @semihisikman) — recursively renamed parameter collisions named `properties` to `properties_` to prevent Gemini JSON schema rejection on tools like Notion and Jira.
+- **fix(responses): report usage on response.completed (#3432)** — properly mapped upstream usage to Responses API shape and attached token usage metrics to the terminal event.
+- **fix(catalog): scope synced catalog modalities to provider:model and upgrade to v2** — resolved provider-scoped catalog modalities in capabilities resolution and sync.
 - **fix(translator): preserve message when content has unknown block types (#4383)** (by @semihisikman) — prevented dropping user messages when encountering unknown content blocks like `container_upload`.
 - **fix(translator): strip errorMessage and non-standard keywords from Gemini tool schemas (#4391)** (by @semihisikman) — removed non-standard error and annotation keywords to prevent 400 INVALID_ARGUMENT from Gemini API.
 - **fix(test): add codebuddy-intl to OAUTH_TEST_CONFIG with tokenExists strategy (#4394)** (by @semihisikman) — added missing test config for codebuddy-intl accounts.
+- **test(cross-platform): ensure test suites pass on Windows and Unix** — normalized CRLF/LF line endings, file lock handling, and path separators in test suites.
 
 ### Security & Hardening
 - **fix(security): restrict PXPIPE process execution routes to localhost** — added `/api/pxpipe/*` (install, start, restart, stop) to `LOCAL_ONLY_PATHS` in `dashboardGuard.js` to prevent remote callers over reverse proxies/tunnels from triggering arbitrary npm package installations or process management on the server host.

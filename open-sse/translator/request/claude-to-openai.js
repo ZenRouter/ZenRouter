@@ -235,7 +235,6 @@ function convertClaudeMessage(msg) {
             content: resultContent
           });
           break;
-        }
 
         default:
           // Block types not handled by this translator (e.g. container_upload, file).

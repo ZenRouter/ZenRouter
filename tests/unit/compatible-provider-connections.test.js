@@ -39,7 +39,11 @@ async function setupTestContext(nodeData) {
     POST,
     getProviderConnections,
     cleanup() {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      try {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      } catch {
+        // Windows SQLite file locks
+      }
     },
   };
 }

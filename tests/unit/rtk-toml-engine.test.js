@@ -55,7 +55,7 @@ describe("applyTomlFilter — upstream parity vectors", () => {
         it(`${file} :: ${t.name ?? t.table}`, () => {
           const out = applyTomlFilter(def, t.input);
           if (typeof t.expected === "string") {
-            expect(out.trim()).toBe(t.expected.trim());
+            expect(out.replace(/\r\n/g, "\n").trim()).toBe(t.expected.replace(/\r\n/g, "\n").trim());
           }
         });
       }

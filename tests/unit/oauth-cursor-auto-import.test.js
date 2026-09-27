@@ -92,7 +92,7 @@ describe("GET /api/oauth/cursor/auto-import", () => {
 
     expect(response.body.found).toBe(false);
     expect(response.body.error).toContain("Cursor database not found");
-    expect(response.body.error).toContain(
+    expect(response.body.error.replace(/\\/g, "/")).toContain(
       "/mock/home/Library/Application Support/Cursor/User/globalStorage/state.vscdb"
     );
   });
