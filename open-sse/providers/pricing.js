@@ -12,7 +12,7 @@
  * "cline-free/deepseek-v4.1-flash" into "deepseek-v4.1-flash" and match
  * MODEL_PRICING, so the namespace is checked before both fallbacks.
  */
-export const FREE_MODEL_NAMESPACES = ["cline-free/"];
+export const FREE_MODEL_NAMESPACES = ["cline-free/", "opencode-free/", "mimo-free/"];
 
 export const ZERO_PRICING = {
   input: 0, output: 0, cached: 0, reasoning: 0, cache_creation: 0,
@@ -132,6 +132,11 @@ export const MODEL_PRICING = {
   "gemini-2.5-pro":               { input: 1.25,  output: 10.00, cached: 0.125, reasoning: 10.00,  cache_creation: 1.25  },
   "gemini-2.5-flash":             { input: 0.30,  output: 2.50,  cached: 0.03,  reasoning: 3.75,   cache_creation: 0.30  },
   "gemini-2.5-flash-lite":        { input: 0.10,  output: 0.40,  cached: 0.01,  reasoning: 0.40,   cache_creation: 0.10  },
+  "gemini-3.1-flash-image":       { input: 0.50,  output: 3.00,  cached: 0.05,  reasoning: 3.00,   cache_creation: 0.50  },
+  "gemini-3-pro-image":           { input: 2.00,  output: 12.00, cached: 0.20,  reasoning: 12.00,  cache_creation: 2.00  },
+  "gemini-2.5-flash-image":       { input: 0.30,  output: 2.50,  cached: 0.03,  reasoning: 2.50,   cache_creation: 0.30  },
+  "imagen-3.0-generate-002":      { input: 0.03,  output: 0.03,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
+  "imagen-3.0-fast-generate-001": { input: 0.02,  output: 0.02,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
 
   // === Qwen (Model Studio, base ≤32k tier; upper tiers up to 5-12x — see docs) ===
   // NOTE: cache-hit rates below are the 10%-of-input convention where Model Studio
@@ -141,6 +146,8 @@ export const MODEL_PRICING = {
   "qwen3.6-flash":                { input: 0.165, output: 0.99,  cached: 0.017, reasoning: 0.99,   cache_creation: 0.165 },
 
   // === Xiaomi MiMo (mimo.mi.com/docs/price/pay-as-you-go, snapshot 2026-09-23) ===
+  "mimo-v2.6-flash":              { input: 0.10,  output: 0.20,  cached: 0.0028, reasoning: 0.20,  cache_creation: 0.10  },
+  "mimo-v2.6-flash-free":         { input: 0.00,  output: 0.00,  cached: 0.00,   reasoning: 0.00,  cache_creation: 0.00  },
   "mimo-v2.5-pro":                { input: 0.435, output: 0.87,  cached: 0.0036, reasoning: 0.87,  cache_creation: 0.435 },
   "mimo-v2.5":                    { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
 
@@ -535,29 +542,74 @@ export function calculateCostFromTokens(tokens, pricing) {
   let cost = 0;
 
   const inputTokens = tokens.prompt_tokens || tokens.input_tokens || 0;
-  const cachedTokens = tokens.cached_tokens || tokens.cache_read_input_tokens || 0;
+  const cachedTokens = tokens.cached_tokens || tokens.cache_read_input_tokens || tokens.prompt_cache_hit_tokens || 0;
   const cacheCreationTokens = tokens.cache_creation_input_tokens || 0;
   // prompt_tokens is cache-inclusive (see canonicalizeUsage): cached + cache_creation
   // are subsets, so subtract both to avoid charging them at the full input rate.
   const nonCachedInput = Math.max(0, inputTokens - cachedTokens - cacheCreationTokens);
 
-  cost += nonCachedInput * (pricing.input / 1000000);
+  cost += nonCachedInput * ((pricing.input ?? 0) / 1000000);
 
   if (cachedTokens > 0) {
-    cost += cachedTokens * ((pricing.cached || pricing.input) / 1000000);
-  }
-
-  const outputTokens = tokens.completion_tokens || tokens.output_tokens || 0;
-  cost += outputTokens * (pricing.output / 1000000);
-
-  const reasoningTokens = tokens.reasoning_tokens || 0;
-  if (reasoningTokens > 0) {
-    cost += reasoningTokens * ((pricing.reasoning || pricing.output) / 1000000);
+    cost += cachedTokens * ((pricing.cached !== undefined ? pricing.cached : pricing.input) / 1000000);
   }
 
   if (cacheCreationTokens > 0) {
-    cost += cacheCreationTokens * ((pricing.cache_creation || pricing.input) / 1000000);
+    cost += cacheCreationTokens * ((pricing.cache_creation !== undefined ? pricing.cache_creation : pricing.input) / 1000000);
+  }
+
+  const outputTokens = tokens.completion_tokens || tokens.output_tokens || 0;
+  const reasoningTokens = tokens.reasoning_tokens || 0;
+
+  // In OpenAI, Claude, Gemini, DeepSeek, completion_tokens / output_tokens already
+  // includes reasoning_tokens. Subtract reasoning from outputTokens to avoid double billing.
+  if (reasoningTokens > 0 && pricing.reasoning !== undefined) {
+    const nonReasoningOutput = Math.max(0, outputTokens - reasoningTokens);
+    cost += nonReasoningOutput * ((pricing.output ?? 0) / 1000000);
+    cost += reasoningTokens * ((pricing.reasoning ?? 0) / 1000000);
+  } else {
+    cost += outputTokens * ((pricing.output ?? 0) / 1000000);
   }
 
   return cost;
+}
+
+/**
+ * Calculate per-component cost breakdown from tokens and pricing.
+ * Ensures the breakdown uses exact component rates (input, cached, cache_creation, output, reasoning)
+ * rather than a blended average token-share.
+ *
+ * @param {object} tokens
+ * @param {object} pricing
+ * @returns {{ inputCost: number, cachedCost: number, cacheCreationCost: number, outputCost: number, reasoningCost: number, totalCost: number }}
+ */
+export function calculateCostBreakdown(tokens, pricing) {
+  if (!tokens || !pricing) {
+    return { inputCost: 0, cachedCost: 0, cacheCreationCost: 0, outputCost: 0, reasoningCost: 0, totalCost: 0 };
+  }
+
+  const inputTokens = tokens.prompt_tokens || tokens.input_tokens || 0;
+  const cachedTokens = tokens.cached_tokens || tokens.cache_read_input_tokens || tokens.prompt_cache_hit_tokens || 0;
+  const cacheCreationTokens = tokens.cache_creation_input_tokens || 0;
+  const nonCachedInput = Math.max(0, inputTokens - cachedTokens - cacheCreationTokens);
+
+  const inputCost = nonCachedInput * ((pricing.input ?? 0) / 1000000);
+  const cachedCost = cachedTokens * ((pricing.cached !== undefined ? pricing.cached : pricing.input) / 1000000);
+  const cacheCreationCost = cacheCreationTokens * ((pricing.cache_creation !== undefined ? pricing.cache_creation : pricing.input) / 1000000);
+
+  const outputTokens = tokens.completion_tokens || tokens.output_tokens || 0;
+  const reasoningTokens = tokens.reasoning_tokens || 0;
+
+  let outputCost = 0;
+  let reasoningCost = 0;
+  if (reasoningTokens > 0 && pricing.reasoning !== undefined) {
+    const nonReasoningOutput = Math.max(0, outputTokens - reasoningTokens);
+    outputCost = nonReasoningOutput * ((pricing.output ?? 0) / 1000000);
+    reasoningCost = reasoningTokens * ((pricing.reasoning ?? 0) / 1000000);
+  } else {
+    outputCost = outputTokens * ((pricing.output ?? 0) / 1000000);
+  }
+
+  const totalCost = inputCost + cachedCost + cacheCreationCost + outputCost + reasoningCost;
+  return { inputCost, cachedCost, cacheCreationCost, outputCost, reasoningCost, totalCost };
 }

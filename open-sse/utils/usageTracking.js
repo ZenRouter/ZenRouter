@@ -124,13 +124,15 @@ export function normalizeUsage(usage) {
     if (Number.isFinite(numeric)) normalized[key] = numeric;
   };
 
-  assignNumber("prompt_tokens", usage?.prompt_tokens);
-  assignNumber("completion_tokens", usage?.completion_tokens);
+  assignNumber("prompt_tokens", usage?.prompt_tokens ?? usage?.input_tokens);
+  assignNumber("completion_tokens", usage?.completion_tokens ?? usage?.output_tokens);
   assignNumber("total_tokens", usage?.total_tokens);
   assignNumber("cache_read_input_tokens", usage?.cache_read_input_tokens);
   assignNumber("cache_creation_input_tokens", usage?.cache_creation_input_tokens);
-  assignNumber("cached_tokens", usage?.cached_tokens);
-  assignNumber("reasoning_tokens", usage?.reasoning_tokens);
+  assignNumber("cached_tokens", usage?.cached_tokens ?? usage?.prompt_tokens_details?.cached_tokens ?? usage?.prompt_cache_hit_tokens);
+  assignNumber("reasoning_tokens", usage?.reasoning_tokens ?? usage?.completion_tokens_details?.reasoning_tokens);
+  assignNumber("prompt_cache_hit_tokens", usage?.prompt_cache_hit_tokens);
+  assignNumber("prompt_cache_miss_tokens", usage?.prompt_cache_miss_tokens);
 
   // Preserve nested details objects for OpenAI format forwarding
   if (usage?.prompt_tokens_details && typeof usage.prompt_tokens_details === "object") {
@@ -166,7 +168,11 @@ export function canonicalizeUsage(usage) {
 
   const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
   const completion = num(usage.completion_tokens ?? usage.output_tokens);
-  const reasoning = num(usage.reasoning_tokens);
+  const reasoning = num(
+    usage.reasoning_tokens ??
+    usage.completion_tokens_details?.reasoning_tokens ??
+    usage.output_tokens_details?.reasoning_tokens
+  );
   // Fall back to the nested prompt_tokens_details.cache_creation_tokens shape
   // (buildUsage()'s OpenAI-forwarding format) when the top-level field is
   // absent, so callers that pass a buildUsage() object through don't silently
@@ -193,7 +199,12 @@ export function canonicalizeUsage(usage) {
     // Mirror the cacheCreation fallback above: buildUsage() only ever emits the
     // nested prompt_tokens_details.cached_tokens shape, so without this the
     // cache-read count is silently dropped on every buildUsage()-derived usage.
-    cached = num(usage.cached_tokens ?? usage.prompt_tokens_details?.cached_tokens);
+    cached = num(
+      usage.cached_tokens ??
+      usage.prompt_tokens_details?.cached_tokens ??
+      usage.input_tokens_details?.cached_tokens ??
+      usage.prompt_cache_hit_tokens
+    );
   }
 
   const result = {

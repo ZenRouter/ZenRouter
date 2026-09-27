@@ -70,6 +70,27 @@ const USAGE_EXTRACTORS = {
     if (reasoning > 0) out.reasoningTokens = reasoning;
     return out;
   },
+  openai(raw) {
+    const prompt = n(raw.prompt_tokens);
+    const completion = n(raw.completion_tokens);
+    const total = n(raw.total_tokens) || (prompt + completion);
+    const cached = n(raw.prompt_tokens_details?.cached_tokens) || n(raw.prompt_cache_hit_tokens) || n(raw.cached_tokens);
+    const cacheCreation = n(raw.prompt_tokens_details?.cache_creation_tokens) || n(raw.cache_creation_input_tokens);
+    const reasoning = n(raw.completion_tokens_details?.reasoning_tokens) || n(raw.reasoning_tokens);
+    return { promptTokens: prompt, completionTokens: completion, totalTokens: total, cachedTokens: cached, cacheCreationTokens: cacheCreation, reasoningTokens: reasoning };
+  },
+  responses(raw) {
+    const input = n(raw.input_tokens) || n(raw.prompt_tokens);
+    const output = n(raw.output_tokens) || n(raw.completion_tokens);
+    const total = n(raw.total_tokens) || (input + output);
+    const cached = n(raw.input_tokens_details?.cached_tokens) || n(raw.cached_tokens);
+    const cacheCreation = n(raw.input_tokens_details?.cache_creation_tokens) || n(raw.cache_creation_input_tokens);
+    const reasoning = n(raw.output_tokens_details?.reasoning_tokens) || n(raw.reasoning_tokens);
+    return { promptTokens: input, completionTokens: output, totalTokens: total, cachedTokens: cached, cacheCreationTokens: cacheCreation, reasoningTokens: reasoning };
+  },
+  codex(raw) {
+    return USAGE_EXTRACTORS.responses(raw);
+  },
 };
 
 // Convert provider-native usage object → OpenAI usage. Returns null if no extractor/raw.

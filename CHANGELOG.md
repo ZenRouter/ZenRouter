@@ -5,6 +5,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### Prompt Caching Detection & Cost Calculation Accuracy (#4191)
+- **fix(pricing): eliminate double-counting of reasoning tokens** — subtracted reasoning tokens from total completion tokens before calculating base output cost, charging reasoning only once at its dedicated or output rate.
+- **feat(pricing): exact per-component cost calculation and dashboard breakdown (#4191)** — added `calculateCostBreakdown()` calculating exact non-cached input, cached read, cache creation, base output, and reasoning costs. Recorded and aggregated component costs in `usageRepo` and updated `UsageStats` to display exact component costs instead of blended average token shares.
+- **feat(cache): enhance prompt cache detection for OpenCode, DeepSeek, and OpenAI** — expanded `normalizeUsage` and `canonicalizeUsage` to detect `prompt_cache_hit_tokens` and preserve cache details across DeepSeek and OpenCode routes.
+- **feat(pricing): add MiMo pricing and free namespaces** — added `mimo-v2.6-flash` and `mimo-v2.6-flash-free` to model pricing and registered `opencode-free/` and `mimo-free/` in `FREE_MODEL_NAMESPACES`.
+
 ### Antigravity Image Generation Enhancements
 - **feat(image/antigravity): enhance image generation and editing pipeline** — support multi-reference images via both `image` and `images[]`, resolve remote HTTP(S) image URLs via `fetchImageAsBase64`, support explicit `aspect_ratio` and size mapping, enforce `responseModalities: ["TEXT", "IMAGE"]` on upstream generation config, add prompt directives to ensure image outputs, robustly parse `inlineData` and `inline_data`, and extract precise quota reset timestamps on upstream rate limits.
 - **feat(models/antigravity): add Gemini 3 Pro Image, Gemini 2.5 Flash Image, and Imagen 3 models** — expanded Antigravity image models in the provider registry with `gemini-3-pro-image`, `gemini-2.5-flash-image`, `imagen-3.0-generate-002`, and `imagen-3.0-fast-generate-001`.

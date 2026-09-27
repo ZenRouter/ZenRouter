@@ -100,6 +100,18 @@ describe("canonicalizeUsage", () => {
     expect(out.cached_tokens).toBe(0);
     expect(out.cache_creation_input_tokens).toBe(500);
   });
+
+  it("detects DeepSeek prompt_cache_hit_tokens as cached tokens", () => {
+    const out = canonicalizeUsage({
+      prompt_tokens: 427,
+      completion_tokens: 17,
+      prompt_cache_hit_tokens: 256,
+      prompt_cache_miss_tokens: 171,
+    });
+    expect(out.prompt_tokens).toBe(427);
+    expect(out.cached_tokens).toBe(256);
+    expect(out.completion_tokens).toBe(17);
+  });
 });
 
 describe("calculateCostFromTokens (canonical inclusive convention)", () => {
@@ -129,6 +141,38 @@ describe("calculateCostFromTokens (canonical inclusive convention)", () => {
   it("matches plain input pricing when no cache present", () => {
     const cost = calculateCostFromTokens({ prompt_tokens: 100, completion_tokens: 50 }, pricing);
     expect(cost).toBeCloseTo((100 * 3 + 50 * 15) / 1_000_000, 12);
+  });
+
+  it("accurately prices reasoning tokens without double billing completion tokens", () => {
+    // 100 total completion tokens, including 60 reasoning tokens.
+    // reasoning is priced at 20, standard output at 15.
+    const customPricing = { input: 3, output: 15, reasoning: 20 };
+    const cost = calculateCostFromTokens(
+      { prompt_tokens: 100, completion_tokens: 100, reasoning_tokens: 60 },
+      customPricing
+    );
+    // 100 input * 3 + (100 - 60) * 15 + 60 * 20 = 300 + 600 + 1200 = 2100 / 1M = 0.0021
+    const expected = (100 * 3 + 40 * 15 + 60 * 20) / 1_000_000;
+    expect(cost).toBeCloseTo(expected, 12);
+  });
+
+  it("computes exact per-component cost breakdown", async () => {
+    const { calculateCostBreakdown } = await import("../../open-sse/providers/pricing.js");
+    const pricing = { input: 3, output: 15, cached: 0.3, cache_creation: 3.75, reasoning: 20 };
+    const tokens = {
+      prompt_tokens: 330,
+      completion_tokens: 100,
+      cached_tokens: 200,
+      cache_creation_input_tokens: 30,
+      reasoning_tokens: 60,
+    };
+    const b = calculateCostBreakdown(tokens, pricing);
+    expect(b.inputCost).toBeCloseTo(0.0003, 10);
+    expect(b.cachedCost).toBeCloseTo(0.00006, 10);
+    expect(b.cacheCreationCost).toBeCloseTo(0.0001125, 10);
+    expect(b.outputCost).toBeCloseTo(0.0006, 10);
+    expect(b.reasoningCost).toBeCloseTo(0.0012, 10);
+    expect(b.totalCost).toBeCloseTo(0.0003 + 0.00006 + 0.0001125 + 0.0006 + 0.0012, 10);
   });
 });
 

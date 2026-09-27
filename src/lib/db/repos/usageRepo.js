@@ -74,27 +74,36 @@ function getLocalDateKey(timestamp) {
 }
 
 function addToCounter(target, key, values) {
-  if (!target[key]) target[key] = { requests: 0, promptTokens: 0, completionTokens: 0, cachedTokens: 0, cost: 0 };
+  if (!target[key]) target[key] = { requests: 0, promptTokens: 0, completionTokens: 0, cachedTokens: 0, cost: 0, inputCost: 0, cachedCost: 0, outputCost: 0 };
   target[key].requests += values.requests || 1;
   target[key].promptTokens += values.promptTokens || 0;
   target[key].completionTokens += values.completionTokens || 0;
   target[key].cachedTokens += values.cachedTokens || 0;
   target[key].cost += values.cost || 0;
+  target[key].inputCost = (target[key].inputCost || 0) + (values.inputCost || 0);
+  target[key].cachedCost = (target[key].cachedCost || 0) + (values.cachedCost || 0);
+  target[key].outputCost = (target[key].outputCost || 0) + (values.outputCost || 0);
   if (values.meta) Object.assign(target[key], values.meta);
 }
 
 function aggregateEntryToDay(day, entry) {
   const promptTokens = entry.tokens?.prompt_tokens || entry.tokens?.input_tokens || 0;
   const completionTokens = entry.tokens?.completion_tokens || entry.tokens?.output_tokens || 0;
-  const cachedTokens = entry.tokens?.cached_tokens || entry.tokens?.cache_read_input_tokens || 0;
+  const cachedTokens = entry.tokens?.cached_tokens || entry.tokens?.cache_read_input_tokens || entry.tokens?.prompt_cache_hit_tokens || 0;
   const cost = entry.cost || 0;
-  const vals = { promptTokens, completionTokens, cachedTokens, cost };
+  const inputCost = entry.inputCost || 0;
+  const cachedCost = entry.cachedCost || 0;
+  const outputCost = entry.outputCost || 0;
+  const vals = { promptTokens, completionTokens, cachedTokens, cost, inputCost, cachedCost, outputCost };
 
   day.requests = (day.requests || 0) + 1;
   day.promptTokens = (day.promptTokens || 0) + promptTokens;
   day.completionTokens = (day.completionTokens || 0) + completionTokens;
   day.cachedTokens = (day.cachedTokens || 0) + cachedTokens;
   day.cost = (day.cost || 0) + cost;
+  day.inputCost = (day.inputCost || 0) + inputCost;
+  day.cachedCost = (day.cachedCost || 0) + cachedCost;
+  day.outputCost = (day.outputCost || 0) + outputCost;
 
   day.byProvider ||= {};
   day.byModel ||= {};
@@ -155,20 +164,21 @@ async function ensureRingInitialized() {
 }
 
 async function calculateCost(provider, model, tokens) {
-  if (!tokens || !provider || !model) return 0;
+  if (!tokens || !provider || !model) return { cost: 0, breakdown: null };
   try {
     const { getPricingForModel } = await import("./pricingRepo.js");
     const pricing = await getPricingForModel(provider, model);
-    if (!pricing) return 0;
+    if (!pricing) return { cost: 0, breakdown: null };
 
     // Delegate the actual math to the single source of truth (avoids the two
     // copies drifting apart — see open-sse/providers/pricing.js for the
     // cache-inclusive prompt_tokens convention this assumes).
-    const { calculateCostFromTokens } = await import("open-sse/providers/pricing.js");
-    return calculateCostFromTokens(tokens, pricing);
+    const { calculateCostBreakdown } = await import("open-sse/providers/pricing.js");
+    const breakdown = calculateCostBreakdown(tokens, pricing);
+    return { cost: breakdown.totalCost, breakdown };
   } catch (e) {
     console.error("Error calculating cost:", e);
-    return 0;
+    return { cost: 0, breakdown: null };
   }
 }
 
@@ -266,7 +276,13 @@ export async function saveRequestUsage(entry) {
     const db = await getAdapter();
 
     if (!entry.timestamp) entry.timestamp = new Date().toISOString();
-    entry.cost = await calculateCost(entry.provider, entry.model, entry.tokens);
+    const { cost, breakdown } = await calculateCost(entry.provider, entry.model, entry.tokens);
+    entry.cost = cost;
+    if (breakdown) {
+      entry.inputCost = breakdown.inputCost + breakdown.cacheCreationCost;
+      entry.cachedCost = breakdown.cachedCost;
+      entry.outputCost = breakdown.outputCost + breakdown.reasoningCost;
+    }
 
     const tokens = entry.tokens || {};
     const promptTokens = tokens.prompt_tokens || tokens.input_tokens || 0;
