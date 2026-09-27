@@ -27,4 +27,20 @@ describe("parseQuotaData codebuddy-cn recurring flag", () => {
     const out = parseQuotaData("codebuddy-cn", data);
     expect(out[0].recurring).toBe(true);
   });
+
+  it("handles codebuddy-intl with recurring flag for refill and bonus packs (#4362)", () => {
+    const data = {
+      plan: "CodeBuddy Pro",
+      quotas: {
+        Monthly: { used: 10, total: 1000, resetAt: "2026-10-31T00:00:00Z", recurring: true },
+        "Bonus Pack 1": { used: 0, total: 200, resetAt: "2026-10-15T00:00:00Z", recurring: false },
+      },
+    };
+
+    const out = parseQuotaData("codebuddy-intl", data);
+    const byName = Object.fromEntries(out.map((q) => [q.name, q]));
+
+    expect(byName["Monthly"].recurring).toBe(true);
+    expect(byName["Bonus Pack 1"].recurring).toBe(false);
+  });
 });

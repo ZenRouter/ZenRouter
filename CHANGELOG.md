@@ -25,6 +25,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 - **fix(translator): preserve message when content has unknown block types (#4383)** (by @semihisikman) — prevented dropping user messages when encountering unknown content blocks like `container_upload`.
 - **fix(translator): strip errorMessage and non-standard keywords from Gemini tool schemas (#4391)** (by @semihisikman) — removed non-standard error and annotation keywords to prevent 400 INVALID_ARGUMENT from Gemini API.
 - **fix(test): add codebuddy-intl to OAUTH_TEST_CONFIG with tokenExists strategy (#4394)** (by @semihisikman) — added missing test config for codebuddy-intl accounts.
+- **fix(usage): support codebuddy-intl in parseQuotaData (#4362)** — forwarded recurring flag for both codebuddy-cn and codebuddy-intl so bonus packs correctly display expiration instead of reset cadence.
 - **test(cross-platform): ensure test suites pass on Windows and Unix** — normalized CRLF/LF line endings, file lock handling, and path separators in test suites.
 
 ### Security & Hardening
