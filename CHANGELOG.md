@@ -32,6 +32,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 - **fix(translator): strip errorMessage and non-standard keywords from Gemini tool schemas (#4391)** (by @semihisikman) — removed non-standard error and annotation keywords to prevent 400 INVALID_ARGUMENT from Gemini API.
 - **fix(test): add codebuddy-intl to OAUTH_TEST_CONFIG with tokenExists strategy (#4394)** (by @semihisikman) — added missing test config for codebuddy-intl accounts.
 - **fix(usage): support codebuddy-intl in parseQuotaData (#4362)** — forwarded recurring flag for both codebuddy-cn and codebuddy-intl so bonus packs correctly display expiration instead of reset cadence.
+- **fix(opencode-go): clamp deepseek reasoning_effort "max" to "high" for mimo backends (#4368)** (by @decolua) — prevented HTTP 400 errors when routing deepseek models via OpenCode Go with max reasoning effort.
+- **feat(thinking): return Claude thinking text to OpenAI-format clients** (by @MrBeanDev, @decolua) — captured thinking intent from pre-translation bodies and set `thinking.display: "summarized"` so OpenAI clients receive Claude's thinking text.
+- **fix(dashboard): resolve combo limits with server capabilities (#4360)** (by @Spoon94) — passed model capabilities resolver into `aggregateComboCapabilities` to accurately display combo token limits in the browser dashboard.
+- **feat(combos): display vision adapter models in an ordered table view** (by @decolua) — upgraded the vision capacity adapter UI to an ordered table view with reorder controls.
+- **fix(antigravity): rewrite all Hermes identity variants** (by @decolua) — sanitized modern Hermes Agent system prompts to prevent upstream 429 quota exhaustion flags.
+- **fix(cli): filter model selector by active connections and noAuth providers** (by @decolua) — filtered CLI interactive model picker to only show models with active credentials or noAuth providers.
 - **test(cross-platform): ensure test suites pass on Windows and Unix** — normalized CRLF/LF line endings, file lock handling, and path separators in test suites.
 
 ### Security & Hardening
