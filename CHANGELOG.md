@@ -3,7 +3,7 @@
 All notable changes to ZenRouter (fork of 9Router) will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional Commits.
 
-## [Unreleased]
+## [0.8.5] - 2026-09-27
 
 ### Latest 2026 Model Catalog & Web Search Enhancements
 - **feat(models): add latest OpenAI GPT-6 (Astra, Sol, Luna) and GPT-5.6 models** — mapped capabilities and pricing for `gpt-6-astra` ($10/$50, 1.05M ctx), `gpt-6-sol` ($2/$10, 1.05M ctx), `gpt-6-luna` ($0.10/$0.50, 1.05M ctx), `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.6-luna`.
