@@ -63,10 +63,18 @@ export const CLAUDE_CLI_SPOOF_HEADERS = {
 
 const ANTHROPIC_BETA_BASE = [...CLAUDE_BETA_FLAGS_BASE];
 const ANTHROPIC_BETA_HEAVY_AGENT = [...CLAUDE_BETA_FLAGS_HEAVY_AGENT];
+const ANTHROPIC_BETA_REDACT_THINKING = "redact-thinking-2026-02-12";
+
+export function wantsThinkingSummaries(body) {
+  return body?.thinking?.display === "summarized";
+}
 
 // Heavy-agent beta flags are gated to opus/sonnet — cheaper models don't need them.
-export function selectAnthropicBeta(model = "") {
-  const flags = [...ANTHROPIC_BETA_BASE];
+// `redact-thinking` asks Anthropic to return signature-only thinking blocks, which
+// is right for clients that never render thinking but blanks the summaries a
+// client explicitly requested with `thinking.display: "summarized"`.
+export function selectAnthropicBeta(model = "", body = null) {
+  const flags = ANTHROPIC_BETA_BASE.filter((flag) => flag !== ANTHROPIC_BETA_REDACT_THINKING || !wantsThinkingSummaries(body));
   if (/(?:^|\/)claude-(opus|sonnet)/.test(model)) flags.push(...ANTHROPIC_BETA_HEAVY_AGENT);
   return flags.join(",");
 }
