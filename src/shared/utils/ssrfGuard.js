@@ -324,6 +324,50 @@ export function assertPublicUrlAsync(rawUrl) {
   return assertPublicUrlResolved(rawUrl);
 }
 
+/**
+ * Guard against Cloud Metadata Service (IMDS) and Link-Local probing (169.254.0.0/16, fe80::/10),
+ * even when local loopback access is permitted.
+ */
+export function assertNotCloudMetadata(rawUrl) {
+  const parsed = new URL(rawUrl);
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`Blocked URL: unsupported protocol ${parsed.protocol}`);
+  }
+  const host = normalizeHost(parsed.hostname);
+  if (
+    host === "metadata.google.internal" ||
+    host === "metadata" ||
+    host === "instance-data" ||
+    host.endsWith(".metadata.google.internal")
+  ) {
+    throw new Error("Blocked URL: cloud metadata host");
+  }
+
+  const bracketless = host.replace(/^\[|\]$/g, "");
+  const ip4 = ipv4ToInt(bracketless) ?? parseAlternativeIpv4(bracketless);
+  if (ip4 !== null) {
+    const metadataBase = ipv4ToInt("169.254.0.0");
+    const mask = (0xffffffff << 16) >>> 0;
+    if ((ip4 & mask) === (metadataBase & mask)) {
+      throw new Error("Blocked URL: cloud metadata IP");
+    }
+  }
+
+  if (bracketless.includes(":")) {
+    const groups = parseIPv6ToGroups(bracketless);
+    if (groups) {
+      if (groups[0] === 0 && groups[1] === 0 && groups[2] === 0 && groups[3] === 0 && groups[4] === 0 && groups[5] === 0xffff) {
+        if (groups[6] === 0xa9fe) {
+          throw new Error("Blocked URL: cloud metadata IP");
+        }
+      }
+      if ((groups[0] & 0xffc0) === 0xfe80) {
+        throw new Error("Blocked URL: link-local IPv6");
+      }
+    }
+  }
+}
+
 // fetch() with SSRF-safe manual redirect handling: each hop's target is
 // re-validated through assertPublicUrlResolved before being followed, so a
 // validated public URL can't 30x its way to an internal target. Bounded to

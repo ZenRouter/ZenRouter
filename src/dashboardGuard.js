@@ -84,6 +84,10 @@ const LOCAL_ONLY_PATHS = [
   "/api/headroom/start",
   "/api/headroom/stop",
   "/api/headroom/proxy",
+  "/api/pxpipe/install",
+  "/api/pxpipe/start",
+  "/api/pxpipe/restart",
+  "/api/pxpipe/stop",
 ];
 
 function isLocalOnlyRoute(pathname) {

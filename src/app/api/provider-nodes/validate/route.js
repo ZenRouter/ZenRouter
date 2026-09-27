@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assertPublicUrl } from "@/shared/utils/ssrfGuard.js";
+import { assertPublicUrl, assertNotCloudMetadata } from "@/shared/utils/ssrfGuard.js";
 import { isLocalRequest } from "@/dashboardGuard";
 
 // Fetch with timeout wrapper
@@ -66,12 +66,20 @@ export async function POST(request) {
       return NextResponse.json({ error: "Invalid URL format" }, { status: 400 });
     }
 
-    // SSRF guard for remote callers; local host keeps self-hosted nodes (e.g. ollama-local)
+    // SSRF guard: remote callers are restricted to public URLs.
+    // Local callers can target loopback (e.g. self-hosted nodes on localhost),
+    // but MUST NEVER target cloud metadata (169.254.169.254) or link-local addresses.
     if (!isLocalRequest(request)) {
       try {
         assertPublicUrl(baseUrl);
       } catch {
         return NextResponse.json({ error: "URL not allowed" }, { status: 400 });
+      }
+    } else {
+      try {
+        assertNotCloudMetadata(baseUrl);
+      } catch {
+        return NextResponse.json({ error: "URL not allowed: metadata access is forbidden" }, { status: 400 });
       }
     }
 

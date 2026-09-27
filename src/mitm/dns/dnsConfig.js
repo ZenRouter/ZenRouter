@@ -2,6 +2,7 @@ const { exec, spawn, execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const crypto = require("crypto");
 const { log, err } = require("../logger");
 const { TOOL_HOSTS } = require("../../shared/constants/mitmToolHosts.js");
 const { runElevatedPowerShell, isAdmin } = require("../winElevated.js");
@@ -91,6 +92,49 @@ function execWithPassword(command, password) {
 }
 
 /**
+ * Safely overwrite /etc/hosts via a temporary file without shell interpolation (macOS/Linux).
+ */
+function writeHostsUnix(content, sudoPassword) {
+  return new Promise((resolve, reject) => {
+    const tmpFile = path.join(
+      os.tmpdir(),
+      `zenrouter-hosts-${Date.now()}-${crypto.randomBytes(6).toString("hex")}.tmp`
+    );
+    try {
+      fs.writeFileSync(tmpFile, content, { mode: 0o644 });
+    } catch (err) {
+      return reject(err);
+    }
+
+    const cleanup = () => {
+      try { fs.unlinkSync(tmpFile); } catch {}
+    };
+
+    const useSudo = isSudoAvailable();
+    const cmd = useSudo ? "sudo" : "cp";
+    const args = useSudo ? ["-S", "cp", tmpFile, HOSTS_FILE] : [tmpFile, HOSTS_FILE];
+
+    const child = spawn(cmd, args, { stdio: ["pipe", "pipe", "pipe"], windowsHide: true });
+    let stderr = "";
+    child.stderr.on("data", (d) => { stderr += d; });
+    child.on("close", (code) => {
+      cleanup();
+      if (code === 0) resolve();
+      else reject(new Error(stderr || `Exit code ${code}`));
+    });
+    child.on("error", (err) => {
+      cleanup();
+      reject(err);
+    });
+
+    if (useSudo) {
+      child.stdin.write(`${sudoPassword}\n`);
+      child.stdin.end();
+    }
+  });
+}
+
+/**
  * Trim trailing blank lines/whitespace, ensure file ends with exactly one newline.
  */
 function normalizeHostsContent(content) {
@@ -167,9 +211,7 @@ async function addDNSEntry(tool, sudoPassword) {
       const trimmed = current.replace(/[\r\n\s]+$/g, "");
       const toAppend = entriesToAdd.map(h => `127.0.0.1 ${h}`).join("\n");
       const next = `${trimmed}\n${toAppend}\n`;
-      // Use tee via sudo to overwrite atomically — escape single quotes in content
-      const escaped = next.replace(/'/g, "'\\''");
-      await execWithPassword(`printf '%s' '${escaped}' | tee ${HOSTS_FILE} > /dev/null`, sudoPassword);
+      await writeHostsUnix(next, sudoPassword);
       await flushDNS(sudoPassword);
     }
     log(`🌐 DNS ${tool}: ✅ added ${entriesToAdd.join(", ")}`);
@@ -203,8 +245,7 @@ async function removeDNSEntry(tool, sudoPassword) {
       const current = fs.readFileSync(HOSTS_FILE, "utf8");
       const filtered = current.split(/\r?\n/).filter(l => !entriesToRemove.some(h => l.includes(h))).join("\n");
       const next = filtered.replace(/[\r\n\s]+$/g, "") + "\n";
-      const escaped = next.replace(/'/g, "'\\''");
-      await execWithPassword(`printf '%s' '${escaped}' | tee ${HOSTS_FILE} > /dev/null`, sudoPassword);
+      await writeHostsUnix(next, sudoPassword);
       await flushDNS(sudoPassword);
     }
     log(`🌐 DNS ${tool}: ✅ removed ${entriesToRemove.join(", ")}`);

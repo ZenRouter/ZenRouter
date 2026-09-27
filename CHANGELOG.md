@@ -5,6 +5,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### Security & Hardening
+- **fix(security): restrict PXPIPE process execution routes to localhost** — added `/api/pxpipe/*` (install, start, restart, stop) to `LOCAL_ONLY_PATHS` in `dashboardGuard.js` to prevent remote callers over reverse proxies/tunnels from triggering arbitrary npm package installations or process management on the server host.
+- **fix(security): prevent shell injection in DNS hosts config** — eliminated shell string interpolation in `src/mitm/dns/dnsConfig.js` by safely writing hosts content to a temporary file and atomically updating `/etc/hosts` via direct file copying without shell command construction (`sh -c`).
+- **fix(security): harden SSRF protections against cloud metadata access** — added `assertNotCloudMetadata` in `src/shared/utils/ssrfGuard.js` and enforced it in `/api/provider-nodes/validate`, blocking loopback requests from reaching link-local and cloud metadata endpoints (`169.254.169.254`, `metadata.google.internal`).
+- **feat(auth): dedicated change-password endpoint** — introduced `POST /api/auth/change-password` with authenticated session verification, strict password length checks, and bcrypt hashing to isolate password rotation from generic settings updates.
+- **fix(security): warn when running in development mode without peer trust** — added warning in `src/lib/auth/trustedPeer.js` when `custom-server.js` peer token is absent to alert developers of non-local request handling.
+
 ## [0.8.0] - 2026-09-24
 
 ### Base: v0.7.4 stabilization (shipped in this release train)
