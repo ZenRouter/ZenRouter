@@ -267,6 +267,7 @@ export class AntigravityExecutor extends BaseExecutor {
           topP: 0.95,
           topK: 40,
           maxOutputTokens: 8192,
+          responseModalities: ["TEXT", "IMAGE"],
           imageConfig,
         },
         sessionId,

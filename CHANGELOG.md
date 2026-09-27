@@ -5,6 +5,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### Antigravity Image Generation Enhancements
+- **feat(image/antigravity): enhance image generation and editing pipeline** — support multi-reference images via both `image` and `images[]`, resolve remote HTTP(S) image URLs via `fetchImageAsBase64`, support explicit `aspect_ratio` and size mapping, enforce `responseModalities: ["TEXT", "IMAGE"]` on upstream generation config, add prompt directives to ensure image outputs, robustly parse `inlineData` and `inline_data`, and extract precise quota reset timestamps on upstream rate limits.
+- **feat(models/antigravity): add Gemini 3 Pro Image, Gemini 2.5 Flash Image, and Imagen 3 models** — expanded Antigravity image models in the provider registry with `gemini-3-pro-image`, `gemini-2.5-flash-image`, `imagen-3.0-generate-002`, and `imagen-3.0-fast-generate-001`.
+
 ### Upstream Fixes & Enhancements (decolua/9router Cherry-Picks)
 - **perf(providers): make POST /api/providers O(1) and refuse silent key overwrite (#4311, #4350)** (by @nikan-wystaf) — eliminated full-pool priority renumbering per insert and prevented silent key overwrites on name collisions.
 - **fix(capabilities): stop caching catalog source per module copy (#4344, #4351)** (by @Mohammad-Hijjawi) — ensured `setCatalogSource(null)` clears the shared `globalThis` slot across all bundled module chunks.
