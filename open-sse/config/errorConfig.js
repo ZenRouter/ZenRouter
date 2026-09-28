@@ -90,6 +90,13 @@ export const ERROR_RULES = [
   { text: "end of life",                cooldownMs: 0 },
   { text: "no longer supported",        cooldownMs: 0 },
   { text: "model is unavailable",       cooldownMs: COOLDOWN.long },
+  // Model/schema incompatibility failures (9router #4447): specific upstream schema
+  // rejections (e.g. Gemini INVALID_ARGUMENT on unsupported schema forms) that should
+  // allow the combo to advance to the next model without cooling down the healthy account.
+  { text: "invalid value at",           cooldownMs: 0 },
+  { text: "invalid_argument",           cooldownMs: 0 },
+  { text: "function_declarations",      cooldownMs: 0 },
+  { text: "unsupported schema",         cooldownMs: 0 },
   // AiHubMix free-tier abuse gate (#3602): "Sorry, to prevent abuse of free resources..."
   { text: "prevent abuse",            cooldownMs: COOLDOWN.extended },
   { text: "can only try",             cooldownMs: COOLDOWN.extended },

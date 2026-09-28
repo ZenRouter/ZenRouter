@@ -320,6 +320,17 @@ function flattenTypeArrays(obj) {
 function ensureObjectType(obj) {
   if (!obj || typeof obj !== "object") return;
   if (obj.properties && !obj.type) obj.type = "object";
+  if (obj.properties && typeof obj.properties === "object" && !Array.isArray(obj.properties)) {
+    for (const [, propSchema] of Object.entries(obj.properties)) {
+      if (propSchema && typeof propSchema === "object" && !Array.isArray(propSchema)) {
+        if (!propSchema.type) {
+          if (propSchema.properties) propSchema.type = "object";
+          else if (propSchema.items) propSchema.type = "array";
+          else propSchema.type = "string";
+        }
+      }
+    }
+  }
   forEachChildSchema(obj, ensureObjectType);
 }
 
@@ -378,6 +389,7 @@ function expandStringSchemas(obj) {
     if (!map || typeof map !== "object" || Array.isArray(map)) continue;
     for (const [key, value] of Object.entries(map)) {
       if (typeof value === "string") map[key] = expand(value);
+      else if (typeof value === "boolean") map[key] = { type: "string" };
     }
   }
 
