@@ -242,3 +242,38 @@ describe("Kiro usage pass-through", () => {
     expect(out.prompt_tokens_details.cache_creation_tokens).toBe(50);
   });
 });
+
+describe("Codex / OpenAI usage with input_tokens_details and output_tokens_details (#4444)", () => {
+  it("extractUsage extracts cached_tokens and reasoning_tokens from input/output_tokens_details", () => {
+    const chunk = {
+      usage: {
+        prompt_tokens: 303619,
+        completion_tokens: 396,
+        total_tokens: 304015,
+        input_tokens_details: { cached_tokens: 280000 },
+        output_tokens_details: { reasoning_tokens: 150 },
+      }
+    };
+    const u = extractUsage(chunk);
+    expect(u).toBeDefined();
+    expect(u.prompt_tokens).toBe(303619);
+    expect(u.completion_tokens).toBe(396);
+    expect(u.cached_tokens).toBe(280000);
+    expect(u.reasoning_tokens).toBe(150);
+    expect(u.prompt_tokens_details?.cached_tokens).toBe(280000);
+    expect(u.completion_tokens_details?.reasoning_tokens).toBe(150);
+  });
+
+  it("canonicalizeUsage folds usage with input_tokens_details without dropping cache", () => {
+    const u = canonicalizeUsage({
+      prompt_tokens: 303619,
+      completion_tokens: 396,
+      input_tokens_details: { cached_tokens: 280000 },
+      output_tokens_details: { reasoning_tokens: 150 },
+    });
+    expect(u.prompt_tokens).toBe(303619);
+    expect(u.completion_tokens).toBe(396);
+    expect(u.cached_tokens).toBe(280000);
+    expect(u.reasoning_tokens).toBe(150);
+  });
+});
