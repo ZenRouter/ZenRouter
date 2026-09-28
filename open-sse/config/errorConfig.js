@@ -97,6 +97,10 @@ export const ERROR_RULES = [
   { text: "invalid_argument",           cooldownMs: 0 },
   { text: "function_declarations",      cooldownMs: 0 },
   { text: "unsupported schema",         cooldownMs: 0 },
+  // ChatGPT account model restriction on Codex (9router #4369)
+  { text: "not supported when using codex with a chatgpt account", cooldownMs: 0 },
+  { text: "chatgpt account",            cooldownMs: 0 },
+  { text: "response.failed",            cooldownMs: 0 },
   // AiHubMix free-tier abuse gate (#3602): "Sorry, to prevent abuse of free resources..."
   { text: "prevent abuse",            cooldownMs: COOLDOWN.extended },
   { text: "can only try",             cooldownMs: COOLDOWN.extended },
