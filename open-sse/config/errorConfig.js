@@ -93,8 +93,6 @@ export const ERROR_RULES = [
   // Model/schema incompatibility failures (9router #4447): specific upstream schema
   // rejections (e.g. Gemini INVALID_ARGUMENT on unsupported schema forms) that should
   // allow the combo to advance to the next model without cooling down the healthy account.
-  { text: "invalid value at",           cooldownMs: 0 },
-  { text: "invalid_argument",           cooldownMs: 0 },
   { text: "function_declarations",      cooldownMs: 0 },
   { text: "unsupported schema",         cooldownMs: 0 },
   // ChatGPT account model restriction on Codex (9router #4369)
