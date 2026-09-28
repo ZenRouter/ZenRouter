@@ -176,6 +176,7 @@ function convertClaudeMessage(msg) {
     const parts = [];
     const toolCalls = [];
     const toolResults = [];
+    let reasoningContent = "";
 
     for (const block of msg.content) {
       switch (block.type) {
@@ -206,6 +207,7 @@ function convertClaudeMessage(msg) {
           break;
 
         case CLAUDE_BLOCK.TOOL_USE:
+        case CLAUDE_BLOCK.SERVER_TOOL_USE:
           toolCalls.push({
             id: block.id,
             type: OPENAI_BLOCK.FUNCTION,
@@ -217,6 +219,7 @@ function convertClaudeMessage(msg) {
           break;
 
         case CLAUDE_BLOCK.TOOL_RESULT:
+        case CLAUDE_BLOCK.WEB_SEARCH_TOOL_RESULT:
           let resultContent = "";
           if (typeof block.content === "string") {
             resultContent = block.content;
@@ -234,6 +237,16 @@ function convertClaudeMessage(msg) {
             tool_call_id: block.tool_use_id,
             content: resultContent
           });
+          break;
+
+        case CLAUDE_BLOCK.THINKING:
+          if (block.thinking && typeof block.thinking === "string") {
+            reasoningContent = block.thinking;
+          }
+          break;
+
+        case CLAUDE_BLOCK.REDACTED_THINKING:
+          // Redacted thinking is encrypted reasoning; omit without injecting placeholder notice into visible text
           break;
 
         default:
@@ -268,20 +281,31 @@ function convertClaudeMessage(msg) {
         result.content = collapseTextParts(parts);
       }
       result.tool_calls = toolCalls;
+      if (reasoningContent) {
+        result.reasoning_content = reasoningContent;
+      }
       return result;
     }
 
     // Return content
     if (parts.length > 0) {
-      return {
+      const result = {
         role,
         content: collapseTextParts(parts)
       };
+      if (reasoningContent && role === ROLE.ASSISTANT) {
+        result.reasoning_content = reasoningContent;
+      }
+      return result;
     }
     
-    // Empty content array
-    if (msg.content.length === 0) {
-      return { role, content: "" };
+    // Empty content array or thinking-only assistant message
+    if (msg.content.length === 0 || (reasoningContent && role === ROLE.ASSISTANT)) {
+      const result = { role, content: "" };
+      if (reasoningContent && role === ROLE.ASSISTANT) {
+        result.reasoning_content = reasoningContent;
+      }
+      return result;
     }
   }
 
