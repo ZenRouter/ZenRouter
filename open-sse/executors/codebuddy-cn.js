@@ -38,10 +38,11 @@ export class CodeBuddyExecutor extends DefaultExecutor {
         if (!message || message.role !== "system") return message;
         const text = flatten(message.content);
         if (!text) return message;
-        if (text.length > 2000 || AGENT_PATTERN.test(text)) {
+        if (AGENT_PATTERN.test(text)) {
+          const sanitized = text.replace(AGENT_PATTERN, NEUTRAL_PROMPT);
           return typeof message.content === "string"
-            ? { ...message, content: NEUTRAL_PROMPT }
-            : { ...message, content: [{ type: "text", text: NEUTRAL_PROMPT }] };
+            ? { ...message, content: sanitized }
+            : { ...message, content: [{ type: "text", text: sanitized }] };
         }
         return message;
       });

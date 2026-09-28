@@ -27,7 +27,24 @@ export class CodeBuddyIntlExecutor extends DefaultExecutor {
     // CodeBuddy rejects plain OpenAI shape (11101 invalid request): needs a
     // leading system prompt + user content as typed blocks, not a bare string.
     const source = Array.isArray(transformed.messages) ? transformed.messages : [];
-    transformed.messages = [{ role: "system", content: "You are CodeBuddy Code." }];
+    const userSystemPrompts = [];
+    for (const message of source) {
+      if (message && ["system", "developer"].includes(message.role)) {
+        const contentStr = typeof message.content === "string"
+          ? message.content
+          : Array.isArray(message.content)
+            ? message.content.map(b => (b && typeof b.text === "string" ? b.text : "")).join("\n")
+            : "";
+        if (contentStr.trim()) userSystemPrompts.push(contentStr.trim());
+      }
+    }
+
+    const basePrompt = "You are CodeBuddy Code.";
+    const combinedSystemPrompt = userSystemPrompts.length > 0
+      ? `${basePrompt}\n\n${userSystemPrompts.join("\n\n")}`
+      : basePrompt;
+
+    transformed.messages = [{ role: "system", content: combinedSystemPrompt }];
     for (const message of source) {
       if (!message || typeof message !== "object" || ["system", "developer"].includes(message.role)) continue;
       if (message.role === "user" && typeof message.content === "string") {
