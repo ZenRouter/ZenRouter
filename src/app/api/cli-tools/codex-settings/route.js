@@ -110,12 +110,26 @@ export async function GET() {
 // POST - Update ZenRouter settings (merge with existing config)
 export async function POST(request) {
   try {
-    const { baseUrl, apiKey, model, subagentModel } = await request.json();
+    let { baseUrl, apiKey, model, subagentModel } = await request.json();
     
-    if (!baseUrl || !apiKey || !model) {
-      return NextResponse.json({ error: "baseUrl, apiKey and model are required" }, { status: 400 });
+    if (!baseUrl || !model) {
+      return NextResponse.json({ error: "baseUrl and model are required" }, { status: 400 });
     }
 
+    if (!apiKey || apiKey === "sk_zenrouter" || apiKey === "sk_9router") {
+      try {
+        const { getApiKeys } = await import("@/lib/db/repos/apiKeysRepo.js");
+        const keys = await getApiKeys();
+        const active = keys?.filter(k => k.isActive);
+        if (active?.length > 0) {
+          apiKey = active[0].key;
+        } else {
+          apiKey = apiKey || "sk_zenrouter";
+        }
+      } catch {
+        apiKey = apiKey || "sk_zenrouter";
+      }
+    }
     const codexDir = getCodexDir();
     const configPath = getCodexConfigPath();
 

@@ -132,7 +132,19 @@ export async function POST(request) {
         const dir = getDeepSeekDir();
         await fs.mkdir(dir, { recursive: true });
 
-        const newConfig = buildZenRouterConfig(baseUrl, apiKey || "sk_zenrouter", model);
+        let keyToUse = apiKey;
+        if (!keyToUse || keyToUse === "sk_zenrouter" || keyToUse === "sk_9router") {
+          try {
+            const { getApiKeys } = await import("@/lib/db/repos/apiKeysRepo.js");
+            const keys = await getApiKeys();
+            const active = keys?.filter(k => k.isActive);
+            keyToUse = active?.length > 0 ? active[0].key : (keyToUse || "sk_zenrouter");
+          } catch {
+            keyToUse = keyToUse || "sk_zenrouter";
+          }
+        }
+
+        const newConfig = buildZenRouterConfig(baseUrl, keyToUse, model);
         await fs.writeFile(getDeepSeekConfigPath(), newConfig);
 
         return NextResponse.json({

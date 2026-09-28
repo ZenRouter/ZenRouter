@@ -112,7 +112,17 @@ export async function POST(request) {
     } catch { /* No existing config */ }
 
     const normalizedBaseUrl = baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
-    const keyToUse = apiKey || "sk_zenrouter";
+    let keyToUse = apiKey;
+    if (!keyToUse || keyToUse === "sk_zenrouter" || keyToUse === "sk_9router") {
+      try {
+        const { getApiKeys } = await import("@/lib/db/repos/apiKeysRepo.js");
+        const keys = await getApiKeys();
+        const active = keys?.filter(k => k.isActive);
+        keyToUse = active?.length > 0 ? active[0].key : (keyToUse || "sk_zenrouter");
+      } catch {
+        keyToUse = keyToUse || "sk_zenrouter";
+      }
+    }
     const effectiveSubagentModel = subagentModel || modelsArray[0];
 
     // Ensure provider object

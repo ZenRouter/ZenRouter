@@ -26,10 +26,10 @@ export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, api
   const [customBaseUrl, setCustomBaseUrl] = useState("");
 
   useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey && !codexStatus?.config) {
+    if (apiKeys?.length > 0 && !selectedApiKey) {
       setSelectedApiKey(apiKeys[0].key);
     }
-  }, [apiKeys, selectedApiKey, codexStatus?.config]);
+  }, [apiKeys, selectedApiKey]);
 
   useEffect(() => {
     if (initialStatus) setCodexStatus(initialStatus);
@@ -71,8 +71,13 @@ export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, api
     if (config) {
       const { baseUrl, apiKey } = getCurrentCodexProviderSettings(config);
       setCustomBaseUrl(baseUrl);
-      setSelectedApiKey(apiKey);
-
+      if (apiKey && apiKey !== "sk_zenrouter" && apiKey !== "sk_9router") {
+        setSelectedApiKey(apiKey);
+      } else if (apiKeys?.length > 0) {
+        setSelectedApiKey(apiKeys[0].key);
+      } else {
+        setSelectedApiKey(apiKey);
+      }
       const modelMatch = config.match(/^model\s*=\s*"([^"]+)"/m);
       if (modelMatch) setSelectedModel(modelMatch[1]);
 
@@ -103,11 +108,10 @@ export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, api
     setApplying(true);
     setMessage(null);
     try {
-      // Use sk_zenrouter for localhost if no key, otherwise use selected key
-      const keyToUse = (selectedApiKey && selectedApiKey.trim())
+      // Use selected key, fallback to first active dashboard key if available, otherwise sk_zenrouter
+      const keyToUse = (selectedApiKey && selectedApiKey.trim() && selectedApiKey !== "sk_zenrouter" && selectedApiKey !== "sk_9router")
         ? selectedApiKey
-        : (!cloudEnabled ? "sk_zenrouter" : selectedApiKey);
-
+        : (apiKeys?.length > 0 ? apiKeys[0].key : (!cloudEnabled ? "sk_zenrouter" : selectedApiKey));
       const res = await fetch("/api/cli-tools/codex-settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -165,10 +169,9 @@ export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, api
   };
 
   const getManualConfigs = () => {
-    const keyToUse = (selectedApiKey && selectedApiKey.trim())
+    const keyToUse = (selectedApiKey && selectedApiKey.trim() && selectedApiKey !== "sk_zenrouter" && selectedApiKey !== "sk_9router")
       ? selectedApiKey
-      : (!cloudEnabled ? "sk_zenrouter" : "<API_KEY_FROM_DASHBOARD>");
-
+      : (apiKeys?.length > 0 ? apiKeys[0].key : (!cloudEnabled ? "sk_zenrouter" : "<API_KEY_FROM_DASHBOARD>"));
     const effectiveSubagentModel = subagentModel || selectedModel;
 
     const configContent = `# ZenRouter Configuration for Codex CLI

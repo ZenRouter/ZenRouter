@@ -106,9 +106,20 @@ export async function POST(request) {
 
     await fs.mkdir(getGrokDir(), { recursive: true });
     const normalizedBaseUrl = baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
+    let keyToUse = apiKey;
+    if (!keyToUse || keyToUse === "sk_zenrouter" || keyToUse === "sk_9router") {
+      try {
+        const { getApiKeys } = await import("@/lib/db/repos/apiKeysRepo.js");
+        const keys = await getApiKeys();
+        const active = keys?.filter(k => k.isActive);
+        keyToUse = active?.length > 0 ? active[0].key : (keyToUse || "sk_zenrouter");
+      } catch {
+        keyToUse = keyToUse || "sk_zenrouter";
+      }
+    }
     const toml = applyGrokBuildConfig(await readConfigToml(), {
       baseUrl: normalizedBaseUrl,
-      apiKey: apiKey || "sk_zenrouter",
+      apiKey: keyToUse,
       model: selectedModel,
       contextWindow: normalizeContextWindow(contextWindow, selectedModel),
       subagentModels: normalizeSubagentModels(subagentModels),

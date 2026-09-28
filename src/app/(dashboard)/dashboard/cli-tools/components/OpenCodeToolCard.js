@@ -133,9 +133,9 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
 
   const saveModels = async (models) => {
     try {
-      const keyToUse = (selectedApiKey && selectedApiKey.trim())
+      const keyToUse = (selectedApiKey && selectedApiKey.trim() && selectedApiKey !== "sk_zenrouter" && selectedApiKey !== "sk_9router")
         ? selectedApiKey
-        : (!cloudEnabled ? "sk_zenrouter" : selectedApiKey);
+        : (apiKeys?.length > 0 ? apiKeys[0].key : (!cloudEnabled ? "sk_zenrouter" : selectedApiKey));
       const validActiveModel = models.includes(activeModel) ? activeModel : (models[0] || "");
       await fetch("/api/cli-tools/opencode-settings", {
         method: "POST",
@@ -176,9 +176,9 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
     setApplying(true);
     setMessage(null);
     try {
-      const keyToUse = (selectedApiKey && selectedApiKey.trim())
+      const keyToUse = (selectedApiKey && selectedApiKey.trim() && selectedApiKey !== "sk_zenrouter" && selectedApiKey !== "sk_9router")
         ? selectedApiKey
-        : (!cloudEnabled ? "sk_zenrouter" : selectedApiKey);
+        : (apiKeys?.length > 0 ? apiKeys[0].key : (!cloudEnabled ? "sk_zenrouter" : selectedApiKey));
 
       const res = await fetch("/api/cli-tools/opencode-settings", {
         method: "POST",
@@ -231,9 +231,9 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
   };
 
   const getManualConfigs = () => {
-    const keyToUse = (selectedApiKey && selectedApiKey.trim())
+    const keyToUse = (selectedApiKey && selectedApiKey.trim() && selectedApiKey !== "sk_zenrouter" && selectedApiKey !== "sk_9router")
       ? selectedApiKey
-      : (!cloudEnabled ? "sk_zenrouter" : "<API_KEY_FROM_DASHBOARD>");
+      : (apiKeys?.length > 0 ? apiKeys[0].key : (!cloudEnabled ? "sk_zenrouter" : "<API_KEY_FROM_DASHBOARD>"));
 
     const modelsToShow = selectedModels.length > 0 ? selectedModels : ["provider/model-id"];
     const activeModelToShow = activeModel || selectedModels[0] || modelsToShow[0];

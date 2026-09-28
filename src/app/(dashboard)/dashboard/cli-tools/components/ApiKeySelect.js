@@ -18,6 +18,11 @@ export default function ApiKeySelect({ value, onChange, apiKeys = [], cloudEnabl
     return subscribeKeyPresets(sync);
   }, []);
 
+  useEffect(() => {
+    if (!value && !customMode && apiKeys?.length > 0 && onChange) {
+      onChange(apiKeys[0].key);
+    }
+  }, [value, customMode, apiKeys, onChange]);
   const options = useMemo(
     () => [
       ...apiKeys.map((k) => ({ value: k.key, label: k.key })),

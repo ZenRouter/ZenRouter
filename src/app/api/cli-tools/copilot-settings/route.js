@@ -82,9 +82,18 @@ export async function POST(request) {
     }
     const config = existingConfig ?? [];
 
+    let keyToUse = apiKey;
+    if (!keyToUse || keyToUse === "sk_zenrouter" || keyToUse === "sk_9router") {
+      try {
+        const { getApiKeys } = await import("@/lib/db/repos/apiKeysRepo.js");
+        const keys = await getApiKeys();
+        const active = keys?.filter(k => k.isActive);
+        keyToUse = active?.length > 0 ? active[0].key : (keyToUse || "sk_zenrouter");
+      } catch {
+        keyToUse = keyToUse || "sk_zenrouter";
+      }
+    }
     const endpointUrl = `${baseUrl}/chat/completions#models.ai.azure.com`;
-    const keyToUse = apiKey || "sk_zenrouter";
-
     const newEntry = {
       name: "ZenRouter",
       vendor: "azure",
