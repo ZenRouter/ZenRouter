@@ -7,8 +7,12 @@ services:
       - "20128:20128"
     volumes:
       - zenrouter-data:/app/data
+    # Optional: copy .env.example to .env to override secrets/ports. The image
+    # provisions JWT_SECRET itself, so no .env is required to get started.
+    # `required: false` keeps `docker compose up` working when it is absent.
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       DATA_DIR: /app/data
       PORT: "20128"

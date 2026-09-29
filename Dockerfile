@@ -47,9 +47,31 @@ RUN mkdir -p /app/data && chown -R node:node /app && \
   mkdir -p /app/data-home && chown node:node /app/data-home && \
   ln -sf /app/data-home /root/.zenrouter 2>/dev/null || true
 
-# Fix permissions at runtime (handles mounted volumes)
+# Fix permissions at runtime (handles mounted volumes) and auto-provision the
+# runtime secrets. JWT_SECRET is required by the dashboard (no fallback, by
+# design), so a container started with no env must still come up usable:
+# generate a per-container random secret and persist it in the data volume so
+# it survives restarts (a changing secret would invalidate every session).
+# An explicitly passed JWT_SECRET always wins.
 RUN apk --no-cache upgrade && apk --no-cache add su-exec && \
-  printf '#!/bin/sh\nchown -R node:node /app/data /app/data-home 2>/dev/null\nexec su-exec node "$@"\n' > /entrypoint.sh && \
+  printf '%s\n' \
+    '#!/bin/sh' \
+    'chown -R node:node /app/data /app/data-home 2>/dev/null' \
+    'SECRETS_FILE="${DATA_DIR:-/app/data}/secrets.env"' \
+    'if [ -z "$JWT_SECRET" ] || [ "${#JWT_SECRET}" -lt 32 ]; then' \
+    '  if [ ! -f "$SECRETS_FILE" ]; then' \
+    '    mkdir -p "$(dirname "$SECRETS_FILE")"' \
+    '    umask 077' \
+    '    { printf "JWT_SECRET=%s\n" "$(head -c 32 /dev/urandom | od -An -tx1 | tr -d " \n")"' \
+    '      printf "API_KEY_SECRET=%s\n" "$(head -c 32 /dev/urandom | od -An -tx1 | tr -d " \n")"' \
+    '      printf "MACHINE_ID_SALT=%s\n" "$(head -c 32 /dev/urandom | od -An -tx1 | tr -d " \n")"; } > "$SECRETS_FILE"' \
+    '    chown node:node "$SECRETS_FILE" 2>/dev/null' \
+    '  fi' \
+    '  . "$SECRETS_FILE"' \
+    '  export JWT_SECRET API_KEY_SECRET MACHINE_ID_SALT' \
+    'fi' \
+    'exec su-exec node "$@"' \
+    > /entrypoint.sh && \
   chmod +x /entrypoint.sh
 
 EXPOSE 20128

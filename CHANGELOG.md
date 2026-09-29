@@ -2,6 +2,30 @@
 
 All notable changes to ZenRouter (fork of 9Router) will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional Commits.
+## [0.8.8] - 2026-09-29
+
+### Zero-Setup Install (auto-provisioned secrets)
+
+Fresh `npm i -g @joyccn/zenrouter` installs could load the dashboard but **never log in**: `POST /api/auth/login` returned `500 {"error":"JWT_SECRET environment variable is required. Set a strong random secret (min 32 chars) in your .env file."}`.
+
+Root cause — the requirement was unsatisfiable as shipped:
+- The dashboard signs its session cookie with `JWT_SECRET`, and `src/lib/auth/dashboardSession.js` deliberately has **no fallback** (a known default would let anyone forge a session).
+- The published package ships **no `.env`**, and the spawned standalone server never loaded one — Next reads `.env` only from its own project root, which inside the package is `<pkg>/app/`. A `.env` in the user's CWD was silently ignored (reproduced).
+
+Fixes:
+- **feat(cli): generate and persist per-install runtime secrets** — new `cli/hooks/runtimeSecrets.js` creates `JWT_SECRET`, `API_KEY_SECRET` and `MACHINE_ID_SALT` (32 random bytes each) in the user data dir (`~/.zenrouter/secrets.json`, `%APPDATA%\zenrouter\secrets.json` on Windows) and injects them into the spawned server. Written atomically, `0600`, and **reused across restarts** so sessions and machine identity survive. An explicitly exported value always wins.
+- **feat(cli): auto-setup at install time** — `hooks/postinstall.js` now creates the data directory and generates the secrets during `npm install`, so the first `zenrouter` run is immediately usable.
+- **fix(server): load `.env` beside the server or in CWD** — `custom-server.js` gained a dependency-free loader that runs before anything reads `process.env`, so an operator-placed `.env` is finally honoured. Real environment variables are never overridden. A malformed file cannot block boot.
+- **feat(docker): provision secrets in the entrypoint** — the image generates its own into the data volume when `JWT_SECRET` is unset or shorter than 32 chars, and reuses them on restart. `docker-compose.yml` now marks `env_file: .env` as `required: false`, so `docker compose up` works with no `.env` present.
+
+### Docs
+- **docs(.env.example): document that no `.env` is needed** — the generated secrets are described, along with the fact that any value set in `.env` overrides them.
+
+### Verification
+- New suite `tests/unit/runtime-secrets-autosetup.test.js` — 14 tests (generation, persistence/stability, per-install isolation, explicit-env precedence, corrupt-file recovery, postinstall/CLI/Docker wiring).
+- Reproduced the original failure against published `@joyccn/zenrouter@0.8.7`, then confirmed the fix end-to-end on Windows: fresh install → postinstall generates secrets → server starts → login `200` → authenticated `/api/auth/status` → protected API `200` → restart reuses the same secret.
+- Docker entrypoint logic exercised for four scenarios (fresh, restart, explicit-secret wins, short-secret replaced).
+
 ## [0.8.7] - 2026-09-29
 
 ### Claude Provider Auth & Streaming Fixes

@@ -64,6 +64,7 @@ function createSpinner(text) {
 
 const pkg = require("./package.json");
 const { ensureSqliteRuntime, buildEnvWithRuntime } = require("./hooks/sqliteRuntime");
+const { buildSecretsEnv, getSecretsPath } = require("./hooks/runtimeSecrets");
 const { resolveHeapFlags } = require("./hooks/nodeFlags");
 const { ensureTrayRuntime } = require("./hooks/trayRuntime");
 const args = process.argv.slice(2);
@@ -88,6 +89,13 @@ try { ensureSqliteRuntime({ silent: true }); } catch {}
 
 // Self-heal tray runtime (systray for macOS/Linux only). Windows skipped.
 try { ensureTrayRuntime({ silent: true }); } catch {}
+
+// Auto-setup: generate + persist the runtime secrets (JWT_SECRET, API_KEY_SECRET,
+// MACHINE_ID_SALT) in the user data dir on first run, so `npm i -g` is usable
+// immediately with no manual .env editing. See hooks/runtimeSecrets.js for why
+// the secret cannot live inside the package.
+let secretsEnv = {};
+try { secretsEnv = buildSecretsEnv(process.env); } catch {}
 
 // Configuration constants
 const APP_NAME = pkg.name; // Use from package.json
@@ -676,6 +684,10 @@ function startServer(updatePromise) {
       windowsHide: true,
       env: {
         ...buildEnvWithRuntime(process.env),
+        // Generated per-install (persisted in the data dir) so the dashboard can
+        // sign session cookies without the user hand-editing a .env inside
+        // node_modules. An explicitly exported JWT_SECRET still wins.
+        ...secretsEnv,
         PORT: port.toString(),
         HOSTNAME: host
       }

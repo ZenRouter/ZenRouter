@@ -6,6 +6,37 @@ const { pathToFileURL } = require("url");
 
 const origCreate = http.createServer.bind(http);
 
+// Load a .env sitting next to this file (or in the standalone project root)
+// BEFORE anything reads process.env. Next's standalone server only reads .env
+// from its own project dir, and the published CLI bundle ships none — so
+// operators who put a .env beside the server previously had it silently
+// ignored, and JWT_SECRET fell through to the "environment variable is
+// required" startup failure. Existing env vars always win (never override).
+(function loadDotEnv() {
+  try {
+    for (const candidate of [path.join(__dirname, ".env"), path.join(process.cwd(), ".env")]) {
+      if (!fs.existsSync(candidate)) continue;
+      const raw = fs.readFileSync(candidate, "utf8");
+      for (const line of raw.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eq = trimmed.indexOf("=");
+        if (eq < 1) continue;
+        const key = trimmed.slice(0, eq).trim();
+        if (!key || key in process.env) continue;
+        let value = trimmed.slice(eq + 1).trim();
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+          value = value.slice(1, -1);
+        }
+        process.env[key] = value;
+      }
+      break;
+    }
+  } catch {
+    // A malformed or unreadable .env must never prevent the server from booting.
+  }
+})();
+
 // Fix #3744: suppress SOCKS5 and SQLite ExperimentalWarning (undici socks5-proxy-agent and node:sqlite emit on first use)
 if (typeof process !== "undefined") {
   const origEmit = process.emit;
