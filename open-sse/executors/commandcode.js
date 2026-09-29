@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { BaseExecutor } from "./base.js";
 import { PROVIDERS } from "../config/providers.js";
 import { commandCodeToOpenAIResponse } from "../translator/response/commandcode-to-openai.js";
+import { FORMATS } from "../translator/formats.js";
 import { SSE_DONE } from "../utils/sseConstants.js";
 
 /**
@@ -56,6 +57,14 @@ export class CommandCodeExecutor extends BaseExecutor {
       }
 
       result.response = wrappedResponse;
+      // inspectAndWrapCommandCodeResponse() has ALREADY decoded the upstream
+      // NDJSON into OpenAI chat.completion.chunk SSE and appended the
+      // `data: [DONE]` sentinel. Declaring that here stops handleChatCore from
+      // treating the body as raw commandcode and running it through the SSE
+      // translator a second time — which parsed `[DONE]` into `{done:true}` and
+      // dropped it, so OpenAI-compatible clients saw the stream end on the
+      // finish chunk and reported truncation (9router #4461).
+      result.responseFormat = FORMATS.OPENAI;
       return result;
     }
   }

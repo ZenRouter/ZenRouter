@@ -244,10 +244,16 @@ function getContentBlocksFromMessage(msg, toolNameMap = new Map()) {
   const blocks = [];
 
   if (msg.role === ROLE.TOOL) {
+    // `is_error` is optional in Anthropic's public API (defaults false) but
+    // REQUIRED by strict Anthropic-wire consumers — Zed's hosted AI rejects
+    // tool_result blocks without it ("failed to parse Anthropic request:
+    // missing field `is_error`", 9router #4463). OpenAI `role:"tool"` messages
+    // carry no error flag, so the honest default is false.
     blocks.push({
       type: CLAUDE_BLOCK.TOOL_RESULT,
       tool_use_id: msg.tool_call_id,
-      content: msg.content
+      content: msg.content,
+      is_error: msg.is_error === true
     });
   } else if (msg.role === ROLE.USER) {
     if (typeof msg.content === "string") {
@@ -263,7 +269,7 @@ function getContentBlocksFromMessage(msg, toolNameMap = new Map()) {
             type: CLAUDE_BLOCK.TOOL_RESULT,
             tool_use_id: part.tool_use_id,
             content: part.content,
-            ...(part.is_error && { is_error: part.is_error })
+            is_error: part.is_error === true
           });
         } else if (part.type === OPENAI_BLOCK.IMAGE_URL) {
           const url = part.image_url.url;
