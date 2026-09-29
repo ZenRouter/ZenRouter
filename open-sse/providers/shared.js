@@ -73,10 +73,38 @@ export function wantsThinkingSummaries(body) {
 // `redact-thinking` asks Anthropic to return signature-only thinking blocks, which
 // is right for clients that never render thinking but blanks the summaries a
 // client explicitly requested with `thinking.display: "summarized"`.
-export function selectAnthropicBeta(model = "", body = null) {
-  const flags = ANTHROPIC_BETA_BASE.filter((flag) => flag !== ANTHROPIC_BETA_REDACT_THINKING || !wantsThinkingSummaries(body));
-  if (/(?:^|\/)claude-(opus|sonnet)/.test(model)) flags.push(...ANTHROPIC_BETA_HEAVY_AGENT);
+//
+// `unsupported` carries flags the upstream rejected for THIS account in a prior
+// 400 ("Unexpected value(s) `X` for the `anthropic-beta` header"). Anthropic
+// gates some betas per organization: the flag string ships in the client binary
+// but is only accepted once the server has handed that account an entitlement.
+// A gateway cannot know that in advance, so it drops them after the first
+// rejection instead of failing every subsequent turn the same way.
+export function selectAnthropicBeta(model = "", body = null, unsupported = null) {
+  const blocked = unsupported instanceof Set ? unsupported : null;
+  const flags = ANTHROPIC_BETA_BASE.filter((flag) => {
+    if (blocked?.has(flag)) return false;
+    return flag !== ANTHROPIC_BETA_REDACT_THINKING || !wantsThinkingSummaries(body);
+  });
+  if (/(?:^|\/)claude-(opus|sonnet)/.test(model)) {
+    for (const flag of ANTHROPIC_BETA_HEAVY_AGENT) {
+      if (!blocked?.has(flag)) flags.push(flag);
+    }
+  }
   return flags.join(",");
+}
+
+// Extract the beta names an Anthropic 400 named as unexpected, so the caller can
+// retry the same turn without them. Returns [] when the body is not that error.
+// The upstream lists every offending value in one backtick-quoted phrase:
+//   Unexpected value(s) `a`, `b` for the `anthropic-beta` header.
+export function parseRejectedAnthropicBetaFlags(bodyText) {
+  if (typeof bodyText !== "string" || !bodyText.includes("anthropic-beta")) return [];
+  const match = bodyText.match(/Unexpected value\(s\)([\s\S]*?)for the `anthropic-beta` header/);
+  if (!match) return [];
+  const flags = [...match[1].matchAll(/`([^`]+)`/g)].map((m) => m[1].trim()).filter(Boolean);
+  // Never treat the header name itself as a flag.
+  return flags.filter((flag) => flag !== "anthropic-beta");
 }
 
 // Re-export the Claude version for tests/inspectors that import from shared.

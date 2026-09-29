@@ -1,12 +1,42 @@
 import { BaseExecutor } from "./base.js";
 import { PROVIDERS, PROVIDER_OAUTH } from "../config/providers.js";
-import { ANTHROPIC_API_VERSION, OPENAI_COMPAT_BASE, ANTHROPIC_COMPAT_BASE, selectAnthropicBeta } from "../providers/shared.js";
+import { ANTHROPIC_API_VERSION, OPENAI_COMPAT_BASE, ANTHROPIC_COMPAT_BASE, selectAnthropicBeta, parseRejectedAnthropicBetaFlags } from "../providers/shared.js";
 import { resolveOpenAICompatibleApiType } from "../services/provider.js";
 import { OAUTH_ENDPOINTS, buildKimiHeaders } from "../config/appConstants.js";
 import { buildClineHeaders } from "../shared/clineAuth.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { injectReasoningContent } from "../utils/reasoningContentInjector.js";
+import { HTTP_STATUS } from "../config/runtimeConfig.js";
 
+// Per-connection set of `anthropic-beta` flags the upstream rejected for that
+// account. Process-local by design: getProviderCredentials() rebuilds
+// providerSpecificData per request, so this cannot live on the credential.
+const rejectedBetaByConnection = new Map();
+
+// Stable identity for the denylist: connection id when present, else the
+// credential itself. Distinct pooled accounts hold distinct tokens, so they
+// never share a denylist entry.
+function betaDenylistKey(credentials) {
+  if (!credentials) return null;
+  return credentials.connectionId
+    || credentials.apiKey
+    || credentials.accessToken
+    || null;
+}
+
+// Flags already rejected for this connection (never null, so callers can pass
+// it straight to selectAnthropicBeta's `unsupported` argument).
+function rejectedBetaFlags(credentials) {
+  return rejectedBetaByConnection.get(betaDenylistKey(credentials)) || null;
+}
+
+function rememberRejectedBeta(credentials, flags) {
+  const key = betaDenylistKey(credentials);
+  if (!key) return;
+  const known = rejectedBetaByConnection.get(key) || new Set();
+  for (const flag of flags) known.add(flag);
+  rejectedBetaByConnection.set(key, known);
+}
 // Auth header descriptors — derived from registry transport.auth, fallback to hardcoded defaults.
 const BEARER = { combined: true, header: "Authorization", scheme: "bearer" };
 const XAPIKEY = { combined: true, header: "x-api-key", scheme: "raw" };
@@ -153,7 +183,7 @@ export class DefaultExecutor extends BaseExecutor {
     applyAuth(headers, desc, credentials);
 
     if (this.provider === "claude" && model) {
-      headers["Anthropic-Beta"] = selectAnthropicBeta(model);
+      headers["Anthropic-Beta"] = selectAnthropicBeta(model, null, rejectedBetaFlags(credentials));
     }
 
     // Strip first-party Claude Code identity headers for non-Anthropic anthropic-compatible upstreams
@@ -191,6 +221,36 @@ export class DefaultExecutor extends BaseExecutor {
 
     if (stream) headers["Accept"] = "text/event-stream";
     return headers;
+  }
+
+  // Anthropic gates some `anthropic-beta` flags per organization. A gateway
+  // cannot know an account's entitlements in advance, so the first 400 naming
+  // the offending flags is absorbed here: they are recorded for that connection
+  // and the same turn is retried once without them. Later turns skip them at
+  // buildHeaders() time, so the cost is paid once per connection, not per
+  // request. Any non-beta 400 falls straight through unchanged.
+  //
+  // The denylist is kept in a process-local map rather than on the credential:
+  // getProviderCredentials() rebuilds providerSpecificData on every request, so
+  // a write there would never be visible to the next call. Keyed by connection
+  // id (falling back to the API key / access token) so pooled accounts on
+  // different subscriptions don't share each other's entitlements.
+  async execute(options) {
+    const result = await super.execute(options);
+    if (this.provider !== "claude" || result.response.status !== HTTP_STATUS.BAD_REQUEST) return result;
+
+    let bodyText;
+    try {
+      bodyText = await result.response.clone().text();
+    } catch {
+      return result;
+    }
+    const rejected = parseRejectedAnthropicBetaFlags(bodyText);
+    if (rejected.length === 0) return result;
+
+    rememberRejectedBeta(options.credentials, rejected);
+    options.log?.debug?.("RETRY", `claude rejected beta flag(s) ${rejected.join(", ")} — retrying without them`);
+    return super.execute(options);
   }
 
   // Generic OAuth refresh for the common {grant_type, refresh_token, client_id[, ...]} shape.

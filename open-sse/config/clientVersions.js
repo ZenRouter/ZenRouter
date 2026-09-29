@@ -41,6 +41,17 @@ export const CLAUDE_CLI_USER_AGENT = `claude-cli/${CLAUDE_CODE_VERSION} (externa
 // Anthropic-Beta flag set — Anthropic adds/removes flags per release. We
 // pass the full set; the heavy-agent flags (advanced-tool-use, effort) are
 // gated to opus/sonnet via selectAnthropicBeta() in shared.js.
+//
+// Every flag here must be one Anthropic accepts for ANY enrolled account.
+// Flags that are gated per-organization (the client only sends them once the
+// server hands it an entitlement) must NOT be listed: the upstream answers the
+// whole request with
+//   400 Unexpected value(s) `timing-2026-09-09` for the `anthropic-beta` header
+// `timing-2026-09-09` is exactly such a flag — it is the client's internal
+// per-turn timing telemetry beta and carries no routing behavior for a gateway.
+// selectAnthropicBeta() additionally strips any flag the upstream names in that
+// 400 (see parseRejectedAnthropicBetaFlags), so a future entitlement change
+// self-heals instead of breaking the turn.
 export const CLAUDE_BETA_FLAGS_BASE = [
   "claude-code-20250219",
   "oauth-2025-04-20",
@@ -53,7 +64,6 @@ export const CLAUDE_BETA_FLAGS_BASE = [
   "token-efficient-tools-2026-03-28",
   "tool-search-tool-2025-10-19",
   "dangerous-tool-use-2026-09-03",
-  "timing-2026-09-09",
   "inline-tools-2026-09-15",
 ];
 export const CLAUDE_BETA_FLAGS_HEAVY_AGENT = [
