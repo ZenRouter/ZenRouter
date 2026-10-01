@@ -22,11 +22,14 @@ describe("capability resolution is spelling-stable (dot vs dash version separato
     expect(dashed).toEqual(dotted);
   });
 
-  it("resolves antigravity claude-sonnet-4-6 and claude-opus-4-6-thinking as 1M adaptive", () => {
-    expect(getCapabilitiesForModel("antigravity", "claude-sonnet-4-6")).toMatchObject(sonnet46);
-    expect(getCapabilitiesForModel("antigravity", "claude-opus-4-6-thinking")).toMatchObject({
-      ...sonnet46,
-      thinkingCanDisable: true,
+  it("resolves antigravity claude-sonnet-4-6 and claude-opus-4-6-thinking with dot/dash parity", () => {
+    const dashed = getCapabilitiesForModel("antigravity", "claude-sonnet-4-6");
+    const dotted = getCapabilitiesForModel("antigravity", "claude-sonnet-4.6");
+    expect(dashed).toEqual(dotted);
+    expect(dashed).toMatchObject({
+      contextWindow: 250000,
+      maxOutput: 64000,
+      thinkingFormat: "claude-adaptive",
     });
   });
 

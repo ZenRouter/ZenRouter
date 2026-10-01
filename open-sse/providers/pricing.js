@@ -143,21 +143,24 @@ export const MODEL_PRICING = {
   "imagen-3.0-generate-002":      { input: 0.03,  output: 0.03,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
   "imagen-3.0-fast-generate-001": { input: 0.02,  output: 0.02,  cached: 0.00,  reasoning: 0.00,   cache_creation: 0.00  },
 
-  // === Qwen (Model Studio, base ≤32k tier; upper tiers up to 5-12x — see docs) ===
-  // NOTE: cache-hit rates below are the 10%-of-input convention where Model Studio
-  // publishes no cache price (not official figures); input/output are official base-tier.
-  "qwen3-coder-plus":             { input: 0.574, output: 2.294, cached: 0.057, reasoning: 2.294,  cache_creation: 0.574 },
-  "qwen3-coder-flash":            { input: 0.144, output: 0.574, cached: 0.014, reasoning: 0.574,  cache_creation: 0.144 },
-  "qwen3.6-flash":                { input: 0.165, output: 0.99,  cached: 0.017, reasoning: 0.99,   cache_creation: 0.165 },
-  "qwen3.6-plus":                 { input: 0.165, output: 0.99,  cached: 0.017, reasoning: 0.99,   cache_creation: 0.165 },
-  "qwen3.7-max":                  { input: 1.25,  output: 3.75,  cached: 0.25,  reasoning: 3.75,   cache_creation: 1.25  },
-  "qwen3.7-plus":                 { input: 0.574, output: 2.294, cached: 0.057, reasoning: 2.294,  cache_creation: 0.574 },
-  "qwen3.8-max":                  { input: 2.00,  output: 6.00,  cached: 0.20,  reasoning: 6.00,   cache_creation: 2.00  },
-  "qwen3.8-flash":                { input: 0.16,  output: 0.47,  cached: 0.016, reasoning: 0.47,   cache_creation: 0.16  },
+  // === Qwen (Model Studio International / Singapore USD schedule, verified 2026-10-01) ===
+  "qwen3-coder-plus":             { input: 1.00,  output: 5.00,  cached: 0.10,  reasoning: 5.00,   cache_creation: 1.25  },
+  "qwen3-coder-flash":            { input: 0.30,  output: 1.50,  cached: 0.03,  reasoning: 1.50,   cache_creation: 0.375 },
+  "qwen3.6-flash":                { input: 0.25,  output: 1.50,  cached: 0.025, reasoning: 1.50,   cache_creation: 0.3125 },
+  "qwen3.6-plus":                 { input: 0.50,  output: 3.00,  cached: 0.05,  reasoning: 3.00,   cache_creation: 0.625 },
+  "qwen3.7-max":                  { input: 2.50,  output: 7.50,  cached: 0.25,  reasoning: 7.50,   cache_creation: 3.125 },
+  "qwen3.7-plus":                 { input: 0.40,  output: 1.60,  cached: 0.04,  reasoning: 1.60,   cache_creation: 0.50  },
+  "qwen3.7-flash":                { input: 0.03,  output: 0.13,  cached: 0.003, reasoning: 0.13,   cache_creation: 0.0375 },
+  "qwen3.8-max":                  { input: 2.00,  output: 6.00,  cached: 0.20,  reasoning: 6.00,   cache_creation: 2.50  },
+  "qwen3.8-flash":                { input: 0.15,  output: 0.60,  cached: 0.015, reasoning: 0.60,   cache_creation: 0.20  },
+  "qwen3.8-omni-flash":           { input: 0.15,  output: 0.47,  cached: 0.016, reasoning: 0.47,   cache_creation: 0.20  },
+  "qwen3.5-flash":                { input: 0.10,  output: 0.40,  cached: 0.01,  reasoning: 0.40,   cache_creation: 0.125 },
 
-  // === Xiaomi MiMo (mimo.mi.com/docs/price/pay-as-you-go, snapshot 2026-09-23) ===
-  "mimo-v2.6-flash":              { input: 0.10,  output: 0.20,  cached: 0.0028, reasoning: 0.20,  cache_creation: 0.10  },
+  // === Xiaomi MiMo (official pay-as-you-go, verified 2026-10-01) ===
+  "mimo-v2.6-flash":              { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,  cache_creation: 0.14  },
   "mimo-v2.6-flash-free":         { input: 0.00,  output: 0.00,  cached: 0.00,   reasoning: 0.00,  cache_creation: 0.00  },
+  "mimo-v2.6-pro":                { input: 0.435, output: 0.87,  cached: 0.0036, reasoning: 0.87,  cache_creation: 0.435 },
+  "mimo-v2.6-pro-ultraspeed":     { input: 4.35,  output: 8.70,  cached: 0.036,  reasoning: 8.70,  cache_creation: 4.35  },
   "mimo-v2.5-pro":                { input: 0.435, output: 0.87,  cached: 0.0036, reasoning: 0.87,  cache_creation: 0.435 },
   "mimo-v2.5":                    { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
 
@@ -182,11 +185,12 @@ export const MODEL_PRICING = {
   "hy4-preview-x":                { input: 0.40,  output: 2.00,  cached: 0.08,  reasoning: 2.00,   cache_creation: 0.40  },
   "kimi-k2.6":                    { input: 0.95,  output: 4.00,  cached: 0.16,  reasoning: 4.00,   cache_creation: 0.95  },
 
-  // === DeepSeek (api-docs.deepseek.com, snapshot 2026-09-23) ===
-  // Off-peak cache-miss input / cache-hit / off-peak output. Peak = 2x input+output.
+  // === DeepSeek (api-docs.deepseek.com, official Flash schedule: 0.15/0.60/0.003) ===
   "deepseek-flash":                { input: 0.15,  output: 0.60,  cached: 0.003,  reasoning: 0.60,   cache_creation: 0.15  },
-  "deepseek-v4.1-flash":           { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
-  "deepseek-v4-flash":             { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
+  "deepseek-v4.1-flash":           { input: 0.15,  output: 0.60,  cached: 0.003,  reasoning: 0.60,   cache_creation: 0.15  },
+  "deepseek-v4-1-flash":           { input: 0.15,  output: 0.60,  cached: 0.003,  reasoning: 0.60,   cache_creation: 0.15  },
+  "deepseek-v4-flash":             { input: 0.15,  output: 0.60,  cached: 0.003,  reasoning: 0.60,   cache_creation: 0.15  },
+  "deepseek-v4-flash-vision-exp":  { input: 0.15,  output: 0.60,  cached: 0.003,  reasoning: 0.60,   cache_creation: 0.15  },
   "deepseek-v4-pro":               { input: 0.66,  output: 1.98,  cached: 0.022,  reasoning: 1.98,   cache_creation: 0.66  },
 
   // === xAI Grok (docs.x.ai, snapshot 2026-09-23; tiered ≥200k ctx = 2x, check docs) ===
@@ -270,6 +274,15 @@ export const MODEL_PRICING = {
  * Keyed by provider alias (cc, cx, gc, gh, ...) or provider id (openai, anthropic, ...).
  */
 export const PROVIDER_PRICING = {
+  // Alibaba Coding Plan (China CNY domestic rates converted to USD base)
+  alicode: {
+    "qwen3-coder-plus":  { input: 0.574, output: 2.294, cached: 0.057, reasoning: 2.294, cache_creation: 0.574 },
+    "qwen3-coder-flash": { input: 0.144, output: 0.574, cached: 0.014, reasoning: 0.574, cache_creation: 0.144 },
+  },
+  "alicode-intl": {
+    "qwen3-coder-plus":  { input: 0.574, output: 2.294, cached: 0.057, reasoning: 2.294, cache_creation: 0.574 },
+    "qwen3-coder-flash": { input: 0.144, output: 0.574, cached: 0.014, reasoning: 0.574, cache_creation: 0.144 },
+  },
   // GitHub Copilot (gh) — explicit override, matches canonical gpt-5.3-codex rate
   gh: {
     "gpt-5.3-codex": { input: 1.75, output: 14.00, cached: 0.175, reasoning: 14.00, cache_creation: 1.75 },

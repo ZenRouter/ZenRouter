@@ -125,36 +125,31 @@ export const MODEL_CAPABILITIES = {
   "glm-4.6v":          { vision: true, videoInput: true, reasoning: true, thinkingFormat: "zai", contextWindow: 128000, maxOutput: 32768 },
   "glm-4.5v":          { vision: true, videoInput: true, reasoning: true, thinkingFormat: "zai", contextWindow: 64000, maxOutput: 16384 },
 
-  // DeepSeek V4.1 Flash. `deepseek-flash` is the canonical id since DeepSeek's
-  // 2026-09-10 rename ("Change the model name to `deepseek-flash` to call the
-  // latest V4.1 Flash model") and it is natively multimodal (image input) with
-  // the full 1M window / 384K output. Without this entry the canonical id falls
-  // through to the generic *deepseek* pattern and is reported as text-only with
-  // a 128K window, so image requests are handed off to the capacity-adapter pool.
+  // DeepSeek V4.1 Flash (official docs: context 1M, maxOutput 384K tokens, image input)
   "deepseek-flash": { vision: true, reasoning: true, thinkingFormat: "deepseek", contextWindow: 1000000, maxOutput: 384000 },
-
-  // Retired V4-Flash ids. DeepSeek no longer lists them but still routes both
-  // to V4.1 Flash, so they keep identical (vision-capable) caps until those
-  // temporary routes are removed upstream.
   "deepseek-v4-flash": { vision: true, reasoning: true, thinkingFormat: "deepseek", contextWindow: 1000000, maxOutput: 384000 },
   "deepseek-v4-flash-vision-exp": { vision: true, reasoning: true, thinkingFormat: "deepseek", contextWindow: 1000000, maxOutput: 384000 },
-
-  // deepseek-v4-1-flash is natively multimodal upstream (modalities.input:
-  // ["text","image"]) while its v4-flash/v4-pro siblings are text-only —
-  // hence an exact entry instead of relying on the generic pattern (9router #4293).
   "deepseek-v4-1-flash": { vision: true, reasoning: true, thinkingFormat: "deepseek", contextWindow: 1000000, maxOutput: 384000 },
+  "deepseek-v4.1-flash": { vision: true, reasoning: true, thinkingFormat: "deepseek", contextWindow: 1000000, maxOutput: 384000 },
 
   // Qwen plain coder/text (no vision) — registry "vision-model" / "coder-model" aliases
   "vision-model":      { vision: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000 },
   "coder-model":       { reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000 },
+  "qwen3.8-max":       { vision: true, videoInput: true, pdf: true, reasoning: true, thinkingFormat: "qwen", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 131072 },
+  "qwen3.8-omni-flash": { vision: true, audioInput: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000, maxOutput: 131072 },
+
+  // MiniMax flagship (official: M3 context 1,000,000, maxOutput 524288, image + video input)
+  "minimax-m3":        { vision: true, videoInput: true, reasoning: true, thinkingFormat: "minimax", contextWindow: 1000000, maxOutput: 524288 },
+  "minimax-m2.5":      { reasoning: true, thinkingFormat: "minimax", thinkingCanDisable: false, contextWindow: 204800, maxOutput: 131072 },
 
   // Kimi flagship + coding (platform + Kimi Code ids) — vision/video native
-  "kimi-k3":           { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 131072 },
-  "k3":                { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 131072 },
-  "kimi-for-coding":   { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 262144, maxOutput: 65536 },
-  "kimi-for-coding-highspeed": { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 262144, maxOutput: 65536 },
+  "kimi-k3":           { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 1048576 },
+  "k3":                { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 1048576 },
+  "kimi-for-coding":   { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: true, contextWindow: 1048576, maxOutput: 65536 },
+  "kimi-for-coding-highspeed": { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: true, contextWindow: 1048576, maxOutput: 65536 },
   "kimi-k2.7-code":    { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 262144, maxOutput: 65536 },
   "kimi-k2.7-code-highspeed": { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 262144, maxOutput: 65536 },
+  "kimi-k2.6":         { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", contextWindow: 262144, maxOutput: 262144 },
   // OpenCode Free Muse Spark — OpenAI Responses reasoning supports up to xhigh.
   "muse-spark-1.2-contributor-free": { vision: true, reasoning: true, thinkingFormat: "openai", contextWindow: 1048576, maxOutput: 131072 },
   "muse-spark-1.3-contributor-free": { vision: true, reasoning: true, thinkingFormat: "openai", contextWindow: 1048576, maxOutput: 131072 },
@@ -378,25 +373,28 @@ export const PATTERN_CAPABILITIES = [
   { pattern: "*grok*",          caps: { vision: true, pdf: true, reasoning: true, search: true, thinkingFormat: "openai", contextWindow: 256000 } },
 
   // ── Qwen (3.5+ = native vision/video; coder & max = text-only; QwQ = thinking-only) ─
+  { pattern: "*qwen3.8-omni*",  caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000, maxOutput: 131072 } },
   { pattern: "*qwen*vl*",       caps: { vision: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 262144 } },
   { pattern: "*qwen*omni*",     caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 262144, maxOutput: 65536 } },
   // qwen3-coder-next is a 256K model, not 1M (Model Studio) — specific first.
   { pattern: "*qwen3-coder-next*", caps: { reasoning: true, thinkingFormat: "qwen", contextWindow: 262144 } },
   { pattern: "*qwen*coder*",    caps: { reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000 } },
-  { pattern: "*qwen*max*",      caps: { reasoning: true, thinkingFormat: "qwen", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 65536 } },
+  { pattern: "*qwen*max*",      caps: { reasoning: true, thinkingFormat: "qwen", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 131072 } },
   { pattern: "*qwen3.5*",       caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000, maxOutput: 65536 } },
   { pattern: "*qwen3.6*",       caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000, maxOutput: 65536 } },
-  { pattern: "*qwen3.7*",       caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 65536 } },
-  { pattern: "*qwen3.8*",       caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000, maxOutput: 65536 } },
-  { pattern: "*qwen*plus*",     caps: { vision: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000, maxOutput: 65536 } },
+  { pattern: "*qwen3.7*",       caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 131072 } },
+  { pattern: "*qwen3.8-max*",   caps: { vision: true, videoInput: true, pdf: true, reasoning: true, thinkingFormat: "qwen", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 131072 } },
+  { pattern: "*qwen3.8*",       caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000, maxOutput: 131072 } },
+  { pattern: "*qwen*plus*",     caps: { vision: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000, maxOutput: 131072 } },
   { pattern: "*qwen*235b*",     caps: { reasoning: true, thinkingFormat: "qwen", contextWindow: 262144 } },
   { pattern: "*qwq*",           caps: { reasoning: true, thinkingFormat: "qwen", thinkingCanDisable: false, contextWindow: 131072 } },
   { pattern: "*qwen*",          caps: { reasoning: true, thinkingFormat: "qwen", contextWindow: 262144 } },
 
   // ── Kimi (enabled→reasoning_effort; K2.7-code cannot disable) ─────
-  { pattern: "*kimi*k3*",       caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 131072 } },
-  { pattern: "*kimi*for-coding*", caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 262144, maxOutput: 65536 } },
+  { pattern: "*kimi*k3*",       caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 1048576 } },
+  { pattern: "*kimi*for-coding*", caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: true, contextWindow: 1048576, maxOutput: 65536 } },
   { pattern: "*kimi*k2.7*code*", caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", thinkingCanDisable: false, contextWindow: 262144, maxOutput: 65536 } },
+  { pattern: "*kimi*k2.6*",     caps: { vision: true, videoInput: true, reasoning: true, thinkingFormat: "kimi", contextWindow: 262144, maxOutput: 262144 } },
   { pattern: "*kimi*k2*",       caps: { vision: true, reasoning: true, thinkingFormat: "kimi", contextWindow: 262144, maxOutput: 262144 } },
   { pattern: "*kimi*",          caps: { reasoning: true, thinkingFormat: "kimi", contextWindow: 262144 } },
 
@@ -405,10 +403,12 @@ export const PATTERN_CAPABILITIES = [
   // older GLM (4.x, 5.0, 5.1, 5-turbo, 5v-turbo) ignore it, so gate it per exact version, not the "*glm-5*" catch-all.
   // GLM-5.3-Flash (multimodal) on top so it overrides text-only GLM-5.3
   { pattern: "*glm-5.3-flash*", caps: { vision: true, videoInput: true, pdf: true, reasoning: true, thinkingFormat: "zai", thinkingEffortSupported: true, thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 131072 } },
-  { pattern: "*glm-5.3*",       caps: { reasoning: true, thinkingFormat: "zai", thinkingEffortSupported: true, contextWindow: 1000000, maxOutput: 131072 } },
-  { pattern: "*glm-5.2*",       caps: { reasoning: true, thinkingFormat: "zai", thinkingEffortSupported: true, contextWindow: 200000, maxOutput: 128000 } },
-  { pattern: "*glm-5*",         caps: { reasoning: true, thinkingFormat: "zai", contextWindow: 200000, maxOutput: 128000 } },
-  { pattern: "*glm-4.7*",       caps: { reasoning: true, thinkingFormat: "zai", contextWindow: 200000, maxOutput: 128000 } },
+  { pattern: "*glm-5.3*",       caps: { reasoning: true, thinkingFormat: "zai", thinkingEffortSupported: true, thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 131072 } },
+  { pattern: "*glm-5.2*",       caps: { reasoning: true, thinkingFormat: "zai", thinkingEffortSupported: true, contextWindow: 1000000, maxOutput: 131072 } },
+  { pattern: "*glm-5*",         caps: { reasoning: true, thinkingFormat: "zai", contextWindow: 204800, maxOutput: 131072 } },
+  { pattern: "*glm-4.7*",       caps: { reasoning: true, thinkingFormat: "zai", contextWindow: 204800, maxOutput: 131072 } },
+  { pattern: "*glm-4.6*",       caps: { reasoning: true, thinkingFormat: "zai", contextWindow: 204800, maxOutput: 131072 } },
+  { pattern: "*glm-4.5*",       caps: { reasoning: true, thinkingFormat: "zai", contextWindow: 131072, maxOutput: 98304 } },
   { pattern: "*glm-4*",         caps: { reasoning: true, thinkingFormat: "zai", contextWindow: 200000 } },
   { pattern: "*glm*",           caps: { reasoning: true, thinkingFormat: "zai", contextWindow: 200000 } },
 
@@ -429,18 +429,21 @@ export const PATTERN_CAPABILITIES = [
   { pattern: "*minimax-m2.7*",  caps: { reasoning: true, thinkingFormat: "minimax", thinkingCanDisable: false, contextWindow: 204800, maxOutput: 131072 } },
   { pattern: "*minimax*",       caps: { reasoning: true, thinkingFormat: "minimax", thinkingCanDisable: false, contextWindow: 200000, maxOutput: 131072 } },
 
-  // ── Xiaomi MiMo (vision, 1M / 262K ctx) ──────────────────────────
-  { pattern: "*mimo*v2.5*",     caps: { vision: true, audioInput: true, videoInput: true, contextWindow: 1048576, maxOutput: 131072 } },
-  { pattern: "*mimo*omni*",     caps: { vision: true, audioInput: true, contextWindow: 262144, maxOutput: 131072 } },
-  { pattern: "*mimo*",          caps: { vision: true, contextWindow: 262144, maxOutput: 131072 } },
+  // ── Xiaomi MiMo (vision, 1M / 262K ctx, deep thinking supported) ─
+  { pattern: "*mimo*v2.6*",     caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, contextWindow: 1048576, maxOutput: 131072 } },
+  { pattern: "*mimo*v2.5*",     caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, contextWindow: 1048576, maxOutput: 131072 } },
+  { pattern: "*mimo*omni*",     caps: { vision: true, audioInput: true, videoInput: true, reasoning: true, contextWindow: 262144, maxOutput: 131072 } },
+  { pattern: "*mimo*",          caps: { vision: true, reasoning: true, contextWindow: 262144, maxOutput: 131072 } },
 
   // ── Llama (4 = vision/1M; 3.x = text-only/128K) ──────────────────
   { pattern: "*llama-4*",       caps: { vision: true, contextWindow: 1000000 } },
   { pattern: "*llama*",         caps: { contextWindow: 128000 } },
 
-  // ── Mistral (Large 3 = vision/256K; codestral 128K ctx per docs.mistral.ai) ──
+  // ── Mistral (Large 3 = vision/256K; Medium & Small latest = 256K + reasoning) ──
   { pattern: "*codestral*",     caps: { contextWindow: 128000 } },
   { pattern: "*mistral-large*", caps: { vision: true, contextWindow: 256000 } },
+  { pattern: "*mistral-medium*", caps: { vision: true, reasoning: true, contextWindow: 256000, maxOutput: 256000 } },
+  { pattern: "*mistral-small*",  caps: { reasoning: true, contextWindow: 256000, maxOutput: 256000 } },
   { pattern: "*mistral*",       caps: { contextWindow: 128000 } },
 
   // ── Cohere (Command A Vision = vision; others text) ──────────────
@@ -644,6 +647,10 @@ export function getCapabilitiesForModel(provider, model) {
   // 2. Canonical exact
   for (const id of [baseModel, model, normalizedModel, variantBase, variantNormalized]) {
     if (id && MODEL_CAPABILITIES[id]) return { ...DEFAULT_CAPABILITIES, ...MODEL_CAPABILITIES[id] };
+    const lower = id ? id.toLowerCase() : null;
+    if (lower && lower !== id && MODEL_CAPABILITIES[lower]) {
+      return { ...DEFAULT_CAPABILITIES, ...MODEL_CAPABILITIES[lower] };
+    }
   }
 
   // 3. Pattern match (first match wins), refined by catalog + name heuristic
