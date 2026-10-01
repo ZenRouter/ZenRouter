@@ -376,6 +376,21 @@ function markLastCacheableBlock(msg) {
   return false;
 }
 
+// In an agent's tool loop, a request ends with the results of the last
+// assistant turn's tool calls -- after that turn's breakpoint. They go at the
+// full input price, and the next request (which appends to them) writes them
+// into the cache. When the 4-marker budget has room, a 5m breakpoint on that
+// final user turn caches them now, and the next request reads them.
+function markFinalToolResults(body) {
+  const messages = body?.messages;
+  const last = Array.isArray(messages) ? messages[messages.length - 1] : null;
+  if (last?.role !== ROLE.USER || !Array.isArray(last.content)) return false;
+  if (!last.content.some((block) => block?.type === CLAUDE_BLOCK.TOOL_RESULT)) return false;
+  if (last.content.some((block) => block?.cache_control)) return false;
+  if (countCacheControlBlocks(body) >= 4) return false;
+  return markLastCacheableBlock(last);
+}
+
 // Re-anchor cache breakpoints on a Claude passthrough body (same policy as
 // prepareClaudeRequest): last tool + last system block at 1h, last assistant at 5m.
 // The client's own markers point at pre-normalization offsets, so they are dropped.
@@ -463,6 +478,9 @@ export function anchorClaudeCache(body) {
         anchored = markLastCacheableBlock(body.messages[i]);
       }
     }
+
+    // ...and a tool loop's final tool results, so the next step reads them.
+    markFinalToolResults(body);
   }
 
   return body;
@@ -658,6 +676,16 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
     }
   }
 
+  // Anthropic itself reads images inside tool_result; other Anthropic-compatible
+  // endpoints (OpenCode Go, Kimi, DeepSeek, GLM, MiniMax) accept image blocks
+  // only as user content and silently drop them inside a tool result. Move a
+  // tool's screenshot out of the result and into the same user turn.
+  if (provider !== "claude" && !provider?.startsWith("anthropic-compatible")) {
+    body = hoistToolResultImages(body);
+  }
+
+  // A tool loop's final tool results: cached now, so the next step reads them.
+  markFinalToolResults(body);
   // Apply cloaking for OAuth tokens (billing header + fake user ID)
   // session_id in user_id must match X-Claude-Code-Session-Id for fingerprint consistency
   if ((provider === "claude" || provider?.startsWith("anthropic-compatible")) && apiKey) {
