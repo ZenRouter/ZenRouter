@@ -33,6 +33,7 @@
 // 2.0+, Grok, Perplexity). Verify with: curl -s https://models.dev/api.json
 
 import { matchPattern } from "./pricing.js";
+import { normalizeModelId } from "./models/schema.js";
 import { looksLikeVisionModel } from "./visionPatterns.js";
 
 /**
@@ -506,6 +507,22 @@ export function aggregateComboCapabilities(comboModels, comboLookup = null, reso
  */
 const MODALITY_KEYS = ["vision", "pdf", "audioInput", "videoInput"];
 
+// Presentation-only suffixes that name a variant of the *same* weights. A
+// registry or client may append them to an id the tables know without the
+// suffix ("claude-opus-4.7-thinking"), so the exact lookup retries with the
+// suffix removed instead of falling through to a pattern that carries no
+// limits (which silently reported 200k/64k for a 1M model).
+const VARIANT_SUFFIXES = ["-thinking-agentic", "-thinking", "-agentic"];
+
+function stripVariantSuffix(model) {
+  for (const suffix of VARIANT_SUFFIXES) {
+    if (model.length > suffix.length && model.endsWith(suffix)) {
+      return model.slice(0, -suffix.length);
+    }
+  }
+  return null;
+}
+
 // Catalog lookups, installed by the server at startup. Left as no-ops in the
 // browser bundle, where there is no file to read.
 //
@@ -566,20 +583,34 @@ export function getCapabilitiesForModel(provider, model) {
   // Canonical exact lookup strips vendor prefix: "anthropic/claude-opus-4.7" -> "claude-opus-4.7".
   const baseModel = model.includes("/") ? model.split("/").pop() : model;
 
+  // Registry ids use dots for versions ("claude-sonnet-4.6") while clients and
+  // sibling registries mix in dashes ("claude-sonnet-4-6"). The tables below
+  // hold both spellings only partially, which made the resolved capability set
+  // depend on spelling (a dash-spelled Sonnet 4.6 lost its 1M window and
+  // adaptive thinking). Look the as-spelled id up first so dated ids keep their
+  // exact table keys, then fall back to the normalized spelling.
+  const normalizedModel = normalizeModelId(baseModel);
+  // "-thinking"/"-agentic" base, for the exact lookups only. Provider tables
+  // keep their own variant keys, so this is a fallback and never an override.
+  const variantBase = stripVariantSuffix(baseModel);
+  const variantNormalized = variantBase ? normalizeModelId(variantBase) : null;
+
   // 1. Provider-specific override
   if (provider) {
     const providerCaps = PROVIDER_CAPABILITIES[provider];
-    if (providerCaps?.[model]) return { ...DEFAULT_CAPABILITIES, ...providerCaps[model] };
-    if (providerCaps?.[baseModel]) return { ...DEFAULT_CAPABILITIES, ...providerCaps[baseModel] };
+    for (const id of [model, baseModel, normalizedModel, variantBase, variantNormalized]) {
+      if (id && providerCaps?.[id]) return { ...DEFAULT_CAPABILITIES, ...providerCaps[id] };
+    }
   }
 
   // 2. Canonical exact
-  if (MODEL_CAPABILITIES[baseModel]) return { ...DEFAULT_CAPABILITIES, ...MODEL_CAPABILITIES[baseModel] };
-  if (MODEL_CAPABILITIES[model]) return { ...DEFAULT_CAPABILITIES, ...MODEL_CAPABILITIES[model] };
+  for (const id of [baseModel, model, normalizedModel, variantBase, variantNormalized]) {
+    if (id && MODEL_CAPABILITIES[id]) return { ...DEFAULT_CAPABILITIES, ...MODEL_CAPABILITIES[id] };
+  }
 
   // 3. Pattern match (first match wins), refined by catalog + name heuristic
   for (const { pattern, caps } of PATTERN_CAPABILITIES) {
-    if (matchPattern(pattern, baseModel) || matchPattern(pattern, model)) {
+    if (matchPattern(pattern, baseModel) || matchPattern(pattern, model) || matchPattern(pattern, normalizedModel)) {
       return refine(caps, provider, model);
     }
   }

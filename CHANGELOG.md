@@ -2,6 +2,11 @@
 
 All notable changes to ZenRouter (fork of 9Router) will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional Commits.
+## [Unreleased]
+
+### Fixed
+- **fix(capabilities): resolve model capabilities independently of dot/dash id spelling** — model ids reach the resolver in two spellings (registry uses dots for versions, `claude-sonnet-4.6`; clients and sibling registries send dashes, `claude-sonnet-4-6`), and the exact tables hold only a partial set of both. A dash-spelled id therefore missed its hand-written entry and fell through to a generic pattern: `claude-sonnet-4-6` on `claude`/`antigravity`/`kimchi` resolved to 200k context / 64k output / `claude-budget` thinking instead of 1M / 128k / `claude-adaptive`, and dash-spelled multimodal ids (`glm-5.3-flash`, `qwen3.8-*`, `glm-4.6v`) lost `vision`/`pdf`, which made the request path strip images and documents before dispatch. Resolution now retries the normalized spelling (digit-digit hyphen → dot) and, for the exact tables only, the id with a presentation-only variant suffix removed (`-thinking`, `-agentic`, which also fixes Kiro `claude-opus-4.7-thinking/-agentic` and Antigravity `claude-opus-4-6-thinking` reporting the generic 200k/64k envelope). Dated ids keep their exact lookups because the as-spelled id is always tried first. Audit count: 233 registered models changed resolved capabilities with spelling before this fix.
+  - Test: `tests/unit/capabilities-spelling-stability.test.js` (5 cases: Claude/Antigravity dot-vs-dash parity, Kiro variant suffixes, GLM/Qwen vision retention, Grok/GPT context retention).
 ## [0.8.8] - 2026-09-29
 
 ### Zero-Setup Install (auto-provisioned secrets)
