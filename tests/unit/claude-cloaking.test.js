@@ -12,7 +12,7 @@ import { CLAUDE_TOOL_SUFFIX } from "../../open-sse/config/appConstants.js";
 
 it("advertises a Claude Code version accepted by Fable 5.1 and Opus 5.5", () => {
   const body = applyCloaking({ messages: [] }, "sk-ant-oat-test", "session-id");
-  expect(body.system[0].text).toMatch(/^x-anthropic-billing-header: cc_version=2\.1\.280\./);
+  expect(body.system[0].text).toMatch(/^x-anthropic-billing-header: cc_version=2\.1\.286\./);
 });
 
 describe("cloakClaudeTools", () => {

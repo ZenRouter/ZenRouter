@@ -4,16 +4,16 @@ import { PROVIDERS } from "../config/providers.js";
 import { getThinkingLevels } from "../providers/thinkingLevels.js";
 import { injectReasoningContent } from "../utils/reasoningContentInjector.js";
 import { resolveSessionId } from "../utils/sessionManager.js";
+import { OPENCODE_VERSION, OPENCODE_USER_AGENT } from "../config/clientVersions.js";
 
-const OPENCODE_UA = "opencode/1.18.31";
 // Models served by /zen/v1/responses; every other model stays on /chat/completions.
 const RESPONSES_MODELS = new Set([
   "muse-spark-1.2-contributor-free",
   "muse-spark-1.3-contributor-free",
 ]);
 
-// Canonical upstream id formats (reverse-engineered from opencode-ai@1.18.31,
-// verified on npm; the Zen backend 403s anything else with FreeTierError):
+// Canonical upstream id formats (reverse-engineered from opencode-ai, verified
+// on npm; the Zen backend 403s anything else with FreeTierError):
 //   session: ses_ + 12 hex timestamp digits + 14 Base62 chars
 //   request: msg_ + 32 hex chars, stable per turn (session + last user message)
 const CANONICAL_SESSION_RE = /^ses_[0-9a-f]{12}[0-9A-Za-z]{14}$/;
@@ -241,7 +241,7 @@ export class OpenCodeExecutor extends BaseExecutor {
     return {
       "Content-Type": "application/json",
       "Authorization": "Bearer public",
-      "User-Agent": isOpencodeDownstream ? downstreamUa : OPENCODE_UA,
+      "User-Agent": isOpencodeDownstream ? downstreamUa : OPENCODE_USER_AGENT,
       "x-opencode-client": lower["x-opencode-client"] || "desktop",
       "x-opencode-session": lower["x-opencode-session"] || this._currentSessionId || mintCanonicalSessionId(),
       "x-opencode-request": lower["x-opencode-request"] || this._currentRequestId || deriveRequestId(null, {}),

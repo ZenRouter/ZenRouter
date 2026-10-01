@@ -3,6 +3,7 @@ import { OAUTH_ENDPOINTS, GITHUB_COPILOT, buildKimiHeaders } from "../../config/
 import { proxyAwareFetch } from "../../utils/proxyFetch.js";
 import { parseTimeMs } from "../oauthCredentialManager.js";
 import { dedupRefresh } from "./dedup.js";
+import { KIRO_CLI_USER_AGENT } from "../../config/clientVersions.js";
 
 let _xaiServiceSingleton = null;
 export async function refreshXaiToken(refreshToken, log) {
@@ -427,7 +428,7 @@ export async function refreshKiroToken(refreshToken, providerSpecificData, log, 
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      "User-Agent": "kiro-cli/1.0.0",
+      "User-Agent": KIRO_CLI_USER_AGENT,
     },
     body: JSON.stringify({
       refreshToken: refreshToken,

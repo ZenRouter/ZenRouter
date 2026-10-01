@@ -62,7 +62,7 @@ describe("OpenCode Zen identity compliance (#4101)", () => {
       { connectionId: "conn-oc-1" }
     );
     const headers = ex.buildHeaders({ connectionId: "conn-oc-1" }, true);
-    expect(headers["User-Agent"]).toBe("opencode/1.18.31");
+    expect(headers["User-Agent"]).toBe("opencode/1.18.34");
     expect(headers["x-opencode-session"]).toMatch(CANONICAL_SESSION_RE);
     expect(headers["x-opencode-request"]).toMatch(/^msg_[0-9a-f]{32}$/);
   });
