@@ -86,6 +86,11 @@ const STREAM_MODE = {
   PASSTHROUGH: "passthrough" // No translation, normalize output, extract usage
 };
 
+// Upper bound on the deferred response.completed wait: a chat->responses stream
+// that saw finish_reason without usage must not hold the client's terminal event
+// forever when the upstream stalls with no usage trailer and no [DONE].
+const PENDING_COMPLETION_FLUSH_MS = 3000;
+
 /**
  * Create unified SSE transform stream
  * @param {object} options
@@ -145,6 +150,7 @@ export function createSSEStream(options = {}) {
   let passthroughAtEventBoundary = true;
   let clientTerminalSeen = false;
   let finalized = false;
+  let completionFlushTimer = null;
 
   // In-stream failure tracking (#4104): an upstream can end an HTTP-200 stream
   // with a failure INSIDE the event body (Responses response.failed / error
@@ -167,6 +173,7 @@ export function createSSEStream(options = {}) {
   // Usage/logging tail, callable from transform() as well as flush(): a client that
   // closes right after the terminal event cancels the reader, and flush() never runs.
   const finalizeStream = () => {
+    if (completionFlushTimer) { clearTimeout(completionFlushTimer); completionFlushTimer = null; }
     if (finalized) return;
     finalized = true;
 
@@ -191,6 +198,20 @@ export function createSSEStream(options = {}) {
         toolCalls: [...toolCallStore.values()].filter((call) => call.name || call.arguments)
       }, finalUsage, ttftAt, { failed: streamFailed, error: streamErrorMessage });
     }
+  };
+
+  // Emit the deferred response.completed now — at [DONE], or when the watchdog
+  // below gives up on a usage trailer that never arrives.
+  const flushPendingCompletion = (controller) => {
+    const completed = translateResponse(targetFormat, sourceFormat, null, state);
+    for (const item of completed || []) {
+      if (item === null || item === undefined) continue;
+      const output = formatSSE(item, sourceFormat);
+      reqLogger?.appendConvertedChunk?.(output);
+      controller.enqueue(sharedEncoder.encode(output));
+      sseEmittedCount++;
+    }
+    finalizeStream();
   };
 
   // Snapshot partial output even when cancellation prevents TransformStream.flush.
@@ -419,15 +440,7 @@ export function createSSEStream(options = {}) {
           // if the upstream keeps the HTTP connection open, so finish now.
           if (targetFormat === FORMATS.OPENAI && sourceFormat === FORMATS.OPENAI_RESPONSES &&
               state.completionPending && !state.completedSent) {
-            const completed = translateResponse(targetFormat, sourceFormat, null, state);
-            for (const item of completed || []) {
-              if (item === null || item === undefined) continue;
-              const output = formatSSE(item, sourceFormat);
-              reqLogger?.appendConvertedChunk?.(output);
-              controller.enqueue(sharedEncoder.encode(output));
-              sseEmittedCount++;
-            }
-            finalizeStream();
+            flushPendingCompletion(controller);
           }
 
           // Synthesize response.failed if the Responses stream never sent a terminal event
@@ -549,6 +562,18 @@ export function createSSEStream(options = {}) {
             controller.enqueue(sharedEncoder.encode(output));
             sseEmittedCount++;
           }
+        }
+
+        // The completion deferral can outlive the upstream: a broken chat upstream
+        // may stall after finish_reason with no usage trailer and no [DONE], holding
+        // the connection open. Bound the wait so the client still gets a terminal event.
+        if (targetFormat === FORMATS.OPENAI && sourceFormat === FORMATS.OPENAI_RESPONSES &&
+            state?.completionPending && !state?.completedSent && !completionFlushTimer) {
+          completionFlushTimer = setTimeout(() => {
+            completionFlushTimer = null;
+            if (state?.completedSent) return;
+            try { flushPendingCompletion(controller); } catch { /* controller already closed */ }
+          }, PENDING_COMPLETION_FLUSH_MS);
         }
       }
     },
