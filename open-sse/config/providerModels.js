@@ -24,18 +24,20 @@ export function getDefaultModel(aliasOrId) {
 const DOT_VERSION_PROVIDERS = new Set(["kr", "kiro", "cc", "claude", "tokenrouter"]);
 
 // Find a registry entry by id. Tolerates dash/dot version separators
-// ("claude-sonnet-4-5" ~= "claude-sonnet-4.5", "claude-opus-5.5" ~= "claude-opus-5-5").
+// ("claude-sonnet-4-5" ~= "claude-sonnet-4.5", "claude-opus-5.5" ~= "claude-opus-5-5")
+// and strips optional thinking level suffixes ("model(max)").
 function findModel(models, modelId, aliasOrId) {
-  if (!models) return undefined;
-  const found = models.find(m => m.id === modelId);
+  if (!models || !modelId) return undefined;
+  const cleanId = typeof modelId === "string" ? modelId.replace(/\([^()]+\)\s*$/, "").trim() : modelId;
+  const found = models.find(m => m.id === cleanId || m.id === modelId);
   if (found) return found;
-  const normalized = normalizeModelId(modelId);
-  if (normalized !== modelId) {
+  const normalized = normalizeModelId(cleanId);
+  if (normalized !== cleanId) {
     const normFound = models.find(m => m.id === normalized);
     if (normFound) return normFound;
   }
-  const dashed = modelId.replace(/(\d)\.(\d)/g, "$1-$2");
-  if (dashed !== modelId) {
+  const dashed = cleanId.replace(/(\d)\.(\d)/g, "$1-$2");
+  if (dashed !== cleanId) {
     const dashFound = models.find(m => m.id === dashed);
     if (dashFound) return dashFound;
   }

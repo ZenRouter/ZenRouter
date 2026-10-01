@@ -348,7 +348,7 @@ export function normalizeClaudePassthrough(body, model = "", rawHeaders = null) 
     body.messages = ensureTrailingUserTurn(body.messages, originalLastRole);
   }
 
-  applyAssistantPrefillPolicy(body, rawHeaders);
+  applyAssistantPrefillPolicy(body, rawHeaders, originalLastRole);
   return body;
 }
 
@@ -489,6 +489,28 @@ export function anchorClaudeCache(body) {
   return body;
 }
 
+export function hoistToolResultImages(body) {
+  if (!Array.isArray(body?.messages)) return body;
+  let touched = false;
+  const messages = body.messages.map((msg) => {
+    if (msg?.role !== ROLE.USER || !Array.isArray(msg.content)) return msg;
+    const hoisted = [];
+    const content = msg.content.map((block) => {
+      if (block?.type !== CLAUDE_BLOCK.TOOL_RESULT || !Array.isArray(block.content)) return block;
+      const images = block.content.filter((c) => c?.type === CLAUDE_BLOCK.IMAGE);
+      if (!images.length) return block;
+      const rest = block.content.filter((c) => c?.type !== CLAUDE_BLOCK.IMAGE);
+      hoisted.push({ type: CLAUDE_BLOCK.TEXT, text: `[Image from tool result ${block.tool_use_id}]` }, ...images);
+      return { ...block, content: rest.length ? rest : [{ type: CLAUDE_BLOCK.TEXT, text: "(image attached below)" }] };
+    });
+    if (!hoisted.length) return msg;
+    touched = true;
+    // tool_result blocks must lead a user message; the hoisted image follows them.
+    return { ...msg, content: [...content, ...hoisted] };
+  });
+  return touched ? { ...body, messages } : body;
+}
+
 // Prepare request for Claude format endpoints
 // - Cleanup cache_control
 // - Filter empty messages
@@ -565,7 +587,7 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
     filtered = ensureTrailingUserTurn(filtered, originalLastRole);
 
     body.messages = filtered;
-    applyAssistantPrefillPolicy(body, rawHeaders);
+    applyAssistantPrefillPolicy(body, rawHeaders, originalLastRole);
     filtered = body.messages;
 
     // Check if thinking is enabled AND last message is from user

@@ -20,9 +20,10 @@ function hasText(content) {
   );
 }
 
-export function applyAssistantPrefillPolicy(body, rawHeaders = null) {
+export function applyAssistantPrefillPolicy(body, rawHeaders = null, originalLastRole = undefined) {
   if (!Array.isArray(body?.messages)) return body;
   if (String(getHeader(rawHeaders, PRESERVE_HEADER) || "").toLowerCase() === "preserve") return body;
+  if (originalLastRole === ROLE.ASSISTANT) return body;
 
   const trailingAssistant = body.messages.at(-1);
   if (trailingAssistant?.role !== ROLE.ASSISTANT) return body;
