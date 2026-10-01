@@ -17,17 +17,22 @@ import { ROLE, OPENAI_BLOCK, RESPONSES_ITEM, OPENAI_FINISH, MODEL_FALLBACK } fro
 function toResponsesUsage(usage) {
   if (!usage || typeof usage !== "object") return null;
 
-  const inputTokens = [usage.input_tokens, usage.prompt_tokens].find(Number.isFinite) ?? 0;
-  const outputTokens = [usage.output_tokens, usage.completion_tokens].find(Number.isFinite) ?? 0;
+  const inputTokens = [usage.input_tokens, usage.prompt_tokens].find(Number.isInteger);
+  const outputTokens = [usage.output_tokens, usage.completion_tokens].find(Number.isInteger);
+  // Some upstreams attach zeroed placeholders to every chunk. Wait for real counts
+  // so response.completed cannot freeze the placeholder before the usage trailer.
+  if (inputTokens === undefined || outputTokens === undefined || inputTokens + outputTokens <= 0) {
+    return null;
+  }
   const responseUsage = {
     input_tokens: inputTokens,
     output_tokens: outputTokens,
-    total_tokens: Number.isFinite(usage.total_tokens) ? usage.total_tokens : inputTokens + outputTokens
+    total_tokens: inputTokens + outputTokens
   };
-  const cachedTokens = [usage.input_tokens_details?.cached_tokens, usage.prompt_tokens_details?.cached_tokens].find(Number.isFinite);
-  const reasoningTokens = [usage.output_tokens_details?.reasoning_tokens, usage.completion_tokens_details?.reasoning_tokens].find(Number.isFinite);
-  if (Number.isFinite(cachedTokens)) responseUsage.input_tokens_details = { cached_tokens: cachedTokens };
-  if (Number.isFinite(reasoningTokens)) responseUsage.output_tokens_details = { reasoning_tokens: reasoningTokens };
+  const cachedTokens = [usage.input_tokens_details?.cached_tokens, usage.prompt_tokens_details?.cached_tokens].find(Number.isInteger);
+  const reasoningTokens = [usage.output_tokens_details?.reasoning_tokens, usage.completion_tokens_details?.reasoning_tokens].find(Number.isInteger);
+  if (Number.isInteger(cachedTokens)) responseUsage.input_tokens_details = { cached_tokens: cachedTokens };
+  if (Number.isInteger(reasoningTokens)) responseUsage.output_tokens_details = { reasoning_tokens: reasoningTokens };
 
   return responseUsage;
 }
@@ -37,14 +42,15 @@ export function openaiToOpenAIResponsesResponse(chunk, state) {
     return flushEvents(state);
   }
 
-  // Capture upstream usage BEFORE the choices guard below: the last OpenAI chunk
-  // may carry usage together with an empty choices array, and it must not be dropped.
-  if (chunk.usage) {
-    state.responsesUsage = toResponsesUsage(chunk.usage);
+  // Capture usage before the choices guard: OpenAI may send it in a trailer
+  // whose choices array is empty.
+  const responseUsage = toResponsesUsage(chunk.usage);
+  if (responseUsage) state.responsesUsage = responseUsage;
+
+  if (!chunk.choices?.length) {
+    return state.completionPending && state.responsesUsage ? flushEvents(state) : [];
   }
 
-  if (!chunk.choices?.length) return [];
-  
   const events = [];
   const nextSeq = () => ++state.seq;
   
@@ -145,8 +151,20 @@ export function openaiToOpenAIResponsesResponse(chunk, state) {
     for (const i in state.msgItemAdded) closeMessage(state, emit, i);
     closeReasoning(state, emit);
     for (const i in state.funcCallIds) closeToolCall(state, emit, i);
+    // Upstreams report usage either on the finish chunk itself or on a trailing chunk
+    // whose `choices` array is empty (OpenAI does the latter). Emitting
+    // response.completed here would freeze the payload before that trailing chunk is
+    // parsed, so when usage is not known yet we leave completion to flushEvents(),
+    // which runs once the upstream stream ends and by then has seen every chunk.
+    //
+    // That only holds on the direct openai:openai-responses route. When this converter
+    // runs as the second hop of a pivot (Claude/Gemini/Kiro upstream), translateResponse()
+    // drops the terminal null chunk before reaching us — the first hop returns null for
+    // it, leaving nothing to iterate — so flushEvents() is never called and deferring
+    // would swallow the terminal event entirely. Keep the old behaviour there.
     const flushReachesUs = state.targetFormat === FORMATS.OPENAI;
     if (state.responsesUsage || !flushReachesUs) sendCompleted(state, emit);
+    else state.completionPending = true;
   }
 
   return events;
