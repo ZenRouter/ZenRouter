@@ -97,6 +97,6 @@ describe("antigravity computeRetryDelay hook (D3)", () => {
     }, true, { projectId: "project-1", connectionId: "conn-1" });
 
     expect(out.requestId).toMatch(/^agent\/[0-9a-f-]{36}\/\d{13}\/[0-9a-f-]{36}\/\d+$/);
-    expect(out.request.generationConfig.maxOutputTokens).toBe(64000);
+    expect(out.request.generationConfig.maxOutputTokens).toBe(65536);
   });
 });

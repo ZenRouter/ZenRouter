@@ -5,6 +5,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- **fix(antigravity): align native functionResponse role, bypass sentinel, Claude bridge limits, and Gemini maxOutputTokens** —
+  - **FunctionResponse role asymmetry**: Google Antigravity wire captures prove that Gemini models require `role: "model"` for `functionResponse` tool responses, while Claude models proxied through Google's bridge require `role: "user"`. Zen previously forced `role = "user"` unconditionally, breaking tool calls on all native Gemini turns.
+  - **Thought signature bypass sentinel**: Preserved Google's documented sentinel `"skip_thought_signature_validator"` verbatim instead of replacing it with `DEFAULT_THINKING_AG_SIGNATURE` after failing `isValidBase64`.
+  - **Claude on Antigravity limits**: Google's Cloud Code bridge limits Claude models to 250,000 context tokens and 64,000 max output, with `application/pdf: false` (images only), as confirmed by Google's live `official_models.json`. Mapped exact overrides in `PROVIDER_CAPABILITIES.antigravity` so the gateway no longer sends over-budget envelopes or unsupported PDF attachments to Google's Claude bridge.
+  - **Max output tokens clamp**: Bumped `MAX_ANTIGRAVITY_OUTPUT_TOKENS` from `64000` to the official limit **`65536`** for native Gemini 3.5/3.6/3.7/3.8 Flash.
+  - **`gemini-3-flash` thinking capability**: Removed `thinking: false` from `registry/antigravity.js` (Google's model catalog confirms `supportsThinking: true` with `minThinkingBudget: 32`).
+  - Test: `tests/unit/antigravity-native-protocol.test.js` (5 cases); 34 Antigravity tests passing.
 - **feat(claude): add verified Claude Sonnet 5.5, fix Fable 5.1 cache read, and drop non-existent beta flag** —
   - Added `claude-sonnet-5-5` (and dot alias `claude-sonnet-5.5`) released 2026-09-28 to `MODEL_CAPABILITIES`, `PATTERN_CAPABILITIES`, `MODEL_PRICING`, and both the `claude` (OAuth) and `anthropic` (API key) registries. Mapped with native 1,000,000 context window, 128,000 max output, adaptive thinking, `thinkingCanDisable: false` (Anthropic returns 400 on `type: "disabled"` for Sonnet 5.5, lowest allowed setting is `between_tools`), and official pricing at **$2.00 input / $10.00 output / $0.20 cache read / $2.50 cache write** per 1M tokens. Previously missing entirely, falling through to the generic `$3/$15` pattern and 200k/64k envelope.
   - Corrected `claude-fable-5-1` cache read pricing from `$1.00` to **`$0.25`** (official rate is 0.025× input). Marked `claude-fable-5` with `thinkingCanDisable: false` matching upstream validation.

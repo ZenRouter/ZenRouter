@@ -173,6 +173,16 @@ const CODEX_GPT_56_DEFAULT_CAPS = { vision: true, reasoning: true, search: true,
  * Provider-specific capability overrides. Keyed by provider alias/id.
  */
 export const PROVIDER_CAPABILITIES = {
+  // Antigravity (Google Cloud Code v1internal): Google's bridge limits Claude models
+  // to 250,000 context tokens and 64,000 max output (verified via official_models.json
+  // from fetchAvailableModels: maxTokens=250000, maxOutputTokens=64000). The bridge
+  // also does not support PDF documents for Claude (application/pdf:false, images only).
+  "antigravity": {
+    "claude-sonnet-4-6":        { vision: true, pdf: false, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", contextWindow: 250000, maxOutput: 64000 },
+    "claude-sonnet-4.6":        { vision: true, pdf: false, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", contextWindow: 250000, maxOutput: 64000 },
+    "claude-opus-4-6-thinking": { vision: true, pdf: false, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", contextWindow: 250000, maxOutput: 64000 },
+    "claude-opus-4.6-thinking": { vision: true, pdf: false, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", contextWindow: 250000, maxOutput: 64000 },
+  },
   // NVIDIA NIM is OpenAI-compatible → rejects MiniMax/GLM native `thinking` field.
   // Force openai reasoning_effort format for its reasoning models. #issue
   "nvidia": {

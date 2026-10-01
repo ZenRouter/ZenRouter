@@ -27,7 +27,7 @@ function sanitizeFunctionName(name) {
 
 const MAX_RETRY_AFTER_MS = 10000;
 const ANTIGRAVITY_TRANSIENT_RETRY_MAX_MS = 15000;
-const MAX_ANTIGRAVITY_OUTPUT_TOKENS = 64000;
+const MAX_ANTIGRAVITY_OUTPUT_TOKENS = 65536;
 const ANTIGRAVITY_IDE_REQUEST_ID_RE = /^agent\/[^/]+\/\d+\/[^/]+\/\d+$/;
 
 const ANTIGRAVITY_TRANSIENT_ERROR_PATTERNS = [
@@ -224,6 +224,7 @@ export class AntigravityExecutor extends BaseExecutor {
     // loadCodeAssist before dispatch). Fall back to ONE stable id per connection
     // — never a fresh random id per request (see resolveAntigravityProjectId).
     const projectId = resolveAntigravityProjectId(credentials, () => this.generateProjectId());
+    const cleanModel = String(model || "").replace(/-(\d+)x(\d+)$/, "");
 
     // OpenAI clients may include stream_options even for non-streaming calls.
     // Google generateContent rejects that combination before processing the request.
@@ -232,8 +233,6 @@ export class AntigravityExecutor extends BaseExecutor {
     // ─── Image generation: completely different request structure ───
     if (isImageModel(model)) {
       const imageConfig = parseImageConfig(model);
-      // Strip model name suffixes for the actual API model name
-      const cleanModel = model.replace(/-(\d+)x(\d+)$/, "");
 
       // Build simplified contents — text + inline images (image models accept
       // inlineData for edit/img2img; dropping them silently degrades to text2img)
@@ -287,11 +286,23 @@ export class AntigravityExecutor extends BaseExecutor {
     // ─── Standard (non-image) request ───
     const rawContents = body.request?.contents || [];
     const cleanedContents = [];
+    const isClaudeOnAg = typeof cleanModel === "string" && cleanModel.startsWith("claude");
+
+    // Google Antigravity wire protocol:
+    //   - Gemini models: functionResponse turns MUST use role: "model"
+    //   - Claude models via Antigravity bridge: functionResponse MUST use role: "user"
+    // Verified across 26k+ native captures: Gemini functionResponse role=model is 100.0%.
+    const functionResponseRole = isClaudeOnAg ? "user" : "model";
+
+    // Official documented bypass sentinel (Google Cloud Code / Antigravity):
+    // "skip_thought_signature_validator" is accepted verbatim by the server.
+    const isAcceptedSignature = (sig) =>
+      typeof sig === "string" && (sig === "skip_thought_signature_validator" || isValidBase64(sig));
 
     for (const c of rawContents) {
       let role = c.role;
       if (c.parts?.some(p => p.functionResponse)) {
-        role = "user";
+        role = functionResponseRole;
       }
 
       const validParts = (c.parts || [])
@@ -303,13 +314,13 @@ export class AntigravityExecutor extends BaseExecutor {
         })
         .map(p => {
           if (p.functionCall) {
-            const hasValidSig = p.thoughtSignature && isValidBase64(p.thoughtSignature);
+            const hasValidSig = isAcceptedSignature(p.thoughtSignature);
             return {
               ...p,
               thoughtSignature: hasValidSig ? p.thoughtSignature : DEFAULT_THINKING_AG_SIGNATURE
             };
           }
-          if (p.thoughtSignature && !isValidBase64(p.thoughtSignature)) {
+          if (p.thoughtSignature && !isAcceptedSignature(p.thoughtSignature)) {
             return { ...p, thoughtSignature: DEFAULT_THINKING_AG_SIGNATURE };
           }
           return p;
