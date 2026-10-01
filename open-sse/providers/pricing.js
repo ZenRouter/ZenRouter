@@ -50,16 +50,19 @@ export const MODEL_PRICING = {
   "claude-opus-4-5-thinking":     { input: 5.00,  output: 25.00, cached: 0.50,  reasoning: 37.50,  cache_creation: 5.00  },
   "claude-opus-4-6-thinking":     { input: 5.00,  output: 25.00, cached: 0.50,  reasoning: 37.50,  cache_creation: 5.00  },
   "claude-fable-5":               { input: 10.00, output: 50.00, cached: 1.00,  reasoning: 50.00,  cache_creation: 12.50 },
-  "claude-fable-5-1":             { input: 10.00, output: 50.00, cached: 1.00,  reasoning: 50.00,  cache_creation: 12.50 },
-  // Current lineup (platform.claude.com/docs/en/models/overview, verified 2026-09-23):
-  // Opus 5.5 = $4/$20 (cache reads 5% = $0.20), Sonnet 5 = $2/$10, Opus 5 = $5/$25.
+  "claude-fable-5-1":             { input: 10.00, output: 50.00, cached: 0.25,  reasoning: 50.00,  cache_creation: 12.50 },
+  // Current lineup (platform.claude.com/docs/en/models/overview, verified 2026-10-01):
+  // Opus 5.5 = $4/$20 (cache reads 5% = $0.20), Sonnet 5 / 5.5 = $2/$10 ($0.20 cache read / $2.50 write),
+  // Opus 5 = $5/$25, Fable 5.1 = $10/$50 ($0.25 cache read = 0.025x).
   // Exact entries win over the claude-opus-*/claude-sonnet-* patterns below.
   "claude-opus-5":                { input: 5.00,  output: 25.00, cached: 0.50,  reasoning: 25.00,  cache_creation: 6.25  },
   "claude-opus-5-5":              { input: 4.00,  output: 20.00, cached: 0.20,  reasoning: 20.00,  cache_creation: 5.00  },
   "claude-opus-5-5-20260922":     { input: 4.00,  output: 20.00, cached: 0.20,  reasoning: 20.00,  cache_creation: 5.00  },
   "claude-sonnet-5":              { input: 2.00,  output: 10.00, cached: 0.20,  reasoning: 10.00,  cache_creation: 2.50  },
-  // Dot-form alias (pricing lookup is exact-match; the claude-opus-* pattern would misprice it)
+  "claude-sonnet-5-5":            { input: 2.00,  output: 10.00, cached: 0.20,  reasoning: 10.00,  cache_creation: 2.50  },
+  // Dot-form aliases (pricing lookup is exact-match; the claude-opus-*/claude-sonnet-* patterns would misprice them)
   "claude-opus-5.5":              { input: 4.00,  output: 20.00, cached: 0.20,  reasoning: 20.00,  cache_creation: 5.00  },
+  "claude-sonnet-5.5":            { input: 2.00,  output: 10.00, cached: 0.20,  reasoning: 10.00,  cache_creation: 2.50  },
 
   // === OpenAI / GPT (developers.openai.com/api/docs/pricing, snapshot 2026-09-23) ===
   // GPT-5+ cache reads = 10% of input; gpt-4.1 family = 25%; o3/o4-mini = 25%.

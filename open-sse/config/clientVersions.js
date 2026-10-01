@@ -61,7 +61,6 @@ export const CLAUDE_BETA_FLAGS_BASE = [
   "structured-outputs-2025-12-15",
   "fast-mode-2026-02-01",
   "redact-thinking-2026-02-12",
-  "token-efficient-tools-2026-03-28",
   "tool-search-tool-2025-10-19",
   "dangerous-tool-use-2026-09-03",
   "inline-tools-2026-09-15",
