@@ -5,6 +5,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- **feat(gemini): passive foundation for upcoming Gemini 4 Argon** — mapped pattern `*gemini-4*` to 1,048,576 context window and industry-leading **1,000,000 max output tokens**, full multimodality (vision, PDF, audio, video, reasoning, web search), and official introductory pricing at **$2.00 input / $10.00 output / $0.10 cache read (95% off)** per 1M tokens (verified from Google announcement 2026-09-30). Model is intentionally omitted from the active registry picker until Google begins public API rollout, ensuring zero dead 404 models in UI while guaranteeing immediate lossless routing for early testers.
+  - Test: `tests/unit/gemini-4-argon-passive.test.js` (2 cases).
 - **feat(antigravity,gemini-cli): add production fallback endpoints, TPU tool slicing, and Gemini CLI model catalog alignment** —
   - **Antigravity Fallback Base URLs**: Added official production endpoints `https://cloudcode-pa.googleapis.com` and `https://daily-cloudcode-pa.sandbox.googleapis.com` to `transport.baseUrls` in `registry/antigravity.js` for seamless failover during `daily-cloudcode-pa` maintenance or 503/429 outages.
   - **Tool Slicing**: Updated `transformRequest` in `open-sse/executors/antigravity.js` to slice declarations into individual `{ functionDeclarations: [decl] }` objects matching the Google TPU prefix-cache format captured in 100% of native packet traces.

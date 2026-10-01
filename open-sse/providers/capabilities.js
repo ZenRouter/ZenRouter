@@ -308,10 +308,9 @@ export const PATTERN_CAPABILITIES = [
   { pattern: "*claude-3*",      caps: { vision: true, pdf: true, tools: true } },
   { pattern: "*claude*",        caps: { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-budget" } },
 
-  // ── Gemini (all 2.0+ multimodal + google_search grounding, 1M ctx) ─
-  // Image models live in the 128K/65K class, not 1M (ai.google.dev/gemini-api/docs/gemini-3).
-  // pdf:true — Gemini 2.5/3.x read documents natively (docs/document-processing);
-  // without it stripUnsupportedModalities() deleted the attachment before dispatch.
+  // ── Gemini 4 Argon & generations (2.0+ multimodal + google_search grounding, 1M ctx) ─
+  // Gemini 4 Argon sets an industry-leading 1M max output token headroom (blog.google 2026-09-30).
+  { pattern: "*gemini-4*",      caps: { vision: true, pdf: true, audioInput: true, videoInput: true, reasoning: true, search: true, thinkingFormat: "gemini-level", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 1000000 } },
   { pattern: "*gemini*image*",  caps: { vision: true, pdf: true, imageOutput: true, contextWindow: 131072, maxOutput: 32768 } },
   { pattern: "*gemini-3.8*",    caps: { vision: true, pdf: true, audioInput: true, videoInput: true, reasoning: true, search: true, thinkingFormat: "gemini-level", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 65536 } },
   { pattern: "*gemini-3.7*",    caps: { vision: true, pdf: true, audioInput: true, videoInput: true, reasoning: true, search: true, thinkingFormat: "gemini-level", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 65536 } },

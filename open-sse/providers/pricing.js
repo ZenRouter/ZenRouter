@@ -106,6 +106,9 @@ export const MODEL_PRICING = {
   "o4-mini":                      { input: 1.10,  output: 4.40,  cached: 0.275, reasoning: 4.40,   cache_creation: 1.10  },
 
   // === Gemini (ai.google.dev/gemini-api/docs/pricing, verified 2026-10-01) ===
+  // Gemini 4 Argon: introductory pricing $2/$10 with 95% off cached tokens ($0.10) per official blog 2026-09-30
+  "gemini-4-argon":                { input: 2.00,  output: 10.00, cached: 0.10,  reasoning: 10.00,  cache_creation: 2.50 },
+  "gemini-4-argon-preview":        { input: 2.00,  output: 10.00, cached: 0.10,  reasoning: 10.00,  cache_creation: 2.50 },
   // 3.6/3.7/3.8-flash promotional pricing is $0.75/$3.75 ($0.075 cache read) active through 31 Dec 2026.
   "gemini-3.5-flash":              { input: 1.50,  output: 9.00,  cached: 0.15,  reasoning: 9.00,   cache_creation: 1.50  },
   "gemini-3.1-flash-lite":         { input: 0.25,  output: 1.50,  cached: 0.025, reasoning: 1.50,   cache_creation: 0.25  },
