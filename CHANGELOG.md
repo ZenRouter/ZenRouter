@@ -5,6 +5,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- **feat(pricing): add native long-context / tiered pricing calculation for flagship models** —
+  - Added `resolveEffectivePricing(pricing, inputTokens)` to `open-sse/providers/pricing.js`, incorporated into both `calculateCostFromTokens()` and `calculateCostBreakdown()`.
+  - Mapped official long-context tiers:
+    - **OpenAI (>272k tokens)**: `gpt-6-astra` ($20/$75/$2 cached/$25 write), `gpt-6-sol`/`gpt-6.1-sol` ($4/$15/$0.20/$5), `gpt-6-luna` ($0.20/$0.75/$0.02/$0.25), `gpt-5.6-sol` ($8/$30/$0.80/$10), `gpt-5.6-terra` ($4/$18/$0.40/$5), `gpt-5.6-luna` ($0.40/$1.80/$0.04/$0.50), `gpt-5.5` ($10/$45/$1), `gpt-5.4` ($5/$22.50/$0.50), `gpt-5.5-pro` ($60/$270/$6), and `gpt-5.4-pro` ($60/$270/$6).
+    - **Google Gemini (>200k tokens)**: `gemini-3.1-pro-preview` ($4/$18/$0.40).
+    - **xAI Grok (≥200k tokens)**: `grok-4.7` ($4/$12/$1), `grok-4.6` ($4/$12/$1), `grok-4.5` ($4/$12/$0.60), `grok-4.3` ($2.50/$5/$0.40), `grok-build-0.1` ($2/$4/$0.40).
+  - Eliminates systematic 50% under-billing in usage logs for long-context agent turns exceeding 200k/272k tokens.
+  - Test: `tests/unit/tiered-pricing.test.js` (3 cases); 72 pricing tests green.
 - **feat(models): update verified capabilities and pricing for 2026 Asia & EU models (DeepSeek, GLM, Qwen, Kimi, MiniMax, MiMo, Mistral)** —
   - **DeepSeek**: Aligned V4.1 Flash pricing across all canonical and compat aliases (`deepseek-flash`, `deepseek-v4.1-flash`, `deepseek-v4-flash`, `deepseek-v4-flash-vision-exp`) to the official schedule of **$0.15 input / $0.60 output / $0.003 cache hit** per 1M tokens. Added case-insensitive lookup in canonical exact capabilities so uppercase registry IDs (`MiniMax-M3`, `Qwen/*`, `Doubao-*`) match their exact declared specifications.
   - **Z.ai GLM**: Upgraded `glm-5.2` context window from 200k to native **1,000,000** tokens. Marked `glm-5.3` and `glm-5.3-flash` as `thinkingCanDisable: false` per official documentation ("forced thinking and cannot be disabled"). Updated GLM 4.6 max output to 131,072 and GLM 4.5 context to 131,072.
