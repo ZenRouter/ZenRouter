@@ -63,8 +63,9 @@ describe("trailing user turn survives empty-message cleanup", () => {
       { role: "user", content: "hi" },
       { role: "assistant", content: [{ type: "text", text: "Sure:" }] },
     ] };
-    expect(roles(prepareClaudeRequest(structuredClone(body), "claude"))).toEqual(["user", "assistant"]);
-    expect(roles(normalizeClaudePassthrough(structuredClone(body), "claude-opus-4-5"))).toEqual(["user", "assistant"]);
+    const preserveHeaders = { "x-zenrouter-assistant-prefill": "preserve" };
+    expect(roles(prepareClaudeRequest(structuredClone(body), "claude", null, null, preserveHeaders))).toEqual(["user", "assistant"]);
+    expect(roles(normalizeClaudePassthrough(structuredClone(body), "claude-opus-4-5", preserveHeaders))).toEqual(["user", "assistant"]);
   });
 
   it("does not append anything when the last user turn has content", () => {

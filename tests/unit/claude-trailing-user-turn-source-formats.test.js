@@ -9,23 +9,25 @@ const roles = (body) => body.messages.map((m) => m.role);
 
 describe("trailing user turn: non-messages[] source formats", () => {
   it("keeps a Gemini trailing model turn (real prefill)", () => {
+    const creds = { rawHeaders: { "x-zenrouter-assistant-prefill": "preserve" } };
     const out = translateRequest("gemini", "claude", "claude-sonnet-4-5", {
       contents: [
         { role: "user", parts: [{ text: "hi" }] },
         { role: "model", parts: [{ text: "The answer is" }] },
       ],
-    }, false);
+    }, false, creds, "claude");
     expect(roles(out)).toEqual(["user", "assistant"]);
   });
 
   it("keeps a Responses trailing assistant message (real prefill)", () => {
+    const creds = { rawHeaders: { "x-zenrouter-assistant-prefill": "preserve" } };
     const out = translateRequest("openai-responses", "claude", "claude-sonnet-4-5", {
       model: "claude-sonnet-4-5",
       input: [
         { role: "user", content: "hi" },
         { role: "assistant", content: "The answer is" },
       ],
-    }, false);
+    }, false, creds, "claude");
     expect(roles(out)).toEqual(["user", "assistant"]);
   });
 

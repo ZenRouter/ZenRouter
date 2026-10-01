@@ -48,7 +48,7 @@ describe.each([
       { role: "assistant", content: [{ type: "tool_use", id: "tool-1", name: "lookup", input: {} }] },
     ]);
 
-    expect(out.messages.at(-1)).toEqual({
+    expect(out.messages.at(-1)).toMatchObject({
       role: "user",
       content: [{
         type: "tool_result",

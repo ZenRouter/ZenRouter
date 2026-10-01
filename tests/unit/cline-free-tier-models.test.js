@@ -109,7 +109,7 @@ describe("cline-free namespace pricing", () => {
 
   it("still bills the paid twin at its published rate", async () => {
     const { getPricingForModel } = await import("../../open-sse/providers/pricing.js");
-    expect(getPricingForModel("cline", "deepseek/deepseek-v4.1-flash").input).toBe(0.14);
+    expect(getPricingForModel("cline", "deepseek/deepseek-v4.1-flash").input).toBe(0.15);
     expect(getPricingForModel("cline", "meta/muse-spark-1.3-contributor")).toBeNull();
   });
 

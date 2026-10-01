@@ -348,7 +348,7 @@ export function normalizeClaudePassthrough(body, model = "", rawHeaders = null) 
     body.messages = ensureTrailingUserTurn(body.messages, originalLastRole);
   }
 
-  applyAssistantPrefillPolicy(body, rawHeaders, originalLastRole);
+  applyAssistantPrefillPolicy(body, rawHeaders);
   return body;
 }
 
@@ -587,7 +587,7 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
     filtered = ensureTrailingUserTurn(filtered, originalLastRole);
 
     body.messages = filtered;
-    applyAssistantPrefillPolicy(body, rawHeaders, originalLastRole);
+    applyAssistantPrefillPolicy(body, rawHeaders);
     filtered = body.messages;
 
     // Check if thinking is enabled AND last message is from user
