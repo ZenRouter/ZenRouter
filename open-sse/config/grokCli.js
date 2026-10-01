@@ -7,5 +7,5 @@ export const GROK_CLI_BASE_URL = "https://cli-chat-proxy.grok.com/v1";
 
 export function supportsGrokCliReasoningEffort(model) {
   // ponytail: unknown models omit effort until live metadata reaches dispatch.
-  return /^grok-4\.(?:5|6)(?:$|-)/.test(String(model || ""));
+  return /^grok-4\.(?:5|6|7)(?:$|-)/.test(String(model || ""));
 }
