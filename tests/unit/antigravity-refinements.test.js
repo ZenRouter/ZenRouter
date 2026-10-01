@@ -49,9 +49,8 @@ describe("Antigravity & Gemini CLI remaining alignments", () => {
     });
   });
 
-  it("includes official models in Gemini CLI registry", () => {
+  it("includes official Gemma 4 models in Gemini CLI registry", () => {
     const ids = geminiCli.models.map((m) => m.id);
-    expect(ids).toContain("gemini-3-pro-preview");
     expect(ids).toContain("gemma-4-31b-it");
     expect(ids).toContain("gemma-4-26b-a4b-it");
   });

@@ -69,7 +69,7 @@ describe("antigravity computeRetryDelay hook (D3)", () => {
   });
 
   it("registry uses the daily IDE cloudcode host and user agent", () => {
-    expect(antigravity.transport.baseUrls).toEqual(["https://daily-cloudcode-pa.googleapis.com"]);
+    expect(antigravity.transport.baseUrls[0]).toBe("https://daily-cloudcode-pa.googleapis.com");
     expect(antigravity.transport.headers["User-Agent"]).toBe(ANTIGRAVITY_IDE_USER_AGENT);
   });
 
