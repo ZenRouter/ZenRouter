@@ -2,6 +2,17 @@
 
 All notable changes to ZenRouter (fork of 9Router) will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional Commits.
+
+## [Unreleased]
+
+### Fixed
+- Categorize xAI Grok Imagine Image, Image 2.0, and Image Quality under Text to Image, and Imagine Video 1.5 variants under Video. Keep media generators out of the chat model list.
+- Preserve model categories and output modalities from live provider catalogs. Correct the displayed category of registered media models previously saved as custom LLM models without changing stored data.
+- Expose OpenRouter's declared image models in Text to Image and connect TokenRouter's image generation configuration to its adapter.
+- Forward supported xAI image parameters, including aspect ratio and resolution, and restrict quality forwarding to Imagine Image 2.0. Add matching image controls to the dashboard.
+- Add video/music model discovery mappings and correct media endpoint metadata.
+- Add regression coverage for media classification, model lists, legacy custom rows, and image request dispatch. Relevant tests and lint pass; real-account image generation has not been verified.
+
 ## [0.9.0] - 2026-10-01
 
 ### Fixed

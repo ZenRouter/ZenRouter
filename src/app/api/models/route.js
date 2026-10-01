@@ -3,6 +3,7 @@ import { getModelAliases, setModelAlias, getCustomModels } from "@/models";
 import { getDisabledModels } from "@/lib/disabledModelsDb";
 import { AI_MODELS } from "@/shared/constants/config";
 import { getProviderAlias } from "@/shared/constants/providers";
+import { getModelKind } from "@/shared/constants/models";
 import { getCapabilitiesForModel } from "open-sse/providers/capabilities.js";
 
 // GET /api/models - Get models with aliases
@@ -40,7 +41,7 @@ export async function GET() {
     // Custom models ride along; their stored caps override the name heuristic
     const seenFull = new Set(models.map((m) => m.fullModel));
     const customModels = (await getCustomModels()).filter((m) => {
-      if (!m?.id || (m.kind || m.type || "llm") !== "llm") return false;
+      if (!m?.id || getModelKind(m, "llm") !== "llm") return false;
       return !seenFull.has(`${m.providerAlias}/${m.id}`);
     });
     for (const m of customModels) {

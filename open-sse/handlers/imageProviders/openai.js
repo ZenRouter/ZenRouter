@@ -21,9 +21,13 @@ export default function createOpenAIAdapter(providerId) {
       if (style) full.style = style;
       if (response_format) full.response_format = response_format;
       // bodyFields whitelist (e.g. xAI accepts only model/prompt/n/response_format)
-      if (Array.isArray(cfg.bodyFields)) {
+      const bodyFields = cfg.modelBodyFields?.[model] || cfg.bodyFields;
+      if (Array.isArray(bodyFields)) {
         const req = {};
-        for (const f of cfg.bodyFields) if (full[f] !== undefined) req[f] = full[f];
+        for (const f of bodyFields) {
+          const value = full[f] ?? body[f];
+          if (value !== undefined) req[f] = value;
+        }
         return req;
       }
       return full;

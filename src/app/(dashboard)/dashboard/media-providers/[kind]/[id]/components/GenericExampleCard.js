@@ -412,7 +412,7 @@ export function GenericExampleCard({ providerId, kind }) {
                 onChange={(e) => setExtraValues((s) => ({ ...s, [f.key]: e.target.value }))}
                 className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
               >
-                {(f.options || []).map((opt) => (
+                {(selectedModelObj?.paramOptions?.[f.key] || f.options || []).map((opt) => (
                   <option key={opt} value={opt}>{opt === "" ? "(default)" : opt}</option>
                 ))}
               </select>

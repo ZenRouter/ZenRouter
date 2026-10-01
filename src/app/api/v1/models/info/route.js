@@ -5,12 +5,14 @@ import { getModelKind } from "@/shared/constants/models";
 const KIND_ENDPOINT = {
   llm: "/v1/chat/completions",
   image: "/v1/images/generations",
+  video: "/v1/videos/generations",
+  music: "/v1/audio/music",
   tts: "/v1/audio/speech",
   stt: "/v1/audio/transcriptions",
   embedding: "/v1/embeddings",
   imageToText: "/v1/chat/completions",
   webSearch: "/v1/search",
-  webFetch: "/v1/fetch",
+  webFetch: "/v1/web/fetch",
 };
 
 const TTS_VOICES_API = new Set(["elevenlabs", "edge-tts", "deepgram", "inworld", "local-device"]);

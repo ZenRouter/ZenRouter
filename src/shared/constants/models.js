@@ -15,6 +15,7 @@ export {
 
 import { AI_PROVIDERS, isOpenAICompatibleProvider } from "./providers.js";
 import { PROVIDER_MODELS as MODELS } from "open-sse/config/providerModels.js";
+import { inferModelKind } from "open-sse/providers/models/schema.js";
 
 // Providers that accept any model (passthrough)
 const PASSTHROUGH_PROVIDERS = new Set(
@@ -34,10 +35,16 @@ export function isValidModel(aliasOrId, modelId) {
 
 // Legacy AI_MODELS for backward compatibility
 export const AI_MODELS = Object.entries(MODELS).flatMap(([alias, models]) =>
-  models.map(m => ({ provider: alias, model: m.id, name: m.name }))
+  models.filter((m) => getModelKind(m, "llm") === "llm")
+    .map(m => ({ provider: alias, model: m.id, name: m.name }))
 );
 
-export const getModelKind = (m, fallback = null) => m?.kind || m?.type || fallback;
+export function getModelKind(m, fallback = null) {
+  // Old custom rows may have saved a registered generator as type=llm.
+  // Correct their presentation without rewriting the user's database.
+  const registered = m?.providerAlias && MODELS[m.providerAlias]?.find((entry) => entry.id === m.id);
+  return registered?.kind || registered?.type || m?.kind || m?.type || inferModelKind(m) || fallback;
+}
 
 // Capacity metadata for UI badges — icon + label + color per capability.
 export const CAPACITY_META = {

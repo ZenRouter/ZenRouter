@@ -17,7 +17,7 @@ import { resolveQoderModels } from "open-sse/services/qoderModels.js";
 import { resolveGrokCliModels } from "open-sse/services/grokCliModels.js";
 import { resolveConnectionProxyConfig } from "@/lib/network/connectionProxy";
 import { resolveCursorModels } from "open-sse/services/cursorModels.js";
-import { fetchProviderLiveModels } from "@/shared/utils/providerLiveModels";
+import { fetchProviderLiveModels, normalizeLiveModel } from "@/shared/utils/providerLiveModels";
 import {
   CODEX_MODELS_CLIENT_VERSION,
   VSCODE_VERSION,
@@ -642,7 +642,7 @@ export async function GET(request, { params }) {
     }
 
     const data = await response.json();
-    const models = config.parseResponse(data);
+    const models = config.parseResponse(data).map((model) => normalizeLiveModel(connection.provider, model));
 
     return NextResponse.json({
       provider: connection.provider,

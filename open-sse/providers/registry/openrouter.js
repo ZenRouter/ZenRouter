@@ -41,7 +41,7 @@ export default {
     { id: "google/imagen-3.0-generate-002", name: "Imagen 3 (via OpenRouter)", params: ["n","size"], kind: "image" },
     { id: "black-forest-labs/FLUX.1-schnell", name: "FLUX.1 Schnell (via OpenRouter)", params: ["n","size"], kind: "image" },
   ],
-  serviceKinds: ["llm","embedding","tts","imageToText"],
+  serviceKinds: ["llm","embedding","tts","image","imageToText"],
   ttsConfig: {
     baseUrl: "https://openrouter.ai/api/v1/chat/completions",
     defaultModel: "openai/gpt-4o-mini-tts",

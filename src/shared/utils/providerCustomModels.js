@@ -1,5 +1,7 @@
+import { getModelKind } from "@/shared/constants/models.js";
+
 function modelType(model) {
-  return model?.kind || model?.type || "llm";
+  return getModelKind(model, "llm");
 }
 
 export function getProviderCustomModelRows({

@@ -6,11 +6,13 @@ const KIND_SLUG_MAP = {
   "tts": ["tts"],
   "stt": ["stt"],
   "embedding": ["embedding"],
+  "video": ["video"],
+  "music": ["music"],
   "image-to-text": ["imageToText"],
   "web": ["webSearch", "webFetch"],
 };
 
-const ALL_KINDS = ["llm", "image", "tts", "stt", "embedding", "imageToText", "webSearch", "webFetch"];
+const ALL_KINDS = ["llm", "image", "tts", "stt", "embedding", "imageToText", "webSearch", "webFetch", "video", "music"];
 
 export async function OPTIONS() {
   return new Response(null, {

@@ -9,6 +9,14 @@
  */
 
 import REGISTRY from "open-sse/providers/registry/index.js";
+import { inferModelKind, modelKind } from "open-sse/providers/models/schema.js";
+
+export function normalizeLiveModel(providerId, model) {
+  const entry = REGISTRY.find((r) => r.id === providerId);
+  const registered = entry?.models?.find((m) => m.id === model.id);
+  const kind = registered ? modelKind(registered) : (model.kind || model.type || inferModelKind(model));
+  return { ...model, ...(kind ? { kind } : {}) };
+}
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const TIMEOUT_MS = 5000;
@@ -86,13 +94,17 @@ export async function fetchProviderLiveModels(providerId, apiKey, { useCache = t
         const caps = {};
         if (Number.isFinite(contextWindow) && contextWindow > 0) caps.contextWindow = contextWindow;
         if (Number.isFinite(maxOutput) && maxOutput > 0) caps.maxOutput = maxOutput;
-        return {
+        return normalizeLiveModel(providerId, {
           id,
           name,
+          ...(m?.kind ? { kind: m.kind } : {}),
+          ...(m?.type ? { type: m.type } : {}),
+          ...(m?.architecture ? { architecture: m.architecture } : {}),
+          ...(m?.output_modalities ? { output_modalities: m.output_modalities } : {}),
           ...(Object.keys(caps).length > 0 ? { capabilities: caps } : {}),
           ...(Number.isFinite(contextWindow) && contextWindow > 0 ? { context_length: contextWindow } : {}),
           ...(Number.isFinite(maxOutput) && maxOutput > 0 ? { max_completion_tokens: maxOutput } : {}),
-        };
+        });
       })
       .filter((m) => typeof m.id === "string" && m.id.trim() !== "");
 

@@ -19,6 +19,7 @@ import { fetchProviderLiveModels } from "@/shared/utils/providerLiveModels";
 import { updateProviderCredentials } from "@/sse/services/tokenRefresh";
 import { resolveConnectionProxyConfig } from "@/lib/network/connectionProxy";
 import { capabilitiesFromServiceKind, getCapabilitiesForModel, withDeclaredCapabilities } from "open-sse/providers/capabilities.js";
+import { modelKind, inferModelKind } from "open-sse/providers/models/schema.js";
 
 // Per-provider live model resolvers. Each receives a connection record and
 // returns { models: [{ id, name? }, ...] } | null on failure.
@@ -130,29 +131,10 @@ const LLM_KIND = "llm";
 
 // Map per-model `type` field (in PROVIDER_MODELS) to service kind.
 // Models without `type` are treated as LLM.
-const MODEL_TYPE_TO_KIND = {
-  image: "image",
-  tts: "tts",
-  embedding: "embedding",
-  stt: "stt",
-  imageToText: "imageToText",
-  video: "video",
-};
-
-function modelKind(model) {
-  const k = model?.kind || model?.type;
-  if (!k) return LLM_KIND;
-  return MODEL_TYPE_TO_KIND[k] || LLM_KIND;
-}
-
 // For dynamic/unknown model IDs (compatible providers, alias map, custom models)
 // fall back to provider-level kind matching when per-model type is unavailable.
 function inferKindFromUnknownModelId(modelId) {
-  const lower = String(modelId).toLowerCase();
-  if (/embed/.test(lower)) return "embedding";
-  if (/tts|speech|audio|voice/.test(lower)) return "tts";
-  if (/image|imagen|dall-?e|flux|sdxl|sd-|stable-diffusion/.test(lower)) return "image";
-  return LLM_KIND;
+  return inferModelKind({ id: modelId }) || LLM_KIND;
 }
 
 // Provider matches kindFilter when its serviceKinds intersect the requested kinds.
@@ -301,9 +283,9 @@ export async function buildModelsList(kindFilter) {
     }
 
     for (const customModel of customModels) {
-      if (!customModel?.id || (customModel.type && customModel.type !== "llm")) continue;
-      // Custom models without active connection are LLM-only by current schema
-      if (!kindFilter.includes(LLM_KIND)) continue;
+      if (!customModel?.id) continue;
+      const kind = getModelKind(customModel, LLM_KIND);
+      if (!kindFilter.includes(kind) && !(kind === "imageToText" && kindFilter.includes(LLM_KIND))) continue;
       const providerAlias = customModel.providerAlias;
       if (!providerAlias) continue;
 

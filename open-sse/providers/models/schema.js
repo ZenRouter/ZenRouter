@@ -27,7 +27,25 @@ export function normalizeModel(raw) {
 
 // Resolve model kind with default (accepts legacy `type` field)
 export function modelKind(model) {
-  return model?.kind || model?.type || MODEL_DEFAULTS.kind;
+  return model?.kind || model?.type || inferModelKind(model) || MODEL_DEFAULTS.kind;
+}
+
+// Live OpenAI catalogs often omit kind. Use output metadata before conservative
+// ID patterns; image *input* alone does not turn a vision chat model into a generator.
+export function inferModelKind(model) {
+  const outputs = model?.architecture?.output_modalities || model?.output_modalities;
+  if (Array.isArray(outputs)) {
+    if (outputs.includes("image")) return "image";
+    if (outputs.includes("video")) return "video";
+    if (outputs.includes("text")) return "llm";
+  }
+  const id = String(model?.id || "").toLowerCase();
+  if (/embed/.test(id)) return "embedding";
+  if (/whisper|(?:^|[-_/])asr(?:$|[-_/])|transcri/.test(id)) return "stt";
+  if (/(?:^|[-_/])tts(?:$|[-_/])|text-to-speech/.test(id)) return "tts";
+  if (/grok-imagine-video|(?:^|\/)sora(?:$|[-.])/.test(id)) return "video";
+  if (/grok-(?:imagine-image|2-image)|gpt-image|dall-?e|(?:^|\/)imagen[-\d]|flux[.-]|stable-diffusion|sdxl|seedream|gemini-.*-image/.test(id)) return "image";
+  return null;
 }
 export function modelQuotaFamily(model) {
   return model?.quotaFamily || MODEL_DEFAULTS.quotaFamily;
