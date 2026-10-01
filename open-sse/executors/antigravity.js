@@ -368,7 +368,11 @@ export class AntigravityExecutor extends BaseExecutor {
           });
         }
       }
-      tools = allDeclarations.length > 0 ? [{ functionDeclarations: allDeclarations }] : [];
+      // Google Antigravity TPU prefix cache: slices into individual { functionDeclarations: [decl] }
+      // objects rather than merging all declarations into one array (HAR_NATIVE_PROTOCOL_ALIGNMENT: 100%).
+      tools = allDeclarations.length > 0
+        ? allDeclarations.map((decl) => ({ functionDeclarations: [decl] }))
+        : [];
     }
 
     // Strip tools/toolConfig (handled separately) and blacklisted fields that Google rejects

@@ -138,6 +138,9 @@ export const MODEL_CAPABILITIES = {
   "qwen3.8-max":       { vision: true, videoInput: true, pdf: true, reasoning: true, thinkingFormat: "qwen", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 131072 },
   "qwen3.8-omni-flash": { vision: true, audioInput: true, videoInput: true, reasoning: true, thinkingFormat: "qwen", contextWindow: 1000000, maxOutput: 131072 },
 
+  // Google Antigravity agentic model alias (official: Gemini 3.1 Pro High)
+  "gemini-pro-agent":  { vision: true, audioInput: true, videoInput: true, pdf: true, reasoning: true, search: true, thinkingFormat: "gemini-level", thinkingCanDisable: false, contextWindow: 1048576, maxOutput: 65536 },
+
   // MiniMax flagship (official: M3 context 1,000,000, maxOutput 524288, image + video input)
   "minimax-m3":        { vision: true, videoInput: true, reasoning: true, thinkingFormat: "minimax", contextWindow: 1000000, maxOutput: 524288 },
   "minimax-m2.5":      { reasoning: true, thinkingFormat: "minimax", thinkingCanDisable: false, contextWindow: 204800, maxOutput: 131072 },

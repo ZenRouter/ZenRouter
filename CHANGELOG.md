@@ -5,6 +5,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- **feat(antigravity,gemini-cli): add production fallback endpoints, TPU tool slicing, and Gemini CLI model catalog alignment** —
+  - **Antigravity Fallback Base URLs**: Added official production endpoints `https://cloudcode-pa.googleapis.com` and `https://daily-cloudcode-pa.sandbox.googleapis.com` to `transport.baseUrls` in `registry/antigravity.js` for seamless failover during `daily-cloudcode-pa` maintenance or 503/429 outages.
+  - **Tool Slicing**: Updated `transformRequest` in `open-sse/executors/antigravity.js` to slice declarations into individual `{ functionDeclarations: [decl] }` objects matching the Google TPU prefix-cache format captured in 100% of native packet traces.
+  - **`gemini-pro-agent` Capabilities**: Added explicit canonical capabilities in `open-sse/providers/capabilities.js` with reasoning, multimodal inputs (image, audio, video, PDF), and 65,536 max output tokens.
+  - **Gemini CLI Registry**: Added official models `gemini-3-pro-preview`, `gemma-4-31b-it`, and `gemma-4-26b-a4b-it` to `registry/gemini-cli.js`.
+  - Test: `tests/unit/antigravity-refinements.test.js` (4 cases).
 - **fix(claude,copilot): align native Claude billing header cch=00000, Stainless SDK 0.127.0, and preserve Copilot catalog limits** —
   - **Claude billing header**: Aligned `generateBillingHeader` in `open-sse/utils/claudeCloaking.js` to emit `cch=00000;` and `cc_entrypoint=cli;`, matching the exact literal string emitted by official Claude Code 2.1.286 native binary on first-party Anthropic endpoints. Previously generated random SHA256 hashes for `cch` and `sdk-cli`, introducing an anomalous fingerprint on first-party sessions.
   - **Stainless SDK version**: Updated `CLAUDE_STAINLESS.packageVersion` to **`0.127.0`**, matching the bundled `@anthropic-ai/sdk` version in Claude Code 2.1.286 (previously pinned to 0.80.0).
