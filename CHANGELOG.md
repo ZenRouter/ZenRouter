@@ -5,6 +5,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- **feat(codex): align Codex CLI protocol headers, reasoning levels, flagship GPT-6 presets, and imagegen model** —
+  - **Headers**: Updated `buildHeaders` in `open-sse/executors/codex.js` to emit `session-id` (hyphenated), `version: CODEX_CLI_VERSION` (0.159.3), and `originator: "codex_cli_rs"`, matching the wire signature of official Codex CLI 0.159.3.
+  - **Models**: Added `gpt-6-astra`, `gpt-6.1-sol`, `gpt-6-sol`, `gpt-6-luna`, and `gpt-image-2` to `open-sse/providers/registry/codex.js` matching official Codex CLI bundled model presets.
+  - **Reasoning options**: Expanded `thinkingConfig.options` to support the full set of Codex reasoning levels: `["auto", "none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"]`.
+  - Test: `tests/unit/codex-cli-protocol.test.js` (3 cases).
 - **feat(pricing): add native long-context / tiered pricing calculation for flagship models** —
   - Added `resolveEffectivePricing(pricing, inputTokens)` to `open-sse/providers/pricing.js`, incorporated into both `calculateCostFromTokens()` and `calculateCostBreakdown()`.
   - Mapped official long-context tiers:

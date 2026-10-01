@@ -1,6 +1,7 @@
 import { BaseExecutor } from "./base.js";
 import { CODEX_DEFAULT_INSTRUCTIONS } from "../config/codexInstructions.js";
 import { PROVIDERS } from "../config/providers.js";
+import { CODEX_CLI_VERSION } from "../config/clientVersions.js";
 import {
   refreshProviderCredentials,
   shouldRefreshCredentials,
@@ -216,7 +217,10 @@ export class CodexExecutor extends BaseExecutor {
    */
   buildHeaders(credentials, stream = true) {
     const headers = super.buildHeaders(credentials, stream);
-    headers["session_id"] = this._currentSessionId || credentials?.connectionId || "default";
+    const sid = this._currentSessionId || credentials?.connectionId || "default";
+    headers["session_id"] = sid;
+    headers["session-id"] = sid;
+    headers["version"] = CODEX_CLI_VERSION;
     // Identify client type to Codex backend (matches official codex CLI)
     if (!headers["originator"]) headers["originator"] = "codex_cli_rs";
     // Account/workspace binding header — required when multiple Codex accounts
