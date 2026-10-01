@@ -5,6 +5,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- **fix(upstream): cherry-pick high-value 9Router fixes (v0.5.95 line)** —
+  - **fix(codex): stop refresh-token reuse that logs accounts out on auto-ping (`0bc7f86e`)**: Reduced `refreshLeadMs` from 5 days to 10 minutes and re-read latest connection tokens from DB before refreshing, preventing OpenAI from revoking active sessions due to stale token reuse.
+  - **fix(responses): deferred completion usage trailer & 3s watchdog (`7111db35`, `fbcaa282`, `bbe7a0b3`)**: Made OpenAI Responses translation wait for the real usage trailer before emitting `response.completed` while bounding the wait with a 3s watchdog against hung upstreams. Fixed upstream bug where `state.targetFormat` was undefined.
+  - **fix(claude): keep trailing user turn and preserve intentional prefill (`75834e96`, `5e9bd464`, `87d3bd5a`)**: Ensured cleanup passes append a user turn only when the turn was emptied, leaving client assistant prefill intact across messages, contents, and input source shapes.
+  - **fix(claude): cache tool loop final tool results with 4th breakpoint (`49c761cd`, `87d3bd5a`)**: Added `markFinalToolResults` and `hoistToolResultImages` so screenshot/image tool results are cached for the follow-up step and hoisted into user messages for non-Anthropic endpoints (DeepSeek, OpenCode Go, GLM, MiniMax).
+  - **fix(thinking): add xhigh to claude-adaptive thinking levels (`7894f3d3`)**: Enabled `xhigh` for Claude-adaptive models (Opus 4.7+, Sonnet 5, Opus 5/5.5, Fable) and passed it through to Kiro instead of silently clamping to high.
+  - **fix(tools): dedupe same-name tools for DeepSeek models (`7f5bd155`)**: Resolved upstream DeepSeek 400 errors when tools with identical names are declared across multiple toolkits.
+  - **fix(claude): inject unsigned thinking placeholders for opencode-go DeepSeek (`08b21fea`)**: Injected thinking blocks on tool turns for DeepSeek models routed through OpenCode Go `/messages`.
+  - **fix(routing): strip thinking suffixes in `findModel` (`87d3bd5a`)**: Stripped thinking suffixes (`(max)`) during registry lookup so `getModelSupportedFormats` correctly identifies chat-only models.
 - **feat(gemini): passive foundation for upcoming Gemini 4 Argon** — mapped pattern `*gemini-4*` to 1,048,576 context window and industry-leading **1,000,000 max output tokens**, full multimodality (vision, PDF, audio, video, reasoning, web search), and official introductory pricing at **$2.00 input / $10.00 output / $0.10 cache read (95% off)** per 1M tokens (verified from Google announcement 2026-09-30). Model is intentionally omitted from the active registry picker until Google begins public API rollout, ensuring zero dead 404 models in UI while guaranteeing immediate lossless routing for early testers.
   - Test: `tests/unit/gemini-4-argon-passive.test.js` (2 cases).
 - **feat(antigravity,gemini-cli): add production fallback endpoints, TPU tool slicing, and Gemini CLI model catalog alignment** —
