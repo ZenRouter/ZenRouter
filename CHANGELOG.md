@@ -5,6 +5,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- **fix(claude,copilot): align native Claude billing header cch=00000, Stainless SDK 0.127.0, and preserve Copilot catalog limits** —
+  - **Claude billing header**: Aligned `generateBillingHeader` in `open-sse/utils/claudeCloaking.js` to emit `cch=00000;` and `cc_entrypoint=cli;`, matching the exact literal string emitted by official Claude Code 2.1.286 native binary on first-party Anthropic endpoints. Previously generated random SHA256 hashes for `cch` and `sdk-cli`, introducing an anomalous fingerprint on first-party sessions.
+  - **Stainless SDK version**: Updated `CLAUDE_STAINLESS.packageVersion` to **`0.127.0`**, matching the bundled `@anthropic-ai/sdk` version in Claude Code 2.1.286 (previously pinned to 0.80.0).
+  - **Copilot catalog limits & vision**: Enhanced `expandCatalog` in `open-sse/services/copilotModels.js` to preserve `capabilities.limits` (`max_context_window_tokens`, `max_output_tokens`) and `supports.vision` returned by GitHub Copilot's live `/models` endpoint instead of discarding them.
+  - Tests: `tests/unit/claude-billing-header-verified.test.js` (2 cases), `tests/unit/copilot-limits-preservation.test.js` (1 case); all passed.
 - **feat(codex): align Codex CLI protocol headers, reasoning levels, flagship GPT-6 presets, and imagegen model** —
   - **Headers**: Updated `buildHeaders` in `open-sse/executors/codex.js` to emit `session-id` (hyphenated), `version: CODEX_CLI_VERSION` (0.159.3), and `originator: "codex_cli_rs"`, matching the wire signature of official Codex CLI 0.159.3.
   - **Models**: Added `gpt-6-astra`, `gpt-6.1-sol`, `gpt-6-sol`, `gpt-6-luna`, and `gpt-image-2` to `open-sse/providers/registry/codex.js` matching official Codex CLI bundled model presets.

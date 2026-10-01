@@ -2,16 +2,14 @@ import { createHash, randomBytes, randomUUID } from "crypto";
 import { CLAUDE_TOOL_SUFFIX, CC_DEFAULT_TOOLS } from "../config/appConstants.js";
 import { CLAUDE_CODE_VERSION } from "../config/clientVersions.js";
 
-const CC_ENTRYPOINT = "sdk-cli";
+const CC_ENTRYPOINT = "cli";
 
 // Generate billing header matching real Claude Code format:
-// x-anthropic-billing-header: cc_version=<ver>.<build>; cc_entrypoint=sdk-cli; cch=<hash>;
-// `cc_version` is single-sourced from open-sse/config/clientVersions.js.
+// x-anthropic-billing-header: cc_version=<ver>.<build>; cc_entrypoint=cli; cch=00000;
+// On first-party Anthropic API, `cch` is literally "00000" (verified in Claude Code native binary).
 function generateBillingHeader(payload) {
-  const content = JSON.stringify(payload);
-  const cch = createHash("sha256").update(content).digest("hex").slice(0, 5);
   const buildHash = randomBytes(2).toString("hex").slice(0, 3);
-  return `x-anthropic-billing-header: cc_version=${CLAUDE_CODE_VERSION}.${buildHash}; cc_entrypoint=${CC_ENTRYPOINT}; cch=${cch};`;
+  return `x-anthropic-billing-header: cc_version=${CLAUDE_CODE_VERSION}.${buildHash}; cc_entrypoint=${CC_ENTRYPOINT}; cch=00000;`;
 }
 
 // Derive a deterministic UUID-v4-shaped string from a seed (stable per account)

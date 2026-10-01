@@ -73,7 +73,22 @@ function expandCatalog(raw) {
     const id = m.id;
     if (!id || seen.has(id)) continue;
     seen.add(id);
-    models.push({ id, name: m.name || id });
+
+    const contextLength = Number(m.capabilities?.limits?.max_context_window_tokens) || undefined;
+    const maxOutputTokens = Number(m.capabilities?.limits?.max_output_tokens) || undefined;
+    const supportsVision = m.capabilities?.supports?.vision === true;
+    const caps = {};
+    if (contextLength) caps.contextWindow = contextLength;
+    if (maxOutputTokens) caps.maxOutput = maxOutputTokens;
+    if (supportsVision) caps.vision = true;
+
+    models.push({
+      id,
+      name: m.name || id,
+      ...(Object.keys(caps).length > 0 ? { capabilities: caps } : {}),
+      ...(contextLength ? { contextLength } : {}),
+      ...(maxOutputTokens ? { maxOutputTokens } : {}),
+    });
   }
   return models;
 }

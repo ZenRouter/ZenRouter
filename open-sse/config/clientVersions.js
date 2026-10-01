@@ -70,13 +70,13 @@ export const CLAUDE_BETA_FLAGS_HEAVY_AGENT = [
   "effort-2025-11-24",
 ];
 
-// X-Stainless-* fingerprint — Node 24.14 is the new minimum; bumped from
-// v22.19 (was used in 2.1.x earlier this year).
+// X-Stainless-* fingerprint — Node 24.14 is the new minimum; bundled SDK is
+// @anthropic-ai/sdk 0.127.0 (verified in Claude Code 2.1.286 native binary).
 export const CLAUDE_STAINLESS = {
   helperMethod: "stream",
   retryCount: "0",
   runtimeVersion: "v24.14.0",
-  packageVersion: "0.80.0",
+  packageVersion: "0.127.0",
   runtime: "node",
   timeout: "600",
 };
