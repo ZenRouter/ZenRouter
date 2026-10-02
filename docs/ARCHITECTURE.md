@@ -164,6 +164,18 @@ Usage DB:
 - API key generation/verification: `src/shared/utils/apiKey.js`
 - Provider secrets persisted in `providerConnections` entries
 - Optional proxy support for upstream calls via env proxy variables (`open-sse/utils/proxyFetch.js`)
+- Account-level strict proxy policy also applies to model catalogs, delegated token refresh, and credential/project caches. Cache and in-flight identities include the effective transport policy.
+- SAML callbacks require a one-use, signed request correlation bound to browser state. Use HTTPS for cross-site POST callbacks (`SameSite=None; Secure`). The outstanding-request cache is process-local; route login start and callback to the same process. Restarts invalidate pending logins.
+- OIDC supports public HTTP(S) issuers. Discovery issuer and advertised endpoints are validated; vetted DNS answers are pinned to each outbound socket. Token requests reject redirects. Draft tests reuse a stored secret only for the configured issuer/client pair.
+- CLI status aggregation returns installation/configured booleans, not host credentials. Cowork configuration access requires the existing local-only/CLI-token authorization. If an older deployment exposed a privileged CLI token, rotate it and reapply local MCP configuration.
+- `fetchPublic` uses direct Undici connections rather than environment proxies so a proxy cannot bypass DNS pinning. Local private MCP access blocks metadata at every redirect and socket lookup. If an environment proxy applies, local MCP fails closed; add an explicit `NO_PROXY` exemption for the trusted server.
+
+### Client release and protocol identities
+
+`open-sse/config/clientVersions.js` records publisher-verified app releases separately from SDK/runtime and signed protocol pins. A published app version does not verify its bundled SDK or wire profile. Retain unverified SDK/runtime pins rather than replacing them with public SDK latest. Antigravity IDE, CLI, and Hub are separate release lines.
+
+OpenCode native session and parent-session aliases use one canonical request-local identity. Devin initializes ACP with integer major version `1` and `clientCapabilities`; incompatible peers terminate through the subprocess cleanup path.
+
 
 ## 5) Cloud Sync
 
@@ -510,6 +522,8 @@ Translations are selected dynamically based on source payload shape and provider
 - disconnect-aware stream controller with Bun & Node socket-close bridge in `custom-server.js` to immediately abort upstream requests and stop token billing on client hangup (#3559)
 - translation stream with end-of-stream flush, cancel-path aborted usage recording, and `[DONE]` handling
 - usage estimation fallback when provider usage metadata is missing
+- Codex and Qoder inspect complete SSE events before committing response headers, bounded by 1000 ms and 256 KiB. Deadline handoff preserves consumed bytes and the outstanding read; cancellation closes the upstream reader/socket.
+- Qoder queue code `10605` returns HTTP 429 with available retry timing; quota codes `110`/`112` remain 403. Errors after output terminate in-band as structured SSE errors, never fabricated assistant text or a replayed request.
 
 ## 4) Cloud Sync Degradation
 

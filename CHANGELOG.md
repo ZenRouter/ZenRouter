@@ -6,6 +6,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- Bound Codex and Qoder preheader SSE inspection to 1000 ms/256 KiB, preserve pending reads and split UTF-8, and cancel upstream transport on disconnect. Treat Qoder queue code `10605` as 429 with retry timing; retain quota 403s and structured late errors across every client format and Responses JSON collection.
+- Pair duplicate Gemini tool-call IDs by occurrence, retain thought signatures, and recognize signed/raw result IDs before synthetic-result repair.
+- Retry missing Qoder PAT identity without re-exchanging a valid job token; pass PAT credentials through live model discovery.
+- Apply strict account egress policy to every catalog/delegated refresh path and partition model, token, project, and in-flight caches by transport policy.
+- Prevent CLI status aggregation from disclosing host credentials or privileged CLI tokens; enforce local-only authorization inside Cowork handlers.
+- Require browser-bound, one-use SAML correlation, including the signed confirmation selected by Node-SAML. Preserve legitimate alternative confirmations; document HTTPS and process-affinity requirements.
+- Bind stored OIDC test secrets to the configured issuer/client, validate discovery destinations, pin vetted DNS answers to sockets, reject token redirects, and cancel failed discovery response bodies. Protect every remote MCP handshake; keep trusted private MCP access while blocking metadata and unsafe proxy bypass.
+- Stop retaining arbitrary invalid API keys in authentication caches; preserve immediate positive-key revocation.
+- Load optional native Zed SQLite credentials correctly in ESM and retain fallback coverage when the native binding is unavailable. Initialize Devin ACP with integer protocol version `1` and reject incompatible peers with subprocess cleanup.
+- Align native OpenCode session/parent header aliases without accepting foreign-client fingerprint overlays.
+- Update verified app releases: Claude Code 2.1.287, Codex 0.160.0, CodeBuddy 2.161.1, Grok 1.0.46, and Kimchi 1.5.0. Correct Antigravity IDE identity to 2.5.5 instead of its Hub release line; retain unverified SDK/runtime pins.
+- Restore frontend files to release commit `db70834e` and remove the discarded new dashboard pages/assets and their unused summary endpoint. Backend/security fixes remain intact.
+- Isolate remaining cached-token/model-routing fixtures, keep live MiMo tests explicitly opt-in, update the Xquik network fixture at the real transport boundary, and remove incidental version/source-copy assertions.
+- Verify the restored release UI with an actual remote standalone production build and browser login/dashboard/provider/CLI/pricing smoke. Full remote regressions pass with zero failed tests/suites; backend/test lint and provider/alias/OAuth baselines pass. The exact restored frontend retains eight existing lint errors and two warnings, and its Analytics requests remain blocked by the existing CSP.
 - Keep the alias regression gate focused on alias-to-provider and provider-to-alias behavior. Remove the unrelated model-catalog key snapshot that drifted when an existing provider gained catalog entries; provider and model behavior retain separate coverage.
 - Wait for native tray teardown before exiting after a clean server close, avoiding orphaned Windows tray processes. Use a private readiness port in launcher regressions so a running gateway cannot affect fixture behavior.
 - Control the clock in provider-priority regression tests so millisecond timestamp ties cannot make the move-to-front assertion driver-speed dependent.
