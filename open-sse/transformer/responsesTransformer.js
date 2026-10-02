@@ -398,6 +398,7 @@ export function createResponsesApiTransformStream(logger = null, options = {}) {
 
           // Regular text content
           if (content) {
+            closeReasoning(controller);
             if (!state.msgItemAdded[idx]) {
               state.msgItemAdded[idx] = true;
               const msgId = `msg_${state.responseId}_${idx}`;
@@ -436,7 +437,9 @@ export function createResponsesApiTransformStream(logger = null, options = {}) {
         }
 
         // Handle tool_calls
-        if (delta.tool_calls) {
+        if (delta.tool_calls?.length) {
+          closeReasoning(controller);
+          state.inThinking = false;
           closeMessage(controller, idx);
 
           for (const tc of delta.tool_calls) {

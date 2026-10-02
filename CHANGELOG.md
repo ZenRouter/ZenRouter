@@ -6,6 +6,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- Emit exactly one OpenAI `[DONE]` sentinel across translated and passthrough streams, including fragmented bytes and newline-free EOF (#4480/#4461/#4356). Close Responses reasoning items before text or tool items, retaining tool arguments, Unicode text, and late usage (`5d2cfbf3`).
 - Use the shared terminal-turn/function-call normalizer on production Gemini, Gemini CLI, and Vertex request paths (#4345). Remove the shadowing merge-only helper; preserve Antigravity's intentional native tool-result roles.
 - Preserve multimodal Responses tool outputs through both request bridges and Claude results (#4517 / PR #4518); lower final Chat tool content to text plus user image turns after parallel results. Retain native documents/search results, opaque file references, IDs/error flags, and image/PDF bytes without new fetches.
 - Return a request-scoped `output_budget_exhausted` error when reasoning consumes the output budget before text/tool calls, instead of retrying identical payloads and locking healthy accounts for 30 seconds. Preserve structured diagnostics through account/combo exhaustion. Complete Responses output-item lifecycle statuses for validating clients (#4498 / PR #4499), including JSON and forced-SSE conversions.

@@ -267,7 +267,6 @@ export function createSSEStream(options = {}) {
           // treat anything after the first finish_reason as a protocol error.
           const isDoneLine = trimmed.startsWith("data:") && trimmed.slice(5).trim() === "[DONE]";
           if (isDoneLine && passthroughDoneSent) continue;
-          if (isDoneLine) passthroughDoneSent = true;
 
           if (trimmed.startsWith("data:") && trimmed.slice(5).trim() !== "[DONE]") {
             try {
@@ -403,6 +402,7 @@ export function createSSEStream(options = {}) {
 
           reqLogger?.appendConvertedChunk?.(output);
           controller.enqueue(sharedEncoder.encode(output));
+          if (isDoneLine) passthroughDoneSent = true;
           passthroughAtEventBoundary = output === "\n";
           // Responses clients (codex CLI) close on response.completed instead of [DONE]
           if (responsesTerminal) finalizeStream();
@@ -456,9 +456,9 @@ export function createSSEStream(options = {}) {
             const doneOutput = "data: [DONE]\n\n";
             reqLogger?.appendConvertedChunk?.(doneOutput);
             controller.enqueue(sharedEncoder.encode(doneOutput));
+            streamDoneSent = true;
+            openAIResponsesDoneSent = true;
           }
-          streamDoneSent = true;
-          if (keepsOpenAIResponsesFormat) openAIResponsesDoneSent = true;
           continue;
         }
 
@@ -588,16 +588,19 @@ export function createSSEStream(options = {}) {
 
         if (mode === STREAM_MODE.PASSTHROUGH) {
           if (buffer) {
+            const trimmed = buffer.trim();
+            const isDoneLine = trimmed.startsWith("data:") && trimmed.slice(5).trim() === "[DONE]";
             let output = buffer;
             if (buffer.startsWith("data:") && !buffer.startsWith("data: ")) {
               output = "data: " + buffer.slice(5);
             }
-            if (isUnusableTail(output)) {
+            if (isUnusableTail(output) || (isDoneLine && passthroughDoneSent)) {
               buffer = "";
             } else {
               output += "\n\n";
               reqLogger?.appendConvertedChunk?.(output);
               controller.enqueue(sharedEncoder.encode(output));
+              if (isDoneLine) passthroughDoneSent = true;
               passthroughAtEventBoundary = true;
             }
           }
