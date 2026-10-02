@@ -297,8 +297,7 @@ export function normalizeClaudePassthrough(body, model = "", rawHeaders = null) 
     body.messages = messages;
   }
 
-  // 3. Drop thinking blocks whose signature is not Claude's (combo mixes models,
-  // so foreign signatures leak into history and Anthropic rejects them).
+  // Drop foreign ordinary thinking signatures, but replay native encrypted data unchanged.
   const thinkingEnabled = body.thinking?.type === "enabled";
   if (Array.isArray(body.messages)) {
     for (const msg of body.messages) {
@@ -308,7 +307,10 @@ export function normalizeClaudePassthrough(body, model = "", rawHeaders = null) 
       const kept = [];
       for (const block of msg.content) {
         if (block.type === CLAUDE_BLOCK.THINKING || block.type === CLAUDE_BLOCK.REDACTED_THINKING) {
-          if (isValidClaudeSignature(block.signature)) {
+          const valid = block.type === CLAUDE_BLOCK.REDACTED_THINKING
+            ? typeof block.data === "string" && block.data.length > 0
+            : isValidClaudeSignature(block.signature);
+          if (valid) {
             hasKeptThinking = true;
             kept.push(block);
           }
@@ -558,14 +560,16 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
     // AFTER adjustMaxTokens capped max_tokens, and the claude-budget format maps
     // max effort → budget_tokens 128000 — larger than the clamped max_tokens.
     // Anthropic requires max_tokens strictly greater than budget_tokens (else 400).
-    // Prefer raising max_tokens to preserve the requested thinking depth; if the
-    // budget alone meets/exceeds the ceiling, cap output and shrink the budget so
-    // some tokens remain for the answer.
+    // Preserve the chosen output cap (including explicit native max_tokens).
+    // Reduce thinking instead; a cap that cannot fit the minimum budget plus
+    // any answer tokens is invalid, not permission to spend more tokens.
     if (body.thinking?.type === "enabled" && body.thinking.budget_tokens && body.thinking.budget_tokens >= body.max_tokens) {
-      body.max_tokens = Math.min(body.thinking.budget_tokens + 1024, ceiling);
-      if (body.thinking.budget_tokens >= body.max_tokens) {
-        body.thinking.budget_tokens = Math.max(1024, body.max_tokens - 1024);
+      if (body.max_tokens <= 1024) {
+        const error = new RangeError("max_tokens must exceed 1024 when enabled thinking requires a budget; increase the output cap or disable thinking");
+        error.code = "invalid_thinking_budget";
+        throw error;
       }
+      body.thinking = { ...body.thinking, budget_tokens: Math.max(1024, body.max_tokens - 1024) };
     }
   }
 
@@ -650,7 +654,7 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
           let hasToolUse = false;
           let hasKeptThinking = false;
 
-          // Claude native: preserve valid signatures, drop invalid blocks.
+          // Claude native: preserve signed thinking and opaque redacted data, drop invalid blocks.
           // anthropic-compatible: replace with default (safe fallback for lenient upstreams).
           // DeepSeek (official + opencode-go models): keep existing thinking as-is;
           // add an unsigned placeholder only if missing.
@@ -660,7 +664,10 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
             const isThinking = block.type === CLAUDE_BLOCK.THINKING || block.type === CLAUDE_BLOCK.REDACTED_THINKING;
             if (isThinking) {
               if (isClaudeNative) {
-                if (isValidClaudeSignature(block.signature)) {
+                const valid = block.type === CLAUDE_BLOCK.REDACTED_THINKING
+                  ? typeof block.data === "string" && block.data.length > 0
+                  : isValidClaudeSignature(block.signature);
+                if (valid) {
                   hasKeptThinking = true;
                   kept.push(block);
                 }

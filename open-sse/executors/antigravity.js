@@ -289,11 +289,11 @@ export class AntigravityExecutor extends BaseExecutor {
     const isClaudeOnAg = typeof cleanModel === "string" && cleanModel.startsWith("claude");
 
     // Google Antigravity wire protocol:
-    //   - Gemini models: functionResponse turns MUST use role: "model"
-    //   - Claude models via Antigravity bridge: functionResponse MUST use role: "user"
-    // Verified across 26k+ native captures: Gemini functionResponse role=model is 100.0%.
-    const functionResponseRole = isClaudeOnAg ? "user" : "model";
-
+    //   - In Google Gemini API, tool results (functionResponse) are provided by the client/user.
+    //   - functionResponse turns MUST use role: "user". Setting role: "model" collapses
+    //     multi-turn tool histories and causes Google to reject with:
+    //     "Requests ending with a model turn are not supported." (INVALID_ARGUMENT 400).
+    const functionResponseRole = "user";
     // Official documented bypass sentinel (Google Cloud Code / Antigravity):
     // "skip_thought_signature_validator" is accepted verbatim by the server.
     const isAcceptedSignature = (sig) =>
@@ -340,9 +340,27 @@ export class AntigravityExecutor extends BaseExecutor {
         mergedContents.push({ ...turn, parts: [...turn.parts] });
       }
     }
-
     if (mergedContents.length === 0) {
       mergedContents.push({ role: "user", parts: [{ text: "..." }] });
+    }
+
+    // Gemini API requires requests to end with a user turn.
+    if (mergedContents.length > 0 && mergedContents.at(-1).role === "model") {
+      const fnCalls = (mergedContents.at(-1).parts || []).filter(p => p && p.functionCall);
+      if (fnCalls.length > 0) {
+        const responses = fnCalls.map(p => {
+          const call = p.functionCall || {};
+          const fr = {
+            name: call.name || "tool",
+            response: { result: "Continue." }
+          };
+          if (call.id) fr.id = call.id;
+          return { functionResponse: fr };
+        });
+        mergedContents.push({ role: "user", parts: responses });
+      } else {
+        mergedContents.push({ role: "user", parts: [{ text: "Continue." }] });
+      }
     }
 
     const contents = mergedContents;

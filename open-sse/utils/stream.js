@@ -5,6 +5,8 @@ import { extractUsage, mergeUsage, hasValidUsage, estimateUsage, logUsage, addBu
 import { parseSSELine, hasValuableContent, fixInvalidId, formatSSE } from "./streamHelpers.js";
 import { getOpenAIResponsesEventName, isOpenAIResponsesTerminalEvent, formatIncompleteOpenAIResponsesStreamFailure } from "./responsesStreamHelpers.js";
 import { dbg, isDebugEnabled } from "./debugLog.js";
+import { extractReasoningText } from "../translator/concerns/reasoning.js";
+import { normalizeTypedContent } from "../translator/concerns/typedContent.js";
 
 import { SSE_DONE, SSE_HEADERS, SSE_HEADERS_NO_BUFFER } from "./sseConstants.js";
 
@@ -152,6 +154,20 @@ export function createSSEStream(options = {}) {
   let finalized = false;
   let completionFlushTimer = null;
   let upstreamErrorTerminated = false;
+
+  const accumulateOpenAIContent = (parsed) => {
+    const delta = parsed?.choices?.[0]?.delta;
+    if (!delta) return;
+    if (typeof delta.content === "string" && delta.content) {
+      totalContentLength += delta.content.length;
+      contentChunks.push(delta.content);
+    }
+    const reasoning = extractReasoningText(delta);
+    if (reasoning) {
+      totalContentLength += reasoning.length;
+      thinkingChunks.push(reasoning);
+    }
+  };
 
   // In-stream failure tracking (#4104): an upstream can end an HTTP-200 stream
   // with a failure INSIDE the event body (Responses response.failed / error
@@ -356,6 +372,12 @@ export function createSSEStream(options = {}) {
                   }
                 }
               }
+              if (Array.isArray(parsed?.choices)) {
+                for (const choice of parsed.choices) {
+                  if (normalizeTypedContent(choice?.delta)) fieldsInjected = true;
+                }
+              }
+
 
               if (!hasValuableContent(parsed, FORMATS.OPENAI)) {
                 continue;
@@ -374,16 +396,7 @@ export function createSSEStream(options = {}) {
                   fieldsInjected = true;
                 }
               }
-              const content = delta?.content;
-              const reasoning = delta?.reasoning_content || delta?.reasoning;
-              if (content && typeof content === "string") {
-                totalContentLength += content.length;
-                contentChunks.push(content);
-              }
-              if (reasoning && typeof reasoning === "string") {
-                totalContentLength += reasoning.length;
-                thinkingChunks.push(reasoning);
-              }
+              accumulateOpenAIContent(parsed);
 
               accumulateToolCalls(toolCallStore, parsed);
 
@@ -502,6 +515,10 @@ export function createSSEStream(options = {}) {
           }
           continue;
         }
+        if (Array.isArray(parsed?.choices)) {
+          for (const choice of parsed.choices) normalizeTypedContent(choice?.delta);
+        }
+
 
         // Claude format - content
         if (parsed.delta?.text) {
@@ -514,19 +531,7 @@ export function createSSEStream(options = {}) {
           thinkingChunks.push(parsed.delta.thinking);
         }
         
-        // OpenAI format - content
-        if (parsed.choices?.[0]?.delta?.content) {
-          totalContentLength += parsed.choices[0].delta.content.length;
-          contentChunks.push(parsed.choices[0].delta.content);
-        }
-        // OpenAI format - reasoning
-        if (parsed.choices?.[0]?.delta?.reasoning_content) {
-          totalContentLength += parsed.choices[0].delta.reasoning_content.length;
-          thinkingChunks.push(parsed.choices[0].delta.reasoning_content);
-        } else if (parsed.choices?.[0]?.delta?.reasoning) {
-          totalContentLength += parsed.choices[0].delta.reasoning.length;
-          thinkingChunks.push(parsed.choices[0].delta.reasoning);
-        }
+        accumulateOpenAIContent(parsed);
         
         // Gemini format
         if (parsed.candidates?.[0]?.content?.parts) {
@@ -630,6 +635,8 @@ export function createSSEStream(options = {}) {
         if (buffer.trim()) {
           const tail = parseSSELine(buffer.trim(), targetFormat);
           if (emitUpstreamError(tail, controller)) return;
+          accumulateOpenAIContent(tail);
+          accumulateToolCalls(toolCallStore, tail);
         }
 
         if (mode === STREAM_MODE.PASSTHROUGH) {

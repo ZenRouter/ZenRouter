@@ -1,6 +1,7 @@
 import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
 import { CLAUDE_SYSTEM_PROMPT } from "../../config/appConstants.js";
+import { DEFAULT_MAX_TOKENS } from "../../config/runtimeConfig.js";
 import { DEFAULT_THINKING_CLAUDE_SIGNATURE } from "../../config/defaultThinkingSignature.js";
 import { adjustMaxTokens } from "../formats/maxTokens.js";
 import { safeParseJSON } from "../concerns/json.js";
@@ -46,10 +47,13 @@ export function openaiToClaudeRequest(model, body, stream) {
   // Cap max_tokens at the model's real output ceiling (e.g. Opus 4.8 = 128000),
   // not the conservative 64000 default — otherwise a high-output model is
   // pre-clamped here before prepareClaudeRequest's model-aware step runs.
-  const modelCeiling = getCapabilitiesForModel(null, model).maxOutput || undefined;
+  const modelCeiling = getCapabilitiesForModel(null, model).maxOutput || DEFAULT_MAX_TOKENS;
+  // Modern OpenAI caps take precedence; neither tools nor thinking may spend
+  // beyond an explicit client limit. Defaults retain the shared helper policy.
+  const clientCap = body.max_completion_tokens ?? body.max_tokens;
   const result = {
     model: model,
-    max_tokens: adjustMaxTokens(body, modelCeiling),
+    max_tokens: clientCap == null ? adjustMaxTokens(body, modelCeiling) : Math.min(clientCap, modelCeiling),
     stream: stream
   };
 

@@ -54,7 +54,7 @@ describe.each(targets)("%s duplicate tool call IDs", (target) => {
     ]);
     const responseTurns = payload.contents.filter((turn) => turn.parts.some((part) => part.functionResponse));
     for (const turn of responseTurns) {
-      expect(turn.role).toBe(target === FORMATS.ANTIGRAVITY ? "model" : "user");
+      expect(turn.role).toBe("user");
     }
     expect(body).toEqual(before);
     expect(wire(target, body).contents).toEqual(payload.contents);

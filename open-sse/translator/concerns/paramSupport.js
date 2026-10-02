@@ -23,6 +23,8 @@ const STRIP_RULES = [
   { provider: "github", match: /gpt-5\.4/i, drop: ["temperature"] },
   // GitHub Copilot Claude (opus/sonnet 4.6, 4.7, 4.8, 5, 5.5): allow thinking + reasoning_effort; drop on older. #713
   { provider: "github", match: (m) => /claude/i.test(m) && !/claude.*(opus|sonnet).*(4\.[6-9]|5)/i.test(m), drop: ["thinking", "reasoning_effort"] },
+  // Mistral rejects native thinking and replayed reasoning message fields (#4143).
+  { provider: "mistral", drop: ["thinking"], dropMessageFields: ["reasoning_content", "reasoning"] },
   // Non-Anthropic providers: drop context_management (Claude Code sends it, but third-party and non-Anthropic endpoints reject it with 400). #1468
   { match: () => true, checkProvider: (p) => p !== "claude", drop: ["context_management"] },
   // Cloudflare Workers AI: content must be plain string, rejects OpenAI content-part array (#1926)
@@ -81,6 +83,12 @@ export function stripUnsupportedParams(provider, model, body) {
     if (!matches(rule, model)) continue;
     for (const key of rule.drop || []) {
       if (body[key] !== undefined) delete body[key];
+    }
+    if (rule.dropMessageFields && Array.isArray(body.messages)) {
+      for (const message of body.messages) {
+        if (!message || typeof message !== "object") continue;
+        for (const key of rule.dropMessageFields) delete message[key];
+      }
     }
     if (rule.translateMaxTokens && body.max_tokens !== undefined) {
       if (body.max_completion_tokens === undefined) {

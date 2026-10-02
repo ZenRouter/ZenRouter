@@ -5,6 +5,7 @@ import { describe, it, expect } from "vitest";
 import "./registerAll.js";
 import { translateRequest } from "../../open-sse/translator/index.js";
 import { FORMATS } from "../../open-sse/translator/formats.js";
+import { normalizeClaudePassthrough } from "../../open-sse/translator/formats/claude.js";
 
 const T = (src, tgt, body, provider = null) =>
   translateRequest(src, tgt, "m", body, true, null, provider);
@@ -39,21 +40,6 @@ describe("Claude Code CLI context → OpenAI", () => {
     expect(JSON.stringify(out)).toContain("step-by-step plan");
   });
 
-  // claude-to-openai.js:128 — redacted_thinking also dropped
-  // KNOWN BUG
-  it.fails("redacted_thinking block is not silently dropped", () => {
-    const out = T(FORMATS.CLAUDE, FORMATS.OPENAI, {
-      messages: [
-        { role: "assistant", content: [
-          { type: "redacted_thinking", data: "ENCRYPTED_BLOB" },
-          { type: "text", text: "answer" },
-        ] },
-        { role: "user", content: "go" },
-      ],
-    });
-    expect(JSON.stringify(out)).toContain("ENCRYPTED_BLOB");
-  });
-
   // claude-to-openai.js:155-173 — tool_result image block stringified into raw JSON
   // KNOWN BUG
   it.fails("tool_result image block is preserved", () => {
@@ -69,5 +55,35 @@ describe("Claude Code CLI context → OpenAI", () => {
     });
     const tool = out.messages.find((m) => m.role === "tool");
     expect(tool?.content, "image turned into raw JSON").not.toMatch(/^\[/);
+  });
+
+  it.each([
+    ["translated native request", (body) => T(FORMATS.CLAUDE, FORMATS.CLAUDE, body, "claude")],
+    ["native passthrough", (body) => normalizeClaudePassthrough(body, "claude-sonnet-4-6")],
+  ])("replays encrypted native thinking unchanged through %s", (_name, prepare) => {
+    const opaqueFirst = { type: "redacted_thinking", data: "opaque:first/+=" };
+    const opaqueSecond = { type: "redacted_thinking", data: "opaque:second/+=" };
+    const out = prepare({
+      model: "claude-sonnet-4-6",
+      thinking: { type: "enabled", budget_tokens: 1024 },
+      messages: [{ role: "assistant", content: [
+        opaqueFirst,
+        { type: "thinking", thinking: "foreign reasoning", signature: "invalid" },
+        { type: "redacted_thinking", data: "" },
+        opaqueSecond,
+        { type: "tool_use", id: "call_1", name: "lookup", input: {} },
+      ] }, { role: "user", content: [
+        { type: "tool_result", tool_use_id: "call_1", content: "done" },
+      ] }],
+    });
+    const assistant = out.messages.find((msg) => msg.role === "assistant");
+    expect(assistant.content.slice(0, 2)).toEqual([
+      { type: "redacted_thinking", data: "opaque:first/+=" },
+      { type: "redacted_thinking", data: "opaque:second/+=" },
+    ]);
+    expect(assistant.content.map((block) => block.type)).toEqual([
+      "redacted_thinking", "redacted_thinking", "tool_use",
+    ]);
+    expect(out.messages[1].content[0]).toMatchObject({ type: "tool_result", tool_use_id: "call_1", content: "done" });
   });
 });

@@ -14,7 +14,7 @@ vi.mock("@/lib/usageDb.js", () => ({
 }));
 
 import { claudeToOpenAIResponse } from "../../open-sse/translator/response/claude-to-openai.js";
-import { addBufferToUsage, canonicalizeUsage, filterUsageForFormat } from "../../open-sse/utils/usageTracking.js";
+import { addBufferToUsage, canonicalizeUsage, filterUsageForFormat, normalizeUsage } from "../../open-sse/utils/usageTracking.js";
 import { FORMATS } from "../../open-sse/translator/formats.js";
 
 function runStream(state) {
@@ -74,5 +74,35 @@ describe("claude -> openai stream usage keeps the cache split", () => {
     expect(final.usage.prompt_tokens).toBe(510);
     expect(final.usage.prompt_tokens_details).toEqual({ cache_creation_tokens: 500 });
     expect(canonicalizeUsage(state.usage).prompt_tokens).toBe(510);
+  });
+
+  it("maps normalized native cache counters to OpenAI details without changing token totals", () => {
+    const native = { input_tokens: 100, output_tokens: 7, cache_read_input_tokens: 5000, cache_creation_input_tokens: 300 };
+    const client = filterUsageForFormat(normalizeUsage(native), FORMATS.OPENAI);
+    expect(client).toEqual({
+      prompt_tokens: 100,
+      completion_tokens: 7,
+      prompt_tokens_details: { cached_tokens: 5000, cache_creation_tokens: 300 },
+    });
+    expect(filterUsageForFormat(native, FORMATS.CLAUDE)).toEqual(native);
+  });
+
+  it.each([
+    [{ cached_tokens: 0, audio_tokens: 9 }, { cached_tokens: 0, audio_tokens: 9, cache_creation_tokens: 300 }],
+    [{ cached_tokens: 40, cache_creation_tokens: 0 }, { cached_tokens: 40, cache_creation_tokens: 0 }],
+  ])("fills only missing details while preserving supplied zero counters (%j)", (details, expected) => {
+    const usage = {
+      prompt_tokens: 5400,
+      completion_tokens: 7,
+      total_tokens: 5407,
+      cache_read_input_tokens: 5000,
+      cache_creation_input_tokens: 300,
+      prompt_tokens_details: { ...details },
+    };
+    const client = filterUsageForFormat(usage, FORMATS.OPENAI);
+    expect(client.prompt_tokens_details).toEqual(expected);
+    expect(usage.prompt_tokens_details).toEqual(details);
+    expect(client.prompt_tokens).toBe(5400);
+    expect(client.total_tokens).toBe(5407);
   });
 });

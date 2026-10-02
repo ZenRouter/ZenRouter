@@ -169,6 +169,8 @@ Usage DB:
 - OIDC supports public HTTP(S) issuers. Discovery issuer and advertised endpoints are validated; vetted DNS answers are pinned to each outbound socket. Token requests reject redirects. Draft tests reuse a stored secret only for the configured issuer/client pair.
 - CLI status aggregation returns installation/configured booleans, not host credentials. Cowork configuration access requires the existing local-only/CLI-token authorization. If an older deployment exposed a privileged CLI token, rotate it and reapply local MCP configuration.
 - `fetchPublic` uses direct Undici connections rather than environment proxies so a proxy cannot bypass DNS pinning. Local private MCP access blocks metadata at every redirect and socket lookup. If an environment proxy applies, local MCP fails closed; add an explicit `NO_PROXY` exemption for the trusted server.
+- Dependency risk (2026-10-02): root and CLI retain `node-forge` 1.4.0 affected by [GHSA-86w9-cpqp-85rv / CVE-2026-85393](https://github.com/advisories/GHSA-86w9-cpqp-85rv). No patched npm release is available; root/CLI audit remains high severity. Current `src/mitm/cert/rootCA.js` uses certificate/key generation, signing, PEM import/export, and local expiry parsing—not the vulnerable RSA PKCS#1 v1.5 signature-verification trust decision. This is a scoped static non-reachability assessment, not a patched dependency or audit suppression. Reassess before introducing forge signature/certificate-chain verification; update both package trees and rebuilt CLI artifacts when an official fix is published.
+- MITM interception trust does not imply upstream trust. Outbound ALPN, HTTP/2, and HTTPS connections validate upstream certificates and hostnames; failures return 502 without insecure retry. For an operator-managed CA, use Node's explicit startup trust contract (`NODE_EXTRA_CA_CERTS`); never disable TLS verification or add the interception root implicitly to upstream trust.
 
 ### Client release and protocol identities
 
@@ -436,6 +438,32 @@ flowchart LR
     Next --> SyncCloud
 ```
 
+### Development worker mesh
+
+`scripts/worker-mesh.mjs` manages a development-only Mutagen 0.18.1 star: the local checkout is the hub and each isolated worker workspace is a leaf. There is no worker-to-worker sync cycle or production target. SSH aliases `zen-mesh-node1` and `zen-mesh-node2` must use their expected IPs, `User root`, `BatchMode yes`, `StrictHostKeyChecking yes`, and `ForwardAgent no`; verify host keys out-of-band first. Install the official Mutagen binary and agents archive under `~/.local/share/zenrouter-worker-mesh/tools`, verifying the release SHA256SUMS, or set `WORKER_MESH_MUTAGEN`.
+
+```bash
+node scripts/worker-mesh.mjs create
+node scripts/worker-mesh.mjs status
+node scripts/worker-mesh.mjs conflicts
+node scripts/worker-mesh.mjs flush
+node scripts/worker-mesh.mjs job node1 deps
+node scripts/worker-mesh.mjs job node2 deps
+node scripts/worker-mesh.mjs job node1 test
+node scripts/worker-mesh.mjs job node2 build
+node scripts/worker-mesh.mjs follow node1 JOB_ID
+node scripts/worker-mesh.mjs job-status node1 JOB_ID
+node scripts/worker-mesh.mjs stop
+```
+
+- Two-way-safe sessions preserve divergent edits as conflicts; flush refuses reported conflicts or scan/transition errors. Resolve intentionally before retrying. A two-pass flush carries reverse edits through the hub; it is a synchronization barrier, **not** a source lock. Freeze edits during build/test/lint/audit verification.
+- Secrets, `.env*` (including examples), DBs, logs, history, SSH keys, dependencies, build products, and symlinks are excluded. Treat every synchronized source file as readable by both worker administrators; filename exclusions are not a substitute for keeping secrets out of source.
+- Worker state is isolated under `/root/zenrouter-worker-mesh/{workspace,jobs,runtime}` with private permissions. Jobs use synthetic authentication values and private HOME/DATA_DIR, never production state. Per-node locking rejects concurrent jobs; node2 owns builds, while tests use at most three workers.
+- `lint` and `audit` are additional fixed job types; audits cover the gateway, tests, and CLI packages. Machine-readable test/audit reports stay in the private job directory. Redacted stdout/stderr and exit status survive SSH disconnects; `follow NODE JOB_ID STDOUT_BYTES STDERR_BYTES` resumes from emitted byte offsets. Output is UTF-8-safe and bounded per frame.
+- The Mutagen daemon persists independently of the CLI. `stop` pauses sessions without deleting archives; `create` resumes. After a workstation restart, run `create` again. No OS startup service, public listener, firewall change, or production deployment is installed.
+- Network latency and availability remain finite; keepalives detect broken SSH sessions but cannot guarantee uninterrupted transport. Detached execution and persisted output allow recovery without replaying the job.
+
+
 ## Module Mapping (Decision-Critical)
 
 ### Route and API Modules
@@ -503,6 +531,23 @@ Target formats include:
 - Cursor
 
 Translations are selected dynamically based on source payload shape and provider target format.
+
+### Reasoning preservation and protocol limits
+
+- Readable reasoning belongs in `reasoning_content`, Claude `thinking` blocks, Gemini thought parts, or Responses reasoning summaries—not visible answer text. Request histories, streaming responses, native JSON, and forced-SSE JSON must preserve ordered reasoning independently of final text and tool calls.
+- Native Claude `redacted_thinking` blocks carry opaque `data`, not a thinking `signature`. Replay valid native blocks unchanged; do not apply signed-thinking validation to encrypted data. Non-native Chat bridges cannot replay Claude encrypted reasoning or signatures and must not fabricate them or expose them as text.
+- The notice `[thinking block omitted: not supported on this route]` was generated by legacy request-history conversion, not an SSE warning. Ordinary thinking is handled before the unsupported-block fallback. Already-contaminated client history remains ordinary text; deleting that literal globally would corrupt legitimate input.
+- Provider-requested summarized/omitted display and provider-specific history restrictions remain intentional. Preservation covers reasoning actually supplied by upstream; the gateway cannot recover reasoning an upstream withholds.
+- Mistral's verified Chat transport uses `reasoning_effort`, not model-family native thinking flags or replayed `reasoning_content`/`reasoning` fields. Its recognized ThinkChunk/TextChunk arrays are normalized into separate reasoning and answer channels; unrelated multimodal/opaque arrays are not flattened. Other providers retain their native dialects; unverified reseller endpoint changes are not inferred from model names.
+- OpenAI→Claude honors `max_completion_tokens` before `max_tokens`; explicit caps bypass tool-token floors and are clamped only by the model ceiling. Final enabled-thinking reconciliation can shrink a conflicting budget but never raise the selected cap. An impossible enabled budget with a cap at or below 1024 returns HTTP 400 before dispatch. Uncapped requests retain existing defaults; native passthrough retains its upstream validation behavior.
+
+### Usage accounting across formats
+
+- Claude prompt totals include uncached input plus cache reads and writes once. OpenAI usage details preserve supplied fields (including zero) and fill missing cache splits from native counters.
+- Gemini thought tokens belong to completion/reasoning, not prompt. Missing totals derive from prompt plus completion; supplied numeric totals remain authoritative, including zero.
+- CommandCode input totals remain cache-inclusive. Cache-write detail is exposed independently; read/write splits must not be added to inclusive prompt totals again.
+
+The 2026-09-27–2026-10-02 upstream audit adapted [#4143](https://github.com/decolua/9router/pull/4143), [#4533](https://github.com/decolua/9router/pull/4533), [#4481](https://github.com/decolua/9router/pull/4481), [#4523](https://github.com/decolua/9router/pull/4523), and [#4412](https://github.com/decolua/9router/pull/4412). Already-present streaming defaults, forced-Claude JSON conversion, Gemini system/schema fixes, and fork-specific security fixes were not duplicated. [Upstream insecure-TLS fallback](https://github.com/decolua/9router/commit/b58bd80406a24030acac6312fce519534c61947a) was rejected; certificate failures must not trigger unauthenticated TLS.
 
 ## Failure Modes and Resilience
 

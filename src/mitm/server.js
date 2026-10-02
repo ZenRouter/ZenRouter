@@ -140,14 +140,18 @@ async function passthrough(req, res, bodyBuffer, onResponse) {
     headersForForwarding["content-length"] = String(bodyForForwarding.length);
   }
 
-  // ALPN negotiate: try HTTP/2 first (like browsers/mitmweb), fallback HTTP/1.1
+  // ALPN selects the protocol only after authenticating the upstream certificate.
   try {
     const proto = await negotiateAlpn(targetHost);
     if (proto === "h2") {
       return await passthroughHttp2(req, res, bodyForForwarding, headersForForwarding, targetHost, onResponse, dumper);
     }
   } catch (e) {
-    err(`[mitm] ALPN negotiate failed: ${e.message}, fallback to HTTP/1.1`);
+    err(`[mitm] Upstream negotiation failed: ${e.message}`);
+    if (dumper) { dumper.writeChunk(`\n[ERROR ALPN] ${e.message}\n`); dumper.end(); }
+    if (!res.headersSent) res.writeHead(502);
+    if (!res.writableEnded) res.end("Bad Gateway");
+    return;
   }
 
   return passthroughHttps(req, res, bodyForForwarding, headersForForwarding, targetHost, onResponse, dumper);
@@ -161,7 +165,7 @@ async function negotiateAlpn(host) {
   return new Promise((resolve, reject) => {
     const socket = tls.connect({
       host: ip, port: 443, servername: host,
-      ALPNProtocols: ["h2", "http/1.1"], rejectUnauthorized: false,
+      ALPNProtocols: ["h2", "http/1.1"], rejectUnauthorized: true,
     }, () => {
       const proto = socket.alpnProtocol || "http/1.1";
       alpnCache.set(host, proto);
@@ -194,7 +198,7 @@ async function passthroughHttp2(req, res, bodyBuffer, headers, targetHost, onRes
     const client = http2.connect(`https://${targetHost}`, {
       createConnection: () => tls.connect({
         host: targetIP, port: 443, servername: targetHost,
-        ALPNProtocols: ["h2"], rejectUnauthorized: false,
+        ALPNProtocols: ["h2"], rejectUnauthorized: true,
       }),
     });
     client.once("error", (e) => {
@@ -256,7 +260,7 @@ async function passthroughHttps(req, res, bodyBuffer, headers, targetHost, onRes
     method: req.method,
     headers,
     servername: targetHost,
-    rejectUnauthorized: false
+    rejectUnauthorized: true
   }, (forwardRes) => {
     res.writeHead(forwardRes.statusCode, forwardRes.headers);
     if (dumper) dumper.writeHeader(forwardRes.statusCode, forwardRes.headers);

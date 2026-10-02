@@ -16,6 +16,8 @@ export default {
   transport: {
     baseUrl: "https://api.mistral.ai/v1/chat/completions",
     validateUrl: "https://api.mistral.ai/v1/models",
+    // This endpoint accepts reasoning_effort, not the hosted model's native dialect.
+    thinkingFormat: "openai",
     quirks: {
       dropClientMetadata: true,
     },

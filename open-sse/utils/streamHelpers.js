@@ -1,4 +1,5 @@
 import { FORMATS } from "../translator/formats.js";
+import { extractReasoningText } from "../translator/concerns/reasoning.js";
 
 // Parse SSE data line
 export function parseSSELine(line, format = null) {
@@ -38,15 +39,16 @@ export function hasValuableContent(chunk, format) {
   // OpenAI format
   if (format === FORMATS.OPENAI && chunk.choices?.[0]?.delta) {
     const delta = chunk.choices[0].delta;
-    return delta.content && delta.content !== "" ||
-           delta.reasoning_content && delta.reasoning_content !== "" ||
-           delta.reasoning && delta.reasoning !== "" ||
-           delta.tool_calls && delta.tool_calls.length > 0 ||
-           // Generated images arrive on their own chunk with nothing else in the
-           // delta, so leaving `images` out of this list dropped every one of them.
-           delta.images && delta.images.length > 0 ||
-           chunk.choices[0].finish_reason ||
-           delta.role;
+    return Boolean(
+      delta.content && delta.content !== "" ||
+      extractReasoningText(delta) ||
+      delta.tool_calls && delta.tool_calls.length > 0 ||
+      // Generated images arrive on their own chunk with nothing else in the
+      // delta, so leaving `images` out of this list dropped every one of them.
+      delta.images && delta.images.length > 0 ||
+      chunk.choices[0].finish_reason ||
+      delta.role
+    );
   }
 
   // Claude format
@@ -55,8 +57,9 @@ export function hasValuableContent(chunk, format) {
     const hasText = chunk.delta?.text && chunk.delta.text !== "";
     const hasThinking = chunk.delta?.thinking && chunk.delta.thinking !== "";
     const hasInputJson = chunk.delta?.partial_json && chunk.delta.partial_json !== "";
+    const hasSignature = typeof chunk.delta?.signature === "string" && chunk.delta.signature !== "";
     
-    if (isContentBlockDelta && !hasText && !hasThinking && !hasInputJson) {
+    if (isContentBlockDelta && !hasText && !hasThinking && !hasInputJson && !hasSignature) {
       return false;
     }
     return true;

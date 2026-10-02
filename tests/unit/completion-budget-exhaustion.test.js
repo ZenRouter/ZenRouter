@@ -44,6 +44,24 @@ async function completion(content = message.content) {
 beforeEach(() => vi.clearAllMocks());
 
 describe("request-scoped output budget exhaustion", () => {
+  it.each(["openai", "claude"])("rejects an impossible %s thinking budget before contacting upstream", async (sourceFormat) => {
+    const result = await handleChatCore({
+      body: {
+        model: "claude-sonnet-4.5", stream: false,
+        messages: [{ role: "user", content: "Calculate." }],
+        ...(sourceFormat === "openai" ? { max_completion_tokens: 1 } : { max_tokens: 1024 }),
+        thinking: { type: "enabled", budget_tokens: 2048 },
+      },
+      modelInfo: { provider: "claude", model: "claude-sonnet-4.5" },
+      credentials: { apiKey: "test-key", providerSpecificData: {} },
+      sourceFormatOverride: sourceFormat, log,
+    });
+    expect(result.status).toBe(400);
+    expect(result.response.status).toBe(400);
+    expect(await result.response.json()).toMatchObject({ error: { type: "invalid_request_error" } });
+    expect(execute).not.toHaveBeenCalled();
+  });
+
   it("reports the exhausted budget instead of provider unavailability", async () => {
     const result = await completion();
     expect(result.status).toBe(400);

@@ -22,7 +22,7 @@ describe("Antigravity protocol and capability alignment", () => {
     expect(caps.reasoning).toBe(true);
   });
 
-  it("places functionResponse under role: 'model' for Gemini models on Antigravity", () => {
+  it("places functionResponse under role: 'user' for Gemini models on Antigravity", () => {
     const ex = new AntigravityExecutor();
     const req = {
       request: {
@@ -36,7 +36,29 @@ describe("Antigravity protocol and capability alignment", () => {
     };
     const transformed = ex.transformRequest("gemini-3.8-flash-high", req, false, {});
     const parts = transformed.request.contents[0];
-    expect(parts.role).toBe("model");
+    expect(parts.role).toBe("user");
+  });
+
+  it("ensures a request ending with a model turn receives a trailing user turn", () => {
+    const ex = new AntigravityExecutor();
+    const req = {
+      request: {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: "Hello" }],
+          },
+          {
+            role: "model",
+            parts: [{ text: "Hi there" }],
+          },
+        ],
+      },
+    };
+    const transformed = ex.transformRequest("gemini-3.8-flash-high", req, false, {});
+    const contents = transformed.request.contents;
+    expect(contents.at(-1).role).toBe("user");
+    expect(contents.at(-1).parts[0].text).toBe("Continue.");
   });
 
   it("places functionResponse under role: 'user' for Claude models on Antigravity", () => {

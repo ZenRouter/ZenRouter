@@ -87,98 +87,77 @@ describe("OpenAI → Claude context mapping", () => {
     );
   });
 
-  // prepareClaudeRequest reconciles max_tokens vs thinking.budget_tokens.
-  // applyThinking runs after adjustMaxTokens caps max_tokens, so a claude-budget
-  // model at "max" effort (budget 128000) can exceed the clamped max_tokens and
-  // trip Anthropic's "max_tokens > budget_tokens" rule (400). See claude.js.
-  describe("max_tokens vs thinking.budget_tokens reconciliation", () => {
-    // 64k-ceiling model (maxOutput 64000) + max-effort budget 128000: budget alone
-    // exceeds the ceiling → cap max_tokens at 64000 and shrink budget below it.
-    it("max effort budget on a 64k model → budget < max_tokens ≤ 64000", () => {
-      const out = prepareClaudeRequest({
-        model: "claude-opus-4-20250514",
-        max_tokens: 64000,
-        thinking: { type: "enabled", budget_tokens: 128000 },
+  describe("explicit Claude output caps", () => {
+    const translate = (extra, model = "claude-sonnet-4.5", source = FORMATS.OPENAI) =>
+      translateRequest(source, FORMATS.CLAUDE, model, {
+        model,
         messages: [{ role: "user", content: "q" }],
-      }, "anthropic");
-      expect(out.max_tokens).toBe(64000);
-      expect(out.thinking.budget_tokens).toBeLessThan(out.max_tokens);
-      expect(out.thinking.budget_tokens).toBeGreaterThan(0);
+        ...extra,
+      }, false, null, "claude");
+    const tools = [{ type: "function", function: { name: "f", parameters: { type: "object", properties: {} } } }];
+
+    it.each(["max_completion_tokens", "max_tokens"])("honors a one-token %s cap even with tools", (field) => {
+      expect(translate({ tools, [field]: 1 }).max_tokens).toBe(1);
     });
 
-    // Budget fits under the ceiling but exceeds a small client max_tokens →
-    // raise max_tokens to fit, preserving the requested thinking depth.
-    it("xhigh budget with a low client max_tokens → raise max_tokens, preserve budget", () => {
-      const out = prepareClaudeRequest({
-        model: "claude-opus-4-20250514",
-        max_tokens: 16000,
-        thinking: { type: "enabled", budget_tokens: 32768 },
-        messages: [{ role: "user", content: "q" }],
-      }, "anthropic");
-      expect(out.thinking.budget_tokens).toBe(32768);
-      expect(out.max_tokens).toBe(33792); // 32768 + 1024, under the 64000 ceiling
+    it("uses max_completion_tokens over the legacy cap", () => {
+      expect(translate({ tools, max_completion_tokens: 1, max_tokens: 500 }).max_tokens).toBe(1);
     });
 
-    // Budget already below max_tokens → nothing to reconcile.
-    it("high budget under max_tokens → both unchanged", () => {
-      const out = prepareClaudeRequest({
-        model: "claude-opus-4-20250514",
-        max_tokens: 64000,
-        thinking: { type: "enabled", budget_tokens: 24576 },
-        messages: [{ role: "user", content: "q" }],
-      }, "anthropic");
+    it("retains an uncapped request's default and clamps caps to model output limits", () => {
+      expect(translate({ tools }).max_tokens).toBe(64000);
+      expect(translate({ max_tokens: 120000 }).max_tokens).toBe(64000);
+      expect(translate({ max_completion_tokens: 128000 }, "claude-opus-4.8").max_tokens).toBe(128000);
+      expect(translate({ max_tokens: 200000 }, "claude-opus-4.8").max_tokens).toBe(128000);
+    });
+
+    it.each([FORMATS.OPENAI, FORMATS.CLAUDE])("shrinks conflicting thinking inside the %s client's cap", (source) => {
+      const out = translate({ max_tokens: 16000, thinking: { type: "enabled", budget_tokens: 32768 } }, "claude-sonnet-4.5", source);
+      expect(out.max_tokens).toBe(16000);
+      expect(out.thinking).toMatchObject({ type: "enabled", budget_tokens: 14976 });
+    });
+
+    it("keeps a valid thinking budget unchanged", () => {
+      const out = translate({ max_tokens: 64000, thinking: { type: "enabled", budget_tokens: 24576 } });
       expect(out.max_tokens).toBe(64000);
       expect(out.thinking.budget_tokens).toBe(24576);
     });
 
-    // Non-budget thinking shapes (adaptive / disabled) carry no budget_tokens →
-    // the reconciliation must never touch them.
-    it("adaptive thinking (no budget_tokens) is left untouched", () => {
-      const out = prepareClaudeRequest({
-        model: "claude-opus-4-20250514",
-        max_tokens: 64000,
-        thinking: { type: "adaptive" },
-        messages: [{ role: "user", content: "q" }],
-      }, "anthropic");
+    it("fits minimum thinking plus one answer token without raising the cap", () => {
+      const out = translate({ max_completion_tokens: 1025, reasoning_effort: "high" });
+      expect(out.max_tokens).toBe(1025);
+      expect(out.thinking.budget_tokens).toBe(1024);
+    });
+
+    it("fits an uncapped max-effort budget below the model ceiling", () => {
+      const out = translate({ reasoning_effort: "max" });
       expect(out.max_tokens).toBe(64000);
-      expect(out.thinking).toEqual({ type: "adaptive" });
+      expect(out.thinking.budget_tokens).toBe(62976);
     });
 
-    // Lifted ceiling: a claude-budget model whose caps declare maxOutput 128000
-    // (e.g. fable) may use the full budget at max effort instead of being pinned
-    // to the conservative 64000 default.
-    it("max effort budget on a 128k model → max_tokens up to 128000, budget preserved just under", () => {
-      const out = prepareClaudeRequest({
-        model: "claude-fable-5",
-        max_tokens: 64000,
-        thinking: { type: "enabled", budget_tokens: 128000 },
-        messages: [{ role: "user", content: "q" }],
-      }, "anthropic");
-      expect(out.max_tokens).toBe(128000);
-      expect(out.thinking.budget_tokens).toBe(126976); // 128000 - 1024
-      expect(out.thinking.budget_tokens).toBeLessThan(out.max_tokens);
+    it.each([1, 1024])("rejects enabled thinking when cap %i cannot fit its minimum budget", (cap) => {
+      expect(() => translate({ max_tokens: cap, thinking: { type: "enabled", budget_tokens: 2048 } })).toThrow(RangeError);
     });
 
-    // Regression: a default 64k-ceiling model still clamps an over-large client
-    // max_tokens down to 64000 (the lift is per-model, not global).
-    it("over-large client max_tokens on a 64k model is still clamped to 64000", () => {
-      const out = prepareClaudeRequest({
-        model: "claude-opus-4-20250514",
-        max_tokens: 120000,
-        messages: [{ role: "user", content: "q" }],
-      }, "anthropic");
-      expect(out.max_tokens).toBe(64000);
+    it("does not reserve a budget for disabled thinking", () => {
+      const out = translate({ max_tokens: 1, thinking: { type: "disabled", budget_tokens: 2048 } });
+      expect(out.max_tokens).toBe(1);
+      expect(out.thinking).toEqual({ type: "disabled" });
     });
 
-    // Lifted ceiling for a 128k model: a large client max_tokens is now allowed
-    // through instead of being clamped to 64000.
-    it("large client max_tokens on a 128k model is allowed up to maxOutput", () => {
-      const out = prepareClaudeRequest({
-        model: "claude-fable-5",
-        max_tokens: 100000,
+    it("keeps small caps for adaptive thinking without a numeric budget", () => {
+      const out = translate({ max_completion_tokens: 1, thinking: { type: "adaptive" } }, "claude-opus-4.8");
+      expect(out.max_tokens).toBe(1);
+      expect(out.thinking.type).toBe("adaptive");
+    });
+
+    it("keeps Claude-to-OpenAI tool minimum behavior unchanged", () => {
+      const out = translateRequest(FORMATS.CLAUDE, FORMATS.OPENAI, "gpt-4o", {
         messages: [{ role: "user", content: "q" }],
-      }, "anthropic");
-      expect(out.max_tokens).toBe(100000);
+        tools: [{ name: "f", input_schema: { type: "object", properties: {} } }],
+        max_tokens: 4096,
+      }, false, null, "openai");
+      expect(out.max_tokens).toBe(32000);
     });
   });
 

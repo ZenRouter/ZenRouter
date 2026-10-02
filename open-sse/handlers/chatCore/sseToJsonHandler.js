@@ -6,6 +6,8 @@ import { fromOpenAIFinish } from "../../translator/concerns/finishReason.js";
 import { PROVIDERS } from "../../config/providers.js";
 import { buildRequestDetail, extractRequestConfig, saveUsageStats, formatDoneLine } from "./requestDetail.js";
 import { ROLE, RESPONSES_ITEM } from "../../translator/schema/index.js";
+import { extractReasoningText } from "../../translator/concerns/reasoning.js";
+import { normalizeTypedContent } from "../../translator/concerns/typedContent.js";
 
 // Responses-API providers (e.g. codex) may emit SSE without content-type + use Responses output shape
 const isResponsesProvider = (p) => PROVIDERS[p]?.format === FORMATS.OPENAI_RESPONSES;
@@ -36,13 +38,23 @@ function pickAssistantMessageForChatCompletion(output) {
   return { msgItem: last, textContent: textFromResponsesMessageItem(last) };
 }
 
+function textFromResponsesReasoningItem(item) {
+  const parts = [];
+  for (const part of Array.isArray(item?.summary) ? item.summary : []) {
+    if (typeof part?.text === "string") parts.push(part.text);
+  }
+  if (typeof item?.content === "string") parts.push(item.content);
+  return parts.join("");
+}
+
 function openAICompletionToClaudeMessage(responseBody) {
   const choice = responseBody?.choices?.[0];
   if (!choice) return responseBody;
   const message = choice.message || {};
   const content = [];
-  if (message.reasoning_content || message.reasoning) {
-    content.push({ type: "thinking", thinking: message.reasoning_content || message.reasoning });
+  const reasoning = extractReasoningText(message);
+  if (reasoning) {
+    content.push({ type: "thinking", thinking: reasoning });
   }
   if (typeof message.content === "string" && message.content.length > 0) {
     content.push({ type: "text", text: message.content });
@@ -72,7 +84,7 @@ function responsesJsonToClaudeMessage(response) {
   const content = [];
   for (const item of output) {
     if (item?.type === "reasoning") {
-      const text = item.summary?.find((part) => typeof part?.text === "string")?.text;
+      const text = textFromResponsesReasoningItem(item);
       if (text) content.push({ type: "thinking", thinking: text });
     } else if (item?.type === "message") {
       const text = textFromResponsesMessageItem(item);
@@ -117,7 +129,7 @@ function chatCompletionToResponses(responseBody, customToolNames = null) {
   const message = choice.message || {};
   const output = [];
 
-  const reasoning = message.reasoning_content || message.reasoning;
+  const reasoning = extractReasoningText(message);
   if (typeof reasoning === "string" && reasoning.length > 0) {
     output.push({
       type: RESPONSES_ITEM.REASONING,
@@ -202,8 +214,9 @@ export function parseSSEToOpenAIResponse(rawSSE, fallbackModel) {
   for (const chunk of chunks) {
     const choice = chunk?.choices?.[0];
     const delta = choice?.delta || {};
+    normalizeTypedContent(delta);
     if (typeof delta.content === "string" && delta.content.length > 0) contentParts.push(delta.content);
-    const reasoningDelta = delta.reasoning_content || delta.reasoning;
+    const reasoningDelta = extractReasoningText(delta);
     if (typeof reasoningDelta === "string" && reasoningDelta.length > 0) reasoningParts.push(reasoningDelta);
     if (choice?.finish_reason) finishReason = choice.finish_reason;
     if (chunk?.usage && typeof chunk.usage === "object") usage = chunk.usage;
@@ -345,6 +358,14 @@ export async function handleForcedSSEToJson({ providerResponse, sourceFormat, ta
         };
       } else {
         const message = { role: "assistant", content: textContent || (hasToolCalls ? null : "") };
+        const reasoningParts = [];
+        for (const item of jsonResponse.output || []) {
+          if (item?.type === RESPONSES_ITEM.REASONING) {
+            const text = textFromResponsesReasoningItem(item);
+            if (text) reasoningParts.push(text);
+          }
+        }
+        if (reasoningParts.length > 0) message.reasoning_content = reasoningParts.join("");
         if (hasToolCalls) message.tool_calls = toolCalls;
         const responseDone = jsonResponse.status === "completed" || jsonResponse.status === "done";
         const finishReason = hasToolCalls ? "tool_calls" : (responseDone ? "stop" : (jsonResponse.status || "stop"));
@@ -405,18 +426,6 @@ export async function handleForcedSSEToJson({ providerResponse, sourceFormat, ta
     // must not be left unable to account for its own token spend: a caller cannot tell
     // a 90%-cached request from a cheap one without this.
     if (usage && Object.keys(usage).length > 0) parsed.usage = usage;
-
-    // Strip reasoning_content only when content is non-empty.
-    // When content is empty (e.g. thinking models that used all tokens for reasoning),
-    // reasoning_content is the only useful output and must be preserved.
-    // Previously this was unconditional, which broke Qwen3.5, Claude extended thinking, etc.
-    if (parsed?.choices) {
-      for (const choice of parsed.choices) {
-        if (choice?.message?.reasoning_content && choice.message.content) {
-          delete choice.message.reasoning_content;
-        }
-      }
-    }
 
     // A Responses-format client (e.g. Codex) forced this provider to stream,
     // but wants JSON back. parseSSEToOpenAIResponse yields a Chat Completions

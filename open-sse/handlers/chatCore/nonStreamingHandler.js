@@ -2,6 +2,7 @@ import { FORMATS } from "../../translator/formats.js";
 import { needsTranslation } from "../../translator/index.js";
 import { fromOpenAIFinish } from "../../translator/concerns/finishReason.js";
 import { ollamaBodyToOpenAI } from "../../translator/response/ollama-to-openai.js";
+import { toOpenAIUsage } from "../../translator/concerns/usage.js";
 import { addBufferToUsage, filterUsageForFormat } from "../../utils/usageTracking.js";
 import { createErrorResult } from "../../utils/error.js";
 import { HTTP_STATUS } from "../../config/runtimeConfig.js";
@@ -14,6 +15,8 @@ import { decloakToolNames } from "../../utils/claudeCloaking.js";
 import { decloakOpenAIChunk } from "../../utils/toolCompressor.js";
 import { ROLE, RESPONSES_ITEM } from "../../translator/schema/index.js";
 import { buildToolCallId, cacheSignature } from "../../translator/concerns/thoughtSignature.js";
+import { extractReasoningText } from "../../translator/concerns/reasoning.js";
+import { normalizeTypedContent } from "../../translator/concerns/typedContent.js";
 
 const DEFAULT_THOUGHT_SIGNATURE = "";
 
@@ -80,7 +83,7 @@ function openAICompletionToClaudeMessage(responseBody) {
   const message = choice.message || {};
   const content = [];
 
-  const reasoning = message.reasoning_content || message.reasoning || message.provider_specific_fields?.reasoning_content || "";
+  const reasoning = extractReasoningText(message) || extractReasoningText(message.provider_specific_fields);
   if (reasoning) {
     content.push({ type: "thinking", thinking: reasoning });
   }
@@ -138,7 +141,7 @@ function openAICompletionToResponses(responseBody, customToolNames = null) {
   const output = [];
 
   // Reasoning → a reasoning item (summary text), mirroring the streaming path.
-  const reasoning = message.reasoning_content || message.reasoning;
+  const reasoning = extractReasoningText(message);
   if (typeof reasoning === "string" && reasoning.length > 0) {
     output.push({
       type: RESPONSES_ITEM.REASONING,
@@ -198,6 +201,9 @@ function openAICompletionToResponses(responseBody, customToolNames = null) {
  * Translate non-streaming response body from provider format → OpenAI format.
  */
 export function translateNonStreamingResponse(responseBody, targetFormat, sourceFormat, customToolNames = null) {
+  if (Array.isArray(responseBody?.choices)) {
+    for (const choice of responseBody.choices) normalizeTypedContent(choice?.message);
+  }
   // Some OpenAI-compatible gateways report a Claude target format while still
   // returning Chat Completions JSON. The client endpoint remains authoritative:
   // `/v1/messages` must never leak `choices` back to a Claude client.
@@ -264,14 +270,7 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
     };
 
     if (usage) {
-      result.usage = {
-        prompt_tokens: (usage.promptTokenCount || 0) + (usage.thoughtsTokenCount || 0),
-        completion_tokens: usage.candidatesTokenCount || 0,
-        total_tokens: usage.totalTokenCount || 0
-      };
-      if (usage.thoughtsTokenCount > 0) {
-        result.usage.completion_tokens_details = { reasoning_tokens: usage.thoughtsTokenCount };
-      }
+      result.usage = toOpenAIUsage(usage, "gemini");
     }
     if (sourceFormat === FORMATS.CLAUDE) {
       return openAICompletionToClaudeMessage(result);
@@ -334,11 +333,7 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
     };
 
     if (responseBody.usage) {
-      result.usage = {
-        prompt_tokens: responseBody.usage.input_tokens || 0,
-        completion_tokens: responseBody.usage.output_tokens || 0,
-        total_tokens: (responseBody.usage.input_tokens || 0) + (responseBody.usage.output_tokens || 0)
-      };
+      result.usage = toOpenAIUsage(responseBody.usage, "claude");
     }
     if (sourceFormat === FORMATS.CLAUDE) {
       return openAICompletionToClaudeMessage(result);
@@ -447,6 +442,9 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
       return createErrorResult(HTTP_STATUS.BAD_GATEWAY, `Invalid JSON response from ${provider}`);
     }
   }
+  if (Array.isArray(responseBody?.choices)) {
+    for (const choice of responseBody.choices) normalizeTypedContent(choice?.message);
+  }
 
   reqLogger.logProviderResponse(providerResponse.status, providerResponse.statusText, providerResponse.headers, responseBody);
   // Detect upstream gateway errors masked as HTTP 200 (e.g. OpenRouter
@@ -486,6 +484,10 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
   // Decloak tool_use names once on raw body, before any translation (INPUT side)
   responseBody = decloakToolNames(responseBody, toolNameMap);
   responseBody = decloakOpenAIChunk(responseBody, toolNameMap);
+  for (const choice of responseBody?.choices || []) {
+    const reasoning = extractReasoningText(choice?.message);
+    if (reasoning) choice.message.reasoning_content = reasoning;
+  }
 
   const usage = extractUsageFromResponse(responseBody);
   appendLog({ tokens: usage, status: "200 OK" });
@@ -526,17 +528,6 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
 
   if (translatedResponse?.usage) {
     translatedResponse.usage = filterUsageForFormat(addBufferToUsage(translatedResponse.usage), sourceFormat);
-  }
-
-  // Strip reasoning_content only when content is non-empty.
-  // When content is empty (e.g. thinking models that used all tokens for reasoning),
-  // reasoning_content is the only useful output and must be preserved.
-  if (!isClaudeMessageResponse && !isResponsesResponse && translatedResponse?.choices) {
-    for (const choice of translatedResponse.choices) {
-      if (choice?.message?.reasoning_content && choice.message.content) {
-        delete choice.message.reasoning_content;
-      }
-    }
   }
 
   if (toolNameMap?.size > 0 && translatedResponse) {

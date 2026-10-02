@@ -13,6 +13,43 @@ const translate = (target, messages) => translateRequest(
 );
 const request = (output) => output.request || output;
 
+describe.each([FORMATS.GEMINI, FORMATS.GEMINI_CLI])("%s incoming thought history", (source) => {
+  it.each([
+    ["answer", [{ text: "Answer" }], "Answer"],
+    ["thought-only", [], ""],
+  ])("keeps thought text separate from %s", (_name, visible, content) => {
+    const output = translateRequest(source, FORMATS.OPENAI, "gpt-4o", {
+      contents: [{ role: "model", parts: [
+        { thought: true, text: "First." },
+        { thought: true, text: "Second." },
+        ...visible,
+      ] }, { role: "user", parts: [{ text: "Next" }] }],
+    });
+    expect(output.messages).toEqual([
+      { role: "assistant", content, reasoning_content: "First.Second." },
+      { role: "user", content: "Next" },
+    ]);
+  });
+
+  it("keeps thought text with a paired function call rather than visible tool content", () => {
+    const output = translateRequest(source, FORMATS.OPENAI, "gpt-4o", {
+      contents: [{ role: "model", parts: [
+        { thought: true, text: "First." },
+        { thought: true, text: "Second." },
+        { functionCall: { id: "call_1", name: "lookup", args: { key: "value" } } },
+      ] }, { role: "user", parts: [
+        { functionResponse: { id: "call_1", name: "lookup", response: { result: "done" } } },
+      ] }],
+    });
+    expect(output.messages).toEqual([
+      { role: "assistant", reasoning_content: "First.Second.", tool_calls: [
+        { id: "call_1", type: "function", function: { name: "lookup", arguments: '{"key":"value"}' } },
+      ] },
+      { role: "tool", tool_call_id: "call_1", content: '"done"' },
+    ]);
+  });
+});
+
 // #4345: exercise the registered production translator, not the previously dead helper.
 describe.each(targets)("%s terminal history", (target) => {
   it.each([
@@ -89,7 +126,7 @@ describe("Antigravity terminal history protocol", () => {
     }, false, credentials, "antigravity");
     const output = new AntigravityExecutor().transformRequest(model, body, false, credentials);
     const responseTurn = output.request.contents.find((turn) => turn.parts.some((part) => part.functionResponse));
-    expect(responseTurn.role).toBe(model.startsWith("claude") ? "user" : "model");
+    expect(responseTurn.role).toBe("user");
     expect(responseTurn.parts.filter((part) => part.functionResponse).map((part) => part.functionResponse.response))
       .toEqual([{ contents: "actual notes" }]);
     expect(output.request.contents.flatMap((turn) => turn.parts).filter((part) => part.text === "Continue."))

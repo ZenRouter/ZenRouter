@@ -1,4 +1,4 @@
-import { ROLE } from "../schema/index.js";
+import { ROLE, REASONING_DETAIL } from "../schema/index.js";
 
 // Build OpenAI delta carrying reasoning_content (optional leading assistant role)
 export function reasoningDelta(text, withRole = false) {
@@ -18,7 +18,22 @@ export function extractReasoningText(delta) {
   if (typeof delta.reasoning === "string" && delta.reasoning) return delta.reasoning;
   const details = delta.reasoning_details;
   if (Array.isArray(details)) {
-    return details.map((d) => (typeof d === "string" ? d : d?.text || d?.content || "")).join("");
+    const parts = [];
+    for (const detail of details) {
+      if (typeof detail === "string") {
+        parts.push(detail);
+        continue;
+      }
+      if (!detail || typeof detail !== "object") continue;
+      // Typed opaque continuity is not readable reasoning, even if a vendor
+      // attaches a text-like field. Untyped entries are MiniMax's split shape.
+      if (detail.type != null && detail.type !== REASONING_DETAIL.TEXT && detail.type !== REASONING_DETAIL.SUMMARY) continue;
+      const text = typeof detail.text === "string" && detail.text
+        ? detail.text
+        : typeof detail.content === "string" ? detail.content : "";
+      if (text) parts.push(text);
+    }
+    return parts.join("");
   }
   return "";
 }

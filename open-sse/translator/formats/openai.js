@@ -1,5 +1,6 @@
 // OpenAI helper functions for translator
 import { ROLE, OPENAI_BLOCK, CLAUDE_BLOCK, VALID_OPENAI_CONTENT_TYPES, VALID_OPENAI_MESSAGE_TYPES } from "../schema/index.js";
+import { extractReasoningText } from "../concerns/reasoning.js";
 
 // Re-export valid-type lists (moved to schema/blocks.js) to keep existing importers working.
 export { VALID_OPENAI_CONTENT_TYPES, VALID_OPENAI_MESSAGE_TYPES };
@@ -54,19 +55,22 @@ export function filterToOpenAIFormat(body, opts = {}) {
     // Keep tool messages as-is (OpenAI format)
     if (msg.role === ROLE.TOOL) return msg;
 
-    // Keep assistant messages with tool_calls as-is
-    if (msg.role === ROLE.ASSISTANT && msg.tool_calls) return msg;
-
     // Handle string content
     if (typeof msg.content === "string") return msg;
 
     // Handle array content
     if (Array.isArray(msg.content)) {
       const filteredContent = [];
+      const collectThinking = msg.role === ROLE.ASSISTANT && !Object.hasOwn(msg, "reasoning_content");
+      const reasoningChunks = [];
 
       for (const block of msg.content) {
-        // Skip thinking blocks
-        if (block.type === CLAUDE_BLOCK.THINKING || block.type === CLAUDE_BLOCK.REDACTED_THINKING) continue;
+        // Native readable thinking belongs in assistant reasoning, never visible content.
+        if (block.type === CLAUDE_BLOCK.THINKING) {
+          if (collectThinking && typeof block.thinking === "string") reasoningChunks.push(block.thinking);
+          continue;
+        }
+        if (block.type === CLAUDE_BLOCK.REDACTED_THINKING) continue;
 
         // Only keep valid OpenAI content types
         if (VALID_OPENAI_CONTENT_TYPES.includes(block.type)) {
@@ -79,6 +83,7 @@ export function filterToOpenAIFormat(body, opts = {}) {
           filteredContent.push(stripBlock(block));
         }
       }
+      if (reasoningChunks.length > 0) msg = { ...msg, reasoning_content: reasoningChunks.join("") };
       
       // If all content was filtered, add empty text
       if (filteredContent.length === 0) {
@@ -104,8 +109,8 @@ export function filterToOpenAIFormat(body, opts = {}) {
   body.messages = body.messages.filter(msg => {
     // Always keep tool messages
     if (msg.role === ROLE.TOOL) return true;
-    // Always keep assistant messages with tool_calls or reasoning_content
-    if (msg.role === ROLE.ASSISTANT && (msg.tool_calls || msg.reasoning_content)) return true;
+    // Always keep assistant tool calls and readable reasoning, including vendor aliases.
+    if (msg.role === ROLE.ASSISTANT && (msg.tool_calls || extractReasoningText(msg))) return true;
     if (typeof msg.content === "string") return msg.content.trim() !== "";
     if (Array.isArray(msg.content)) {
       return msg.content.some(b => 

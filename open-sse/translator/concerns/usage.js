@@ -35,7 +35,7 @@ const USAGE_EXTRACTORS = {
       candidates = total - prompt - thoughts;
       if (candidates < 0) candidates = 0;
     }
-    return { promptTokens: prompt, completionTokens: candidates + thoughts, totalTokens: total, cachedTokens: cached, reasoningTokens: thoughts };
+    return { promptTokens: prompt, completionTokens: candidates + thoughts, totalTokens: typeof raw.totalTokenCount === "number" ? total : prompt + candidates + thoughts, cachedTokens: cached, reasoningTokens: thoughts };
   },
   kiro(raw) {
     const input = n(raw.inputTokens), output = n(raw.outputTokens);
@@ -64,9 +64,11 @@ const USAGE_EXTRACTORS = {
     // the cached rate instead of the full input rate. Do NOT add it to
     // promptTokens or the cache portion gets billed twice.
     const cached = n(raw.cachedInputTokens) || n(raw.inputTokenDetails?.cacheReadTokens) || n(raw.cacheReadTokens);
+    const cacheCreation = n(raw.inputTokenDetails?.cacheWriteTokens);
     const reasoning = n(raw.reasoningTokens) || n(raw.outputTokenDetails?.reasoningTokens);
     const out = { promptTokens: input, completionTokens: output, totalTokens: total };
     if (cached > 0) out.cachedTokens = cached;
+    if (cacheCreation > 0) out.cacheCreationTokens = cacheCreation;
     if (reasoning > 0) out.reasoningTokens = reasoning;
     return out;
   },

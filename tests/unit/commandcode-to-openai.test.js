@@ -113,6 +113,25 @@ describe("commandcode-to-openai — finish", () => {
     const last = chunks[chunks.length - 1];
     expect(last.usage).toEqual({ prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 });
   });
+
+  it.each([999, 0])("exposes cache writes without adding cache to the inclusive prompt, retaining total %s", (totalTokens) => {
+    const { chunks } = feed([
+      { type: "finish", finishReason: "stop", totalUsage: {
+        inputTokens: 100,
+        outputTokens: 20,
+        totalTokens,
+        inputTokenDetails: { noCacheTokens: 10, cacheReadTokens: 60, cacheWriteTokens: 30 },
+        outputTokenDetails: { reasoningTokens: 4 },
+      } },
+    ]);
+    expect(chunks.at(-1).usage).toEqual({
+      prompt_tokens: 100,
+      completion_tokens: 20,
+      total_tokens: totalTokens,
+      prompt_tokens_details: { cached_tokens: 60, cache_creation_tokens: 30 },
+      completion_tokens_details: { reasoning_tokens: 4 },
+    });
+  });
 });
 
 describe("commandcode-to-openai — error event", () => {

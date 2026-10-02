@@ -262,6 +262,19 @@ describe("extractReasoningText (response shapes)", () => {
   it("reasoning_details[] (MiniMax split)", () => {
     expect(extractReasoningText({ reasoning_details: [{ text: "a" }, { content: "b" }, "c"] })).toBe("abc");
   });
+  it("retains readable detail order without exposing opaque continuity or coercing objects", () => {
+    expect(extractReasoningText({ reasoning_details: [
+      { type: "reasoning.text", text: "First." },
+      { type: "reasoning.encrypted", text: "opaque", data: "ciphertext" },
+      { text: { private: "not text" } },
+      { content: 42 },
+      { type: "reasoning.summary", content: "Summary." },
+      "Tail.",
+    ] })).toBe("First.Summary.Tail.");
+  });
+  it("prefers authoritative reasoning fields over duplicate vendor details", () => {
+    expect(extractReasoningText({ reasoning_content: "Primary.", reasoning: "Alias.", reasoning_details: [{ text: "Duplicate." }] })).toBe("Primary.");
+  });
   it("no reasoning → empty", () => {
     expect(extractReasoningText({ content: "hello" })).toBe("");
   });

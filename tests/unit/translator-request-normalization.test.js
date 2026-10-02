@@ -7,6 +7,68 @@ import { filterToOpenAIFormat } from "../../open-sse/translator/formats/openai.j
 import { parseSSELine } from "../../open-sse/utils/streamHelpers.js";
 
 describe("request normalization", () => {
+  it.each([
+    ["answer", [{ type: "text", text: "Answer" }], "Answer"],
+    ["thinking-only", [], ""],
+  ])("preserves hybrid assistant thinking separately from %s content", (_name, visible, content) => {
+    const result = translateRequest(FORMATS.OPENAI, FORMATS.OPENAI, "gpt-4o", {
+      messages: [{ role: "assistant", content: [
+        { type: "thinking", thinking: "First.", signature: "native-only" },
+        { type: "redacted_thinking", data: "opaque-native-only" },
+        { type: "thinking", thinking: "Second." },
+        ...visible,
+      ] }, { role: "user", content: "Next" }],
+    });
+    expect(result.messages[0]).toEqual({ role: "assistant", content, reasoning_content: "First.Second." });
+  });
+
+  it.each(["Authoritative reasoning", ""])("does not duplicate or replace an existing reasoning_content field: %j", (reasoning) => {
+    const result = translateRequest(FORMATS.OPENAI, FORMATS.OPENAI, "gpt-4o", {
+      messages: [{ role: "assistant", reasoning_content: reasoning, content: [
+        { type: "thinking", thinking: "Fallback must not be appended" },
+        { type: "text", text: "Answer" },
+      ] }, { role: "user", content: "Next" }],
+    });
+    expect(result.messages[0]).toEqual({ role: "assistant", reasoning_content: reasoning, content: "Answer" });
+  });
+
+  it("cleans hybrid native blocks without losing assistant tool calls or their replies", () => {
+    const tools = [{ id: "call_1", type: "function", function: { name: "lookup", arguments: "{}" } }];
+    const result = translateRequest(FORMATS.OPENAI, FORMATS.OPENAI, "gpt-4o", {
+      messages: [{ role: "assistant", tool_calls: tools, content: [
+        { type: "thinking", thinking: "First." },
+        { type: "redacted_thinking", data: "opaque" },
+        { type: "thinking", thinking: "Second." },
+      ] }, { role: "tool", tool_call_id: "call_1", content: "done" }],
+    });
+    expect(result.messages).toEqual([
+      { role: "assistant", content: "", tool_calls: tools, reasoning_content: "First.Second." },
+      { role: "tool", tool_call_id: "call_1", content: "done" },
+    ]);
+  });
+
+  it.each([
+    [{ reasoning: "First.Second." }],
+    [{ reasoning_details: [{ text: "First." }, { content: "Second." }] }],
+  ])("retains readable reasoning-only assistant aliases: %j", (reasoning) => {
+    const result = translateRequest(FORMATS.OPENAI, FORMATS.OPENAI, "gpt-4o", {
+      messages: [{ role: "assistant", content: "", ...reasoning }, { role: "user", content: "Next" }],
+    });
+    expect(result.messages).toEqual([
+      { role: "assistant", content: "", ...reasoning }, { role: "user", content: "Next" },
+    ]);
+  });
+
+  it("does not reinterpret user native thinking as assistant reasoning", () => {
+    const result = translateRequest(FORMATS.OPENAI, FORMATS.OPENAI, "gpt-4o", {
+      messages: [{ role: "user", content: [
+        { type: "thinking", thinking: "Not assistant reasoning" },
+        { type: "text", text: "Question" },
+      ] }],
+    });
+    expect(result.messages).toEqual([{ role: "user", content: "Question" }]);
+  });
+
   it("claudeToOpenAIRequest flattens text-only content arrays into string", () => {
     const body = {
       messages: [

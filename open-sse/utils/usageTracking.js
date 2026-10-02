@@ -108,7 +108,20 @@ export function filterUsageForFormat(usage, targetFormat) {
     fields = formatFields.default;
   }
 
-  return pickFields(fields);
+  const filtered = pickFields(fields);
+  // Claude's native cache counters are separate from input_tokens. OpenAI
+  // clients receive those counters as details, without replacing their own split.
+  if (fields === formatFields.default) {
+    const cacheRead = usage.cache_read_input_tokens;
+    const cacheCreation = usage.cache_creation_input_tokens;
+    if (cacheRead > 0 || cacheCreation > 0) {
+      const details = { ...(filtered.prompt_tokens_details || {}) };
+      if (cacheRead > 0 && details.cached_tokens === undefined) details.cached_tokens = cacheRead;
+      if (cacheCreation > 0 && details.cache_creation_tokens === undefined) details.cache_creation_tokens = cacheCreation;
+      filtered.prompt_tokens_details = details;
+    }
+  }
+  return filtered;
 }
 
 /**

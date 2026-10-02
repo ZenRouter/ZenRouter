@@ -11,6 +11,12 @@ export const OPENAI_BLOCK = {
   FUNCTION: "function",
 };
 
+// OpenAI-compatible vendor reasoning_details discriminators.
+export const REASONING_DETAIL = {
+  TEXT: "reasoning.text",
+  SUMMARY: "reasoning.summary",
+};
+
 // Claude content blocks.
 export const CLAUDE_BLOCK = {
   TEXT: "text",

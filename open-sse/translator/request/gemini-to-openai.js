@@ -82,10 +82,15 @@ function convertGeminiContent(content) {
 
   const parts = [];
   const toolCalls = [];
+  const reasoningChunks = [];
 
   for (const part of content.parts) {
     if (part.text !== undefined) {
-      parts.push({ type: OPENAI_BLOCK.TEXT, text: part.text });
+      if (part.thought === true) {
+        if (role === ROLE.ASSISTANT && typeof part.text === "string") reasoningChunks.push(part.text);
+      } else {
+        parts.push({ type: OPENAI_BLOCK.TEXT, text: part.text });
+      }
     }
 
     if (part.inlineData) {
@@ -118,6 +123,7 @@ function convertGeminiContent(content) {
       };
     }
   }
+  const reasoningContent = reasoningChunks.join("");
 
   if (toolCalls.length > 0) {
     const result = { role: ROLE.ASSISTANT };
@@ -125,14 +131,17 @@ function convertGeminiContent(content) {
       result.content = parts.length === 1 ? parts[0].text : parts;
     }
     result.tool_calls = toolCalls;
+    if (reasoningContent) result.reasoning_content = reasoningContent;
     return result;
   }
 
-  if (parts.length > 0) {
-    return {
+  if (parts.length > 0 || reasoningContent) {
+    const result = {
       role,
-      content: collapseTextParts(parts)
+      content: parts.length > 0 ? collapseTextParts(parts) : ""
     };
+    if (reasoningContent) result.reasoning_content = reasoningContent;
+    return result;
   }
 
   return null;

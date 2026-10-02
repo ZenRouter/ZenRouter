@@ -22,17 +22,41 @@ describe("bug: Claude → OpenAI bridge data loss", () => {
     expect(json, "remote image url silently dropped").toContain("a.png");
   });
 
-  // claude-to-openai.js:128 switch — missing thinking/redacted_thinking case
-  it("thinking block survives round-trip Claude→OpenAI→Claude", () => {
-    const body = {
+  it.each([
+    ["answer", [{ type: "text", text: "answer" }], "answer"],
+    ["thinking-only", [], ""],
+  ])("preserves ordered thinking separately from %s content", (_name, visible, content) => {
+    const out = T(FORMATS.CLAUDE, FORMATS.OPENAI, {
       messages: [{ role: "assistant", content: [
-        { type: "thinking", thinking: "secret reasoning", signature: "sig" },
-        { type: "text", text: "answer" },
+        { type: "thinking", thinking: "First.", signature: "sig-a" },
+        { type: "redacted_thinking", data: "opaque-not-portable" },
+        { type: "thinking", thinking: "Second.", signature: "sig-b" },
+        ...visible,
       ] }, { role: "user", content: "go" }],
-    };
-    const out = T(FORMATS.CLAUDE, FORMATS.CLAUDE, body);
-    const json = JSON.stringify(out);
-    expect(json, "thinking content lost via OpenAI bridge").toContain("secret reasoning");
+    });
+    expect(out.messages[0]).toEqual({ role: "assistant", content, reasoning_content: "First.Second." });
+  });
+
+  it("preserves ordered thinking with paired parallel tool calls", () => {
+    const out = T(FORMATS.CLAUDE, FORMATS.OPENAI, {
+      messages: [{ role: "assistant", content: [
+        { type: "thinking", thinking: "First." },
+        { type: "thinking", thinking: "Second." },
+        { type: "tool_use", id: "call_1", name: "first", input: { value: 1 } },
+        { type: "tool_use", id: "call_2", name: "second", input: { value: 2 } },
+      ] }, { role: "user", content: [
+        { type: "tool_result", tool_use_id: "call_1", content: "one" },
+        { type: "tool_result", tool_use_id: "call_2", content: "two" },
+      ] }],
+    });
+    expect(out.messages).toEqual([
+      { role: "assistant", reasoning_content: "First.Second.", tool_calls: [
+        { id: "call_1", type: "function", function: { name: "first", arguments: '{"value":1}' } },
+        { id: "call_2", type: "function", function: { name: "second", arguments: '{"value":2}' } },
+      ] },
+      { role: "tool", tool_call_id: "call_1", content: "one" },
+      { role: "tool", tool_call_id: "call_2", content: "two" },
+    ]);
   });
 
   // claude-to-openai.js:155-173 — tool_result image block dropped (text only)

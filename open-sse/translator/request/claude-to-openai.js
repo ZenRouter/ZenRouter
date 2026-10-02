@@ -176,7 +176,7 @@ function convertClaudeMessage(msg) {
     const parts = [];
     const toolCalls = [];
     const toolResults = [];
-    let reasoningContent = "";
+    const reasoningChunks = [];
 
     for (const block of msg.content) {
       switch (block.type) {
@@ -241,7 +241,7 @@ function convertClaudeMessage(msg) {
 
         case CLAUDE_BLOCK.THINKING:
           if (block.thinking && typeof block.thinking === "string") {
-            reasoningContent = block.thinking;
+            reasoningChunks.push(block.thinking);
           }
           break;
 
@@ -265,6 +265,7 @@ function convertClaudeMessage(msg) {
           break;
       }
     }
+    const reasoningContent = reasoningChunks.join("");
 
     // If has tool results, return array of tool messages
     if (toolResults.length > 0) {

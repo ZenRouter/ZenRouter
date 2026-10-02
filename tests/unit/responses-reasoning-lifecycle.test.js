@@ -49,11 +49,77 @@ function assertReasoningClosedBefore(events, itemType, text) {
   expect(next).toBeGreaterThan(events.indexOf(closure[2]));
 }
 
+function assertTerminalItems(events, types) {
+  const added = events.filter((event) => event.type === "response.output_item.added");
+  const done = events.filter((event) => event.type === "response.output_item.done");
+  const completed = events.filter((event) => event.type === "response.completed");
+  expect(added.map((event) => event.item.type)).toEqual(types);
+  expect(added.map((event) => event.output_index)).toEqual(types.map((_, index) => index));
+  expect(added.every((event) => event.item.status === "in_progress")).toBe(true);
+  expect(done.map((event) => event.item.id).sort()).toEqual(added.map((event) => event.item.id).sort());
+  for (const event of done) {
+    const opened = added.find((entry) => entry.item.id === event.item.id);
+    expect(event.output_index).toBe(opened.output_index);
+    expect(event.item.status).toBe("completed");
+  }
+  for (const event of events.filter((event) => event.item_id)) {
+    expect(event.output_index).toBe(added.find((entry) => entry.item.id === event.item_id).output_index);
+  }
+  expect(completed).toHaveLength(1);
+  const output = completed[0].response.output;
+  expect(output).toEqual(added.map((event) => done.find((entry) => entry.item.id === event.item.id).item));
+  expect(output.every((item) => !("output_index" in item) && !("sequence_number" in item))).toBe(true);
+  return output;
+}
+
 const final = chunk({}, { finish_reason: "stop" });
 const usage = { prompt_tokens: 7, completion_tokens: 3, total_tokens: 10 };
 const trailer = { choices: [], usage };
 
 describe.each(converters)("%s reasoning lifecycle", (_name, create) => {
+  it("retains reasoning, text and fragmented tool arguments in terminal output with unique indexes", async () => {
+    const events = await collect([
+      chunk({ reasoning_content: "Plan", content: "Answer" }),
+      chunk({ tool_calls: [{ index: 0, id: "call_terminal", function: { name: "lookup", arguments: '{"q":' } }] }),
+      chunk({ tool_calls: [{ index: 0, function: { arguments: '"weather"}' } }] }),
+      chunk({}, { finish_reason: "tool_calls" }), trailer,
+    ], create());
+    const output = assertTerminalItems(events, ["reasoning", "message", "function_call"]);
+    expect(output[0].summary).toEqual([{ type: "summary_text", text: "Plan" }]);
+    expect(output[1].content[0].text).toBe("Answer");
+    expect(output[2]).toMatchObject({ call_id: "call_terminal", name: "lookup", arguments: '{"q":"weather"}' });
+    expect(events.find((event) => event.type === "response.completed").response.usage)
+      .toMatchObject({ input_tokens: 7, output_tokens: 3, total_tokens: 10 });
+  });
+
+  it("orders interleaved choice messages and tool indexes by item creation rather than upstream indexes", async () => {
+    const events = await collect([
+      { id: "chatcmpl-lifecycle", choices: [{ index: 4, delta: { content: "Fourth" } }] },
+      chunk({ content: "First" }),
+      chunk({ tool_calls: [
+        { index: 2, id: "call_second", function: { name: "second", arguments: '{"b":2}' } },
+        { index: 0, id: "call_first", function: { name: "first", arguments: '{"a":1}' } },
+      ] }),
+      chunk({}, { finish_reason: "tool_calls" }), trailer,
+    ], create());
+    const output = assertTerminalItems(events, ["message", "message", "function_call", "function_call"]);
+    expect(output.slice(0, 2).map((item) => item.content[0].text)).toEqual(["Fourth", "First"]);
+    expect(output.slice(2).map((item) => [item.call_id, item.arguments]))
+      .toEqual([["call_second", '{"b":2}'], ["call_first", '{"a":1}']]);
+  });
+
+  it("opens a fresh message after a tool transition rather than appending to a completed item", async () => {
+    const events = await collect([
+      chunk({ reasoning_content: "Before", content: "Opening" }),
+      chunk({ tool_calls: [{ index: 0, id: "call_between", function: { name: "lookup", arguments: "{}" } }] }),
+      chunk({ reasoning_content: "After", content: "Closing" }), final, trailer,
+    ], create());
+    const output = assertTerminalItems(events, ["reasoning", "message", "function_call", "reasoning", "message"]);
+    expect(output.filter((item) => item.type === "reasoning").map((item) => item.summary[0].text)).toEqual(["Before", "After"]);
+    expect(output.filter((item) => item.type === "message").map((item) => item.content[0].text)).toEqual(["Opening", "Closing"]);
+    expect(output.find((item) => item.type === "function_call").arguments).toBe("{}");
+  });
+
   it("closes native reasoning before opening a text item, preserving text and late usage", async () => {
     const events = await collect([
       chunk({ reasoning_content: "First " }), chunk({ reasoning_content: "think" }),
@@ -100,6 +166,24 @@ describe.each(converters)("%s reasoning lifecycle", (_name, create) => {
     upstream.error(new Error("upstream aborted"));
     await expect(pending).rejects.toThrow("upstream aborted");
     expect(observed.join("")).not.toContain("response.completed");
+  });
+});
+
+describe.each(converters)("%s custom tool terminal output", (name) => {
+  it("preserves completed freeform input alongside reasoning and text", async () => {
+    const customToolNames = ["exec"];
+    const transform = name === "Responses transformer"
+      ? createResponsesApiTransformStream(null, { customToolNames })
+      : createSSEStream({ targetFormat: FORMATS.OPENAI, sourceFormat: FORMATS.OPENAI_RESPONSES, customToolNames });
+    const events = await collect([
+      chunk({ reasoning_content: "Execute", content: "Running" }),
+      chunk({ tool_calls: [{ index: 0, id: "call_custom", function: { name: "exec", arguments: '{"input":"print(' } }] }),
+      chunk({ tool_calls: [{ index: 0, function: { arguments: '1)"}' } }] }),
+      chunk({}, { finish_reason: "tool_calls" }), trailer,
+    ], transform);
+    const output = assertTerminalItems(events, ["reasoning", "message", "custom_tool_call"]);
+    expect(output[2]).toMatchObject({ call_id: "call_custom", name: "exec", input: "print(1)" });
+    expect(output[2]).not.toHaveProperty("arguments");
   });
 });
 
