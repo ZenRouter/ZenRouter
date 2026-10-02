@@ -377,7 +377,12 @@ export function openaiToOpenAIResponsesRequest(model, body, stream, credentials)
               return { type: RESPONSES_ITEM.INPUT_IMAGE, image_url: url, detail: c.image_url?.detail || "auto" };
             }
             if (c.type === RESPONSES_ITEM.INPUT_IMAGE) return c;
-            // Serialize any unknown type (tool_use, tool_result, thinking, etc.) as text
+            if (c.type === OPENAI_BLOCK.FILE || c.type === RESPONSES_ITEM.INPUT_FILE) {
+              const fileData = c.file?.file_data || c.file_data;
+              if (fileData) {
+                return { type: RESPONSES_ITEM.INPUT_FILE, file_data: fileData, ...(c.file?.filename || c.filename ? { filename: c.file?.filename || c.filename } : {}) };
+              }
+            }
             const text = c.text || c.content || JSON.stringify(c);
             return { type: contentType, text: typeof text === "string" ? text : JSON.stringify(text) };
           })

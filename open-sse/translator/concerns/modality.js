@@ -8,12 +8,14 @@ import { FORMATS } from "../formats.js";
 const PLACEHOLDER_CURRENT = {
   vision: "[image omitted: model has no vision support]",
   audioInput: "[audio omitted: model has no audio support]",
+  videoInput: "[video omitted: model has no video support]",
   pdf: "[file omitted: model has no document support]",
 };
 // Earlier turns: neutral (a combo may route to a different model each turn).
 const PLACEHOLDER_PREV = {
   vision: "[Previous image omitted from context.]",
   audioInput: "[Previous audio omitted from context.]",
+  videoInput: "[Previous video omitted from context.]",
   pdf: "[Previous file omitted from context.]",
 };
 const ph = (cap, isLast) => (isLast ? PLACEHOLDER_CURRENT : PLACEHOLDER_PREV)[cap];
@@ -23,6 +25,7 @@ function capForMime(mime) {
   if (typeof mime !== "string") return null;
   if (mime.startsWith("image/")) return "vision";
   if (mime.startsWith("audio/")) return "audioInput";
+  if (mime.startsWith("video/")) return "videoInput";
   if (mime === "application/pdf") return "pdf";
   return null;
 }
@@ -32,6 +35,7 @@ function capForOpenAIBlock(block) {
   const t = block?.type;
   if (t === "image_url" || t === "image") return "vision";
   if (t === "input_audio" || t === "audio_url") return "audioInput";
+  if (t === "video_url" || t === "input_video") return "videoInput";
   if (t === "file") return "pdf";
   return null;
 }
@@ -41,6 +45,7 @@ function capForClaudeBlock(block) {
   const t = block?.type;
   if (t === "image") return "vision";
   if (t === "document") return "pdf";
+  if (t === "video") return "videoInput";
   return null;
 }
 
@@ -135,8 +140,7 @@ function stripGeminiParts(contents, caps) {
 export function stripUnsupportedModalities(body, sourceFormat, caps) {
   if (!body || !caps) return false;
   // Fast exit: model supports everything we'd strip.
-  if (caps.vision !== false && caps.audioInput !== false && caps.pdf !== false) return false;
-
+  if (caps.vision !== false && caps.audioInput !== false && caps.videoInput !== false && caps.pdf !== false) return false;
   switch (sourceFormat) {
     case FORMATS.OPENAI:
     case FORMATS.OLLAMA:

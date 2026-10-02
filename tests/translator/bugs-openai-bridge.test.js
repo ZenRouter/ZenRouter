@@ -9,9 +9,8 @@ const T = (src, tgt, body, provider = null) =>
   translateRequest(src, tgt, "m", body, true, null, provider);
 
 describe("bug: Claude → OpenAI bridge data loss", () => {
-  // claude-to-openai.js:133-141 — image source.type==="url" only handles base64
-  // KNOWN BUG: it.fails passes while app drops the url; flips to failing once fixed.
-  it.fails("image with source.type=url is preserved (NOT dropped)", () => {
+  // claude-to-openai.js:187-203 — image source.type==="url" handled
+  it("image with source.type=url is preserved (NOT dropped)", () => {
     const out = T(FORMATS.CLAUDE, FORMATS.OPENAI, {
       messages: [{ role: "user", content: [
         { type: "text", text: "look" },
@@ -59,9 +58,8 @@ describe("bug: Claude → OpenAI bridge data loss", () => {
     ]);
   });
 
-  // claude-to-openai.js:155-173 — tool_result image block dropped (text only)
-  // KNOWN BUG
-  it.fails("tool_result with image block is not turned into raw JSON / dropped", () => {
+  // claude-to-openai.js:229-269 — tool_result with image block preserved
+  it("tool_result with image block is not turned into raw JSON / dropped", () => {
     const out = T(FORMATS.CLAUDE, FORMATS.OPENAI, {
       messages: [
         { role: "assistant", content: [
@@ -79,7 +77,7 @@ describe("bug: Claude → OpenAI bridge data loss", () => {
     expect(toolMsg?.content, "image in tool_result lost").not.toMatch(/^\[/);
   });
 
-  // claude-to-openai.js:155-173 — is_error lost
+  // claude-to-openai.js:260-265 — is_error preserved internally but stripped in final OpenAI format
   // KNOWN BUG
   it.fails("tool_result is_error flag is preserved", () => {
     const out = T(FORMATS.CLAUDE, FORMATS.OPENAI, {

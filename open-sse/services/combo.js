@@ -157,9 +157,9 @@ function trailingUserItems(arr) {
   return arr.slice(i + 1);
 }
 
-// Detect which capabilities a request needs. Modalities (vision/pdf) are scanned
-// only on the current user turn; "search" is request-wide (lives in tools).
-// Returns a Set of: "vision" | "pdf" | "search".
+// Detect which capabilities a request needs. Modalities (vision/pdf/audioInput/videoInput)
+// are scanned across the entire conversation history (user & tool turns); "search"/"tools"
+// are request-wide. Returns a Set of: "vision" | "pdf" | "audioInput" | "videoInput" | "tools" | "search".
 export function detectRequiredCapabilities(body) {
   const required = new Set();
   if (!body || typeof body !== "object") return required;
@@ -187,6 +187,30 @@ export function detectRequiredCapabilities(body) {
       else if (b.source?.data) fmime = String(b.source.data).match(/^data:([^;,]+)/)?.[1];
       if (fmime) addByMime(fmime);
       else required.add("pdf");
+    }
+    if (t === "tool_result") {
+      if (Array.isArray(b.content)) scanContent(b.content);
+      else if (typeof b.content === "string") {
+        if (b.content.includes("data:image/")) required.add("vision");
+        else if (b.content.includes("data:audio/")) required.add("audioInput");
+        else if (b.content.includes("data:video/")) required.add("videoInput");
+        else if (b.content.includes("data:application/pdf")) required.add("pdf");
+      }
+    }
+    if (b.functionResponse?.response) {
+      const resp = b.functionResponse.response;
+      if (typeof resp === "string") {
+        if (resp.includes("data:image/")) required.add("vision");
+        else if (resp.includes("data:audio/")) required.add("audioInput");
+        else if (resp.includes("data:video/")) required.add("videoInput");
+        else if (resp.includes("data:application/pdf")) required.add("pdf");
+      } else if (Array.isArray(resp)) {
+        scanContent(resp);
+      } else if (typeof resp === "object") {
+        addByMime(resp.inlineData?.mimeType || resp.fileData?.mimeType);
+        if (Array.isArray(resp.parts)) scanContent(resp.parts);
+        if (Array.isArray(resp.content)) scanContent(resp.content);
+      }
     }
     // gemini parts: inlineData/fileData carry a mime
     addByMime(b.inlineData?.mimeType || b.fileData?.mimeType);
@@ -218,23 +242,74 @@ export function detectRequiredCapabilities(body) {
     // Direct message-level modality properties
     if (m.image_url || m.image) required.add("vision");
     if (m.audio_url || m.audio) required.add("audioInput");
+    if (m.video_url || m.video) required.add("videoInput");
 
     // Scan array content blocks
     scanContent(m.content);
+
+    // Scan output (Responses API function_call_output)
+    if (typeof m.output === "string") {
+      if (m.output.includes("data:image/")) required.add("vision");
+      else if (m.output.includes("data:audio/")) required.add("audioInput");
+      else if (m.output.includes("data:video/")) required.add("videoInput");
+      else if (m.output.includes("data:application/pdf")) required.add("pdf");
+    } else if (Array.isArray(m.output)) {
+      scanContent(m.output);
+    }
 
     // Scan string content for embedded data URIs
     if (typeof m.content === "string") {
       if (m.content.includes("data:image/")) required.add("vision");
       else if (m.content.includes("data:audio/")) required.add("audioInput");
+      else if (m.content.includes("data:video/")) required.add("videoInput");
       else if (m.content.includes("data:application/pdf")) required.add("pdf");
     }
   };
 
-  // Modalities: current user turn only (trailing user run across each known shape).
-  for (const m of trailingUserItems(body.messages)) scanMessage(m);              // openai / claude / hermes / ollama
-  for (const it of trailingUserItems(body.input)) scanContent(it.content);       // responses
-  const contents = body.contents || body.request?.contents;                      // gemini / antigravity
-  for (const c of trailingUserItems(contents)) scanContent(c.parts);
+  const isAssistantOrSystemRole = (r) => (
+    r === "assistant" || r === "system" || r === "developer" || r === "model"
+  );
+
+  // Scan ALL user messages and tool result messages across the entire conversation history.
+  // 1. body.messages (openai / claude / hermes / ollama)
+  if (Array.isArray(body.messages)) {
+    for (const m of body.messages) {
+      if (!m || typeof m !== "object") continue;
+      if (m.type === "tool_result" || m.type === "function_call_output") {
+        scanMessage(m);
+      } else if (!isAssistantOrSystemRole(m.role)) {
+        scanMessage(m);
+      }
+    }
+  }
+
+  // 2. body.input (responses API / grok-cli / codex)
+  if (Array.isArray(body.input)) {
+    for (const it of body.input) {
+      if (!it || typeof it !== "object") continue;
+      if (it.type === "function_call") continue;
+      if (it.type === "tool_result" || it.type === "function_call_output") {
+        scanMessage(it);
+      } else if (!isAssistantOrSystemRole(it.role)) {
+        scanMessage(it);
+      }
+    }
+  } else if (typeof body.input === "string") {
+    if (body.input.includes("data:image/")) required.add("vision");
+    else if (body.input.includes("data:audio/")) required.add("audioInput");
+    else if (body.input.includes("data:video/")) required.add("videoInput");
+    else if (body.input.includes("data:application/pdf")) required.add("pdf");
+  }
+
+  // 3. body.contents / body.request.contents (gemini / antigravity)
+  const contents = body.contents || body.request?.contents;
+  if (Array.isArray(contents)) {
+    for (const c of contents) {
+      if (!c || typeof c !== "object") continue;
+      if (c.role === "model") continue;
+      scanContent(c.parts);
+    }
+  }
 
   // search: a declared web-search tool on the request means this turn needs
   // server-side grounding — prefer combo entries that declare search support.
@@ -756,6 +831,136 @@ function collectPanel(calls, { minPanel, stragglerGraceMs, panelHardTimeoutMs })
 }
 
 /**
+ * Strip multimodal content (images, PDFs, audio, video) from a request body,
+ * leaving only clean text prompt so text-only judge models (like deepseek, qwen-coder)
+ * do not crash with HTTP 400 'this model does not support image input' (Issue #3375).
+ */
+export function stripMultimodalContent(body) {
+  if (!body || typeof body !== "object") return body;
+  const next = structuredClone(body);
+
+  const isMediaBlock = (b) => {
+    if (!b || typeof b !== "object") return false;
+    const t = b.type;
+    if (t === "image_url" || t === "image" || t === "input_image") return true;
+    if (t === "input_audio" || t === "audio_url" || t === "audio") return true;
+    if (t === "input_video" || t === "video_url" || t === "video") return true;
+    if (t === "file" || t === "document" || t === "input_file") return true;
+    if (b.inlineData || b.fileData) return true;
+    return false;
+  };
+
+  const cleanDataUris = (str) => {
+    if (typeof str !== "string") return str;
+    return str.replace(/data:(?:image|audio|video|application\/pdf)[^"'\s)>]+/gi, "[media omitted]");
+  };
+
+  const cleanBlock = (b) => {
+    if (!b || typeof b !== "object") return b;
+    if (b.type === "text" && typeof b.text === "string") {
+      return { ...b, text: cleanDataUris(b.text) };
+    }
+    if (b.type === "input_text" && typeof b.text === "string") {
+      return { ...b, text: cleanDataUris(b.text) };
+    }
+    if (typeof b.text === "string" && !b.type) {
+      return { ...b, text: cleanDataUris(b.text) };
+    }
+    if (b.type === "tool_result") {
+      if (Array.isArray(b.content)) {
+        const filtered = b.content.filter((c) => !isMediaBlock(c)).map(cleanBlock);
+        return { ...b, content: filtered.length > 0 ? filtered : [{ type: "text", text: "[media omitted]" }] };
+      }
+      if (typeof b.content === "string") {
+        return { ...b, content: cleanDataUris(b.content) };
+      }
+    }
+    return b;
+  };
+
+  const cleanMessage = (m) => {
+    if (!m || typeof m !== "object") return m;
+    const msg = { ...m };
+    if ("images" in msg) delete msg.images;
+    if ("image_url" in msg) delete msg.image_url;
+    if ("image" in msg) delete msg.image;
+    if ("audio_url" in msg) delete msg.audio_url;
+    if ("audio" in msg) delete msg.audio;
+    if ("video_url" in msg) delete msg.video_url;
+    if ("video" in msg) delete msg.video;
+
+    if (Array.isArray(msg.experimental_attachments)) {
+      msg.experimental_attachments = msg.experimental_attachments.filter(
+        (a) => !a?.contentType?.startsWith("image/") && !a?.contentType?.startsWith("audio/") && !a?.contentType?.startsWith("video/") && a?.contentType !== "application/pdf" && !String(a?.url || "").startsWith("data:")
+      );
+    }
+    if (Array.isArray(msg.attachments)) {
+      msg.attachments = msg.attachments.filter(
+        (a) => !a?.contentType?.startsWith("image/") && !a?.contentType?.startsWith("audio/") && !a?.contentType?.startsWith("video/") && a?.contentType !== "application/pdf" && !String(a?.url || "").startsWith("data:")
+      );
+    }
+
+    if (Array.isArray(msg.content)) {
+      const filtered = msg.content
+        .filter((b) => !isMediaBlock(b))
+        .map(cleanBlock);
+      msg.content = filtered.length > 0 ? filtered : [{ type: "text", text: "[media omitted]" }];
+    } else if (typeof msg.content === "string") {
+      msg.content = cleanDataUris(msg.content);
+    }
+
+    if (typeof msg.output === "string") {
+      msg.output = cleanDataUris(msg.output);
+    } else if (Array.isArray(msg.output)) {
+      const filtered = msg.output.filter((b) => !isMediaBlock(b)).map(cleanBlock);
+      msg.output = filtered.length > 0 ? filtered : [{ type: "text", text: "[media omitted]" }];
+    }
+
+    return msg;
+  };
+
+  if (Array.isArray(next.messages)) {
+    next.messages = next.messages.map(cleanMessage);
+  }
+
+  if (Array.isArray(next.input)) {
+    next.input = next.input.map((it) => {
+      if (!it || typeof it !== "object") return it;
+      const item = { ...it };
+      if (Array.isArray(item.content)) {
+        const filtered = item.content.filter((b) => !isMediaBlock(b)).map(cleanBlock);
+        item.content = filtered.length > 0 ? filtered : [{ type: "input_text", text: "[media omitted]" }];
+      } else if (typeof item.content === "string") {
+        item.content = cleanDataUris(item.content);
+      }
+      return item;
+    });
+  }
+
+  const cleanContents = (contents) => {
+    if (!Array.isArray(contents)) return contents;
+    return contents.map((c) => {
+      if (!c || typeof c !== "object") return c;
+      const copy = { ...c };
+      if (Array.isArray(copy.parts)) {
+        const filtered = copy.parts.filter((p) => !isMediaBlock(p)).map(cleanBlock);
+        copy.parts = filtered.length > 0 ? filtered : [{ text: "[media omitted]" }];
+      }
+      return copy;
+    });
+  };
+
+  if (Array.isArray(next.contents)) {
+    next.contents = cleanContents(next.contents);
+  }
+  if (Array.isArray(next.request?.contents)) {
+    next.request.contents = cleanContents(next.request.contents);
+  }
+
+  return next;
+}
+
+/**
  * Handle a fusion combo: fan the prompt out to every panel model in parallel,
  * then a judge model synthesizes one final answer from all panel responses.
  *
@@ -779,12 +984,32 @@ function collectPanel(calls, { minPanel, stragglerGraceMs, panelHardTimeoutMs })
  * @returns {Promise<Response>}
  */
 export async function handleFusionChat({ body, models, handleSingleModel, log, comboName, judgeModel, tuning }) {
-  const panel = Array.isArray(models) ? models.filter(Boolean) : [];
+  let panel = Array.isArray(models) ? models.filter(Boolean) : [];
   if (panel.length === 0) {
     return new Response(
       JSON.stringify({ error: { message: "Fusion combo has no models" } }),
       { status: 400, headers: { "Content-Type": "application/json" } }
     );
+  }
+
+  // Filter panel models by detectRequiredCapabilities(body) so text-only panel
+  // members don't receive media requests that cause 400 errors (upstream Issue #3375).
+  const required = detectRequiredCapabilities(body);
+  const mediaCaps = [...required].filter((c) => HARD_CAPS.has(c));
+  if (mediaCaps.length > 0) {
+    const capablePanel = panel.filter((m) => {
+      const slash = typeof m === "string" ? m.indexOf("/") : -1;
+      const provider = slash > 0 ? m.slice(0, slash) : "";
+      const model = slash > 0 ? m.slice(slash + 1) : m;
+      const caps = getCapabilitiesForModel(provider, model);
+      return mediaCaps.every((c) => caps[c] === true);
+    });
+    if (capablePanel.length > 0) {
+      if (capablePanel.length < panel.length) {
+        log?.info?.("FUSION", `Filtered panel for [${mediaCaps.join(",")}] from ${panel.length} to ${capablePanel.length} models: [${capablePanel.join(", ")}]`);
+      }
+      panel = capablePanel;
+    }
   }
 
   // A single-model fusion has nothing to fuse — just answer directly.
@@ -853,7 +1078,9 @@ export async function handleFusionChat({ body, models, handleSingleModel, log, c
   }
 
   // 4. Judge analyzes + writes one final answer (streams to client if requested).
-  const judgeBody = appendUserTurn(body, buildJudgePrompt(answers));
+  // Strip multimodal content from judgeBody so text-only judge models (like deepseek, qwen-coder)
+  // do not crash with HTTP 400 'this model does not support image input' (Issue #3375).
+  const judgeBody = stripMultimodalContent(appendUserTurn(body, buildJudgePrompt(answers)));
   log.info("FUSION", `Judging ${answers.length} answers with ${judge}`);
   return handleSingleModel(judgeBody, judge);
 }

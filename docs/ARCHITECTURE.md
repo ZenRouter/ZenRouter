@@ -547,6 +547,13 @@ Translations are selected dynamically based on source payload shape and provider
 - Gemini thought tokens belong to completion/reasoning, not prompt. Missing totals derive from prompt plus completion; supplied numeric totals remain authoritative, including zero.
 - CommandCode input totals remain cache-inclusive. Cache-write detail is exposed independently; read/write splits must not be added to inclusive prompt totals again.
 
+
+### Multimodal translation and capability routing
+
+- **Remote image URLs and inline base64**: Remote HTTP image URLs dispatched to Claude are prefetched and converted to inline base64 data URIs before reaching Anthropic's Messages API (which strictly forbids `source.type: "url"`). Claude requests with remote images preserve `OPENAI_BLOCK.IMAGE_URL` when bridging through OpenAI.
+- **Multimodal tool outputs**: Screenshots and images returned within `tool_result` content arrays are preserved as structured `OPENAI_BLOCK.IMAGE_URL` blocks and hoisted into user messages rather than stringified into raw text, preventing multi-million token context overflows.
+- **Documents and video**: Claude `document` blocks (PDF) map to OpenAI `file` and Responses `input_file` blocks. `video_url` and `input_video` blocks translate to Gemini `inlineData`/`fileData` and are cleanly stripped with descriptive placeholders when routed to non-video models.
+- **Combo and fusion modality safety**: `detectRequiredCapabilities` scans the entire conversation history (including tool results and earlier user turns) so that follow-up turns never fall back to text-only models when media is present. In fusion mode, media blocks are stripped from the judge prompt so text-only judges evaluate clean text answers without crashing (Issue #3375).
 The 2026-09-27–2026-10-02 upstream audit adapted [#4143](https://github.com/decolua/9router/pull/4143), [#4533](https://github.com/decolua/9router/pull/4533), [#4481](https://github.com/decolua/9router/pull/4481), [#4523](https://github.com/decolua/9router/pull/4523), and [#4412](https://github.com/decolua/9router/pull/4412). Already-present streaming defaults, forced-Claude JSON conversion, Gemini system/schema fixes, and fork-specific security fixes were not duplicated. [Upstream insecure-TLS fallback](https://github.com/decolua/9router/commit/b58bd80406a24030acac6312fce519534c61947a) was rejected; certificate failures must not trigger unauthenticated TLS.
 
 ## Failure Modes and Resilience

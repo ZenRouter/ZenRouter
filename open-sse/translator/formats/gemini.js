@@ -104,6 +104,22 @@ export function convertOpenAIContentToParts(content) {
           const data = url.substring(commaIndex + 1);
           parts.push({ inlineData: { mime_type: mimeType, data: data } });
         }
+      } else if ((item.type === OPENAI_BLOCK.VIDEO_URL || item.type === "video_url") && item.video_url?.url) {
+        const url = item.video_url.url;
+        if (url.startsWith("data:")) {
+          const commaIndex = url.indexOf(",");
+          if (commaIndex !== -1) {
+            const mimeType = url.substring(5, commaIndex).split(";")[0] || "video/mp4";
+            const data = url.substring(commaIndex + 1);
+            parts.push({ inlineData: { mime_type: mimeType, data: data } });
+          }
+        } else if (url.startsWith("http://") || url.startsWith("https://")) {
+          parts.push({ fileData: { fileUri: url, mimeType: "video/mp4" } });
+        }
+      } else if ((item.type === OPENAI_BLOCK.INPUT_VIDEO || item.type === "input_video") && item.input_video?.data) {
+        const format = item.input_video.format || "mp4";
+        const mimeType = `video/${format}`;
+        parts.push({ inlineData: { mime_type: mimeType, data: item.input_video.data } });
       }
     }
   }

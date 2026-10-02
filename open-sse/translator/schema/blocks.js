@@ -7,6 +7,8 @@ export const OPENAI_BLOCK = {
   IMAGE: "image",
   INPUT_AUDIO: "input_audio",
   AUDIO_URL: "audio_url",
+  VIDEO_URL: "video_url",
+  INPUT_VIDEO: "input_video",
   FILE: "file",
   FUNCTION: "function",
 };
@@ -28,6 +30,7 @@ export const CLAUDE_BLOCK = {
   REDACTED_THINKING: "redacted_thinking",
   SERVER_TOOL_USE: "server_tool_use",
   WEB_SEARCH_TOOL_RESULT: "web_search_tool_result",
+  CONTAINER_UPLOAD: "container_upload",
 };
 
 // OpenAI Responses API item types.
@@ -48,7 +51,7 @@ export const RESPONSES_ITEM = {
 
 // Valid OpenAI block types (used by filterToOpenAIFormat).
 export const VALID_OPENAI_CONTENT_TYPES = [
-  OPENAI_BLOCK.TEXT, OPENAI_BLOCK.IMAGE_URL, OPENAI_BLOCK.IMAGE, OPENAI_BLOCK.INPUT_AUDIO, OPENAI_BLOCK.AUDIO_URL, OPENAI_BLOCK.FILE,
+  OPENAI_BLOCK.TEXT, OPENAI_BLOCK.IMAGE_URL, OPENAI_BLOCK.IMAGE, OPENAI_BLOCK.INPUT_AUDIO, OPENAI_BLOCK.AUDIO_URL, OPENAI_BLOCK.VIDEO_URL, OPENAI_BLOCK.INPUT_VIDEO, OPENAI_BLOCK.FILE,
 ];
 export const VALID_OPENAI_MESSAGE_TYPES = [
   OPENAI_BLOCK.TEXT, OPENAI_BLOCK.IMAGE_URL, OPENAI_BLOCK.IMAGE, "tool_calls", CLAUDE_BLOCK.TOOL_RESULT,

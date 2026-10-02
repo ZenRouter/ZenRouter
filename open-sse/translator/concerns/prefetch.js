@@ -6,6 +6,7 @@ import { fetchImageAsBase64, parseDataUri } from "./image.js";
 
 // Targets that require inline base64 images (cannot accept remote URLs).
 const TARGETS_NEED_BASE64 = new Set([
+  FORMATS.CLAUDE,
   FORMATS.GEMINI, FORMATS.GEMINI_CLI, FORMATS.VERTEX,
   FORMATS.ANTIGRAVITY, FORMATS.OLLAMA, FORMATS.KIRO,
 ]);

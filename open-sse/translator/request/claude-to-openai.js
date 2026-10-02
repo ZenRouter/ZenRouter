@@ -185,11 +185,18 @@ function convertClaudeMessage(msg) {
           break;
 
         case CLAUDE_BLOCK.IMAGE:
-          if (block.source?.type === "base64") {
+          if (block.source?.type === "base64" && block.source.data) {
             parts.push({
               type: OPENAI_BLOCK.IMAGE_URL,
               image_url: {
                 url: encodeDataUri(block.source.media_type, block.source.data)
+              }
+            });
+          } else if (block.source?.type === "url" && block.source.url) {
+            parts.push({
+              type: OPENAI_BLOCK.IMAGE_URL,
+              image_url: {
+                url: block.source.url
               }
             });
           }
@@ -221,13 +228,31 @@ function convertClaudeMessage(msg) {
         case CLAUDE_BLOCK.TOOL_RESULT:
         case CLAUDE_BLOCK.WEB_SEARCH_TOOL_RESULT:
           let resultContent = "";
+          const toolImages = [];
           if (typeof block.content === "string") {
             resultContent = block.content;
           } else if (Array.isArray(block.content)) {
-            resultContent = block.content
-              .filter(c => c.type === CLAUDE_BLOCK.TEXT)
-              .map(c => c.text)
-              .join("\n") || JSON.stringify(block.content);
+            const textParts = [];
+            for (const c of block.content) {
+              if (c.type === CLAUDE_BLOCK.TEXT && c.text) {
+                textParts.push(c.text);
+              } else if (c.type === CLAUDE_BLOCK.IMAGE) {
+                if (c.source?.type === "base64" && c.source.data) {
+                  toolImages.push({
+                    type: OPENAI_BLOCK.IMAGE_URL,
+                    image_url: {
+                      url: encodeDataUri(c.source.media_type, c.source.data)
+                    }
+                  });
+                } else if (c.source?.type === "url" && c.source.url) {
+                  toolImages.push({
+                    type: OPENAI_BLOCK.IMAGE_URL,
+                    image_url: { url: c.source.url }
+                  });
+                }
+              }
+            }
+            resultContent = textParts.join("\n") || (toolImages.length === 0 ? JSON.stringify(block.content) : "");
           } else if (block.content) {
             resultContent = JSON.stringify(block.content);
           }
@@ -235,8 +260,12 @@ function convertClaudeMessage(msg) {
           toolResults.push({
             role: ROLE.TOOL,
             tool_call_id: block.tool_use_id,
-            content: resultContent
+            content: resultContent,
+            ...(typeof block.is_error === "boolean" ? { is_error: block.is_error } : {})
           });
+          if (toolImages.length > 0) {
+            parts.push(...toolImages);
+          }
           break;
 
         case CLAUDE_BLOCK.THINKING:
