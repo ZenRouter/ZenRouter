@@ -6,6 +6,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- Attach server lifecycle listeners before the tray-mode early return so Windows startup can recover a crashed gateway or exit after a clean shutdown (#4509 / PR #4522). Add isolated launcher subprocess regressions.
 - Apply Sonnet 5.5 request restrictions across native, translated, and passthrough paths: reduced-thinking `between_tools`, supported effort limits, and non-forced tool selection (`49ba54b2`). Preserve explicitly requested summarized/omitted reasoning display on mandatory-adaptive Claude models.
 - Emit exactly one OpenAI `[DONE]` sentinel across translated and passthrough streams, including fragmented bytes and newline-free EOF (#4480/#4461/#4356). Close Responses reasoning items before text or tool items, retaining tool arguments, Unicode text, and late usage (`5d2cfbf3`).
 - Use the shared terminal-turn/function-call normalizer on production Gemini, Gemini CLI, and Vertex request paths (#4345). Remove the shadowing merge-only helper; preserve Antigravity's intentional native tool-result roles.

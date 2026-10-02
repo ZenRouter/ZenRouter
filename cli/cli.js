@@ -717,6 +717,7 @@ function startServer(updatePromise) {
   }
 
   let server = spawnServer();
+  attachServerEvents();
 
   // Cleanup function - force kill server process
   let isCleaningUp = false;
@@ -998,5 +999,4 @@ function startServer(updatePromise) {
     }, delay);
   }
 
-  attachServerEvents();
 }
