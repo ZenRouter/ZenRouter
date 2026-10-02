@@ -905,8 +905,14 @@ function startServer(updatePromise) {
       else { cleanup(); process.exit(1); }
     });
 
-    server.on("close", (code) => {
+    server.on("close", async (code) => {
       if (isShuttingDown || code === 0) {
+        isShuttingDown = true;
+        // Native trays can outlive stdin EOF; finish their teardown before exit.
+        try {
+          const { killTray } = require("./src/cli/tray/tray");
+          await killTray();
+        } catch {}
         process.exit(code || 0);
         return;
       }
