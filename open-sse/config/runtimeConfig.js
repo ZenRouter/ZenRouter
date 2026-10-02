@@ -76,7 +76,7 @@ export const GEMINI_NATIVE_TTS_FETCH_TIMEOUT_MS = envMs("GEMINI_NATIVE_TTS_FETCH
 // Default token limits
 export const DEFAULT_MAX_TOKENS = 64000;
 export const DEFAULT_MIN_TOKENS = 32000;
-
+export const REASONING_MIN_OUTPUT_FLOOR = 65536;
 export const TOKEN_SAVER_HEADER = "x-zenrouter-token-saver";
 
 // Retry config for 429 responses (legacy - kept for backward compatibility)

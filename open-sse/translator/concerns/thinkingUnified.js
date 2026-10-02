@@ -203,7 +203,6 @@ function geminiBudgetOutputFloor(budget) {
   if (budget <= 24576) return 32768;
   return 65535;
 }
-
 function geminiLevelOutputFloor(level) {
   return GEMINI_LEVEL_OUTPUT_FLOOR[level] || GEMINI_LEVEL_OUTPUT_FLOOR.high;
 }

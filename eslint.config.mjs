@@ -1,6 +1,6 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
-
+import reactHooks from "eslint-plugin-react-hooks";
 const eslintConfig = defineConfig([
   ...nextVitals,
   // Override default ignores of eslint-config-next.
@@ -23,6 +23,15 @@ const eslintConfig = defineConfig([
   {
     files: ["open-sse/**/*.js", "src/lib/**/*.js"],
     rules: { "import/no-anonymous-default-export": "off" },
+  },
+  {
+    plugins: {
+      "react-hooks": reactHooks,
+    },
+    rules: {
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/immutability": "warn",
+    },
   },
 ]);
 

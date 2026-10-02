@@ -28,7 +28,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
     - Enabled `pdf: true` and `videoInput: true` for `*qwen*vl*` models.
     - Added `*gemini-1.5*` pattern declaring native `audioInput: true` and `videoInput: true`.
     - Added `*pixtral*` pattern with `vision: true, pdf: true, contextWindow: 128000`.
-    - Added Codex 872k context ceilings for `gpt-6.1-sol` and `[1m]` models in `PROVIDER_CAPABILITIES.codex` and alias `cx` (PR #4524, #4443, #4419).
+    - Aligned context windows with official `models.dev/api.json` specifications:
+      - Flagship Claude models (`claude-sonnet-4`, `claude-sonnet-4.5`, `claude-sonnet-4.6`, `claude-sonnet-5`, `claude-sonnet-5.5`, `claude-opus-4.6+`, `claude-opus-5+`, `claude-fable-5+`) natively resolve to 1,000,000 (1M) context window without requiring legacy `[1m]` suffix.
+      - Codex and OpenAI GPT-6 models (`gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`, `gpt-5.6-*`) resolve to official 1,050,000 (1.05M) context window, with `[1m]` suffix retained as a fallback.
+      - DeepSeek (`deepseek-v4*`, `deepseek-flash`) and Qwen (`qwen3*`, `qwen*max*`, `qwen*plus*`) models aligned to 1,000,000 (1M) context window.
+      - Added dynamic reasoning budget auto-floor (`REASONING_MIN_OUTPUT_FLOOR = 65536`) in `open-sse/translator/formats/maxTokens.js` and `thinkingUnified.js`: automatically bumps small client `max_tokens` (e.g. 1000, 2000) up to 65,536 tokens when reasoning effort (`medium`, `high`, `max`, `ultra`) or adaptive thinking is active, preventing blank outputs from budget exhaustion while maintaining standard 64k non-reasoning contracts.
 - Document the unresolved `node-forge` GHSA-86w9-cpqp-85rv advisory honestly: no official patched release exists; current MITM issuance/parsing uses do not reach the affected signature verifier. Root/CLI dependency audits remain high severity rather than suppressing the finding.
 - Bound Codex and Qoder preheader SSE inspection to 1000 ms/256 KiB, preserve pending reads and split UTF-8, and cancel upstream transport on disconnect. Treat Qoder queue code `10605` as 429 with retry timing; retain quota 403s and structured late errors across every client format and Responses JSON collection.
 - Pair duplicate Gemini tool-call IDs by occurrence, retain thought signatures, and recognize signed/raw result IDs before synthetic-result repair.

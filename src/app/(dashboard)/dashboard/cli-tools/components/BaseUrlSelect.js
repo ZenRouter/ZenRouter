@@ -104,22 +104,24 @@ export default function BaseUrlSelect({
     const matched = current
       ? options.find((o) => o.value !== CUSTOM_VALUE && normalizeUrl(o.url) === current)
       : null;
-    if (matched) {
-      setCustomInput("");
-      customInputRef.current = "";
-      setMode(matched.value);
-      onChange(matched.url);
-    } else if (current) {
-      setCustomInput(current);
-      customInputRef.current = current;
-      setMode(CUSTOM_VALUE);
-      onChange(current);
-    } else {
-      const target = options.find((o) => o.value !== CUSTOM_VALUE);
-      if (!target) return;
-      setMode(target.value);
-      onChange(target.url);
-    }
+    queueMicrotask(() => {
+      if (matched) {
+        setCustomInput("");
+        customInputRef.current = "";
+        setMode(matched.value);
+        onChange(matched.url);
+      } else if (current) {
+        setCustomInput(current);
+        customInputRef.current = current;
+        setMode(CUSTOM_VALUE);
+        onChange(current);
+      } else {
+        const target = options.find((o) => o.value !== CUSTOM_VALUE);
+        if (!target) return;
+        setMode(target.value);
+        onChange(target.url);
+      }
+    });
   }, [presetsLoaded, options, onChange, currentUrl, withV1]);
 
   const handleSelect = (e) => {
