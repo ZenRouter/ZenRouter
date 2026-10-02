@@ -30,9 +30,21 @@ function evictOldestIfNeeded() {
   }
 }
 
-export async function dedupRefresh(provider, oldToken, fn, log) {
+// Match the policy fields consumed by proxyAwareFetch; keys stay in memory only.
+export function getRefreshProxyKey(proxyOptions = null) {
+  const normalize = (value) => typeof value === "string" ? value.trim() : "";
+  return JSON.stringify([
+    proxyOptions?.enabled === true || proxyOptions?.connectionProxyEnabled === true,
+    normalize(proxyOptions?.url ?? proxyOptions?.connectionProxyUrl),
+    normalize(proxyOptions?.noProxy ?? proxyOptions?.connectionNoProxy),
+    proxyOptions?.strictProxy === true,
+    normalize(proxyOptions?.vercelRelayUrl),
+  ]);
+}
+
+export async function dedupRefresh(provider, oldToken, fn, log, proxyOptions = null) {
   if (!oldToken) return fn();
-  const key = `${provider}:${oldToken}`;
+  const key = JSON.stringify([provider, oldToken, getRefreshProxyKey(proxyOptions)]);
   const hit = refreshDedupCache.get(key);
   if (hit) {
     if (hit.promise) {

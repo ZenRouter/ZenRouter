@@ -13,6 +13,7 @@
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { GITHUB_COPILOT } from "../config/appConstants.js";
 import { refreshCopilotToken } from "./tokenRefresh.js";
+import { getRefreshProxyKey } from "./tokenRefresh/dedup.js";
 
 const MODELS_URL = "https://api.githubcopilot.com/models";
 const FETCH_TIMEOUT_MS = 10_000;
@@ -39,7 +40,7 @@ function buildHeaders(token) {
   };
 }
 
-async function fetchCatalogRaw(token, signal) {
+async function fetchCatalogRaw(token, signal, proxyOptions = null) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
@@ -48,7 +49,7 @@ async function fetchCatalogRaw(token, signal) {
       headers: buildHeaders(token),
       cache: "no-store",
       signal: signal || controller.signal,
-    });
+    }, proxyOptions);
     if (!response.ok) {
       const err = new Error(`Copilot /models returned ${response.status}`);
       err.status = response.status;
@@ -113,7 +114,7 @@ export async function resolveCopilotModels(credentials, options = {}) {
     return null;
   }
 
-  const key = cacheKey(credentials);
+  const key = JSON.stringify([cacheKey(credentials), getRefreshProxyKey(options.proxyOptions)]);
   const now = Date.now();
   if (!options.forceRefresh) {
     const cached = catalogCache.get(key);
@@ -124,13 +125,14 @@ export async function resolveCopilotModels(credentials, options = {}) {
 
   let raw;
   try {
-    raw = await fetchCatalogRaw(token, options.signal);
+    raw = await fetchCatalogRaw(token, options.signal, options.proxyOptions);
   } catch (err) {
+    if (err?.message?.includes("strictProxy=true")) throw err;
     // A 401/403 means the Copilot token is stale — refresh from the GitHub
     // access token and retry once.
     if (err && (err.status === 401 || err.status === 403) && credentials.accessToken) {
       options.log?.info?.("COPILOT_MODELS", `Got ${err.status}; refreshing Copilot token`);
-      const refreshed = await refreshCopilotToken(credentials.accessToken);
+      const refreshed = await refreshCopilotToken(credentials.accessToken, options.log, options.proxyOptions);
       if (refreshed?.token) {
         if (typeof options.onCredentialsRefreshed === "function") {
           try {
@@ -143,8 +145,9 @@ export async function resolveCopilotModels(credentials, options = {}) {
           }
         }
         try {
-          raw = await fetchCatalogRaw(refreshed.token, options.signal);
+          raw = await fetchCatalogRaw(refreshed.token, options.signal, options.proxyOptions);
         } catch (err2) {
+          if (err2?.message?.includes("strictProxy=true")) throw err2;
           options.log?.warn?.("COPILOT_MODELS", `Retry after refresh failed: ${err2?.message || err2}`);
           return null;
         }

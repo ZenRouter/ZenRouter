@@ -11,6 +11,8 @@ import http2 from "http2";
 import { PROVIDER_OAUTH } from "../providers/index.js";
 import { buildCursorHeaders } from "../utils/cursorChecksum.js";
 import { decodeMessage } from "../utils/cursorProtobuf.js";
+import { proxyAwareFetch } from "../utils/proxyFetch.js";
+import { getRefreshProxyKey } from "./tokenRefresh/dedup.js";
 
 const FETCH_TIMEOUT_MS = 10_000;
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -128,7 +130,7 @@ function http2PostProto(url, headers, body, signal, timeoutMs) {
   });
 }
 
-async function fetchCursorCatalog(credentials, signal) {
+async function fetchCursorCatalog(credentials, signal, proxyOptions = null) {
   const accessToken = credentials?.accessToken;
   const machineId = credentials?.providerSpecificData?.machineId;
   const url = getCursorModelsUrl();
@@ -144,7 +146,20 @@ async function fetchCursorCatalog(credentials, signal) {
   delete headers["connect-accept-encoding"];
   delete headers["connect-protocol-version"];
 
-  const response = await http2PostProto(url, headers, new Uint8Array(), signal, FETCH_TIMEOUT_MS);
+  // Preserve Cursor's native HTTP/2 path only when no account proxy is configured.
+  // A configured proxy/relay must carry this credentialed unary RPC too.
+  let response;
+  if (proxyOptions?.strictProxy || proxyOptions?.connectionProxyEnabled || proxyOptions?.vercelRelayUrl) {
+    const res = await proxyAwareFetch(url, {
+      method: "POST",
+      headers,
+      body: new Uint8Array(),
+      signal: signal || AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    }, proxyOptions);
+    response = { status: res.status, body: await res.arrayBuffer() };
+  } else {
+    response = await http2PostProto(url, headers, new Uint8Array(), signal, FETCH_TIMEOUT_MS);
+  }
   if (response.status !== 200) {
     const error = new Error(`Cursor GetUsableModels returned ${response.status}`);
     error.status = response.status;
@@ -164,7 +179,7 @@ export async function resolveCursorModels(credentials, options = {}) {
     return null;
   }
 
-  const key = cacheKey(credentials);
+  const key = JSON.stringify([cacheKey(credentials), getRefreshProxyKey(options.proxyOptions)]);
   const now = Date.now();
   if (!options.forceRefresh) {
     const cached = catalogCache.get(key);
@@ -172,11 +187,12 @@ export async function resolveCursorModels(credentials, options = {}) {
   }
 
   try {
-    const models = await fetchCursorCatalog(credentials, options.signal);
+    const models = await fetchCursorCatalog(credentials, options.signal, options.proxyOptions);
     if (!models?.length) return null;
     catalogCache.set(key, { expiresAt: now + CACHE_TTL_MS, models });
     return { models };
   } catch (error) {
+    if (error?.message?.includes("strictProxy=true")) throw error;
     options.log?.warn?.("CURSOR_MODELS", `Live model fetch failed: ${error?.message || error}`);
     return null;
   }

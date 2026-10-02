@@ -21,6 +21,7 @@
 import { createHash } from "crypto";
 
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
+import { getRefreshProxyKey } from "./tokenRefresh/dedup.js";
 import { buildCosyHeaders } from "../shared/qoder/cosy.js";
 import { QODER_CLI_VERSION } from "../config/clientVersions.js";
 import {
@@ -126,16 +127,21 @@ async function fetchUserIdForJobToken(jobToken, proxyOptions = null, signal = nu
 }
 
 /**
- * Resolve a PAT to a job-token credential, cached per-PAT.
+ * Resolve a PAT to a job-token credential, cached per-PAT. Missing identity
+ * is retried on the next request without discarding a still-valid job token.
  */
 async function resolvePatCredential(pat, proxyOptions = null, signal = null) {
-  const cached = patJobCache.get(pat);
-  if (cached && cached.expiresAt - Date.now() > PAT_REFRESH_BUFFER_MS) return cached;
-
-  const { jobToken, expiresAt } = await exchangeJobToken(pat, proxyOptions, signal);
-  const userId = await fetchUserIdForJobToken(jobToken, proxyOptions, signal);
-  const resolved = { accessToken: jobToken, userId, expiresAt };
-  patJobCache.set(pat, resolved);
+  const key = JSON.stringify([pat, getRefreshProxyKey(proxyOptions)]);
+  let resolved = patJobCache.get(key);
+  if (!resolved || resolved.expiresAt - Date.now() <= PAT_REFRESH_BUFFER_MS) {
+    const { jobToken, expiresAt } = await exchangeJobToken(pat, proxyOptions, signal);
+    resolved = { accessToken: jobToken, userId: "", expiresAt };
+    patJobCache.set(key, resolved);
+  }
+  if (!resolved.userId) {
+    const userId = await fetchUserIdForJobToken(resolved.accessToken, proxyOptions, signal);
+    if (userId) resolved.userId = userId;
+  }
   return resolved;
 }
 
@@ -298,12 +304,13 @@ export async function resolveQoderModels(credentials, options = {}) {
   try {
     resolved = await resolveQoderCredentials(credentials, options.proxyOptions, options.signal);
   } catch (error) {
+    if (error?.message?.includes("strictProxy=true")) throw error;
     options.log?.warn?.("QODER", `PAT exchange failed: ${error.message}`);
     return null;
   }
   if (!resolved?.accessToken || !(resolved.providerSpecificData || {}).userId) return null;
 
-  const key = cacheKey(resolved);
+  const key = JSON.stringify([cacheKey(resolved), getRefreshProxyKey(options.proxyOptions)]);
   const now = Date.now();
   if (!options.forceRefresh) {
     const cached = catalogCache.get(key);

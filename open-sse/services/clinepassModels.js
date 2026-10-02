@@ -1,4 +1,5 @@
 import { buildClineHeaders } from "../shared/clineAuth.js";
+import { proxyAwareFetch } from "../utils/proxyFetch.js";
 
 const CLINEPASS_MODELS_ENDPOINT = "https://api.cline.bot/api/v1/models";
 // Cline's free tier is published here, not in /api/v1/models: the catalog
@@ -28,7 +29,7 @@ function buildModelListHeaders(token, isApiKey) {
  * Internal: fetch the raw model list from Cline's /models endpoint.
  * Returns the parsed array or null on any failure.
  */
-async function fetchClineRawModels(credentials) {
+async function fetchClineRawModels(credentials, proxyOptions = null) {
   const isApiKey = Boolean(credentials?.apiKey);
   const token = isApiKey ? credentials.apiKey : credentials?.accessToken;
   if (!token) return null;
@@ -39,11 +40,11 @@ async function fetchClineRawModels(credentials) {
   try {
     const headers = buildModelListHeaders(token, isApiKey);
 
-    const response = await fetch(CLINEPASS_MODELS_ENDPOINT, {
+    const response = await proxyAwareFetch(CLINEPASS_MODELS_ENDPOINT, {
       method: "GET",
       headers,
       signal: controller.signal,
-    });
+    }, proxyOptions);
 
     if (!response.ok) return null;
 
@@ -64,8 +65,8 @@ async function fetchClineRawModels(credentials) {
  * @param {object} credentials - Connection credentials ({ accessToken, apiKey })
  * @returns {Promise<{ models: { id: string, name: string }[] } | null>}
  */
-export async function resolveClinepassModels(credentials) {
-  const rawList = await fetchClineRawModels(credentials);
+export async function resolveClinepassModels(credentials, { proxyOptions = null } = {}) {
+  const rawList = await fetchClineRawModels(credentials, proxyOptions);
   if (!rawList) return null;
 
   const models = rawList
@@ -85,16 +86,16 @@ export async function resolveClinepassModels(credentials) {
  * @param {{accessToken?: string, apiKey?: string}} credentials
  * @returns {Promise<{id: string, name: string}[] | null>}
  */
-async function fetchClineFreeTierModels() {
+async function fetchClineFreeTierModels(proxyOptions = null) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const response = await fetch(CLINE_RECOMMENDED_MODELS_ENDPOINT, {
+    const response = await proxyAwareFetch(CLINE_RECOMMENDED_MODELS_ENDPOINT, {
       method: "GET",
       headers: { Accept: "application/json" },
       signal: controller.signal,
-    });
+    }, proxyOptions);
 
     if (!response.ok) return null;
 
@@ -120,8 +121,8 @@ async function fetchClineFreeTierModels() {
  * @param {object} credentials - Connection credentials ({ accessToken, apiKey })
  * @returns {Promise<{ models: { id: string, name: string }[] } | null>}
  */
-export async function resolveClineModels(credentials) {
-  const rawList = await fetchClineRawModels(credentials);
+export async function resolveClineModels(credentials, { proxyOptions = null } = {}) {
+  const rawList = await fetchClineRawModels(credentials, proxyOptions);
   if (!rawList) return null;
 
   const models = rawList
@@ -134,7 +135,7 @@ export async function resolveClineModels(credentials) {
   // Free tier: /api/v1/models lists no `cline-free/*` ids, so merge the feed's
   // free[] in. First writer wins on a shared id, keeping the catalog's entry
   // for anything the two sources agree on.
-  const freeTier = await fetchClineFreeTierModels();
+  const freeTier = await fetchClineFreeTierModels(proxyOptions);
   const byId = new Map(models.map((m) => [m.id, m]));
   for (const m of freeTier || []) {
     if (!byId.has(m.id)) byId.set(m.id, m);

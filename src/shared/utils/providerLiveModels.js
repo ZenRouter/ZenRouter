@@ -10,6 +10,7 @@
 
 import REGISTRY from "open-sse/providers/registry/index.js";
 import { inferModelKind, modelKind } from "open-sse/providers/models/schema.js";
+import { proxyAwareFetch } from "open-sse/utils/proxyFetch.js";
 
 export function normalizeLiveModel(providerId, model) {
   const entry = REGISTRY.find((r) => r.id === providerId);
@@ -51,12 +52,14 @@ export function deriveModelsUrl(providerId) {
 
 /**
  * Fetch the live model catalog for an API-key provider.
- * @returns {Promise<Array<{id: string, name?: string}>|null>} null on any failure
+ * @returns {Promise<Array<{id: string, name?: string}>|null>} null on failure; strict transport errors propagate
  */
-export async function fetchProviderLiveModels(providerId, apiKey, { useCache = true } = {}) {
+export async function fetchProviderLiveModels(providerId, apiKey, { useCache = true, proxyOptions = null } = {}) {
   if (!apiKey) return null;
 
-  if (useCache) {
+  // Configured account egress must not reuse another account's cached catalog.
+  const cacheAllowed = !proxyOptions?.strictProxy && !proxyOptions?.connectionProxyEnabled && !proxyOptions?.vercelRelayUrl;
+  if (useCache && cacheAllowed) {
     const cached = cache.get(providerId);
     if (cached && Date.now() < cached.expiresAt) return cached.models;
   }
@@ -64,17 +67,18 @@ export async function fetchProviderLiveModels(providerId, apiKey, { useCache = t
   const url = deriveModelsUrl(providerId);
   if (!url) return null;
 
+  let tid;
   try {
     const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), TIMEOUT_MS);
-    const res = await fetch(url, {
+    tid = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const res = await proxyAwareFetch(url, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       cache: "no-store",
       signal: controller.signal,
-    });
+    }, proxyOptions);
     clearTimeout(tid);
     if (!res.ok) return null;
 
@@ -109,10 +113,13 @@ export async function fetchProviderLiveModels(providerId, apiKey, { useCache = t
       .filter((m) => typeof m.id === "string" && m.id.trim() !== "");
 
     if (!models.length) return null;
-    cache.set(providerId, { models, expiresAt: Date.now() + CACHE_TTL_MS });
+    if (cacheAllowed) cache.set(providerId, { models, expiresAt: Date.now() + CACHE_TTL_MS });
     return models;
-  } catch {
+  } catch (error) {
+    if (proxyOptions?.strictProxy === true) throw error;
     return null;
+  } finally {
+    clearTimeout(tid);
   }
 }
 

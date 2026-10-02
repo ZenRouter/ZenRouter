@@ -11,6 +11,7 @@
 
 import crypto from "node:crypto";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
+import { getRefreshProxyKey } from "../services/tokenRefresh/dedup.js";
 
 export const ZED_WEB_BASE_URL = "https://zed.dev";
 export const ZED_CLOUD_BASE_URL = "https://cloud.zed.dev";
@@ -260,7 +261,7 @@ export async function fetchZedLlmToken(credentials, options = {}) {
   }
   if (!organizationId) throw new Error("No Zed organization selected");
 
-  const cacheKey = zedUserCacheKey(credentials, organizationId);
+  const cacheKey = JSON.stringify([zedUserCacheKey(credentials, organizationId), getRefreshProxyKey(options.proxyOptions)]);
   const cached = llmTokenCache.get(cacheKey);
   if (!options.forceRefresh && cached && cached.expiresAt > Date.now()) return cached.token;
 
@@ -280,6 +281,7 @@ export async function fetchZedLlmToken(credentials, options = {}) {
       body: JSON.stringify({ organization_id: organizationId }),
       signal: options.signal ?? undefined,
     },
+    options.proxyOptions ?? null,
   );
   const token =
     typeof data?.token === "string" ? data.token : data?.token?.[0] || data?.token?.value;
@@ -308,7 +310,7 @@ export async function zedLlmFetch(credentials, path, options = {}) {
         Authorization: `Bearer ${token}`,
       },
       signal: options.signal ?? undefined,
-    });
+    }, options.proxyOptions ?? null);
   };
 
   let response = await buildRequest(false);
@@ -356,7 +358,7 @@ export function mapZedModel(model) {
 /** Resolve (and cache) the live Zed model catalog. Never hardcoded — always a live fetch. */
 export async function resolveZedModels(credentials, options = {}) {
   if (!credentials?.accessToken) return null;
-  const key = zedModelCacheKey(credentials);
+  const key = JSON.stringify([zedModelCacheKey(credentials), getRefreshProxyKey(options.proxyOptions)]);
   const cached = modelCache.get(key);
   if (!options.forceRefresh && cached && cached.expiresAt > Date.now()) return cached;
 

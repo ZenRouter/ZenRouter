@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
+import { getRefreshProxyKey } from "./tokenRefresh/dedup.js";
 import { KIMCHI_USER_AGENT } from "../config/clientVersions.js";
 
 export const KIMCHI_API = "https://llm.kimchi.dev";
@@ -146,7 +147,7 @@ export async function resolveKimchiModels(credentials, options = {}) {
   if (!token) return null;
 
   const endpoint = credentials?.providerSpecificData?.kimchiEndpoint || options.endpoint || KIMCHI_API;
-  const key = cacheKey(credentials, endpoint);
+  const key = JSON.stringify([cacheKey(credentials, endpoint), getRefreshProxyKey(options.proxyOptions)]);
   const now = Date.now();
   if (!options.forceRefresh) {
     const cached = catalogCache.get(key);
@@ -157,6 +158,7 @@ export async function resolveKimchiModels(credentials, options = {}) {
   try {
     rawModels = await fetchKimchiCatalogRaw(token, endpoint, options);
   } catch (error) {
+    if (error?.message?.includes("strictProxy=true")) throw error;
     options.log?.warn?.("KIMCHI_MODELS", error.message);
     return null;
   }

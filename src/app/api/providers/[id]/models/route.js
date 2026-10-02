@@ -16,6 +16,7 @@ import { resolveKimchiModels } from "open-sse/services/kimchiModels.js";
 import { resolveQoderModels } from "open-sse/services/qoderModels.js";
 import { resolveGrokCliModels } from "open-sse/services/grokCliModels.js";
 import { resolveConnectionProxyConfig } from "@/lib/network/connectionProxy";
+import { proxyAwareFetch } from "open-sse/utils/proxyFetch.js";
 import { resolveCursorModels } from "open-sse/services/cursorModels.js";
 import { fetchProviderLiveModels, normalizeLiveModel } from "@/shared/utils/providerLiveModels";
 import {
@@ -102,17 +103,17 @@ const getStaticProviderModels = (providerId) =>
   }));
 
 // Generic custom resolver for OAuth providers that need refresh-on-401 + token persist.
-// Receives a `fetchFn(token)` and returns parsed models or throws.
-const buildOAuthResolver = ({ refreshFn, fetchFn, parseFn, errorLabel }) => async (connection) => {
+// Receives a `fetchFn(token, connection, proxyOptions)` and returns parsed models or throws.
+const buildOAuthResolver = ({ refreshFn, fetchFn, parseFn, errorLabel }) => async (connection, proxyOptions) => {
   const { accessToken, refreshToken } = connection;
   if (!accessToken) {
     return { error: "No valid token found", status: 401 };
   }
   let warning;
   try {
-    let response = await fetchFn(accessToken, connection);
+    let response = await fetchFn(accessToken, connection, proxyOptions);
     if (!response.ok && (response.status === 401 || response.status === 403) && refreshToken) {
-      const refreshed = await refreshFn(connection);
+      const refreshed = await refreshFn(connection, proxyOptions);
       if (refreshed?.accessToken) {
         await updateProviderCredentials(connection.id, {
           accessToken: refreshed.accessToken,
@@ -121,7 +122,7 @@ const buildOAuthResolver = ({ refreshFn, fetchFn, parseFn, errorLabel }) => asyn
         });
         connection.accessToken = refreshed.accessToken;
         if (refreshed.refreshToken) connection.refreshToken = refreshed.refreshToken;
-        response = await fetchFn(refreshed.accessToken, connection);
+        response = await fetchFn(refreshed.accessToken, connection, proxyOptions);
       }
     }
     if (response.ok) {
@@ -134,6 +135,7 @@ const buildOAuthResolver = ({ refreshFn, fetchFn, parseFn, errorLabel }) => asyn
       console.log(`${errorLabel} (falling back to static):`, errorText);
     }
   } catch (error) {
+    if (error.message?.includes("strictProxy=true")) throw error;
     warning = `${errorLabel}: ${error.message}`;
     console.log(`${errorLabel} (falling back to static):`, error.message);
   }
@@ -161,8 +163,8 @@ const PROVIDER_MODELS_CONFIG = {
   },
   codex: {
     customResolver: buildOAuthResolver({
-      refreshFn: (conn) => refreshCodexToken(conn.refreshToken),
-      fetchFn: (token) => fetch(CODEX_MODELS_URL, {
+      refreshFn: (conn, proxyOptions) => refreshCodexToken(conn.refreshToken, proxyOptions),
+      fetchFn: (token, conn, proxyOptions) => proxyAwareFetch(CODEX_MODELS_URL, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -170,7 +172,7 @@ const PROVIDER_MODELS_CONFIG = {
           "Authorization": `Bearer ${token}`,
           "originator": "codex_cli_rs"
         }
-      }),
+      }, proxyOptions),
       parseFn: parseCodexModels,
       errorLabel: "Failed to fetch Codex models"
     })
@@ -271,12 +273,12 @@ const PROVIDER_MODELS_CONFIG = {
   assemblyai: createOpenAIModelsConfig("https://api.assemblyai.com/v1/models"),
   "vercel-ai-gateway": createOpenAIModelsConfig("https://ai-gateway.vercel.sh/v1/models"),
   kimchi: {
-    customResolver: async (connection) => {
+    customResolver: async (connection, proxyOptions) => {
       const result = await resolveKimchiModels({
         accessToken: connection.accessToken,
         apiKey: connection.apiKey,
         providerSpecificData: connection.providerSpecificData || {},
-      }, { forceRefresh: true, log: console });
+      }, { forceRefresh: true, log: console, proxyOptions });
       if (result?.models?.length) {
         return { models: result.models };
       }
@@ -287,11 +289,11 @@ const PROVIDER_MODELS_CONFIG = {
     }
   },
   cursor: {
-    customResolver: async (connection) => {
+    customResolver: async (connection, proxyOptions) => {
       const result = await resolveCursorModels({
         accessToken: connection.accessToken,
         providerSpecificData: connection.providerSpecificData || {},
-      }, { forceRefresh: true, log: console });
+      }, { forceRefresh: true, log: console, proxyOptions });
       if (result?.models?.length) return { models: result.models };
       return {
         models: getStaticProviderModels("cursor"),
@@ -302,7 +304,7 @@ const PROVIDER_MODELS_CONFIG = {
 
   // Custom resolvers (non-OpenAI-shaped APIs / token-refresh flows)
   kiro: {
-    customResolver: async (connection) => {
+    customResolver: async (connection, proxyOptions) => {
       const credentials = {
         accessToken: connection.accessToken,
         refreshToken: connection.refreshToken,
@@ -312,6 +314,7 @@ const PROVIDER_MODELS_CONFIG = {
       try {
         const result = await resolveKiroModels(credentials, {
           log: console,
+          proxyOptions,
           onCredentialsRefreshed: async (refreshed) => {
             if (refreshed?.accessToken) {
               await updateProviderCredentials(connection.id, {
@@ -339,6 +342,7 @@ const PROVIDER_MODELS_CONFIG = {
         }
         warning = "Kiro returned no models; falling back to static catalog.";
       } catch (error) {
+        if (error.message?.includes("strictProxy=true")) throw error;
         warning = `Failed to fetch Kiro models: ${error.message}`;
         console.log("Failed to fetch Kiro models dynamically, falling back to static:", error.message);
       }
@@ -346,7 +350,7 @@ const PROVIDER_MODELS_CONFIG = {
     }
   },
   qoder: {
-    customResolver: async (connection) => {
+    customResolver: async (connection, proxyOptions) => {
       const credentials = {
         accessToken: connection.accessToken,
         apiKey: connection.apiKey,
@@ -357,7 +361,7 @@ const PROVIDER_MODELS_CONFIG = {
       };
       let warning;
       try {
-        const result = await resolveQoderModels(credentials, { forceRefresh: true });
+        const result = await resolveQoderModels(credentials, { forceRefresh: true, proxyOptions });
         if (result?.models?.length) {
           return {
             models: result.models.map((m) => ({
@@ -375,6 +379,7 @@ const PROVIDER_MODELS_CONFIG = {
         }
         warning = "Qoder returned no models; falling back to static catalog.";
       } catch (error) {
+        if (error.message?.includes("strictProxy=true")) throw error;
         warning = `Failed to fetch Qoder models: ${error.message}`;
         console.log("Failed to fetch Qoder models dynamically, falling back to static:", error.message);
       }
@@ -384,7 +389,7 @@ const PROVIDER_MODELS_CONFIG = {
   zed: {
     // Zed serves a rotating hosted catalog; resolve it live through the LLM
     // token exchange so combos can pick current models (9router #4244).
-    customResolver: async (connection) => {
+    customResolver: async (connection, proxyOptions) => {
       if (!connection.accessToken) {
         return { error: "No valid token found", status: 401 };
       }
@@ -395,21 +400,22 @@ const PROVIDER_MODELS_CONFIG = {
           apiKey: connection.apiKey,
           userId: connection.providerSpecificData?.userId,
           providerSpecificData: connection.providerSpecificData || {},
-        }, { forceRefresh: true });
+        }, { forceRefresh: true, proxyOptions });
         if (entry?.models?.length) return { models: entry.models };
         return { error: "Zed returned no models", status: 502 };
       } catch (error) {
+        if (error.message?.includes("strictProxy=true")) throw error;
         return { error: `Failed to fetch Zed models: ${error.message}`, status: 500 };
       }
     },
   },
   "gemini-cli": {
     customResolver: buildOAuthResolver({
-      refreshFn: (conn) => refreshGoogleToken(conn.refreshToken, GEMINI_CONFIG.clientId, GEMINI_CONFIG.clientSecret),
-      fetchFn: (token, conn) => {
+      refreshFn: (conn, proxyOptions) => refreshGoogleToken(conn.refreshToken, GEMINI_CONFIG.clientId, GEMINI_CONFIG.clientSecret, proxyOptions),
+      fetchFn: (token, conn, proxyOptions) => {
         const projectId = conn.projectId || conn.providerSpecificData?.projectId;
         const body = projectId ? { project: projectId } : {};
-        return fetch(GEMINI_CLI_MODELS_URL, {
+        return proxyAwareFetch(GEMINI_CLI_MODELS_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -418,27 +424,20 @@ const PROVIDER_MODELS_CONFIG = {
             "X-Goog-Api-Client": "google-cloud-sdk vscode_cloudshelleditor/0.1"
           },
           body: JSON.stringify(body)
-        });
+        }, proxyOptions);
       },
       parseFn: parseGeminiCliModels,
       errorLabel: "Failed to fetch Gemini CLI models"
     })
   },
   "grok-cli": {
-    customResolver: async (connection) => {
-      const proxy = await resolveConnectionProxyConfig(connection.providerSpecificData || {});
+    customResolver: async (connection, proxyOptions) => {
       const result = await resolveGrokCliModels({
         ...connection,
         connectionId: connection.id,
       }, {
         log: console,
-        proxyOptions: {
-          connectionProxyEnabled: proxy.connectionProxyEnabled === true,
-          connectionProxyUrl: proxy.connectionProxyUrl || "",
-          connectionNoProxy: proxy.connectionNoProxy || "",
-          vercelRelayUrl: proxy.vercelRelayUrl || "",
-          strictProxy: proxy.strictProxy === true,
-        },
+        proxyOptions,
         onCredentialsRefreshed: async (refreshed) => {
           await updateProviderCredentials(connection.id, {
             ...refreshed,
@@ -454,12 +453,12 @@ const PROVIDER_MODELS_CONFIG = {
     },
   },
   "ollama-local": {
-    customResolver: async (connection) => {
+    customResolver: async (connection, proxyOptions) => {
       const url = `${resolveOllamaLocalHost(connection)}/api/tags`;
-      const response = await fetch(url, {
+      const response = await proxyAwareFetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" }
-      });
+      }, proxyOptions);
       if (!response.ok) {
         const errorText = await response.text();
         console.log("Error fetching models from ollama-local:", errorText);
@@ -487,19 +486,21 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Connection not found" }, { status: 404 });
     }
 
+    const proxyOptions = await resolveConnectionProxyConfig(connection.providerSpecificData || {});
+
     if (isOpenAICompatibleProvider(connection.provider)) {
       const baseUrl = connection.providerSpecificData?.baseUrl;
       if (!baseUrl) {
         return NextResponse.json({ error: "No base URL configured for OpenAI compatible provider" }, { status: 400 });
       }
       const url = `${baseUrl.replace(/\/$/, "")}/models`;
-      const response = await fetch(url, {
+      const response = await proxyAwareFetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${connection.apiKey}`,
         },
-      });
+      }, proxyOptions);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -535,7 +536,7 @@ export async function GET(request, { params }) {
       }
 
       const url = `${baseUrl}/models`;
-      const response = await fetch(url, {
+      const response = await proxyAwareFetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -543,7 +544,7 @@ export async function GET(request, { params }) {
           "anthropic-version": "2023-06-01",
           "Authorization": `Bearer ${connection.apiKey}`
         },
-      });
+      }, proxyOptions);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -573,7 +574,7 @@ export async function GET(request, { params }) {
       // their registry entry (nvidia, openrouter, groq, ...). The caller falls
       // back to the static list when this returns empty.
       if (connection.apiKey) {
-        const live = await fetchProviderLiveModels(connection.provider, connection.apiKey, { useCache: !refresh });
+        const live = await fetchProviderLiveModels(connection.provider, connection.apiKey, { useCache: !refresh, proxyOptions });
         if (live?.length) {
           return NextResponse.json({
             provider: connection.provider,
@@ -590,7 +591,7 @@ export async function GET(request, { params }) {
 
     // Config-driven custom resolver path (OAuth refresh, non-OpenAI shape, etc.)
     if (typeof config.customResolver === "function") {
-      const result = await config.customResolver(connection);
+      const result = await config.customResolver(connection, proxyOptions);
       if (result.error) {
         return NextResponse.json({ error: result.error }, { status: result.status || 500 });
       }
@@ -630,7 +631,7 @@ export async function GET(request, { params }) {
       fetchOptions.body = JSON.stringify(config.body);
     }
 
-    const response = await fetch(url, fetchOptions);
+    const response = await proxyAwareFetch(url, fetchOptions, proxyOptions);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -650,7 +651,9 @@ export async function GET(request, { params }) {
       models
     });
   } catch (error) {
-    console.log("Error fetching provider models:", error);
-    return NextResponse.json({ error: "Failed to fetch models" }, { status: 500 });
+    const proxyRejected = error.message?.includes("strictProxy=true");
+    const message = proxyRejected ? "Configured account proxy unavailable (strictProxy=true)" : "Failed to fetch models";
+    console.log("Error fetching provider models:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

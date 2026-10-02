@@ -25,42 +25,44 @@ import { modelKind, inferModelKind } from "open-sse/providers/models/schema.js";
 // returns { models: [{ id, name? }, ...] } | null on failure.
 // Adding a provider here makes /v1/models prefer the live catalog for it.
 const LIVE_MODEL_RESOLVERS = {
-  kiro: async (conn) => {
+  kiro: async (conn, proxyOptions) => {
     const result = await resolveKiroModels({
       accessToken: conn.accessToken,
       refreshToken: conn.refreshToken,
       providerSpecificData: conn.providerSpecificData || {}
-    }, { log: console });
+    }, { log: console, proxyOptions });
     return result?.models?.length ? { models: result.models } : null;
   },
-  qoder: async (conn) => {
+  qoder: async (conn, proxyOptions) => {
     const result = await resolveQoderModels({
+      apiKey: conn.apiKey,
       accessToken: conn.accessToken,
       refreshToken: conn.refreshToken,
       email: conn.email,
       displayName: conn.displayName,
       providerSpecificData: conn.providerSpecificData || {}
-    });
+    }, { proxyOptions });
     if (!result?.models?.length) return null;
     return {
       models: result.models.map((m) => ({ id: m.id, name: m.name })),
     };
   },
-  kimchi: async (conn) => {
+  kimchi: async (conn, proxyOptions) => {
     const result = await resolveKimchiModels({
       accessToken: conn.accessToken,
       apiKey: conn.apiKey,
       providerSpecificData: conn.providerSpecificData || {}
-    }, { log: console });
+    }, { log: console, proxyOptions });
     return result?.models?.length ? { models: result.models } : null;
   },
-  github: async (conn) => {
+  github: async (conn, proxyOptions) => {
     const result = await resolveCopilotModels({
       accessToken: conn.accessToken,
       refreshToken: conn.refreshToken,
       providerSpecificData: conn.providerSpecificData || {}
     }, {
       log: console,
+      proxyOptions,
       onCredentialsRefreshed: async (refreshed) => {
         await updateProviderCredentials(conn.id, {
           copilotToken: refreshed.copilotToken,
@@ -71,27 +73,20 @@ const LIVE_MODEL_RESOLVERS = {
     });
     return result?.models?.length ? { models: result.models } : null;
   },
-  clinepass: async (conn) => {
+  clinepass: async (conn, proxyOptions) => {
     const result = await resolveClinepassModels({
       accessToken: conn.accessToken,
       apiKey: conn.apiKey,
-    });
+    }, { proxyOptions });
     return result?.models?.length ? { models: result.models } : null;
   },
-  "grok-cli": async (conn) => {
-    const proxy = await resolveConnectionProxyConfig(conn.providerSpecificData || {});
+  "grok-cli": async (conn, proxyOptions) => {
     const result = await resolveGrokCliModels({
       ...conn,
       connectionId: conn.id,
     }, {
       log: console,
-      proxyOptions: {
-        connectionProxyEnabled: proxy.connectionProxyEnabled === true,
-        connectionProxyUrl: proxy.connectionProxyUrl || "",
-        connectionNoProxy: proxy.connectionNoProxy || "",
-        vercelRelayUrl: proxy.vercelRelayUrl || "",
-        strictProxy: proxy.strictProxy === true,
-      },
+      proxyOptions,
       onCredentialsRefreshed: async (refreshed) => {
         await updateProviderCredentials(conn.id, {
           ...refreshed,
@@ -101,18 +96,18 @@ const LIVE_MODEL_RESOLVERS = {
     });
     return result?.models?.length ? { models: result.models } : null;
   },
-  cursor: async (conn) => {
+  cursor: async (conn, proxyOptions) => {
     const result = await resolveCursorModels({
       accessToken: conn.accessToken,
       providerSpecificData: conn.providerSpecificData || {},
-    }, { log: console });
+    }, { log: console, proxyOptions });
     return result?.models?.length ? { models: result.models } : null;
   },
-  zed: async (conn) => {
+  zed: async (conn, proxyOptions) => {
     const result = await resolveZedModels({
       accessToken: conn.accessToken,
       providerSpecificData: conn.providerSpecificData || {},
-    });
+    }, { proxyOptions });
     if (!result?.models?.length) return null;
     return {
       models: result.models
@@ -338,9 +333,12 @@ export async function buildModelsList(kindFilter) {
       // -thinking/-agentic variants per account). On failure, fall back to
       // whatever rawModelIds already holds.
       const liveResolver = LIVE_MODEL_RESOLVERS[providerId];
+      const proxyOptions = !hasExplicitEnabledModels && (liveResolver || (!isCompatibleProvider && conn?.apiKey))
+        ? await resolveConnectionProxyConfig(conn.providerSpecificData || {})
+        : null;
       if (liveResolver && !hasExplicitEnabledModels) {
         try {
-          const live = await liveResolver(conn);
+          const live = await liveResolver(conn, proxyOptions);
           if (live?.models?.length) {
             rawModelIds = live.models.map((m) => m.id);
             liveModelKindById = new Map(
@@ -372,7 +370,7 @@ export async function buildModelsList(kindFilter) {
         conn?.apiKey
       ) {
         try {
-          const live = await fetchProviderLiveModels(providerId, conn.apiKey);
+          const live = await fetchProviderLiveModels(providerId, conn.apiKey, { proxyOptions });
           if (live?.length) {
             rawModelIds = Array.from(new Set([...live.map((m) => m.id), ...rawModelIds]));
             liveModelKindById = new Map(

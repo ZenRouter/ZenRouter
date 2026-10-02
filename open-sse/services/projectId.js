@@ -9,16 +9,17 @@
 
 import { CLOUD_CODE_API, LOAD_CODE_ASSIST_HEADERS, ANTIGRAVITY_LOAD_CODE_ASSIST_HEADERS, LOAD_CODE_ASSIST_METADATA } from "../config/appConstants.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
+import { getRefreshProxyKey } from "./tokenRefresh/dedup.js";
 
 // ─── Cache ────────────────────────────────────────────────────────────────────
-// connectionId -> { projectId: string, fetchedAt: number }
+// [connectionId, provider, proxy policy] -> { connectionId, projectId: string, fetchedAt: number }
 const projectIdCache = new Map();
 
 /** How long a cached project ID is considered fresh (1 hour). */
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
 // ─── Pending-fetch deduplication ─────────────────────────────────────────────
-// connectionId -> { promise: Promise<string|null>, controller: AbortController, startedAt: number }
+// [connectionId, provider, proxy policy] -> { connectionId, promise: Promise<string|null>, controller: AbortController, startedAt: number }
 const pendingFetches = new Map();
 
 /** Abort and evict a pending fetch that has been running longer than this (2 min). */
@@ -89,15 +90,17 @@ startCacheCleanup();
 export async function getProjectIdForConnection(connectionId, accessToken, provider = "gemini-cli", proxyOptions = null) {
     if (!connectionId || !accessToken) return null;
 
+    const key = JSON.stringify([connectionId, provider, getRefreshProxyKey(proxyOptions)]);
+
     // Return cached value if still fresh
-    const cached = projectIdCache.get(connectionId);
+    const cached = projectIdCache.get(key);
     if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
         return cached.projectId;
     }
 
-    // Deduplicate concurrent fetches for the same connection
-    if (pendingFetches.has(connectionId)) {
-        return pendingFetches.get(connectionId).promise;
+    // Deduplicate only requests using the same connection, provider and egress policy
+    if (pendingFetches.has(key)) {
+        return pendingFetches.get(key).promise;
     }
 
     // Each fetch gets its own AbortController so it can be canceled via removeConnection()
@@ -106,8 +109,9 @@ export async function getProjectIdForConnection(connectionId, accessToken, provi
     const promise = (async () => {
         try {
             const projectId = await fetchProjectId(accessToken, controller.signal, provider, proxyOptions);
+            if (controller.signal.aborted || pendingFetches.get(key)?.controller !== controller) return null;
             if (projectId) {
-                projectIdCache.set(connectionId, {projectId, fetchedAt: Date.now()});
+                projectIdCache.set(key, { connectionId, projectId, fetchedAt: Date.now() });
                 return projectId;
             }
             console.warn("[ProjectId] could not fetch projectId for connection", connectionId.slice(0, 8));
@@ -116,20 +120,20 @@ export async function getProjectIdForConnection(connectionId, accessToken, provi
             console.warn(`[ProjectId] Error fetching project ID: ${error.message}`);
             return null;
         } finally {
-            pendingFetches.delete(connectionId);
+            if (pendingFetches.get(key)?.controller === controller) pendingFetches.delete(key);
         }
     })();
 
-    pendingFetches.set(connectionId, {promise, controller, startedAt: Date.now()});
+    pendingFetches.set(key, { connectionId, promise, controller, startedAt: Date.now() });
     return promise;
 }
 
 /**
- * Invalidate the cached project ID for a connection.
+ * Invalidate every cached project ID and abort pending requests for a connection.
  * Call this when a connection's credentials are fully revoked or refreshed.
  */
 export function invalidateProjectId(connectionId) {
-    projectIdCache.delete(connectionId);
+    removeConnection(connectionId);
 }
 
 /**
@@ -140,11 +144,13 @@ export function invalidateProjectId(connectionId) {
  */
 export function removeConnection(connectionId) {
     if (!connectionId) return;
-    projectIdCache.delete(connectionId);
-    const pending = pendingFetches.get(connectionId);
-    if (pending) {
+    for (const [key, entry] of projectIdCache) {
+        if (entry.connectionId === connectionId) projectIdCache.delete(key);
+    }
+    for (const [key, pending] of pendingFetches) {
+        if (pending.connectionId !== connectionId) continue;
+        pendingFetches.delete(key);
         try { pending.controller.abort(); } catch (_) { /* ignore */ }
-        pendingFetches.delete(connectionId);
     }
 }
 

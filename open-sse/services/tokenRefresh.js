@@ -1,5 +1,7 @@
 import { PROVIDERS } from "../config/providers.js";
 import { OAUTH_ENDPOINTS, REFRESH_LEAD_MS } from "../config/appConstants.js";
+import { proxyAwareFetch } from "../utils/proxyFetch.js";
+import { getRefreshProxyKey } from "./tokenRefresh/dedup.js";
 import {
   refreshXaiToken,
   refreshAccessToken,
@@ -73,11 +75,11 @@ export function parseVertexSaJson(apiKey) {
   }
 }
 
-// Cache Vertex tokens keyed by service account email { token, expiresAt }
+// Cache Vertex tokens by service account email and transport policy { token, expiresAt }
 const vertexTokenCache = new Map();
 
-export async function refreshVertexToken(saJson, log) {
-  const cacheKey = saJson.client_email;
+export async function refreshVertexToken(saJson, log, proxyOptions = null) {
+  const cacheKey = JSON.stringify([saJson.client_email, getRefreshProxyKey(proxyOptions)]);
   const cached = vertexTokenCache.get(cacheKey);
 
   if (cached && cached.expiresAt - Date.now() > 5 * 60 * 1000) {
@@ -98,14 +100,14 @@ export async function refreshVertexToken(saJson, log) {
       .setExpirationTime(now + 3600)
       .sign(privateKey);
 
-    const res = await fetch(OAUTH_ENDPOINTS.google.token, {
+    const res = await proxyAwareFetch(OAUTH_ENDPOINTS.google.token, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
         assertion: jwt,
       }),
-    });
+    }, proxyOptions);
 
     if (!res.ok) {
       const err = await res.text();
@@ -126,33 +128,33 @@ export async function refreshVertexToken(saJson, log) {
   }
 }
 
-function vertexRefreshHandler(c, log) {
+function vertexRefreshHandler(c, log, proxyOptions = null) {
   const saJson = parseVertexSaJson(c.apiKey);
   if (!saJson) return null;
-  return refreshVertexToken(saJson, log);
+  return refreshVertexToken(saJson, log, proxyOptions);
 }
 
 const REFRESH_HANDLERS = {
   "gemini-cli": (c, log, proxyOptions) => refreshGoogleToken(c.refreshToken, PROVIDERS["gemini-cli"].clientId, PROVIDERS["gemini-cli"].clientSecret, log, proxyOptions),
   antigravity: (c, log, proxyOptions) => refreshGoogleToken(c.refreshToken, PROVIDERS.antigravity.clientId, PROVIDERS.antigravity.clientSecret, log, proxyOptions),
-  claude: (c, log) => refreshClaudeOAuthToken(c.refreshToken, log),
+  claude: (c, log, proxyOptions) => refreshClaudeOAuthToken(c.refreshToken, log, proxyOptions),
   codex: (c, log, proxyOptions) => refreshCodexToken(c.refreshToken, log, proxyOptions),
-  iflow: (c, log) => refreshIflowToken(c.refreshToken, log),
-  github: (c, log) => refreshGitHubToken(c.refreshToken, log),
-  kiro: (c, log) => refreshKiroToken(c.refreshToken, c.providerSpecificData, log),
+  iflow: (c, log, proxyOptions) => refreshIflowToken(c.refreshToken, log, proxyOptions),
+  github: (c, log, proxyOptions) => refreshGitHubToken(c.refreshToken, log, proxyOptions),
+  kiro: (c, log, proxyOptions) => refreshKiroToken(c.refreshToken, c.providerSpecificData, log, proxyOptions),
   xai: (c, log, proxyOptions) => refreshXaiToken(c.refreshToken, log, proxyOptions),
   // Grok CLI shares xAI OAuth client + token endpoint (device-code tokens refresh the same way)
   "grok-cli": (c, log, proxyOptions) => refreshXaiToken(c.refreshToken, log, proxyOptions),
   gcli: (c, log, proxyOptions) => refreshXaiToken(c.refreshToken, log, proxyOptions),
-  "codebuddy-cn": (c, log) => refreshCodebuddyToken(c.refreshToken, log),
-  "codebuddy-intl": (c, log) => refreshCodebuddyIntlToken(c.refreshToken, log),
-  trae: (c, log) => refreshTraeToken(c.refreshToken, c, log),
-  cline: (c, log) => refreshClineToken(c.refreshToken, log),
+  "codebuddy-cn": (c, log, proxyOptions) => refreshCodebuddyToken(c.refreshToken, log, proxyOptions),
+  "codebuddy-intl": (c, log, proxyOptions) => refreshCodebuddyIntlToken(c.refreshToken, log, proxyOptions),
+  trae: (c, log, proxyOptions) => refreshTraeToken(c.refreshToken, c, log, proxyOptions),
+  cline: (c, log, proxyOptions) => refreshClineToken(c.refreshToken, log, proxyOptions),
   zed: () => refreshZedToken(),
   windsurf: (c, log) => refreshWindsurfToken(c, log),
   // Kimi Code OAuth (merged into id `kimi`); legacy id still routes here
-  kimi: (c, log) => refreshKimiToken(c.refreshToken, c, log),
-  "kimi-coding": (c, log) => refreshKimiToken(c.refreshToken, c, log),
+  kimi: (c, log, proxyOptions) => refreshKimiToken(c.refreshToken, c, log, proxyOptions),
+  "kimi-coding": (c, log, proxyOptions) => refreshKimiToken(c.refreshToken, c, log, proxyOptions),
   vertex: vertexRefreshHandler,
   "vertex-partner": vertexRefreshHandler
 };
@@ -180,7 +182,7 @@ async function _getAccessTokenInternal(provider, credentials, log, proxyOptions 
 export async function refreshTokenByProvider(provider, credentials, log, proxyOptions = null) {
   if (!credentials.refreshToken) return null;
   const handler = REFRESH_HANDLERS[provider];
-  return handler ? handler(credentials, log, proxyOptions) : refreshAccessToken(provider, credentials.refreshToken, credentials, log);
+  return handler ? handler(credentials, log, proxyOptions) : refreshAccessToken(provider, credentials.refreshToken, credentials, log, proxyOptions);
 }
 
 export function formatProviderCredentials(provider, credentials, log) {
