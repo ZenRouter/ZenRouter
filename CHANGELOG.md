@@ -6,6 +6,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- Select Claude reasoning beta flags using the final outbound body, preserve client beta flags subject to the per-account rejection denylist, and forward OAuth session identity per request without leaking first-party headers to other providers (`90b06934`, `6aea3875`, `dc198dff`).
 - Isolate database-mutating regression tests in disposable SQLite directories, remove order-dependent fixtures/destructive writes to the operator database, and close adapters/remove only test-added shutdown listeners before Windows cleanup (#4407 / upstream `57c04f00`).
 - Attach server lifecycle listeners before the tray-mode early return so Windows startup can recover a crashed gateway or exit after a clean shutdown (#4509 / PR #4522). Add isolated launcher subprocess regressions.
 - Apply Sonnet 5.5 request restrictions across native, translated, and passthrough paths: reduced-thinking `between_tools`, supported effort limits, and non-forced tool selection (`49ba54b2`). Preserve explicitly requested summarized/omitted reasoning display on mandatory-adaptive Claude models.

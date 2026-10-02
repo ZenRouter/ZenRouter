@@ -175,7 +175,16 @@ export class DefaultExecutor extends BaseExecutor {
     return BEARER;
   }
 
-  buildHeaders(credentials, stream = true, url, model) {
+  // Header forwarding is deliberately allowlisted; never overlay client auth.
+  readClientHeader(credentials, name) {
+    const raw = credentials?.rawHeaders;
+    if (typeof raw?.get === "function") return raw.get(name);
+    if (!raw || typeof raw !== "object") return null;
+    const key = Object.keys(raw).find(key => key.toLowerCase() === name);
+    return key ? raw[key] : null;
+  }
+
+  buildHeaders(credentials, stream = true, url, model, body = null) {
     const rt = credentials?.runtimeTransport;
     const headers = { "Content-Type": "application/json", ...(rt ? rt.headers : this.config.headers) };
     const desc = rt?.auth || AUTH_DESCRIPTORS[this.provider] || this.resolveAuthDescriptor();
@@ -183,14 +192,41 @@ export class DefaultExecutor extends BaseExecutor {
     for (const hook of desc.hooks || []) HEADER_HOOKS[hook]?.(headers, credentials);
     applyAuth(headers, desc, credentials);
 
-    if (this.provider === "claude" && model) {
-      headers["Anthropic-Beta"] = selectAnthropicBeta(model, null, rejectedBetaFlags(credentials));
+    let isOfficialAnthropic = false;
+    try {
+      const endpoint = url || this.buildUrl(model, stream, 0, credentials);
+      isOfficialAnthropic = new URL(endpoint).hostname === "api.anthropic.com";
+    } catch { /* No valid endpoint: do not forward client identity. */ }
+    if (this.provider === "claude" && isOfficialAnthropic) {
+      const blocked = rejectedBetaFlags(credentials);
+      const configured = model ? selectAnthropicBeta(model, body, blocked) : headers["Anthropic-Beta"] || headers["anthropic-beta"] || "";
+      const incoming = this.readClientHeader(credentials, "anthropic-beta");
+      const flags = new Set(configured.split(",").map(flag => flag.trim()).filter(Boolean));
+      for (const flag of typeof incoming === "string" ? incoming.split(",") : []) {
+        const value = flag.trim();
+        if (/^[a-z0-9][a-z0-9-]*-(?:\d{8}|\d{4}-\d{2}-\d{2})$/.test(value)
+          && !blocked?.has(value)
+          && !(body?.thinking?.display === "summarized" && value === "redact-thinking-2026-02-12")) flags.add(value);
+      }
+      delete headers["anthropic-beta"];
+      headers["Anthropic-Beta"] = [...flags].join(",");
+
+      // Session identity is request-local, never stored on pooled credentials.
+      if (credentials.accessToken && !credentials.apiKey) {
+        let sessionId = this.readClientHeader(credentials, "x-claude-code-session-id");
+        if (!sessionId) {
+          try { sessionId = JSON.parse(body?.metadata?.user_id || "null")?.session_id; }
+          catch { /* Non-JSON user_id is valid metadata, not a session identity. */ }
+        }
+        if (typeof sessionId === "string" && sessionId && !/[\r\n]/.test(sessionId)) {
+          headers["x-claude-code-session-id"] = sessionId;
+        }
+      }
     }
 
     // Strip first-party Claude Code identity headers for non-Anthropic anthropic-compatible upstreams
     if (this.provider?.startsWith?.("anthropic-compatible-")) {
-      const baseUrl = credentials?.providerSpecificData?.baseUrl || "";
-      const isOfficialAnthropic = baseUrl === "" || baseUrl.includes("api.anthropic.com");
+      // Resolve the actual outbound URL, not a substring in configured metadata.
       if (!isOfficialAnthropic) {
         // Some third-party Anthropic-compatible gateways require Bearer auth in
         // addition to x-api-key. Send both (x-api-key already set above) so
@@ -202,6 +238,8 @@ export class DefaultExecutor extends BaseExecutor {
         delete headers["Anthropic-Dangerous-Direct-Browser-Access"];
         delete headers["x-app"];
         delete headers["X-App"];
+        delete headers["x-claude-code-session-id"];
+        delete headers["X-Claude-Code-Session-Id"];
         // Strip claude-code-20250219 from Anthropic-Beta / anthropic-beta
         for (const betaKey of ["anthropic-beta", "Anthropic-Beta"]) {
           if (headers[betaKey]) {

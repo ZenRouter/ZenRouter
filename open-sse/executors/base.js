@@ -133,7 +133,7 @@ export class BaseExecutor {
       // (e.g. opencode muse max_tokens), not just Default/GitHub which used
       // to call it from their own transformRequest overrides. Idempotent.
       stripUnsupportedParams(this.provider, model, transformedBody);
-      const headers = this.buildHeaders(credentials, stream, url, model);
+      const headers = this.buildHeaders(credentials, stream, url, model, transformedBody);
 
       if (!retryAttemptsByUrl[urlIndex]) retryAttemptsByUrl[urlIndex] = 0;
 
