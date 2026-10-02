@@ -1,7 +1,67 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { addCustomModel, getCustomModels, deleteCustomModel } from "@/lib/db/repos/aliasRepo.js";
-import { GET as getModels } from "@/app/api/models/route.js";
-import { POST as postCustomModel, DELETE as deleteCustomApi } from "@/app/api/models/custom/route.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+let dataDir;
+let previousDataDir;
+let previousListeners;
+let previousGlobals;
+const shutdownEvents = ["beforeExit", "exit", "SIGINT", "SIGTERM"];
+const fixtureGlobals = [
+  "_dbAdapter", "_pendingRequests", "_lastErrorProvider", "_statsEmitter",
+  "_pendingTimers", "_recentRing", "_connectionMapCache", "_statsEmitTimers",
+];
+let addCustomModel;
+let getCustomModels;
+let deleteCustomModel;
+let getModels;
+let postCustomModel;
+
+beforeEach(async () => {
+  previousDataDir = process.env.DATA_DIR;
+  previousListeners = new Map(
+    shutdownEvents.map((event) => [event, process.rawListeners(event)])
+  );
+  previousGlobals = new Map(
+    fixtureGlobals.map((key) => [key, Object.getOwnPropertyDescriptor(global, key)])
+  );
+  dataDir = await mkdtemp(join(tmpdir(), "zenrouter-custom-model-capabilities-"));
+  process.env.DATA_DIR = dataDir;
+  vi.resetModules();
+  for (const key of fixtureGlobals) delete global[key];
+  ({ addCustomModel, getCustomModels, deleteCustomModel } = await import("@/lib/db/repos/aliasRepo.js"));
+  ({ GET: getModels } = await import("@/app/api/models/route.js"));
+  ({ POST: postCustomModel } = await import("@/app/api/models/custom/route.js"));
+});
+
+afterEach(async () => {
+  try {
+    for (const timer of Object.values(global._pendingTimers || {})) clearTimeout(timer);
+    for (const timer of Object.values(global._statsEmitTimers || {})) clearTimeout(timer);
+    global._statsEmitter?.removeAllListeners();
+    await global._dbAdapter?.instance?.close();
+  } finally {
+    for (const event of shutdownEvents) {
+      const existing = [...previousListeners.get(event)];
+      for (const listener of process.rawListeners(event)) {
+        const index = existing.indexOf(listener);
+        if (index === -1) process.removeListener(event, listener);
+        else existing.splice(index, 1);
+      }
+    }
+    for (const key of fixtureGlobals) {
+      const descriptor = previousGlobals.get(key);
+      if (descriptor) Object.defineProperty(global, key, descriptor);
+      else delete global[key];
+    }
+    vi.resetModules();
+    if (previousDataDir === undefined) delete process.env.DATA_DIR;
+    else process.env.DATA_DIR = previousDataDir;
+    if (dataDir) await rm(dataDir, { recursive: true, force: true });
+    dataDir = undefined;
+  }
+});
 
 describe("Custom Model Capabilities & Upsert (#3752)", () => {
   const providerAlias = "test-oai-prov";

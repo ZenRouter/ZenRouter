@@ -7,22 +7,54 @@ import path from "node:path";
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { canonicalizeUsage } from "../../open-sse/utils/usageTracking.js";
 
-const originalDataDir = process.env.DATA_DIR;
+const fixtureGlobals = [
+  "_dbAdapter", "_pendingRequests", "_lastErrorProvider", "_statsEmitter",
+  "_pendingTimers", "_recentRing", "_connectionMapCache", "_statsEmitTimers",
+];
+let originalDataDir;
+let originalGlobals;
+let originalListeners;
+let originalEmit;
 let tempDir;
 let db;
 
 beforeAll(async () => {
+  originalDataDir = process.env.DATA_DIR;
+  originalGlobals = new Map(fixtureGlobals.map((key) => [key, Object.getOwnPropertyDescriptor(global, key)]));
+  originalListeners = new Map(["beforeExit", "SIGINT", "SIGTERM"].map((event) => [event, process.rawListeners(event)]));
+  originalEmit = process.emit;
+  for (const key of fixtureGlobals) delete global[key];
   tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "zenrouter-cached-e2e-"));
   process.env.DATA_DIR = tempDir;
   vi.resetModules();
   db = await import("@/lib/db/index.js");
   await db.initDb();
+  await db.updateSettings({ enableObservability: true });
 });
 
-afterAll(() => {
-  if (tempDir) fs.rmSync(tempDir, { recursive: true, force: true });
-  if (originalDataDir === undefined) delete process.env.DATA_DIR;
-  else process.env.DATA_DIR = originalDataDir;
+afterAll(async () => {
+  try {
+    const state = global._dbAdapter;
+    const adapter = state?.instance ?? (state?.initPromise ? await state.initPromise : null);
+    await adapter?.close();
+    if (tempDir) fs.rmSync(tempDir, { recursive: true, force: true });
+  } finally {
+    for (const timer of Object.values(global._pendingTimers ?? {})) clearTimeout(timer);
+    for (const timer of Object.values(global._statsEmitTimers ?? {})) clearTimeout(timer);
+    for (const [event, listeners] of originalListeners) {
+      for (const listener of process.rawListeners(event)) {
+        if (!listeners.includes(listener)) process.removeListener(event, listener);
+      }
+    }
+    process.emit = originalEmit;
+    for (const [key, descriptor] of originalGlobals) {
+      if (descriptor) Object.defineProperty(global, key, descriptor);
+      else delete global[key];
+    }
+    if (originalDataDir === undefined) delete process.env.DATA_DIR;
+    else process.env.DATA_DIR = originalDataDir;
+    vi.resetModules();
+  }
 });
 
 describe("cached-token end-to-end (persist + aggregate + cost)", () => {

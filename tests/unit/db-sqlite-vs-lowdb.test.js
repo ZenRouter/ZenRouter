@@ -5,22 +5,59 @@ import os from "node:os";
 import path from "node:path";
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 
-const originalDataDir = process.env.DATA_DIR;
+const fixtureEnv = ["DATA_DIR", "OBSERVABILITY_ENABLED", "ENABLE_REQUEST_LOGS"];
+const shutdownEvents = ["beforeExit", "SIGINT", "SIGTERM", "exit"];
+const usageGlobals = ["_pendingRequests", "_lastErrorProvider", "_statsEmitter", "_pendingTimers", "_recentRing", "_connectionMapCache", "_statsEmitTimers"];
+let originalEnv;
+let originalDbAdapter;
+let originalListeners;
+let originalUsageGlobals;
 let tempDir;
 let sqliteDb;
 
 beforeAll(async () => {
+  originalEnv = Object.fromEntries(fixtureEnv.map((key) => [key, process.env[key]]));
+  originalDbAdapter = global._dbAdapter;
+  originalUsageGlobals = Object.fromEntries(usageGlobals.map((key) => [key, global[key]]));
+  for (const key of usageGlobals) delete global[key];
+  originalListeners = new Map(shutdownEvents.map((event) => [event, new Set(process.listeners(event))]));
   tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "zenrouter-db-compare-"));
   process.env.DATA_DIR = tempDir;
+  // Exercise persisted settings rather than inherited observability overrides.
+  delete process.env.OBSERVABILITY_ENABLED;
+  delete process.env.ENABLE_REQUEST_LOGS;
+  delete global._dbAdapter;
   vi.resetModules();
   sqliteDb = await import("@/lib/db/index.js");
   await sqliteDb.initDb();
 });
 
-afterAll(() => {
-  if (tempDir) fs.rmSync(tempDir, { recursive: true, force: true });
-  if (originalDataDir === undefined) delete process.env.DATA_DIR;
-  else process.env.DATA_DIR = originalDataDir;
+afterAll(async () => {
+  try {
+    const state = global._dbAdapter;
+    if (state?.initPromise) await state.initPromise;
+    await state?.instance?.close();
+    if (tempDir) fs.rmSync(tempDir, { recursive: true, force: true });
+  } finally {
+    for (const event of shutdownEvents) {
+      for (const listener of process.listeners(event)) {
+        if (!originalListeners.get(event).has(listener)) process.removeListener(event, listener);
+      }
+    }
+    for (const timer of Object.values(global._pendingTimers || {})) clearTimeout(timer);
+    for (const timer of Object.values(global._statsEmitTimers || {})) clearTimeout(timer);
+    for (const key of usageGlobals) {
+      if (originalUsageGlobals[key] === undefined) delete global[key];
+      else global[key] = originalUsageGlobals[key];
+    }
+    if (originalDbAdapter === undefined) delete global._dbAdapter;
+    else global._dbAdapter = originalDbAdapter;
+    for (const key of fixtureEnv) {
+      if (originalEnv[key] === undefined) delete process.env[key];
+      else process.env[key] = originalEnv[key];
+    }
+    vi.resetModules();
+  }
 });
 
 describe("DB SQLite layer — public API parity", () => {

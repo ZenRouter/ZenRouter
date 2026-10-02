@@ -3,44 +3,66 @@ import os from "node:os";
 import path from "node:path";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-const originalDataDir = process.env.DATA_DIR;
+const fixtureGlobals = [
+  "_dbAdapter", "_pendingRequests", "_lastErrorProvider", "_statsEmitter",
+  "_pendingTimers", "_recentRing", "_connectionMapCache", "_statsEmitTimers",
+];
+let originalDataDir;
+let originalGlobals;
+let originalListeners;
+let originalEmit;
+let tempDir;
 
 async function setupDb() {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "zenrouter-model-routing-"));
+  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "zenrouter-model-routing-"));
   process.env.DATA_DIR = tempDir;
   vi.resetModules();
 
   const { createProviderNode } = await import("@/models/index.js");
   const { getModelInfo } = await import("@/sse/services/model.js");
 
-  return {
-    createProviderNode,
-    getModelInfo,
-    cleanup() {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    },
-  };
+  return { createProviderNode, getModelInfo };
 }
 
 describe("model routing", () => {
-  let cleanup = () => {};
-
   beforeEach(() => {
+    originalDataDir = process.env.DATA_DIR;
+    originalGlobals = new Map(fixtureGlobals.map((key) => [key, Object.getOwnPropertyDescriptor(global, key)]));
+    originalListeners = new Map(["beforeExit", "SIGINT", "SIGTERM"].map((event) => [event, process.rawListeners(event)]));
+    originalEmit = process.emit;
+    tempDir = undefined;
+    for (const key of fixtureGlobals) delete global[key];
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    vi.resetModules();
-    vi.clearAllMocks();
-    cleanup();
-    cleanup = () => {};
-    if (originalDataDir === undefined) delete process.env.DATA_DIR;
-    else process.env.DATA_DIR = originalDataDir;
+  afterEach(async () => {
+    try {
+      const state = global._dbAdapter;
+      const adapter = state?.instance ?? (state?.initPromise ? await state.initPromise : null);
+      await adapter?.close();
+      if (tempDir) fs.rmSync(tempDir, { recursive: true, force: true });
+    } finally {
+      for (const timer of Object.values(global._pendingTimers ?? {})) clearTimeout(timer);
+      for (const timer of Object.values(global._statsEmitTimers ?? {})) clearTimeout(timer);
+      for (const [event, listeners] of originalListeners) {
+        for (const listener of process.rawListeners(event)) {
+          if (!listeners.includes(listener)) process.removeListener(event, listener);
+        }
+      }
+      process.emit = originalEmit;
+      for (const [key, descriptor] of originalGlobals) {
+        if (descriptor) Object.defineProperty(global, key, descriptor);
+        else delete global[key];
+      }
+      if (originalDataDir === undefined) delete process.env.DATA_DIR;
+      else process.env.DATA_DIR = originalDataDir;
+      vi.resetModules();
+      vi.clearAllMocks();
+    }
   });
 
   it("keeps built-in provider aliases ahead of compatible node prefixes", async () => {
     const ctx = await setupDb();
-    cleanup = ctx.cleanup;
 
     await ctx.createProviderNode({
       id: "openai-compatible-chat-test",
@@ -60,7 +82,6 @@ describe("model routing", () => {
 
   it("still routes non-reserved compatible node prefixes", async () => {
     const ctx = await setupDb();
-    cleanup = ctx.cleanup;
 
     await ctx.createProviderNode({
       id: "openai-compatible-chat-test",

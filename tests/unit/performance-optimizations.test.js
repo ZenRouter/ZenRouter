@@ -1,19 +1,82 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { getSettings, updateSettings } from "@/lib/db/repos/settingsRepo.js";
-import { validateApiKey, createApiKey, updateApiKey, deleteApiKey, invalidateApiKeyCache } from "@/lib/db/repos/apiKeysRepo.js";
-import { getProviderConnections, createProviderConnection, updateProviderConnection, deleteProviderConnection, invalidateConnectionCache } from "@/lib/db/repos/connectionsRepo.js";
-import { getProviderCredentials } from "@/sse/services/auth.js";
-import { createSSEStream } from "open-sse/utils/stream.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+let dataDir;
+let previousDataDir;
+let previousListeners;
+let previousGlobals;
+const shutdownEvents = ["beforeExit", "exit", "SIGINT", "SIGTERM"];
+const fixtureGlobals = [
+  "_dbAdapter", "_pendingRequests", "_lastErrorProvider", "_statsEmitter",
+  "_pendingTimers", "_recentRing", "_connectionMapCache", "_statsEmitTimers",
+];
+let getSettings;
+let updateSettings;
+let validateApiKey;
+let createApiKey;
+let updateApiKey;
+let deleteApiKey;
+let getProviderConnections;
+let createProviderConnection;
+let updateProviderConnection;
+let deleteProviderConnection;
+let getProviderCredentials;
+let createSSEStream;
+
+beforeEach(async () => {
+  previousDataDir = process.env.DATA_DIR;
+  previousListeners = new Map(
+    shutdownEvents.map((event) => [event, process.rawListeners(event)])
+  );
+  previousGlobals = new Map(
+    fixtureGlobals.map((key) => [key, Object.getOwnPropertyDescriptor(global, key)])
+  );
+  dataDir = await mkdtemp(join(tmpdir(), "zenrouter-performance-"));
+  process.env.DATA_DIR = dataDir;
+  vi.resetModules();
+  for (const key of fixtureGlobals) delete global[key];
+  ({ getSettings, updateSettings } = await import("@/lib/db/repos/settingsRepo.js"));
+  ({ validateApiKey, createApiKey, updateApiKey, deleteApiKey } = await import("@/lib/db/repos/apiKeysRepo.js"));
+  ({ getProviderConnections, createProviderConnection, updateProviderConnection, deleteProviderConnection } = await import("@/lib/db/repos/connectionsRepo.js"));
+  ({ getProviderCredentials } = await import("@/sse/services/auth.js"));
+  ({ createSSEStream } = await import("open-sse/utils/stream.js"));
+});
+
+afterEach(async () => {
+  try {
+    for (const timer of Object.values(global._pendingTimers || {})) clearTimeout(timer);
+    for (const timer of Object.values(global._statsEmitTimers || {})) clearTimeout(timer);
+    global._statsEmitter?.removeAllListeners();
+    await global._dbAdapter?.instance?.close();
+  } finally {
+    for (const event of shutdownEvents) {
+      const existing = [...previousListeners.get(event)];
+      for (const listener of process.rawListeners(event)) {
+        const index = existing.indexOf(listener);
+        if (index === -1) process.removeListener(event, listener);
+        else existing.splice(index, 1);
+      }
+    }
+    for (const key of fixtureGlobals) {
+      const descriptor = previousGlobals.get(key);
+      if (descriptor) Object.defineProperty(global, key, descriptor);
+      else delete global[key];
+    }
+    vi.resetModules();
+    if (previousDataDir === undefined) delete process.env.DATA_DIR;
+    else process.env.DATA_DIR = previousDataDir;
+    if (dataDir) await rm(dataDir, { recursive: true, force: true });
+    dataDir = undefined;
+  }
+});
 
 // ZenRouter port of upstream PR #3629 perf tests, hardened for Zen's diverged
 // implementations (2s TTL raw settings cache, object-identity usage dedup,
-// arg-less GET /v1/models). 15 tests — 4 more than upstream's 11.
+// arg-less GET /v1/models).
 
 describe("Performance Optimizations (ZenRouter hardened port of #3629)", () => {
-  beforeEach(() => {
-    invalidateApiKeyCache();
-    invalidateConnectionCache();
-  });
 
   describe("Settings Repository raw TTL cache", () => {
     it("returns equal values on consecutive reads within TTL", async () => {
@@ -179,6 +242,7 @@ describe("Performance Optimizations (ZenRouter hardened port of #3629)", () => {
       const res2 = await GET();
       const body2 = await res2.json();
       expect(body2.data.length).toBe(body1.data.length);
+
     });
   });
 

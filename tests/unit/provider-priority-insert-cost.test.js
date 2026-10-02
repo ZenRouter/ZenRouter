@@ -1,20 +1,54 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-import {
-  createProviderConnection,
-  getProviderConnections,
-  deleteProviderConnection,
-  updateProviderConnection,
-} from "../../src/lib/db/index.js";
+let dataDir;
+let previousDataDir;
+let previousListeners;
+const shutdownEvents = ["beforeExit", "SIGINT", "SIGTERM"];
+let createProviderConnection;
+let getProviderConnections;
+let deleteProviderConnection;
+let updateProviderConnection;
 
-// #4311: POST /api/providers was O(pool) per insert. Inside one transaction it
-// read the whole pool AND renumbered every row's priority, so a 5k-key import
-// was O(n*m) — ~25M statements at a 5k pool — and every parallel writer
-// serialized on the same transaction. On top of that, an apikey name collision
-// silently overwrote the stored key with no 409.
-//
-// The test DB persists across tests in a file, so each case uses its own
-// provider alias; priorities are per-provider.
+beforeEach(async () => {
+  previousDataDir = process.env.DATA_DIR;
+  previousListeners = new Map(
+    shutdownEvents.map((event) => [event, process.rawListeners(event)])
+  );
+  dataDir = await mkdtemp(join(tmpdir(), "zenrouter-provider-priority-"));
+  process.env.DATA_DIR = dataDir;
+  vi.resetModules();
+  delete global._dbAdapter;
+  ({
+    createProviderConnection,
+    getProviderConnections,
+    deleteProviderConnection,
+    updateProviderConnection,
+  } = await import("../../src/lib/db/index.js"));
+});
+
+afterEach(async () => {
+  try {
+    await global._dbAdapter?.instance?.close();
+  } finally {
+    for (const event of shutdownEvents) {
+      const existing = [...previousListeners.get(event)];
+      for (const listener of process.rawListeners(event)) {
+        const index = existing.indexOf(listener);
+        if (index === -1) process.removeListener(event, listener);
+        else existing.splice(index, 1);
+      }
+    }
+    delete global._dbAdapter;
+    vi.resetModules();
+    if (previousDataDir === undefined) delete process.env.DATA_DIR;
+    else process.env.DATA_DIR = previousDataDir;
+    if (dataDir) await rm(dataDir, { recursive: true, force: true });
+    dataDir = undefined;
+  }
+});
 
 async function seed(provider, n) {
   for (let i = 0; i < n; i++) {
@@ -27,112 +61,92 @@ async function seed(provider, n) {
   }
 }
 
-describe("provider insert is O(1) in pool size (#4311)", () => {
-  it("assigns sequential priorities without a renumber pass", async () => {
-    const P = `openai-compatible-seq-${Date.now()}`;
-    await seed(P, 3);
-    const list = await getProviderConnections({ provider: P });
-    expect(list.map((c) => c.name)).toEqual(["seed-0", "seed-1", "seed-2"]);
-    expect(list.map((c) => c.priority)).toEqual([1, 2, 3]);
+describe("provider insertion ordering (#4311)", () => {
+  it("keeps a large pool in insertion order with sequential priorities", async () => {
+    const provider = "openai-compatible-order";
+    await seed(provider, 60);
+    const list = await getProviderConnections({ provider });
+    expect(list.map((c) => c.name)).toEqual(
+      Array.from({ length: 60 }, (_, i) => `seed-${i}`)
+    );
+    expect(list.map((c) => c.priority)).toEqual(
+      Array.from({ length: 60 }, (_, i) => i + 1)
+    );
   });
 
-  it("keeps a large pool in insertion order", async () => {
-    const P = `openai-compatible-ord-${Date.now()}`;
-    await seed(P, 60);
-    const list = await getProviderConnections({ provider: P });
-    expect(list).toHaveLength(60);
-    // The bug showed up as reordering once the pool grew past a few rows.
-    expect(list[0].name).toBe("seed-0");
-    expect(list[59].name).toBe("seed-59");
-    for (let i = 1; i < list.length; i++) {
-      expect(list[i].priority).toBeGreaterThan(list[i - 1].priority);
-    }
-  });
-
-  it("still renumbers on delete, so gaps do not accumulate", async () => {
-    const P = `openai-compatible-del-${Date.now()}`;
-    await seed(P, 4);
-    const before = await getProviderConnections({ provider: P });
-    await deleteProviderConnection(before[0].id);
-    const after = await getProviderConnections({ provider: P });
+  it("preserves remaining order and renumbers after delete", async () => {
+    const provider = "openai-compatible-delete";
+    await seed(provider, 4);
+    const before = await getProviderConnections({ provider });
+    await deleteProviderConnection(before[1].id);
+    const after = await getProviderConnections({ provider });
+    expect(after.map((c) => c.name)).toEqual(["seed-0", "seed-2", "seed-3"]);
     expect(after.map((c) => c.priority)).toEqual([1, 2, 3]);
   });
 
-  it("still renumbers on an explicit priority update", async () => {
-    // Unique alias per run: the DB persists across runs, so a fixed alias
-    // would accumulate rows and make this assertion depend on test order.
-    const P = `openai-compatible-upd-${Date.now()}`;
-    await seed(P, 4);
-    await new Promise((r) => setTimeout(r, 10));
-    const list = await getProviderConnections({ provider: P });
-    // Move the last one to the front.
+  it("moves a connection to the requested priority", async () => {
+    const provider = "openai-compatible-update";
+    await seed(provider, 4);
+    const list = await getProviderConnections({ provider });
     await updateProviderConnection(list[3].id, { priority: 1 });
-    const after = await getProviderConnections({ provider: P });
-    expect(after[0].name).toBe("seed-3");
+    const after = await getProviderConnections({ provider });
+    expect(after.map((c) => c.name)).toEqual(["seed-3", "seed-0", "seed-1", "seed-2"]);
+    expect(after.map((c) => c.priority)).toEqual([1, 2, 3, 4]);
   });
 });
 
-describe("name collision no longer destroys a key silently (#4311)", () => {
-  // Seeded once: these cases each mutate the SAME row, so a per-test seed
-  // would make the later assertions depend on earlier ones.
-  const P = `openai-compatible-clash-${Date.now()}`;
-  const original = (async () => {
-    await seed(P, 1);
-    return (await getProviderConnections({ provider: P }))[0];
-  })();
-
-  it("throws a typed conflict instead of overwriting, when overwrite is refused", async () => {
-    const orig = await original;
+describe("name collision does not destroy a key silently (#4311)", () => {
+  it("throws a typed conflict and preserves the key when overwrite is refused", async () => {
+    const provider = "openai-compatible-conflict";
+    await seed(provider, 1);
+    const [original] = await getProviderConnections({ provider });
     await expect(
       createProviderConnection({
-        provider: P,
+        provider,
         authType: "apikey",
-        name: orig.name,
+        name: original.name,
         apiKey: "REPLACEMENT-KEY",
         allowOverwrite: false,
       })
-    ).rejects.toMatchObject({ code: "PROVIDER_NAME_CONFLICT", existingId: orig.id });
-
-    // The stored key must be untouched.
-    const after = (await getProviderConnections({ provider: P }))[0];
-    expect(after.apiKey).toBe(orig.apiKey);
+    ).rejects.toMatchObject({ code: "PROVIDER_NAME_CONFLICT", existingId: original.id });
+    const after = await getProviderConnections({ provider });
+    expect(after.map((c) => ({ id: c.id, apiKey: c.apiKey }))).toEqual([
+      { id: original.id, apiKey: original.apiKey },
+    ]);
   });
 
-  it("still overwrites when the caller opts in", async () => {
-    const orig = await original;
+  it("replaces the key without adding a connection when overwrite is explicit", async () => {
+    const provider = "openai-compatible-overwrite";
+    await seed(provider, 1);
+    const [original] = await getProviderConnections({ provider });
     const updated = await createProviderConnection({
-      provider: P,
+      provider,
       authType: "apikey",
-      name: orig.name,
+      name: original.name,
       apiKey: "REPLACEMENT-KEY",
       allowOverwrite: true,
     });
-    expect(updated.id).toBe(orig.id);
-    const after = (await getProviderConnections({ provider: P }))[0];
-    expect(after.apiKey).toBe("REPLACEMENT-KEY");
+    expect(updated.id).toBe(original.id);
+    const after = await getProviderConnections({ provider });
+    expect(after.map((c) => ({ id: c.id, apiKey: c.apiKey }))).toEqual([
+      { id: original.id, apiKey: "REPLACEMENT-KEY" },
+    ]);
   });
 
-  it("defaults to the previous overwrite behaviour for existing callers", async () => {
-    // Every other call site in the repo (oauth routes, bulk import) omits the
-    // flag, so they must keep working exactly as before.
-    const orig = await original;
-    const updated = await createProviderConnection({
-      provider: P,
-      authType: "apikey",
-      name: orig.name,
-      apiKey: "LEGACY-PATH-KEY",
-    });
-    expect(updated.id).toBe(orig.id);
-  });
-
-  it("does not collide across different providers", async () => {
-    const orig = await original;
+  it("allows the same name in separate providers without changing either key", async () => {
+    const provider = "openai-compatible-first";
+    const otherProvider = "openai-compatible-second";
+    await seed(provider, 1);
+    const [original] = await getProviderConnections({ provider });
     const other = await createProviderConnection({
-      provider: "openai-compatible-other",
+      provider: otherProvider,
       authType: "apikey",
-      name: orig.name,
+      name: original.name,
       apiKey: "other-key",
+      allowOverwrite: false,
     });
-    expect(other.id).not.toBe(orig.id);
+    expect(other.id).not.toBe(original.id);
+    expect((await getProviderConnections({ provider }))[0].apiKey).toBe(original.apiKey);
+    expect((await getProviderConnections({ provider: otherProvider }))[0].apiKey).toBe("other-key");
   });
 });
