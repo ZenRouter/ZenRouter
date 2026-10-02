@@ -45,7 +45,19 @@ function makeFakeChild() {
 
   function handle(msg) {
     if (msg.method === "initialize") {
-      send({ jsonrpc: "2.0", id: msg.id, result: { protocolVersion: 1 } });
+      if (msg.params?.protocolVersion !== 1 ||
+          !msg.params?.clientCapabilities ||
+          typeof msg.params.clientCapabilities !== "object" ||
+          Array.isArray(msg.params.clientCapabilities) ||
+          Object.hasOwn(msg.params, "capabilities")) {
+        send({
+          jsonrpc: "2.0",
+          id: msg.id,
+          error: { code: -32602, message: "ACP v1 requires integer protocolVersion and clientCapabilities" },
+        });
+        return;
+      }
+      send({ jsonrpc: "2.0", id: msg.id, result: { protocolVersion: 1, agentCapabilities: {}, authMethods: [] } });
     } else if (msg.method === "session/new") {
       // Mirror devin 3000.2.x: `mcpServers` is a required sequence.
       if (Array.isArray(msg.params && msg.params.mcpServers)) {

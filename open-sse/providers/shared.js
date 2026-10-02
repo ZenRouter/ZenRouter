@@ -117,10 +117,9 @@ export const KIMI_CODING_BASE_URL = "https://api.kimi.com/coding/v1/messages";
 export const OPENAI_COMPAT_BASE = "https://api.openai.com/v1";
 export const ANTHROPIC_COMPAT_BASE = "https://api.anthropic.com/v1";
 
-// Official Antigravity IDE Desktop fingerprint. Version + UA are
-// single-sourced from open-sse/config/clientVersions.js; the platform
-// token is computed at import time so the spoof matches the IDE client,
-// not the zenrouter host OS.
+// Antigravity IDE version and User-Agent are single-sourced from
+// open-sse/config/clientVersions.js. The platform token follows the gateway
+// host OS/architecture; this is not a fixed captured desktop fingerprint.
 export { ANTIGRAVITY_IDE_VERSION, ANTIGRAVITY_IDE_USER_AGENT };
 export const ANTIGRAVITY_IDE_BASE_URL = "https://daily-cloudcode-pa.googleapis.com";
 

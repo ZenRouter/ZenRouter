@@ -65,6 +65,10 @@ function resolveDevinBin() {
 
 // ─── ACP JSON-RPC helper ────────────────────────────────────────────────────
 
+// ACP uses integer major versions, independently of the installed CLI version.
+// https://agentclientprotocol.com/protocol/initialization
+const ACP_PROTOCOL_VERSION = 1;
+
 function rpc(method, params, id) {
   const msg = { jsonrpc: "2.0", method, params };
   if (id !== undefined) msg.id = id;
@@ -616,6 +620,14 @@ export class DevinCliExecutor extends BaseExecutor {
 
             // ── Initialize response ───────────────────────────────────────
             if (!initDone && msg.result !== undefined && !msg.method) {
+              if (msg.result?.protocolVersion !== ACP_PROTOCOL_VERSION) {
+                finish(
+                  `Devin ACP: unsupported protocol version ${JSON.stringify(msg.result?.protocolVersion)}; ` +
+                  `ZenRouter supports ACP protocol version ${ACP_PROTOCOL_VERSION}. ` +
+                  `Use a Devin CLI agent that supports this version.`
+                );
+                return;
+              }
               initDone = true;
               // Create session with the client workspace cwd so agent file tools
               // resolve relative paths against the project (not /tmp).
@@ -789,9 +801,9 @@ export class DevinCliExecutor extends BaseExecutor {
 
         // ── Send initialize ───────────────────────────────────────────────
         sendRpc("initialize", {
-          protocolVersion: "0.3",
+          protocolVersion: ACP_PROTOCOL_VERSION,
           clientInfo: { name: "zenrouter", version: "1.0" },
-          capabilities: {},
+          clientCapabilities: {},
         });
       },
     });

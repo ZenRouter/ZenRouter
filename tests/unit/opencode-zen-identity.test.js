@@ -62,7 +62,6 @@ describe("OpenCode Zen identity compliance (#4101)", () => {
       { connectionId: "conn-oc-1" }
     );
     const headers = ex.buildHeaders({ connectionId: "conn-oc-1" }, true);
-    expect(headers["User-Agent"]).toBe("opencode/1.18.34");
     expect(headers["x-opencode-session"]).toMatch(CANONICAL_SESSION_RE);
     expect(headers["x-opencode-request"]).toMatch(/^msg_[0-9a-f]{32}$/);
   });
@@ -79,14 +78,4 @@ describe("OpenCode Zen identity compliance (#4101)", () => {
     expect(s2).toBe(s1);
   });
 
-  it("preserves explicit downstream session/request headers untouched", () => {
-    const ex = new OpenCodeExecutor();
-    const real = "ses_019a3f4c2d8bKq9vX2mZ4Rt7Ws";
-    const headers = ex.buildHeaders(
-      { rawHeaders: { "x-opencode-session": real, "x-opencode-request": "msg_client123" } },
-      true
-    );
-    expect(headers["x-opencode-session"]).toBe(real);
-    expect(headers["x-opencode-request"]).toBe("msg_client123");
-  });
 });

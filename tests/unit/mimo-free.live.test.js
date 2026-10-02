@@ -11,7 +11,7 @@ import { describe, it, expect } from "vitest";
 import { proxyAwareFetch } from "../../open-sse/utils/proxyFetch.js";
 import { __test__ } from "../../open-sse/executors/mimo-free.js";
 
-const d = process.env.RUN_LIVE_TESTS ? describe : describe.skip;
+const d = process.env.RUN_LIVE_TESTS === "1" ? describe : describe.skip;
 
 const { BOOTSTRAP_URL, CHAT_URL, generateFingerprint, MIMO_SYSTEM_MARKER } = __test__;
 

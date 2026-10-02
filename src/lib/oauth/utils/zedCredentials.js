@@ -4,8 +4,10 @@ import { access, constants, readFile } from "fs/promises";
 import { homedir } from "os";
 import { join } from "path";
 import { randomUUID } from "crypto";
+import { createRequire } from "module";
 
 const execFileAsync = promisify(execFile);
+const require = createRequire(import.meta.url);
 
 export const ZED_DEFAULT_CREDENTIALS_URL = "https://zed.dev";
 export const ZED_KEYRING_LABEL = "zed-github-account";
@@ -82,7 +84,6 @@ export async function readZedSystemId() {
 
 async function queryKvStore(dbPath, key) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Database = require("better-sqlite3");
     const db = new Database(dbPath, { readonly: true, fileMustExist: true });
     try {

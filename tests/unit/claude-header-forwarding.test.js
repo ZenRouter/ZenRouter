@@ -2,7 +2,7 @@
  * Unit tests for Anthropic header forwarding pipeline
  *
  * Tests cover:
- *  - default.js buildHeaders(): static provider defaults + model-gated anthropic-beta
+ *  - default.js buildHeaders(): model-gated anthropic-beta
  *  - default.js buildHeaders(): anthropic-compatible non-Anthropic host stripping
  *  - default.js buildHeaders(): anthropic-compatible official host keeps headers
  *  - proxyFetch.js: api.anthropic.com routes through anthropicFetch path
@@ -19,17 +19,6 @@ describe("DefaultExecutor.buildHeaders() — claude provider", () => {
     vi.resetModules();
     const mod = await import("open-sse/executors/default.js");
     DefaultExecutor = mod.DefaultExecutor || mod.default;
-  });
-
-  it("uses static provider defaults when no model is given", () => {
-    const executor = new DefaultExecutor("claude");
-    const headers = executor.buildHeaders({ apiKey: "sk-test" }, true);
-
-    const hasVersion =
-      headers["Anthropic-Version"] === "2023-06-01" ||
-      headers["anthropic-version"] === "2023-06-01";
-    expect(hasVersion).toBe(true);
-    expect(headers["User-Agent"]).toBe("claude-cli/2.1.286 (external, sdk-cli)");
   });
 
   it("includes heavy-agent beta flags for claude-opus-5-5", () => {

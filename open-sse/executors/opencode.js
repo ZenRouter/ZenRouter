@@ -4,7 +4,7 @@ import { PROVIDERS } from "../config/providers.js";
 import { getThinkingLevels } from "../providers/thinkingLevels.js";
 import { injectReasoningContent } from "../utils/reasoningContentInjector.js";
 import { resolveSessionId } from "../utils/sessionManager.js";
-import { OPENCODE_VERSION, OPENCODE_USER_AGENT } from "../config/clientVersions.js";
+import { OPENCODE_USER_AGENT } from "../config/clientVersions.js";
 
 // Models served by /zen/v1/responses; every other model stays on /chat/completions.
 const RESPONSES_MODELS = new Set([
@@ -86,8 +86,24 @@ function isResponsesModel(model) {
   return /muse/i.test(base) || RESPONSES_MODELS.has(base);
 }
 
+function opencodeRequestHeaders(credentials) {
+  const lower = {};
+  for (const [key, value] of Object.entries(credentials?.rawHeaders || {})) {
+    lower[key.toLowerCase()] = value;
+  }
+  return lower;
+}
+
 function resolveOpencodeSession(body, credentials) {
-  const headers = credentials?.rawHeaders || {};
+  const headers = opencodeRequestHeaders(credentials);
+  // Native OpenCode's namespaced id survives translation even when the body
+  // has acquired a different cache key. Resolve it before shared fallbacks.
+  if ((headers["user-agent"] || "").toLowerCase().includes("opencode")) {
+    const nativeSession = headers["x-opencode-session-id"] || headers["x-opencode-session"];
+    if (typeof nativeSession === "string" && nativeSession.trim() && nativeSession.trim().length <= 256) {
+      return canonicalizeOpencodeSession(nativeSession.trim());
+    }
+  }
   const resolved = resolveSessionId({
     headers,
     body,
@@ -231,21 +247,28 @@ export class OpenCodeExecutor extends BaseExecutor {
   }
 
   buildHeaders(credentials, stream = true) {
-    const raw = credentials?.rawHeaders || {};
-    const lower = {};
-    for (const [k, v] of Object.entries(raw)) lower[k.toLowerCase()] = v;
+    const lower = opencodeRequestHeaders(credentials);
 
     const downstreamUa = lower["user-agent"] || "";
     const isOpencodeDownstream = downstreamUa.toLowerCase().includes("opencode");
+    const sessionId = this._currentSessionId || resolveOpencodeSession(null, credentials);
+    const parentSessionId = isOpencodeDownstream
+      ? lower["x-opencode-parent-session-id"] || lower["x-parent-session-id"]
+      : null;
 
     return {
       "Content-Type": "application/json",
       "Authorization": "Bearer public",
       "User-Agent": isOpencodeDownstream ? downstreamUa : OPENCODE_USER_AGENT,
-      "x-opencode-client": lower["x-opencode-client"] || "desktop",
-      "x-opencode-session": lower["x-opencode-session"] || this._currentSessionId || mintCanonicalSessionId(),
-      "x-opencode-request": lower["x-opencode-request"] || this._currentRequestId || deriveRequestId(null, {}),
-      "x-opencode-project": lower["x-opencode-project"] || "global",
+      "x-opencode-client": (isOpencodeDownstream && lower["x-opencode-client"]) || "desktop",
+      "x-opencode-session-id": sessionId,
+      "x-opencode-session": sessionId,
+      ...(parentSessionId ? {
+        "x-opencode-parent-session-id": parentSessionId,
+        "x-parent-session-id": parentSessionId,
+      } : {}),
+      "x-opencode-request": (isOpencodeDownstream && lower["x-opencode-request"]) || this._currentRequestId || deriveRequestId(sessionId, {}),
+      "x-opencode-project": (isOpencodeDownstream && lower["x-opencode-project"]) || "global",
       "Accept": stream ? "text/event-stream" : "*/*",
     };
   }
