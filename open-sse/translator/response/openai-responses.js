@@ -37,7 +37,23 @@ function toResponsesUsage(usage) {
   return responseUsage;
 }
 
-export function openaiToOpenAIResponsesResponse(chunk, state) {
+export function openaiToOpenAIResponsesResponse(chunk, state = {}) {
+  state.seq ??= 0;
+  state.responseId ??= `resp_${Date.now()}`;
+  state.created ??= Math.floor(Date.now() / 1000);
+  state.msgOutputIndexes ??= {};
+  state.msgItemAdded ??= {};
+  state.msgItemDone ??= {};
+  state.msgContentAdded ??= {};
+  state.msgTextBuf ??= {};
+  state.funcCallIds ??= {};
+  state.funcNames ??= {};
+  state.funcItemAdded ??= {};
+  state.funcArgsDone ??= {};
+  state.funcItemDone ??= {};
+  state.funcArgsBuf ??= {};
+  state.toolOutputIndexes ??= {};
+
   if (!chunk) {
     return flushEvents(state);
   }
