@@ -1,6 +1,7 @@
 // Tool call helper functions for translator
 
 import { FORMATS } from "../formats.js";
+import { splitToolCallId } from "./thoughtSignature.js";
 
 // Anthropic tool_use.id must match: ^[a-zA-Z0-9_-]+$
 const TOOL_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
@@ -122,7 +123,9 @@ export function hasToolResults(msg, toolCallIds) {
 
   // OpenAI format: role = "tool" with tool_call_id
   if (msg.role === "tool" && msg.tool_call_id) {
-    return toolCallIds.includes(msg.tool_call_id);
+    if (toolCallIds.includes(msg.tool_call_id)) return true;
+    const rawId = splitToolCallId(msg.tool_call_id).rawId;
+    return toolCallIds.some(id => splitToolCallId(id).rawId === rawId);
   }
 
   // Claude format: tool_result blocks in user message content

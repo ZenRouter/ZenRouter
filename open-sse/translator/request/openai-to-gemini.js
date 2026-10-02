@@ -73,6 +73,58 @@ export function sanitizeAntigravitySystemPrompt(text) {
   );
 }
 
+// Google call IDs are unique across the entire history, but OpenAI clients may
+// reuse them. Keep wire IDs and results on call occurrences, never on the source
+// messages: the same body can be retried against another provider.
+function normalizeGeminiToolCalls(messages) {
+  const reservedIds = new Set();
+  for (const msg of messages) {
+    if (msg.role !== ROLE.ASSISTANT || !Array.isArray(msg.tool_calls)) continue;
+    for (const tc of msg.tool_calls) {
+      if (tc.type === OPENAI_BLOCK.FUNCTION) reservedIds.add(splitToolCallId(tc.id).rawId);
+    }
+  }
+
+  const callsByMessage = new Map();
+  const usedIds = new Set();
+  const pendingById = new Map();
+  const nextSuffixById = new Map();
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    if (msg.role === ROLE.ASSISTANT && Array.isArray(msg.tool_calls)) {
+      const calls = [];
+      const turnPending = new Map();
+      for (const tc of msg.tool_calls) {
+        if (tc.type !== OPENAI_BLOCK.FUNCTION) continue;
+        const { rawId, thoughtSignature } = splitToolCallId(tc.id);
+        let wireId = rawId;
+        if (usedIds.has(wireId)) {
+          let suffix = nextSuffixById.get(rawId) || 2;
+          do {
+            wireId = `${rawId}_d${suffix++}`;
+          } while (reservedIds.has(wireId) || usedIds.has(wireId));
+          nextSuffixById.set(rawId, suffix);
+        }
+        usedIds.add(wireId);
+        const call = { toolCall: tc, wireId, thoughtSignature, response: undefined };
+        calls.push(call);
+        if (!turnPending.has(rawId)) turnPending.set(rawId, []);
+        turnPending.get(rawId).push(call);
+      }
+      callsByMessage.set(i, calls);
+      // A later turn reusing an ID owns subsequent results. Within one turn,
+      // duplicate IDs pair FIFO, just like parallel call/result occurrences.
+      for (const [rawId, calls] of turnPending) pendingById.set(rawId, { calls, next: 0 });
+    } else if (msg.role === ROLE.TOOL && msg.tool_call_id) {
+      const pending = pendingById.get(splitToolCallId(msg.tool_call_id).rawId);
+      if (pending && pending.next < pending.calls.length) {
+        pending.calls[pending.next++].response = msg.content;
+      }
+    }
+  }
+  return callsByMessage;
+}
+
 // Core: Convert OpenAI request to Gemini format (base for all variants)
 function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG_SIGNATURE) {
   const result = {
@@ -99,29 +151,8 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
     result.generationConfig.maxOutputTokens = body.max_tokens;
   }
 
-  // Build tool_call_id -> name map; IDs may carry a preserved Gemini signature.
-  const tcID2Name = {};
-  if (body.messages && Array.isArray(body.messages)) {
-    for (const msg of body.messages) {
-      if (msg.role === ROLE.ASSISTANT && msg.tool_calls) {
-        for (const tc of msg.tool_calls) {
-          if (tc.type === OPENAI_BLOCK.FUNCTION && tc.id && tc.function?.name) {
-            tcID2Name[splitToolCallId(tc.id).rawId] = tc.function.name;
-          }
-        }
-      }
-    }
-  }
-
-  // Build tool responses cache using the raw Gemini call ID.
-  const toolResponses = {};
-  if (body.messages && Array.isArray(body.messages)) {
-    for (const msg of body.messages) {
-      if (msg.role === ROLE.TOOL && msg.tool_call_id) {
-        toolResponses[splitToolCallId(msg.tool_call_id).rawId] = msg.content;
-      }
-    }
-  }
+  const messages = Array.isArray(body.messages) ? body.messages : [];
+  const callsByMessage = normalizeGeminiToolCalls(messages);
 
   // Convert messages
   if (body.messages && Array.isArray(body.messages)) {
@@ -170,47 +201,32 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
         }
 
         if (msg.tool_calls && Array.isArray(msg.tool_calls)) {
-          const toolCallIds = [];
-          for (const tc of msg.tool_calls) {
-            if (tc.type !== OPENAI_BLOCK.FUNCTION) continue;
-
-              const args = tryParseJSON(tc.function?.arguments || "{}");
-            const { rawId, thoughtSignature } = splitToolCallId(tc.id);
-            const validSig = isValidBase64(thoughtSignature) ? thoughtSignature : signature;
+          const toolCalls = callsByMessage.get(i);
+          for (const call of toolCalls) {
+            const tc = call.toolCall;
+            const args = tryParseJSON(tc.function?.arguments || "{}");
+            const validSig = isValidBase64(call.thoughtSignature) ? call.thoughtSignature : signature;
             parts.push({
               thoughtSignature: validSig,
               functionCall: {
-                id: rawId,
+                id: call.wireId,
                 name: sanitizeGeminiFunctionName(tc.function.name, existingToolNames, toolNameMap),
                 args: args
               }
             });
-            toolCallIds.push(rawId);
           }
 
           if (parts.length > 0) {
             result.contents.push({ role: GEMINI_ROLE.MODEL, parts });
           }
 
-          // Check if there are actual tool responses in the next messages
-          const hasActualResponses = toolCallIds.some(fid => toolResponses[fid] !== undefined);
-
-          if (hasActualResponses) {
+          // Emit each result next to its own call, in the original call order.
+          if (toolCalls.some(call => call.response !== undefined)) {
             const toolParts = [];
-            for (const fid of toolCallIds) {
-              if (toolResponses[fid] === undefined) continue;
-
-              let name = tcID2Name[fid];
-              if (!name) {
-                const idParts = fid.split("-");
-                if (idParts.length > 2) {
-                  name = idParts.slice(0, -2).join("-");
-                } else {
-                  name = fid;
-                }
-              }
-
-              const rawResp = toolResponses[fid] ?? "";
+            for (const call of toolCalls) {
+              if (call.response === undefined) continue;
+              const name = call.toolCall.function.name;
+              const rawResp = call.response ?? "";
               let parsedResp = tryParseJSON(rawResp);
               if (parsedResp === null || typeof parsedResp !== "object") {
                 parsedResp = { result: rawResp };
@@ -220,7 +236,7 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
 
               toolParts.push({
                 functionResponse: {
-                  id: fid,
+                  id: call.wireId,
                   name: sanitizeGeminiFunctionName(name, existingToolNames, toolNameMap),
                   response: parsedResp
                 }
