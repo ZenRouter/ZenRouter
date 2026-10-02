@@ -118,12 +118,6 @@ describe("Performance Optimizations (ZenRouter hardened port of #3629)", () => {
       expect(await validateApiKey(null)).toBe(false);
       expect(await validateApiKey(undefined)).toBe(false);
     });
-
-    it("negative-caches unknown keys", async () => {
-      const ghost = `sk-ghost-${Date.now()}`;
-      expect(await validateApiKey(ghost)).toBe(false);
-      expect(await validateApiKey(ghost)).toBe(false);
-    });
   });
 
   describe("Connections Repository L1 cache", () => {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSettings } from "@/lib/localDb";
 import {
+  discardSamlRequest,
   getSamlBaseUrl,
   isSamlConfigured,
   pickSamlDisplayName,
@@ -15,9 +16,14 @@ export async function POST(request) {
   const settings = await getSettings();
   const origin = getSamlBaseUrl(request, settings);
   const ip = getClientIp(request);
+  const cookieStore = await cookies();
+  const storedRequestId = cookieStore.get("saml_state")?.value || "";
+  // Every callback attempt clears browser state, even when rate limited.
+  cookieStore.delete("saml_state");
 
   const lock = checkLock(ip);
   if (lock.locked) {
+    discardSamlRequest(request, storedRequestId, settings);
     return NextResponse.redirect(
       new URL(
         `/login?error=${encodeURIComponent(`Too many failed attempts. Try again in ${lock.retryAfter}s.`)}`,
@@ -26,13 +32,11 @@ export async function POST(request) {
     );
   }
 
-  const cookieStore = await cookies();
-  const storedRequestId = cookieStore.get("saml_state")?.value || "";
-
-  // Always clear saml_state cookie after attempt
-  cookieStore.delete("saml_state");
-
   try {
+    if (!storedRequestId) {
+      recordFail(ip);
+      return NextResponse.redirect(new URL("/login?error=saml_missing_state", origin));
+    }
     const formData = await request.formData();
     const SAMLResponse = formData.get("SAMLResponse");
 
@@ -65,5 +69,7 @@ export async function POST(request) {
     return NextResponse.redirect(
       new URL(`/login?error=${encodeURIComponent(error.message || "saml_acs_failed")}`, origin)
     );
+  } finally {
+    discardSamlRequest(request, storedRequestId, settings);
   }
 }

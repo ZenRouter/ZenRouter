@@ -7,12 +7,14 @@
 //                                *resolves* to a private/loopback address (e.g. a
 //                                nip.io/sslip.io wildcard-DNS domain, or an attacker's
 //                                own domain pointed at 127.0.0.1) is also rejected.
-//   3. fetchPublic             - wraps fetch() with manual redirect handling so a
-//                                validated public URL can't 30x its way to an
-//                                internal target without the redirect target being
-//                                re-validated through layer 2 first.
+//   3. fetchPublic             - pins that validated DNS snapshot to the socket
+//                                lookup, preserving the hostname for Host/TLS.
+//                                Every redirect gets its own validated snapshot;
+//                                patched global/proxy fetch cannot bypass it.
 
 import dns from "node:dns";
+import { isIP } from "node:net";
+import { Agent, fetch as undiciFetch, Response } from "undici";
 
 const BLOCKED_HOSTNAMES = new Set(["localhost", "ip6-localhost", "ip6-loopback"]);
 const BLOCKED_SUFFIXES = [".internal", ".local", ".localhost"];
@@ -262,61 +264,35 @@ export function assertPublicUrl(rawUrl) {
   if (isBlockedHost(host)) throw new Error("Blocked URL: internal host");
 }
 
-// Full asynchronous validation with DNS lookup resolution to prevent DNS rebinding.
-export async function assertPublicUrlResolved(rawUrl) {
+// Resolve one immutable address snapshot. The transport must use this snapshot,
+// not perform another DNS lookup after validation (DNS rebinding / TOCTOU).
+async function resolvePublicUrl(rawUrl) {
+  assertPublicUrl(rawUrl);
   const parsed = new URL(rawUrl);
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new Error(`Blocked URL: unsupported protocol ${parsed.protocol}`);
-  }
-  const host = normalizeHost(parsed.hostname);
-  if (BLOCKED_HOSTNAMES.has(host) || BLOCKED_SUFFIXES.some((s) => host.endsWith(s))) {
-    throw new Error("Blocked URL: internal host");
-  }
-  if (BLOCKED_DNS_REBINDING_HOSTS.has(host) || BLOCKED_DNS_REBINDING_SUFFIXES.some((s) => host.endsWith(s))) {
-    throw new Error("Blocked URL: private IP (DNS rebinding host)");
-  }
-  if (isBlockedIpv4(host) || isBlockedAlternativeIpv4(host)) {
-    throw new Error("Blocked URL: private IP");
-  }
-  if (host.includes(":")) {
-    const groups = parseIPv6ToGroups(host.replace(/^\[|\]$/g, ""));
-    if (groups ? isBlockedIpv6Groups(groups) : isBlockedIpv6(host)) {
-      throw new Error("Blocked URL: private IP");
-    }
-  }
-  if (isBlockedHost(host)) {
-    // isBlockedHost covers combined checks; preserve message distinction
-    if (BLOCKED_DNS_REBINDING_HOSTS.has(host) || BLOCKED_DNS_REBINDING_SUFFIXES.some((s) => host.endsWith(s)) ||
-        isBlockedIpv4(host) || isBlockedAlternativeIpv4(host) || host.includes(":")) {
-      throw new Error("Blocked URL: private IP");
-    }
-    throw new Error("Blocked URL: internal host");
-  }
-
-  // Already a literal IPv4/IPv6 address — isBlockedHost above already covered it,
-  // no DNS lookup applies (and dns.lookup would just echo it back anyway).
-  const bracketless = host.replace(/^\[|\]$/g, "");
-  if (ipv4ToInt(bracketless) !== null || parseAlternativeIpv4(bracketless) !== null || bracketless.includes(":")) {
-    if (isBlockedHost(bracketless)) throw new Error("Blocked URL: private IP");
-    return;
-  }
+  const host = normalizeHost(parsed.hostname).replace(/^\[|\]$/g, "");
+  const family = isIP(host);
+  if (family) return [{ address: host, family }];
 
   let addresses;
   try {
     addresses = await dns.promises.lookup(host, { all: true, verbatim: true });
   } catch {
-    // Resolution failure isn't an SSRF signal by itself — let the subsequent
-    // fetch() fail with its own (clearer) network error.
-    return;
+    throw new Error("Blocked URL: DNS resolution failed");
   }
-  for (const { address, family } of addresses) {
-    if (family === 4) {
-      if (isBlockedIpv4(address) || isBlockedAlternativeIpv4(address)) throw new Error("Blocked URL: private IP (hostname resolves to an internal host)");
-    } else if (family === 6) {
-      const groups = parseIPv6ToGroups(address);
-      if (groups ? isBlockedIpv6Groups(groups) : isBlockedIpv6(address)) throw new Error("Blocked URL: private IP (hostname resolves to an internal host)");
+  if (!Array.isArray(addresses) || !addresses.length) throw new Error("Blocked URL: DNS returned no addresses");
+  for (const { address, family: addressFamily } of addresses) {
+    if (!isIP(address) || isIP(address) !== addressFamily) {
+      throw new Error("Blocked URL: invalid DNS address");
     }
+    assertPublicIp(address);
   }
+  return addresses;
+}
+
+// Validation-only API: keep its historical void return value. A later fetch
+// needs its own pinned snapshot; validation alone does not secure a transport.
+export async function assertPublicUrlResolved(rawUrl) {
+  await resolvePublicUrl(rawUrl);
 }
 
 // Backward-compat alias for callers still importing assertPublicUrlAsync
@@ -368,22 +344,120 @@ export function assertNotCloudMetadata(rawUrl) {
   }
 }
 
-// fetch() with SSRF-safe manual redirect handling: each hop's target is
-// re-validated through assertPublicUrlResolved before being followed, so a
-// validated public URL can't 30x its way to an internal target. Bounded to
-// maxRedirects hops (fetch's own default following behavior has no bound
-// relevant here since we never let it auto-follow).
+function createPinnedAgent(addresses) {
+  return new Agent({
+    connect: {
+      lookup(_hostname, options, callback) {
+        const family = typeof options === "number" ? options : options.family;
+        const candidates = family ? addresses.filter((entry) => entry.family === family) : addresses;
+        if (!candidates.length) {
+          callback(new Error("Blocked URL: no validated address for requested family"));
+        } else if (options.all) {
+          callback(null, candidates);
+        } else {
+          callback(null, candidates[0].address, candidates[0].family);
+        }
+      },
+    },
+  });
+}
+
+// Response ownership follows the caller's stream lifetime, not fetch's header
+// completion. This also handles readers, text/json, clone(), cancel and abort.
+function ownResponse(response, agent, signal) {
+  let released = false;
+  const release = (abort = false) => {
+    if (released) return Promise.resolve();
+    released = true;
+    signal?.removeEventListener("abort", onAbort);
+    return (abort ? agent.destroy() : agent.close()).catch(() => {});
+  };
+  const onAbort = () => { void release(true); };
+  signal?.addEventListener("abort", onAbort, { once: true });
+  if (signal?.aborted) onAbort();
+  if (!response.body) {
+    void release();
+    return response;
+  }
+  const reader = response.body.getReader();
+  const body = new ReadableStream({
+    async pull(controller) {
+      try {
+        const { done, value } = await reader.read();
+        if (done) {
+          await release();
+          controller.close();
+        } else {
+          controller.enqueue(value);
+        }
+      } catch (error) {
+        await release(true);
+        controller.error(error);
+      }
+    },
+    async cancel(reason) {
+      try {
+        await reader.cancel(reason);
+      } finally {
+        await release();
+      }
+    },
+  }, { highWaterMark: 0 });
+  const owned = new Response(body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+  for (const key of ["url", "type", "redirected"]) {
+    Object.defineProperty(owned, key, { value: response[key] });
+  }
+  return owned;
+}
+
+// Use Undici directly: global fetch may have been replaced by a proxy wrapper
+// which ignores dispatchers. Each redirect gets a new validated, pinned Agent.
 export async function fetchPublic(url, init = {}, { maxRedirects = 5 } = {}) {
-  await assertPublicUrlResolved(url);
-  let currentUrl = url;
+  let currentUrl = new URL(url);
+  let currentInit = { ...init, headers: new Headers(init.headers) };
   for (let hop = 0; ; hop++) {
-    const res = await fetch(currentUrl, { ...init, redirect: "manual" });
-    const isRedirect = res.status >= 300 && res.status < 400;
-    const location = isRedirect ? res.headers.get("location") : null;
-    if (!location) return res;
+    const addresses = await resolvePublicUrl(currentUrl);
+    const agent = createPinnedAgent(addresses);
+    let response;
+    try {
+      response = ownResponse(await undiciFetch(currentUrl, {
+        ...currentInit,
+        dispatcher: agent,
+        redirect: "manual",
+      }), agent, currentInit.signal);
+    } catch (error) {
+      await agent.destroy().catch(() => {});
+      throw error;
+    }
+    const isRedirect = [301, 302, 303, 307, 308].includes(response.status);
+    const location = isRedirect ? response.headers.get("location") : null;
+    if (!location) return response;
+    await response.body?.cancel();
     if (hop >= maxRedirects) throw new Error("Blocked URL: too many redirects");
-    const nextUrl = new URL(location, currentUrl).toString();
-    await assertPublicUrlResolved(nextUrl);
+    const nextUrl = new URL(location, currentUrl);
+    const method = (currentInit.method || "GET").toUpperCase();
+    const rewriteToGet = ((response.status === 301 || response.status === 302) && method === "POST") ||
+      (response.status === 303 && method !== "GET" && method !== "HEAD");
+    const headers = new Headers(currentInit.headers);
+    if (rewriteToGet) {
+      currentInit = { ...currentInit, method: "GET", body: undefined };
+      for (const name of ["content-encoding", "content-language", "content-location", "content-type", "content-length"]) {
+        headers.delete(name);
+      }
+    }
+    if (nextUrl.origin !== currentUrl.origin) {
+      // A 307/308 must not carry credential-bearing POST bodies to another
+      // origin. Refuse rather than silently change its method/semantics.
+      if (currentInit.body != null) throw new Error("Blocked URL: cross-origin body redirect");
+      for (const name of ["authorization", "proxy-authorization", "cookie", "cookie2", "x-api-key", "api-key", "x-goog-api-key", "mcp-session-id", "host"]) {
+        headers.delete(name);
+      }
+    }
+    currentInit = { ...currentInit, headers };
     currentUrl = nextUrl;
   }
 }

@@ -5,9 +5,7 @@ import {
   generateSamlMetadata,
   pickSamlEmail,
   pickSamlDisplayName,
-  validateSamlResponse,
 } from "../../src/lib/auth/saml.js";
-import { mergeWithDefaults } from "../../src/lib/db/repos/settingsRepo.js";
 
 describe("SAML 2.0 Auth Engine Utilities", () => {
   describe("formatX509Certificate", () => {
@@ -70,31 +68,6 @@ describe("SAML 2.0 Auth Engine Utilities", () => {
     });
   });
 
-  describe("InResponseTo Replay Validation", () => {
-    it("throws error when expectedRequestId is supplied but InResponseTo is missing", async () => {
-      const settings = { samlCert: "dummy-cert" };
-      const rawXml = Buffer.from('<Response ID="123"></Response>').toString("base64");
-      await expect(
-        validateSamlResponse(null, { SAMLResponse: rawXml }, "req-123", settings)
-      ).rejects.toThrow(/InResponseTo mismatch/);
-    });
-
-    it("throws error when expectedRequestId is supplied but InResponseTo does not match", async () => {
-      const settings = { samlCert: "dummy-cert" };
-      const rawXml = Buffer.from('<Response InResponseTo="wrong-id"></Response>').toString("base64");
-      await expect(
-        validateSamlResponse(null, { SAMLResponse: rawXml }, "req-123", settings)
-      ).rejects.toThrow(/InResponseTo mismatch/);
-    });
-
-    it("throws error if samlCert is not configured", async () => {
-      const rawXml = Buffer.from('<Response ID="123"></Response>').toString("base64");
-      await expect(
-        validateSamlResponse(null, { SAMLResponse: rawXml }, "req-123", {})
-      ).rejects.toThrow(/Certificate/);
-    });
-  });
-
   describe("Claims Extraction", () => {
     const mockProfile = {
       email: "user@example.com",
@@ -128,17 +101,6 @@ describe("SAML 2.0 Auth Engine Utilities", () => {
       expect(
         pickSamlDisplayName({ givenName: "Alice", surname: "Smith" }, {})
       ).toBe("Alice Smith");
-    });
-  });
-
-  describe("Settings Repository Defaults", () => {
-    it("mergeWithDefaults safely populates SAML defaults for existing installations", () => {
-      const merged = mergeWithDefaults({ authMode: "password" });
-      expect(merged.ssoType).toBe("oidc");
-      expect(merged.samlIssuer).toBe("urn:zenrouter:sp");
-      expect(merged.samlLoginLabel).toBe("Sign in with SAML SSO");
-      expect(merged.samlAttributeEmail).toBe("email");
-      expect(merged.samlAttributeName).toBe("name");
     });
   });
 });

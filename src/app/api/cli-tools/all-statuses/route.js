@@ -33,14 +33,17 @@ const STATUS_GETTERS = {
   devin: devinGet,
 };
 
-// Batch endpoint: gather all CLI tool statuses in one round-trip
-export async function GET() {
+// The overview only needs connection state, never host configuration or credentials.
+export async function GET(request, context) {
   const entries = await Promise.all(
     Object.entries(STATUS_GETTERS).map(async ([toolId, getter]) => {
       try {
-        const res = await getter();
+        const res = await getter(request, context);
+        if (!res.ok) {
+          return [toolId, { error: res.status === 403 ? "Local only: CLI token required" : "Status unavailable" }];
+        }
         const data = await res.json();
-        return [toolId, data];
+        return [toolId, { installed: !!data.installed, hasZenRouter: !!data.hasZenRouter }];
       } catch {
         return [toolId, null];
       }

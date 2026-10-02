@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import { createRemoteJWKSet, customFetch, jwtVerify } from "jose";
 import { getSettings } from "@/lib/localDb";
+import { assertPublicUrlAsync, fetchPublic } from "@/shared/utils/ssrfGuard";
 
 export const OIDC_COOKIE_NAMES = {
   state: "oidc_state",
@@ -62,13 +63,70 @@ export async function getOidcRuntimeConfig() {
   };
 }
 
-export async function fetchOidcDiscovery(issuerUrl) {
-  const discoveryUrl = `${trimTrailingSlashes(issuerUrl)}/.well-known/openid-configuration`;
-  const res = await fetch(discoveryUrl, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error(`Failed to load OIDC discovery document from ${discoveryUrl}`);
+export class OidcRequestError extends Error {
+  constructor(message, options) {
+    super(message, options);
+    this.name = "OidcRequestError";
   }
-  return await res.json();
+}
+
+export function normalizeOidcIssuerUrl(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return "";
+  try {
+    const url = new URL(trimmed);
+    if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
+      throw new Error("Issuer URL must be an HTTP(S) URL without credentials, query, or fragment");
+    }
+    return trimTrailingSlashes(url.toString());
+  } catch (error) {
+    throw new OidcRequestError(error.message || "Invalid OIDC issuer URL", { cause: error });
+  }
+}
+
+async function validateOidcEndpoint(value, field) {
+  try {
+    if (typeof value !== "string" || !value) throw new Error(`OIDC discovery is missing ${field}`);
+    const url = new URL(value);
+    if (url.username || url.password || url.hash) throw new Error(`Invalid OIDC ${field}`);
+    await assertPublicUrlAsync(url.toString());
+  } catch (error) {
+    throw new OidcRequestError(error.message || `Invalid OIDC ${field}`, { cause: error });
+  }
+}
+
+async function fetchOidcPublic(url, init, options) {
+  try {
+    return await fetchPublic(url, init, options);
+  } catch (error) {
+    throw new OidcRequestError(error.message || "OIDC endpoint request failed", { cause: error });
+  }
+}
+
+export async function fetchOidcDiscovery(issuerUrl) {
+  const expectedIssuer = normalizeOidcIssuerUrl(issuerUrl);
+  if (!expectedIssuer) throw new OidcRequestError("Issuer URL is required");
+  const discoveryUrl = `${expectedIssuer}/.well-known/openid-configuration`;
+  const res = await fetchOidcPublic(discoveryUrl, { cache: "no-store" });
+  if (!res.ok) {
+    await res.body?.cancel();
+    throw new OidcRequestError(`Failed to load OIDC discovery document from ${discoveryUrl}`);
+  }
+  let discovery;
+  try {
+    discovery = await res.json();
+  } catch (error) {
+    throw new OidcRequestError("Invalid OIDC discovery document", { cause: error });
+  }
+  if (typeof discovery?.issuer !== "string" || normalizeOidcIssuerUrl(discovery.issuer) !== expectedIssuer) {
+    throw new OidcRequestError("OIDC discovery issuer does not match the requested issuer");
+  }
+  // Providers may advertise endpoints on different public origins. Validate all
+  // of them before returning metadata, and guard every subsequent network hop.
+  for (const field of ["authorization_endpoint", "token_endpoint", "jwks_uri"]) {
+    await validateOidcEndpoint(discovery[field], field);
+  }
+  return discovery;
 }
 
 export function createPkcePair() {
@@ -126,11 +184,11 @@ export async function exchangeOidcCode({
     body.set("client_secret", clientSecret);
   }
 
-  const res = await fetch(tokenEndpoint, {
+  const res = await fetchOidcPublic(tokenEndpoint, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
-  });
+  }, { maxRedirects: 0 });
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -164,11 +222,11 @@ export async function probeOidcClientSecret({
     code_verifier: "__oidc_test_invalid_verifier__",
   });
 
-  const res = await fetch(tokenEndpoint, {
+  const res = await fetchOidcPublic(tokenEndpoint, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
-  });
+  }, { maxRedirects: 0 });
 
   const data = await res.json().catch(() => ({}));
   const error = (data?.error || "").toLowerCase();
@@ -216,7 +274,9 @@ export async function verifyOidcIdToken({
   jwksUri,
   nonce,
 }) {
-  const jwks = createRemoteJWKSet(new URL(jwksUri));
+  const jwks = createRemoteJWKSet(new URL(jwksUri), {
+    [customFetch]: (url, options) => fetchOidcPublic(url, options),
+  });
   const { payload } = await jwtVerify(idToken, jwks, {
     issuer,
     audience,

@@ -8,6 +8,7 @@ import crypto from "crypto";
 import { DEFAULT_PLUGINS, LOCAL_STDIO_PLUGINS, buildManagedMcpServers } from "@/shared/constants/coworkPlugins";
 import { UPDATER_CONFIG } from "@/shared/constants/config";
 import { getConsistentMachineId } from "@/shared/utils/machineId";
+import { canAccessLocalOnlyRoute } from "@/dashboardGuard";
 
 const APP_PORT = UPDATER_CONFIG.appPort;
 const CLI_TOKEN_HEADER = "x-zen-cli-token";
@@ -241,7 +242,10 @@ async function writeSkipApprovals(managedServers) {
   return { written: Object.keys(skip).length };
 }
 
-export async function GET() {
+export async function GET(request) {
+  if (!(await canAccessLocalOnlyRoute(request))) {
+    return NextResponse.json({ error: "Local only: CLI token required" }, { status: 403 });
+  }
   try {
     const installed = await checkInstalled();
     if (!installed) {
@@ -273,7 +277,12 @@ export async function GET() {
 
     return NextResponse.json({
       installed: true,
-      config,
+      // Only display fields are returned; persisted gateway/MCP credentials stay on the host.
+      config: config ? {
+        inferenceProvider: config.inferenceProvider,
+        inferenceGatewayBaseUrl: baseUrl,
+        inferenceModels: models.map((name) => ({ name })),
+      } : null,
       hasZenRouter,
       configPath,
       cowork: {
@@ -309,6 +318,9 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  if (!(await canAccessLocalOnlyRoute(request))) {
+    return NextResponse.json({ error: "Local only: CLI token required" }, { status: 403 });
+  }
   try {
     const { baseUrl, apiKey, models, plugins, localPlugins, customPlugins } = await request.json();
 
@@ -368,7 +380,10 @@ export async function POST(request) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request) {
+  if (!(await canAccessLocalOnlyRoute(request))) {
+    return NextResponse.json({ error: "Local only: CLI token required" }, { status: 403 });
+  }
   try {
     const meta = await readJson(await getMetaPath());
     if (!meta?.appliedId) {

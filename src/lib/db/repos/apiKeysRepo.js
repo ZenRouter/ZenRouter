@@ -84,6 +84,7 @@ export async function validateApiKey(key) {
   const db = await getAdapter();
   const row = db.get(`SELECT isActive FROM apiKeys WHERE key = ?`, [key]);
   const isValid = !!(row && (row.isActive === 1 || row.isActive === true));
-  apiKeyCache.set(key, isValid);
+  // Never retain attacker-controlled invalid credentials in the process cache.
+  if (isValid) apiKeyCache.set(key, true);
   return isValid;
 }

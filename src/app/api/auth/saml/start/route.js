@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSettings } from "@/lib/localDb";
-import { buildSamlAuthorizeUrl, getSamlBaseUrl, isSamlConfigured } from "@/lib/auth/saml.js";
+import { buildSamlAuthorizeUrl, getSamlBaseUrl, isSamlConfigured, SAML_STATE_MAX_AGE_SECONDS } from "@/lib/auth/saml.js";
 import { shouldUseSecureCookie } from "@/lib/auth/dashboardSession";
 
 export async function GET(request) {
@@ -15,12 +15,15 @@ export async function GET(request) {
     const { authorizeUrl, requestId } = await buildSamlAuthorizeUrl(request, settings);
 
     const cookieStore = await cookies();
+    // Cross-site IdP POST callbacks require SameSite=None and Secure. HTTP-only
+    // development remains Lax; cross-site SAML deployments must use HTTPS.
+    const secure = new URL(origin).protocol === "https:" || shouldUseSecureCookie(request);
     cookieStore.set("saml_state", requestId, {
       httpOnly: true,
-      secure: shouldUseSecureCookie(request),
-      sameSite: "lax",
+      secure,
+      sameSite: secure ? "none" : "lax",
       path: "/",
-      maxAge: 10 * 60,
+      maxAge: SAML_STATE_MAX_AGE_SECONDS,
     });
 
     return NextResponse.redirect(authorizeUrl);

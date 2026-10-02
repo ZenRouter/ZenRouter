@@ -1,4 +1,11 @@
+import dns from "node:dns";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+const { publicFetch } = vi.hoisted(() => ({ publicFetch: vi.fn() }));
+vi.mock("undici", async (importOriginal) => ({
+  ...await importOriginal(),
+  fetch: publicFetch,
+}));
 
 import REGISTRY from "../../open-sse/providers/registry/index.js";
 import { buildSearchRequest } from "../../open-sse/handlers/search/callers.js";
@@ -41,7 +48,8 @@ const RESPONSE = {
 };
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+  publicFetch.mockReset();
 });
 
 describe("Xquik search provider", () => {
@@ -130,10 +138,20 @@ describe("Xquik search provider", () => {
   });
 
   it("reports Xquik credits without claiming an unknown USD cost", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(RESPONSE), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    })));
+    vi.spyOn(dns.promises, "lookup").mockImplementation(async (hostname) => {
+      expect(hostname).toBe("xquik.com");
+      return [{ address: "93.184.216.34", family: 4 }];
+    });
+    publicFetch.mockImplementation(async (url, init) => {
+      expect(url.origin + url.pathname).toBe(CONFIG.baseUrl);
+      expect(url.searchParams.get("q")).toBe(PARAMS.query);
+      expect(url.search).not.toContain("xq_test_key");
+      expect(init.headers.get("x-api-key")).toBe("xq_test_key");
+      return new Response(JSON.stringify(RESPONSE), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
 
     const result = await handleSearchCore({
       body: { query: PARAMS.query, max_results: 10, provider_options: PARAMS.providerOptions },

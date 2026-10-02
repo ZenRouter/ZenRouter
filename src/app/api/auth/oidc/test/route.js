@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSettings } from "@/lib/localDb";
-import { fetchOidcDiscovery, getPublicOrigin, probeOidcClientSecret } from "@/lib/auth/oidc";
+import { fetchOidcDiscovery, getPublicOrigin, normalizeOidcIssuerUrl, OidcRequestError, probeOidcClientSecret } from "@/lib/auth/oidc";
 import { verifyDashboardAuthToken } from "@/lib/auth/dashboardSession";
-import { assertPublicUrlAsync } from "@/shared/utils/ssrfGuard";
 
 async function canAccessTestRoute() {
   const settings = await getSettings();
@@ -20,16 +19,25 @@ export async function POST(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json().catch(() => ({}));
+    const body = await request.json().catch(() => {
+      throw new OidcRequestError("Invalid JSON request body");
+    });
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      throw new OidcRequestError("OIDC test request body must be an object");
+    }
     const settings = await getSettings();
 
-    const issuerUrl = String(body.issuerUrl || settings.oidcIssuerUrl || "").trim();
+    const issuerUrl = normalizeOidcIssuerUrl(String(body.issuerUrl || settings.oidcIssuerUrl || ""));
     const clientId = String(body.clientId || settings.oidcClientId || "").trim();
     const scopes = String(body.scopes || settings.oidcScopes || "openid profile email").trim() || "openid profile email";
+    // Stored credentials belong only to the configured issuer/client pair. Draft
+    // providers must supply their own secret, otherwise test discovery only.
+    const sameConfiguredClient = issuerUrl === normalizeOidcIssuerUrl(String(settings.oidcIssuerUrl || "")) &&
+      clientId === String(settings.oidcClientId || "").trim();
     const clientSecret = String(
       Object.prototype.hasOwnProperty.call(body, "clientSecret")
-        ? body.clientSecret
-        : settings.oidcClientSecret || ""
+        ? body.clientSecret || ""
+        : sameConfiguredClient ? settings.oidcClientSecret || "" : ""
     ).trim();
 
     if (!issuerUrl) {
@@ -37,13 +45,6 @@ export async function POST(request) {
     }
     if (!clientId) {
       return NextResponse.json({ error: "Client ID is required" }, { status: 400 });
-    }
-
-    // SSRF guard: reject internal/private/metadata targets (including DNS rebinding)
-    try {
-      await assertPublicUrlAsync(issuerUrl);
-    } catch (err) {
-      return NextResponse.json({ error: err.message }, { status: 400 });
     }
 
     const discovery = await fetchOidcDiscovery(issuerUrl);
@@ -87,6 +88,8 @@ export async function POST(request) {
       message: secretProbe.message,
     });
   } catch (error) {
-    return NextResponse.json({ error: error.message || "OIDC test failed" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "OIDC test failed" }, {
+      status: error instanceof OidcRequestError ? 400 : 500,
+    });
   }
 }

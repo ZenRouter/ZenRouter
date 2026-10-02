@@ -174,7 +174,8 @@ async function canAccessPublicLlmApi(request) {
   return await hasValidApiKey(request);
 }
 
-async function canAccessLocalOnlyRoute(request) {
+export async function canAccessLocalOnlyRoute(request) {
+  if (!request?.headers?.get) return false;
   if (await hasValidCliToken(request)) return true;
   // Browser on host: loopback Host + Origin (blocks tunnel/CSRF) + auth (JWT or requireLogin=false)
   if (isLocalRequest(request) && await isAuthenticated(request)) return true;

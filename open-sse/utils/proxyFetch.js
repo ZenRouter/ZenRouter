@@ -225,7 +225,7 @@ function shouldBypassByNoProxy(targetUrl, noProxyValue) {
 /**
  * Get proxy URL from environment
  */
-function getEnvProxyUrl(targetUrl) {
+export function getEnvProxyUrl(targetUrl) {
   if (isLoopbackTarget(targetUrl)) return null;
   const noProxy = process.env.NO_PROXY || process.env.no_proxy;
   if (shouldBypassByNoProxy(targetUrl, noProxy)) return null;
