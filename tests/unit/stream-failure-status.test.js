@@ -136,3 +136,37 @@ describe("in-stream failure is not logged as success (#4104)", () => {
     expect(record.response.error).toBeUndefined();
   });
 });
+
+describe("late OpenAI errors reach every client format", () => {
+  it.each([
+    FORMATS.OPENAI, FORMATS.CLAUDE, FORMATS.OPENAI_RESPONSES,
+    FORMATS.GEMINI, FORMATS.ANTIGRAVITY,
+  ])("preserves a partial answer and terminates %s as failed, not completed", async (sourceFormat) => {
+    const calls = [];
+    const transform = createSSETransformStreamWithLogger(
+      FORMATS.OPENAI, sourceFormat, "qoder", null, null,
+      "ultimate", null, { messages: [{ role: "user", content: "hello" }] },
+      (...args) => calls.push(args), null,
+    );
+    const output = await drain(sseSource([
+      `data: ${JSON.stringify({ id: "chat-1", choices: [{ index: 0, delta: { content: "partial answer" }, finish_reason: null }] })}`,
+      "",
+      `data: ${JSON.stringify({ error: { code: "10605", message: "Queue limit", retryAfterSeconds: 30 } })}`,
+      "",
+      "data: [DONE]",
+      "",
+    ]).pipeThrough(transform));
+    expect(output).toContain("partial answer");
+    expect(output).toContain("Queue limit");
+    expect(output).toContain("10605");
+    expect(output).not.toContain("response.completed");
+    expect(output).not.toContain('"status":"completed"');
+    expect(output).not.toContain('"finish_reason":"stop"');
+    expect(output).not.toContain('"finishReason":"STOP"');
+    expect(output).not.toContain("event: message_stop");
+    if (sourceFormat === FORMATS.CLAUDE) expect(output).toContain("event: error");
+    if (sourceFormat === FORMATS.OPENAI_RESPONSES) expect(output).toContain("event: response.failed");
+    expect(calls).toHaveLength(1);
+    expect(calls[0][3]).toEqual({ failed: true, error: "Queue limit" });
+  });
+});

@@ -29,12 +29,11 @@ import { BaseExecutor } from "./base.js";
 import { PROVIDERS } from "../config/providers.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { SSE_DONE } from "../utils/sseConstants.js";
-import { FETCH_CONNECT_TIMEOUT_MS } from "../config/runtimeConfig.js";
+import { FETCH_CONNECT_TIMEOUT_MS, HTTP_STATUS, QODER_SSE_PEEK_TIMEOUT_MS, QODER_SSE_PEEK_MAX_BYTES } from "../config/runtimeConfig.js";
 import {
   QODER_CHAT_URL_ENCODED,
   QODER_CHAT_BASE_ALT,
   QODER_CHAT_SIG_PATH,
-  QODER_MODEL_MAP,
 } from "../shared/qoder/constants.js";
 import { getQoderModelConfig, resolveQoderModels, isQoderPat, resolveQoderCredentials } from "../services/qoderModels.js";
 import { OPENAI_BLOCK, CLAUDE_BLOCK } from "../translator/schema/blocks.js";
@@ -260,213 +259,242 @@ async function buildQoderRequestBody({ model, body, credentials, log, proxyOptio
   };
 }
 
-/**
- * Check if a qoder error message indicates a billing/quota block.
- * Signatures: code 112 (quota exhausted), code 10605 (queue throttle), pricingUrl field.
- */
-function isBillingBlock(inner) {
-  if (!inner || typeof inner !== "string") return false;
-  const lowerMsg = inner.toLowerCase();
-  // Match: {"code":"112",...}, {"code":"10605",...}, or pricingUrl field
-  return /\"code\"\s*:\s*\"(112|10605)\"/.test(inner) || lowerMsg.includes("pricingurl");
-}
-
-/**
- * Peek the first SSE frame to detect billing errors before piping.
- * Returns { isBilling, statusVal, message, consumed } — `consumed` is every
- * byte read so far (including the peeked line) so the caller can re-process
- * it and nothing is dropped from the stream.
- */
-async function peekFirstQoderFrame(reader, decoder) {
-  let consumed = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) return { isBilling: false, consumed, upstreamDone: true };
-
-    consumed += decoder.decode(value, { stream: true });
-    const nl = consumed.indexOf("\n");
-    if (nl === -1) continue; // need a full line first
-
-    const line = consumed.slice(0, nl).replace(/\r$/, "").trim();
-    if (!line.startsWith("data:")) continue;
-
-    const data = line.slice(5).trimStart();
-    if (data === "[DONE]") return { isBilling: false, consumed };
-
-    let envelope;
-    try { envelope = JSON.parse(data); } catch { return { isBilling: false, consumed }; }
-
-    const statusVal = typeof envelope.statusCodeValue === "number" ? envelope.statusCodeValue : 200;
-    const inner = typeof envelope.body === "string" ? envelope.body : "";
-
-    if (statusVal !== 200 && isBillingBlock(inner)) {
-      return { isBilling: true, statusVal, message: inner || `qoder billing block (${statusVal})` };
-    }
-    return { isBilling: false, consumed };
-  }
-}
-
-/**
- * Wrap the upstream's `{statusCodeValue, body}` SSE envelope into plain
- * OpenAI SSE chunks the rest of the chatCore pipeline understands.
- *
- * Each upstream line looks like:
- *   data: {"statusCodeValue":200,"body":"{\"choices\":[{\"delta\":{...}}]}"}
- * The inner body is an OpenAI streaming chunk (or "[DONE]"). We unwrap it
- * and re-emit as `data: <inner>\n\n`. Errors become a synthetic OpenAI error
- * chunk + [DONE].
- *
- * Critical: Qoder's SSE often keeps the socket open after the terminal
- * [DONE]/error frame (agent keepalive). Non-streaming clients drain via
- * response.text() which hangs until the socket closes — so on terminal
- * events we cancel the upstream reader and close our stream immediately.
- *
- * NEW: Peek first frame to detect billing blocks (code 112/10605/pricingUrl).
- * If detected, return 403 response so chatCore marks connection unavailable
- * and triggers combo fallback instead of leaking error text into chat.
- */
-async function wrapQoderSSE(response, model) {
-  if (!response.ok || !response.body) return response;
-
+/** Parse complete SSE events, including CRLF and multiline data fields. */
+function createQoderEventParser(onData) {
   const decoder = new TextDecoder();
-  const reader = response.body.getReader();
+  let buffer = "";
+  let dataLines = [];
+  const line = (value) => {
+    if (value === "") {
+      if (dataLines.length) {
+        const data = dataLines.join("\n");
+        dataLines = [];
+        return onData(data);
+      }
+      return false;
+    }
+    if (value === "data" || value.startsWith("data:")) {
+      let data = value === "data" ? "" : value.slice(5);
+      if (data.startsWith(" ")) data = data.slice(1);
+      dataLines.push(data);
+    }
+    return false;
+  };
+  return (bytes, eof = false) => {
+    buffer += bytes ? decoder.decode(bytes, { stream: true }) : decoder.decode();
+    let offset = 0;
+    const endings = /\r\n|\r|\n/g;
+    let match;
+    while ((match = endings.exec(buffer))) {
+      if (!eof && match[0] === "\r" && match.index === buffer.length - 1) break;
+      const value = buffer.slice(offset, match.index);
+      offset = match.index + match[0].length;
+      if (line(value)) {
+        buffer = buffer.slice(offset);
+        return true;
+      }
+    }
+    buffer = buffer.slice(offset);
+    if (eof) {
+      if (buffer) line(buffer);
+      buffer = "";
+      return line("");
+    }
+    return false;
+  };
+}
 
-  // Peek first frame to detect billing block
-  const peek = await peekFirstQoderFrame(reader, decoder);
-  if (peek?.isBilling) {
-    // Billing block detected — return 403 so chatCore fails this connection
-    await reader.cancel().catch(() => {});
-    return new Response(
-      JSON.stringify({ error: { message: peek.message, code: peek.statusVal } }),
-      { status: 403, headers: { "Content-Type": "application/json" } }
-    );
+function parseQoderBody(body) {
+  if (typeof body !== "string") return body;
+  try { return JSON.parse(body); } catch { return body; }
+}
+
+/** Queue saturation is retryable, whereas quota/payment blocks keep the 403 policy. */
+function classifyQoderError(envelope) {
+  if (!envelope || typeof envelope !== "object") return null;
+  const body = Object.hasOwn(envelope, "body") ? parseQoderBody(envelope.body) : envelope;
+  const detail = body?.error && typeof body.error === "object" ? body.error : body;
+  const code = detail?.code;
+  const queue = String(code) === "10605";
+  const billing = String(code) === "110" || String(code) === "112" || !!detail?.pricingUrl;
+  const status = Number(envelope.statusCodeValue);
+  if (!queue && !billing && !(status >= 400 && status <= 599) && !body?.error) return null;
+  const error = detail && typeof detail === "object" ? { ...detail } : {};
+  error.message = typeof error.message === "string" ? error.message
+    : typeof body === "string" && body ? body : `qoder upstream error (${status || 502})`;
+  if (error.code == null && Number.isFinite(status)) error.code = status;
+  const retryAfterSeconds = Number(error.retryAfterSeconds ?? envelope.retryAfterSeconds);
+  return {
+    status: queue ? HTTP_STATUS.RATE_LIMITED : billing ? HTTP_STATUS.FORBIDDEN
+      : status >= 400 && status <= 599 ? status : HTTP_STATUS.BAD_GATEWAY,
+    error,
+    retryAfterSeconds: queue && Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0 ? retryAfterSeconds : null,
+  };
+}
+
+function qoderErrorResponse(failure) {
+  const headers = { "Content-Type": "application/json" };
+  if (failure.retryAfterSeconds != null) headers["Retry-After"] = String(failure.retryAfterSeconds);
+  return new Response(JSON.stringify({ error: failure.error }), { status: failure.status, headers });
+}
+
+/** Inspect a bounded byte prefix and retain the pending read for lossless handoff. */
+async function peekFirstQoderFrame(reader, signal) {
+  const chunks = [];
+  let bytes = 0;
+  let failure = null;
+  let pendingRead = null;
+  let timer;
+  let onAbort;
+  const deadline = new Promise((resolve) => { timer = setTimeout(() => resolve(null), QODER_SSE_PEEK_TIMEOUT_MS); });
+  const aborted = new Promise((_, reject) => {
+    onAbort = () => reject(signal.reason);
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+  const parse = createQoderEventParser((data) => {
+    if (data === "[DONE]") return true;
+    let envelope;
+    try { envelope = JSON.parse(data); } catch { return true; }
+    failure = classifyQoderError(envelope);
+    if (failure) return true;
+    const inner = Object.hasOwn(envelope || {}, "body") ? envelope.body : envelope;
+    return !!inner && (typeof inner === "string" || !!inner.choices);
+  });
+  try {
+    signal?.throwIfAborted();
+    while (bytes < QODER_SSE_PEEK_MAX_BYTES) {
+      pendingRead = reader.read();
+      const result = await Promise.race([pendingRead, deadline, aborted]);
+      if (result === null) return { chunks, pendingRead };
+      pendingRead = null;
+      if (result.done) {
+        parse(null, true);
+        return { chunks, failure, upstreamDone: true };
+      }
+      chunks.push(result.value);
+      const remaining = QODER_SSE_PEEK_MAX_BYTES - bytes;
+      bytes += result.value.byteLength;
+      if (parse(result.value.byteLength > remaining ? result.value.subarray(0, remaining) : result.value)) break;
+    }
+    return { chunks, failure };
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", onAbort);
+  }
+}
+
+/** Unwrap Qoder events; errors never become assistant text or reissue the request. */
+async function wrapQoderSSE(response, _model, signal) {
+  if (!response.ok || !response.body) return response;
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType && !contentType.toLowerCase().includes("text/event-stream")) return response;
+  const reader = response.body.getReader();
+  let cancellation;
+  const cancelReader = () => {
+    if (!cancellation) cancellation = reader.cancel().catch(() => {});
+    return cancellation;
+  };
+  let peek;
+  try {
+    peek = await peekFirstQoderFrame(reader, signal);
+  } catch (error) {
+    await cancelReader();
+    reader.releaseLock();
+    throw error;
+  }
+  if (peek.failure) {
+    await cancelReader();
+    reader.releaseLock();
+    return qoderErrorResponse(peek.failure);
   }
 
-  // Normal flow: re-process every byte the peek consumed, then continue.
-  let buffer = peek.consumed || "";
-  const upstreamDrained = peek.upstreamDone === true;
   const encoder = new TextEncoder();
-  let doneEmitted = false;
-
-  // Process one already-extracted SSE line (no trailing newline).
-  const processLine = (line, controller) => {
-    const trimmed = line.replace(/\r$/, "").trim();
-    if (!trimmed) return;
-    if (!trimmed.startsWith("data:")) return;
-    if (doneEmitted) return;
-
-    const data = trimmed.slice(5).trimStart();
-    if (data === "[DONE]") {
-      controller.enqueue(encoder.encode(SSE_DONE));
-      doneEmitted = true;
-      return;
-    }
-
-    let envelope;
-    try { envelope = JSON.parse(data); } catch { return; }
-    const statusVal = typeof envelope.statusCodeValue === "number" ? envelope.statusCodeValue : 200;
-    const inner = typeof envelope.body === "string" ? envelope.body : "";
-    if (statusVal !== 200) {
-      const msg = inner || `upstream status ${statusVal}`;
-      const errChunk = JSON.stringify({
-        id: `qoder-error-${Date.now()}`,
-        object: "chat.completion.chunk",
-        created: Math.floor(Date.now() / 1000),
-        model,
-        choices: [{ index: 0, delta: { content: `\n[qoder error ${statusVal}: ${truncate(msg, 200)}]` }, finish_reason: "stop" }],
-      });
-      controller.enqueue(encoder.encode(`data: ${errChunk}\n\n`));
-      controller.enqueue(encoder.encode(SSE_DONE));
-      doneEmitted = true;
-      return;
-    }
-    if (!inner) return;
-    if (inner === "[DONE]") {
-      controller.enqueue(encoder.encode(SSE_DONE));
-      doneEmitted = true;
-      return;
-    }
-    // Strip embedded newlines so the SSE frame stays a single event.
-    const sanitized = inner.replace(/\r?\n/g, "");
-    controller.enqueue(encoder.encode(`data: ${sanitized}\n\n`));
-  };
-
+  let terminal = false;
+  let closed = false;
+  let onAbort;
   const stream = new ReadableStream({
-    // Use start()+loop (not pull): a pull that buffers a partial line without
-    // enqueueing would never be re-invoked, hanging consumers like .text().
-    async start(controller) {
-      try {
-        // Drain whatever the peek already pulled off the socket first.
-        let nlSeed;
-        while ((nlSeed = buffer.indexOf("\n")) !== -1) {
-          const line = buffer.slice(0, nlSeed);
-          buffer = buffer.slice(nlSeed + 1);
-          processLine(line, controller);
-          if (doneEmitted) {
-            await reader.cancel().catch(() => {});
+    start(controller) {
+      const emit = (data) => controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+      const parse = createQoderEventParser((data) => {
+        if (closed || terminal) return true;
+        if (data === "[DONE]") {
+          terminal = true;
+          emit("[DONE]");
+          return true;
+        }
+        let envelope;
+        try { envelope = JSON.parse(data); } catch { return false; }
+        const failure = classifyQoderError(envelope);
+        if (failure) {
+          emit(JSON.stringify({ error: failure.error }));
+          emit("[DONE]");
+          terminal = true;
+          return true;
+        }
+        const inner = Object.hasOwn(envelope || {}, "body") ? envelope.body : envelope;
+        if (!inner) return false;
+        if (inner === "[DONE]") {
+          emit("[DONE]");
+          terminal = true;
+          return true;
+        }
+        // Re-encode parsed JSON rather than stripping newlines from the message.
+        const parsed = parseQoderBody(inner);
+        if (parsed && typeof parsed === "object") emit(JSON.stringify(parsed));
+        return false;
+      });
+      onAbort = () => {
+        if (closed) return;
+        closed = true;
+        controller.error(signal.reason);
+        void cancelReader();
+      };
+      signal?.addEventListener("abort", onAbort, { once: true });
+      void (async () => {
+        try {
+          signal?.throwIfAborted();
+          for (const bytes of peek.chunks) {
+            if (parse(bytes)) break;
+          }
+          if (!terminal && peek.upstreamDone) parse(null, true);
+          let pendingRead = peek.pendingRead;
+          while (!terminal && !closed && !peek.upstreamDone) {
+            const { done, value } = await (pendingRead || reader.read());
+            pendingRead = null;
+            if (closed) break;
+            if (done) {
+              parse(null, true);
+              break;
+            }
+            parse(value);
+          }
+          if (!closed) {
+            if (!terminal) controller.enqueue(encoder.encode(SSE_DONE));
+            closed = true;
             controller.close();
-            return;
           }
-        }
-        if (upstreamDrained) {
-          // Peek hit end-of-stream: flush any trailing partial line.
-          buffer += decoder.decode();
-          if (buffer.length > 0) {
-            processLine(buffer, controller);
-            buffer = "";
+        } catch (error) {
+          if (!closed) {
+            closed = true;
+            controller.error(error);
           }
+        } finally {
+          signal?.removeEventListener("abort", onAbort);
+          await cancelReader();
+          reader.releaseLock();
         }
-
-        while (!doneEmitted && !upstreamDrained) {
-          const { done, value } = await reader.read();
-          if (done) {
-            buffer += decoder.decode();
-            if (buffer.length > 0) {
-              processLine(buffer, controller);
-              buffer = "";
-            }
-            break;
-          }
-
-          buffer += decoder.decode(value, { stream: true });
-          let nl;
-          while ((nl = buffer.indexOf("\n")) !== -1) {
-            const line = buffer.slice(0, nl);
-            buffer = buffer.slice(nl + 1);
-            processLine(line, controller);
-            if (doneEmitted) {
-              // Terminal frame received — drop upstream keepalive and end.
-              await reader.cancel().catch(() => {});
-              controller.close();
-              return;
-            }
-          }
-        }
-      } catch {
-        // fall through to terminal [DONE] + close
-      } finally {
-        if (!doneEmitted) {
-          try {
-            controller.enqueue(encoder.encode(SSE_DONE));
-            doneEmitted = true;
-          } catch { /* already closed */ }
-        }
-        try { controller.close(); } catch { /* already closed */ }
-        await reader.cancel().catch(() => {});
-      }
+      })();
     },
     cancel() {
-      return reader.cancel().catch(() => {});
+      closed = true;
+      signal?.removeEventListener("abort", onAbort);
+      return cancelReader();
     },
   });
-
   return new Response(stream, {
     status: response.status,
     statusText: response.statusText,
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-    },
+    headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
   });
 }
 
@@ -602,8 +630,16 @@ export class QoderExecutor extends BaseExecutor {
       return { response, url, headers, transformedBody: payload };
     }
 
-    const wrapped = await wrapQoderSSE(response, `qoder/${qoderKey}`);
+    const wrapped = await wrapQoderSSE(response, `qoder/${qoderKey}`, mergedSignal);
     return { response: wrapped, url, headers, transformedBody: payload };
+  }
+
+  parseError(response, bodyText) {
+    const parsed = super.parseError(response, bodyText);
+    if (response.status !== HTTP_STATUS.RATE_LIMITED) return parsed;
+    const retryAfterSeconds = Number(response.headers.get("retry-after"));
+    if (!Number.isFinite(retryAfterSeconds) || retryAfterSeconds <= 0) return parsed;
+    return { ...parsed, resetsAtMs: Date.now() + retryAfterSeconds * 1000 };
   }
 
   // Qoder device tokens don't refresh through OAuth — the upstream returns
@@ -626,5 +662,4 @@ export const __test__ = {
   normalizeMessages,
   wrapQoderSSE,
   buildQoderRequestBody,
-  isBillingBlock,
 };

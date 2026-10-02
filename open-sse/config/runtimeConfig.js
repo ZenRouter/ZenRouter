@@ -63,6 +63,13 @@ export const SSE_KEEPALIVE_MS = envMs("SSE_KEEPALIVE_MS", 15 * 1000);
 // Fetch connect timeout: abort if upstream doesn't return response headers within this duration
 export const FETCH_CONNECT_TIMEOUT_MS = envMs("FETCH_CONNECT_TIMEOUT_MS", 60 * 1000);
 
+// Codex preheader error inspection must hand off quickly so SSE keepalives can start.
+export const CODEX_SSE_PEEK_TIMEOUT_MS = 1000;
+
+// Qoder preheader inspection is bounded by time and bytes before handing off SSE.
+export const QODER_SSE_PEEK_TIMEOUT_MS = 1000;
+export const QODER_SSE_PEEK_MAX_BYTES = 256 * 1024;
+
 // Gemini native TTS fetch timeout: abort if Google does not return response headers in time.
 export const GEMINI_NATIVE_TTS_FETCH_TIMEOUT_MS = envMs("GEMINI_NATIVE_TTS_FETCH_TIMEOUT_MS", 45 * 1000);
 

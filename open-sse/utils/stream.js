@@ -151,6 +151,7 @@ export function createSSEStream(options = {}) {
   let clientTerminalSeen = false;
   let finalized = false;
   let completionFlushTimer = null;
+  let upstreamErrorTerminated = false;
 
   // In-stream failure tracking (#4104): an upstream can end an HTTP-200 stream
   // with a failure INSIDE the event body (Responses response.failed / error
@@ -168,6 +169,43 @@ export function createSSEStream(options = {}) {
     const msg = typeof err === "string" ? err : err?.message;
     if (typeof msg === "string" && msg.trim()) return msg.trim().slice(0, 500);
     return fallback;
+  };
+
+  // Error objects are terminal protocol events, not completion deltas. Handle
+  // them before format translators' choices/content guards can discard them.
+  const emitUpstreamError = (parsed, controller) => {
+    if (!parsed?.error || upstreamErrorTerminated) return false;
+    const error = typeof parsed.error === "object" ? parsed.error : { message: String(parsed.error) };
+    markStreamFailed(extractStreamErrorMessage(parsed, "upstream stream failed"));
+    upstreamErrorTerminated = true;
+    let failure;
+    if (sourceFormat === FORMATS.OPENAI_RESPONSES) {
+      failure = {
+        event: "response.failed",
+        data: {
+          type: "response.failed",
+          response: { id: state?.responseId || state?.id || `resp_${Date.now()}`, status: "failed", error },
+        },
+      };
+    } else if (sourceFormat === FORMATS.CLAUDE) {
+      failure = { type: "error", error };
+    } else {
+      failure = { error };
+    }
+    const output = formatSSE(failure, sourceFormat);
+    reqLogger?.appendConvertedChunk?.(output);
+    controller.enqueue(sharedEncoder.encode(output));
+    sseEmittedCount++;
+    if (sourceFormat === FORMATS.OPENAI || sourceFormat === FORMATS.OPENAI_RESPONSES ||
+        (mode === STREAM_MODE.PASSTHROUGH && !sourceFormat && !["antigravity", "gemini", "vertex"].includes(provider))) {
+      reqLogger?.appendConvertedChunk?.(SSE_DONE);
+      controller.enqueue(sharedEncoder.encode(SSE_DONE));
+      streamDoneSent = true;
+    }
+    finalizeStream();
+    trackPendingRequest(model, provider, connectionId, false);
+    controller.terminate();
+    return true;
   };
 
   // Usage/logging tail, callable from transform() as well as flush(): a client that
@@ -242,6 +280,7 @@ export function createSSEStream(options = {}) {
       while ((idx = buffer.indexOf("\n")) !== -1) {
         const line = buffer.slice(0, idx);
         buffer = buffer.slice(idx + 1);
+        if (upstreamErrorTerminated) continue;
         const trimmed = line.trim();
         if (isDebugEnabled && trimmed) {
           sseLineCount++;
@@ -271,6 +310,7 @@ export function createSSEStream(options = {}) {
           if (trimmed.startsWith("data:") && trimmed.slice(5).trim() !== "[DONE]") {
             try {
               const parsed = JSON.parse(trimmed.slice(5).trim());
+              if (emitUpstreamError(parsed, controller)) continue;
 
               // In-stream failure forwarded verbatim (e.g. Responses
               // response.failed / error event on an HTTP-200 stream): the
@@ -414,6 +454,7 @@ export function createSSEStream(options = {}) {
 
         const parsed = parseSSELine(trimmed, targetFormat);
         if (!parsed) continue;
+        if (emitUpstreamError(parsed, controller)) continue;
 
         // Responses API same-format passthrough: preserve event framing + track terminal state
         const isOpenAIResponsesStream = targetFormat === FORMATS.OPENAI_RESPONSES;
@@ -585,6 +626,11 @@ export function createSSEStream(options = {}) {
       try {
         const remaining = decoder.decode();
         if (remaining) buffer += remaining;
+        if (upstreamErrorTerminated) { finalizeStream(); return; }
+        if (buffer.trim()) {
+          const tail = parseSSELine(buffer.trim(), targetFormat);
+          if (emitUpstreamError(tail, controller)) return;
+        }
 
         if (mode === STREAM_MODE.PASSTHROUGH) {
           if (buffer) {

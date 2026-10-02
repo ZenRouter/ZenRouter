@@ -10,10 +10,11 @@ import { normalizeResponsesInput } from "../translator/formats/responsesApi.js";
 import { fetchImageAsBase64 } from "../translator/concerns/image.js";
 import { getModelUpstreamId } from "../config/providerModels.js";
 import { getThinkingLevels } from "../providers/thinkingLevels.js";
-import { DEFAULT_RETRY_CONFIG, HTTP_STATUS, resolveRetryEntry } from "../config/runtimeConfig.js";
+import { CODEX_SSE_PEEK_TIMEOUT_MS, DEFAULT_RETRY_CONFIG, HTTP_STATUS, resolveRetryEntry } from "../config/runtimeConfig.js";
 import { dbg } from "../utils/debugLog.js";
 import { resolveSessionId } from "../utils/sessionManager.js";
 import { stripCodexUnsupportedPatterns } from "../utils/codexToolSchema.js";
+import { getOpenAIResponsesEventName } from "../utils/responsesStreamHelpers.js";
 
 // SSE error patterns inside 200-OK bodies. Some retry same account first; capacity rotates accounts.
 const CODEX_SSE_RETRY_PATTERNS = ["server_is_overloaded", "service_unavailable_error"];
@@ -23,12 +24,11 @@ const CODEX_SSE_ACCOUNT_FALLBACK_PATTERNS = [
   "response.failed",
   "not supported when using codex with a chatgpt account",
 ];
-const CODEX_SSE_USER_OUTPUT_PATTERNS = [
-  "event: response.output_text.delta",
-  "event: response.function_call_arguments.delta",
-  '"type":"response.output_text.delta"',
-  '"type":"response.function_call_arguments.delta"',
-];
+const CODEX_SSE_USER_OUTPUT_EVENTS = new Set([
+  "response.output_text.delta",
+  "response.function_call_arguments.delta",
+  "response.custom_tool_call_input.delta",
+]);
 const CODEX_SSE_PEEK_BYTES = 256 * 1024;
 const CODEX_MODEL_CAPACITY_MESSAGE = "Selected model is at capacity. Please try a different model.";
 
@@ -169,24 +169,6 @@ function findNestedMessage(value, depth = 0) {
   return null;
 }
 
-function extractSseErrorMessage(text, fallback) {
-  const exact = text?.match(/Selected model is at capacity\. Please try a different model\./i)?.[0];
-  if (exact) return exact;
-
-  for (const line of String(text || "").split(/\r?\n/)) {
-    if (!line.startsWith("data:")) continue;
-    const data = line.slice(5).trim();
-    if (!data || data === "[DONE]") continue;
-    try {
-      const message = findNestedMessage(JSON.parse(data));
-      if (message) return message;
-    } catch {
-      // Ignore non-JSON SSE data lines.
-    }
-  }
-
-  return fallback || CODEX_MODEL_CAPACITY_MESSAGE;
-}
 
 function codexSseErrorResponse(status, message) {
   return new Response(JSON.stringify({
@@ -198,6 +180,21 @@ function codexSseErrorResponse(status, message) {
   }), {
     status,
     headers: { "Content-Type": "application/json" },
+  });
+}
+
+function waitForCodexRetry(delayMs, signal) {
+  signal?.throwIfAborted();
+  return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(signal.reason);
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, delayMs);
+    signal?.addEventListener("abort", onAbort, { once: true });
   });
 }
 
@@ -292,8 +289,9 @@ export class CodexExecutor extends BaseExecutor {
     const { attempts, delayMs } = resolveRetryEntry(retryConfig[503]);
     let attempt = 0;
     while (true) {
+      args.signal?.throwIfAborted();
       const result = await super.execute(args);
-      const peek = await this._peekSseTransientError(result.response);
+      const peek = await this._peekSseTransientError(result.response, args.signal);
       if (!peek.matched) {
         // Replace body with re-assembled stream (prefix bytes already read + rest)
         if (peek.replacementBody) {
@@ -318,63 +316,178 @@ export class CodexExecutor extends BaseExecutor {
       attempt++;
       args.log?.debug?.("RETRY", `CODEX | SSE "${peek.matched}" retry ${attempt}/${attempts} after ${delayMs / 1000}s`);
       dbg("CODEX", `SSE overloaded "${peek.matched}" → retry ${attempt}/${attempts} in ${delayMs}ms`);
-      await new Promise(r => setTimeout(r, delayMs));
+      await waitForCodexRetry(delayMs, args.signal);
     }
   }
 
-  // Peek first N bytes of SSE body to detect upstream transient errors.
-  // Returns { matched: string|null, message: string|null, accountFallback: boolean, replacementBody: ReadableStream|null }.
-  // Caller must use replacementBody when no error matched (original body has been read).
-  async _peekSseTransientError(response) {
-    if (!response || !response.ok || !response.body) return { matched: null, message: null, accountFallback: false, replacementBody: null };
+  // Bound preheader inspection, then replay the exact prefix and any outstanding read.
+  // Only complete SSE payloads can establish real output or a pre-output failure.
+  async _peekSseTransientError(response, signal) {
+    if (!response || !response.ok || !response.body
+      || response.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase() !== "text/event-stream") {
+      return { matched: null, message: null, accountFallback: false, replacementBody: null };
+    }
+    signal?.throwIfAborted();
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     const chunks = [];
-    let text = "";
+    let buffer = "";
+    let dataLines = [];
+    let eventName = null;
+    let inspectedBytes = 0;
+    let pendingRead = null;
+    let ended = false;
+    let readError = null;
     let matched = null;
+    let message = null;
     let accountFallback = false;
-    try {
-      while (text.length < CODEX_SSE_PEEK_BYTES) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        text += decoder.decode(value, { stream: true });
-        const lowerText = text.toLowerCase();
-        const accountHit = CODEX_SSE_ACCOUNT_FALLBACK_PATTERNS.find(p => lowerText.includes(p));
-        if (accountHit) { matched = accountHit; accountFallback = true; break; }
-        const retryHit = CODEX_SSE_RETRY_PATTERNS.find(p => lowerText.includes(p));
-        if (retryHit) { matched = retryHit; break; }
-        if (CODEX_SSE_USER_OUTPUT_PATTERNS.some(p => lowerText.includes(p))) break;
+
+    const inspectFrame = () => {
+      const payload = dataLines.join("\n");
+      dataLines = [];
+      const name = eventName;
+      eventName = null;
+      if (!payload.trim() || payload.trim() === "[DONE]") return false;
+      let data;
+      try { data = JSON.parse(payload); } catch { return false; }
+      const type = getOpenAIResponsesEventName(name, data);
+      if (CODEX_SSE_USER_OUTPUT_EVENTS.has(type)
+        && typeof data?.delta === "string" && data.delta.length > 0) return true;
+
+      const error = data?.error || data?.response?.error;
+      if (!error && type !== "error" && type !== "response.failed") return false;
+      const lowerError = JSON.stringify(error || data).toLowerCase();
+      const accountHit = CODEX_SSE_ACCOUNT_FALLBACK_PATTERNS.find(pattern => lowerError.includes(pattern));
+      matched = accountHit || (type === "response.failed" ? "response.failed" : null);
+      accountFallback = !!matched;
+      if (!matched) matched = CODEX_SSE_RETRY_PATTERNS.find(pattern => lowerError.includes(pattern)) || null;
+      if (!matched) return false;
+      message = findNestedMessage(error || data) || matched;
+      return true;
+    };
+
+    const inspectLine = line => {
+      if (line === "") return inspectFrame();
+      if (line.startsWith("data:")) dataLines.push(line.slice(5).replace(/^ /, ""));
+      else if (line.startsWith("event:")) eventName = line.slice(6).trim();
+      return false;
+    };
+
+    const inspectBuffer = (eof = false) => {
+      while (true) {
+        const index = buffer.search(/[\r\n]/);
+        if (index < 0 || (!eof && buffer[index] === "\r" && index === buffer.length - 1)) break;
+        const line = buffer.slice(0, index);
+        const delimiterLength = buffer[index] === "\r" && buffer[index + 1] === "\n" ? 2 : 1;
+        buffer = buffer.slice(index + delimiterLength);
+        if (inspectLine(line)) return true;
       }
-    } catch (e) {
-      dbg("CODEX", `peek read error: ${e.message}`);
+      if (eof) {
+        if (buffer && inspectLine(buffer)) return true;
+        buffer = "";
+        return inspectFrame();
+      }
+      return false;
+    };
+
+    const deadline = Symbol("peek deadline");
+    let timer;
+    let onAbort;
+    const deadlinePromise = new Promise(resolve => {
+      timer = setTimeout(() => resolve(deadline), CODEX_SSE_PEEK_TIMEOUT_MS);
+    });
+    const abortPromise = new Promise((_, reject) => {
+      onAbort = () => reject(signal.reason);
+      signal?.addEventListener("abort", onAbort, { once: true });
+    });
+    const cancelReader = async reason => {
+      try { await reader.cancel(reason); } catch { /* Cancellation may race an upstream error. */ }
+      finally { try { reader.releaseLock(); } catch { /* Already released. */ } }
+    };
+
+    try {
+      while (inspectedBytes < CODEX_SSE_PEEK_BYTES) {
+        signal?.throwIfAborted();
+        pendingRead = reader.read();
+        const result = await Promise.race([pendingRead, deadlinePromise, abortPromise]);
+        if (result === deadline) break;
+        pendingRead = null;
+        if (result.done) {
+          ended = true;
+          buffer += decoder.decode();
+          inspectBuffer(true);
+          break;
+        }
+        chunks.push(result.value);
+        const remaining = CODEX_SSE_PEEK_BYTES - inspectedBytes;
+        const prefix = result.value.subarray(0, remaining);
+        inspectedBytes += prefix.byteLength;
+        buffer += decoder.decode(prefix, { stream: true });
+        if (inspectBuffer()) break;
+      }
+    } catch (error) {
+      if (signal?.aborted) {
+        await cancelReader(signal.reason);
+        throw signal.reason;
+      }
+      readError = error;
+      dbg("CODEX", `peek read error: ${error.message}`);
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
     }
 
     if (matched) {
-      try { await reader.cancel(); } catch { /* noop */ }
-      try { reader.releaseLock(); } catch { /* noop */ }
-      return { matched, message: extractSseErrorMessage(text, matched), accountFallback, replacementBody: null };
+      await cancelReader();
+      return { matched, message, accountFallback, replacementBody: null };
     }
 
-    reader.releaseLock();
-
-    // Re-assemble stream: prefix chunks + remaining upstream body
-    const upstream = response.body;
-    let upstreamReader = null;
+    let finished = false;
+    let onReplayAbort;
+    const finish = () => {
+      finished = true;
+      signal?.removeEventListener("abort", onReplayAbort);
+      try { reader.releaseLock(); } catch { /* Cancellation may still own a pending read. */ }
+    };
     const replacementBody = new ReadableStream({
       start(controller) {
-        for (const c of chunks) controller.enqueue(c);
-        upstreamReader = upstream.getReader();
+        for (const chunk of chunks) controller.enqueue(chunk);
+        if (ended) {
+          finish();
+          controller.close();
+          return;
+        }
+        onReplayAbort = () => {
+          if (finished) return;
+          finished = true;
+          signal.removeEventListener("abort", onReplayAbort);
+          controller.error(signal.reason);
+          void cancelReader(signal.reason);
+        };
+        signal?.addEventListener("abort", onReplayAbort, { once: true });
+        if (signal?.aborted) onReplayAbort();
       },
       async pull(controller) {
         try {
-          const { done, value } = await upstreamReader.read();
-          if (done) { controller.close(); return; }
-          controller.enqueue(value);
-        } catch (e) { controller.error(e); }
+          if (readError) throw readError;
+          const read = pendingRead || reader.read();
+          pendingRead = null;
+          const { done, value } = await read;
+          if (finished) return;
+          if (done) {
+            finish();
+            controller.close();
+          } else controller.enqueue(value);
+        } catch (error) {
+          if (finished) return;
+          finish();
+          controller.error(error);
+        }
       },
-      cancel(reason) {
-        try { upstreamReader?.cancel(reason); } catch { /* noop */ }
+      async cancel(reason) {
+        finished = true;
+        signal?.removeEventListener("abort", onReplayAbort);
+        await cancelReader(reason);
       },
     });
     return { matched: null, message: null, accountFallback: false, replacementBody };

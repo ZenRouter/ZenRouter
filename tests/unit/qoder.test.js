@@ -482,16 +482,14 @@ describe("wrapQoderSSE", () => {
     expect(out).toContain(`data: ${inner}\n\n`);
   });
 
-  // Regression for review finding #3: chunks could leak past [DONE] when
-  // the success branch had no doneEmitted guard. We synthesize an error
-  // envelope (which sets doneEmitted=true) followed by a valid envelope
-  // and assert the second envelope is NOT forwarded.
-  it("does not forward chunks after [DONE] has been emitted", async () => {
+  it("does not forward chunks after a terminal upstream error", async () => {
+    const firstInner = JSON.stringify({ choices: [{ delta: { content: "first" } }] });
+    const firstEnv = JSON.stringify({ statusCodeValue: 200, body: firstInner });
     const errorEnv = JSON.stringify({ statusCodeValue: 500, body: "boom" });
     const validInner = JSON.stringify({ choices: [{ delta: { content: "leak" } }] });
     const validEnv = JSON.stringify({ statusCodeValue: 200, body: validInner });
     const wrapped = await wrapQoderSSE(
-      makeResponse([`data: ${errorEnv}\n\ndata: ${validEnv}\n\n`]),
+      makeResponse([`data: ${firstEnv}\n\ndata: ${errorEnv}\n\ndata: ${validEnv}\n\n`]),
       "qoder/auto",
     );
     const out = await drain(wrapped);
@@ -501,28 +499,12 @@ describe("wrapQoderSSE", () => {
     expect(doneCount).toBe(1);
   });
 
-  // Regression for review finding #6: literal newlines inside the inner
-  // OpenAI body would split the SSE frame across multiple data: lines.
-  // We now strip them so the frame stays a single event.
-  it("strips embedded newlines from inner body before forwarding", async () => {
-    const innerWithNewlines = '{"choices":[{"delta":{"content":"a\nb"}}]}';
-    const env = JSON.stringify({ statusCodeValue: 200, body: innerWithNewlines });
-    const wrapped = await wrapQoderSSE(makeResponse([`data: ${env}\n\n`]), "qoder/auto");
-    const out = await drain(wrapped);
-    // The forwarded data: line should be a single event terminated by \n\n
-    // and contain no internal \n other than the trailing pair.
-    const dataLine = out.split("\n\n").find((l) => l.startsWith("data: ") && !l.includes("[DONE]"));
-    expect(dataLine).toBeDefined();
-    // Body sans "data: " prefix should be valid JSON.
-    expect(() => JSON.parse(dataLine.slice("data: ".length))).not.toThrow();
-  });
 
-  it("upstream error envelope produces an error chunk + [DONE]", async () => {
+  it("upstream error before output returns its HTTP status and structured error", async () => {
     const env = JSON.stringify({ statusCodeValue: 503, body: "service unavailable" });
     const wrapped = await wrapQoderSSE(makeResponse([`data: ${env}\n\n`]), "qoder/lite");
-    const out = await drain(wrapped);
-    expect(out).toContain("[qoder error 503");
-    expect(out).toContain("data: [DONE]\n\n");
+    expect(wrapped.status).toBe(503);
+    expect(await wrapped.json()).toMatchObject({ error: { message: "service unavailable" } });
   });
 
   it("non-ok responses are returned unchanged (no transform)", async () => {

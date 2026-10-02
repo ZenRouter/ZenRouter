@@ -1,147 +1,148 @@
-/**
- * Unit tests for qoder billing error detection.
- *
- * Ensures that billing blocks (code 112, 10605, pricingUrl) are detected
- * on the first SSE frame and returned as 403 responses so chatCore can
- * mark the connection unavailable and trigger combo failover.
- */
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { describe, it, expect } from "vitest";
-import { __test__ as qoderExecutorInternals } from "../../open-sse/executors/qoder.js";
+const { fetchUpstream } = vi.hoisted(() => ({ fetchUpstream: vi.fn() }));
+vi.mock("../../open-sse/utils/proxyFetch.js", () => ({ proxyAwareFetch: fetchUpstream }));
+vi.mock("../../open-sse/services/qoderModels.js", () => ({
+  getQoderModelConfig: async () => ({ key: "ultimate", max_output_tokens: 4096 }),
+  resolveQoderModels: vi.fn(),
+  isQoderPat: () => false,
+  resolveQoderCredentials: vi.fn(),
+}));
 
-describe("isBillingBlock", () => {
-  const { isBillingBlock } = qoderExecutorInternals;
+import { QoderExecutor } from "../../open-sse/executors/qoder.js";
+import { QODER_SSE_PEEK_TIMEOUT_MS, QODER_SSE_PEEK_MAX_BYTES } from "../../open-sse/config/runtimeConfig.js";
 
-  it("detects code 112 (quota exhausted)", () => {
-    const msg = '{"code":"112","message":"Quota exhausted","pricingUrl":"..."}';
-    expect(isBillingBlock(msg)).toBe(true);
+const encoder = new TextEncoder();
+const frame = (body, statusCodeValue = 200) => `data: ${JSON.stringify({ statusCodeValue, body })}\n\n`;
+const answer = { choices: [{ delta: { content: "first 🌍 delta\nsecond line" } }] };
+
+function upstream(chunks, options = {}) {
+  return new Response(new ReadableStream({
+    start(controller) {
+      for (const chunk of chunks) controller.enqueue(typeof chunk === "string" ? encoder.encode(chunk) : chunk);
+      if (!options.keepOpen) controller.close();
+      options.capture?.(controller);
+    },
+    cancel: options.cancel,
+  }), { headers: { "Content-Type": options.contentType || "text/event-stream" } });
+}
+
+async function execute(response, signal) {
+  fetchUpstream.mockResolvedValueOnce(response);
+  return new QoderExecutor().execute({
+    model: "ultimate",
+    body: { messages: [{ role: "user", content: "hello" }] },
+    stream: true,
+    credentials: { accessToken: "dt-test", providerSpecificData: { userId: "test-user", machineId: "test-machine" } },
+    signal,
+  });
+}
+
+afterEach(() => {
+  fetchUpstream.mockReset();
+  vi.useRealTimers();
+});
+
+describe("Qoder upstream errors", () => {
+  it.each([
+    [10605, false], ["10605", false], [10605, true], ["10605", true],
+  ])("returns queue code %s (string body: %s) as 429 with precise retry timing", async (code, stringBody) => {
+    vi.spyOn(Date, "now").mockReturnValue(1_900_000_000_000);
+    try {
+      const error = { code, message: "Queue limit", retryAfterSeconds: 30 };
+      const result = await execute(upstream([": heartbeat\r\n\r\n", frame(stringBody ? JSON.stringify(error) : error, 403)]));
+      expect(result.response.status).toBe(429);
+      expect(result.response.headers.get("retry-after")).toBe("30");
+      const text = await result.response.text();
+      expect(JSON.parse(text).error).toMatchObject({ message: "Queue limit", code });
+      expect(new QoderExecutor().parseError(result.response, text)).toMatchObject({ status: 429, resetsAtMs: 1_900_000_030_000 });
+    } finally {
+      vi.restoreAllMocks();
+    }
   });
 
-  it("detects code 10605 (queue throttle)", () => {
-    const msg = '{"code":"10605","message":"Queue limit"}';
-    expect(isBillingBlock(msg)).toBe(true);
+  it.each([110, "110", 112, "112"])("keeps quota code %s as 403", async (code) => {
+    const result = await execute(upstream([frame(JSON.stringify({ code, message: "Quota exhausted" }), 403)]));
+    expect(result.response.status).toBe(403);
+    expect(result.response.headers.get("retry-after")).toBeNull();
+    expect((await result.response.json()).error).toMatchObject({ code, message: "Quota exhausted" });
   });
 
-  it("detects pricingUrl field", () => {
-    const msg = '{"message":"Upgrade required","pricingUrl":"https://..."}';
-    expect(isBillingBlock(msg)).toBe(true);
+  it("returns non-billing errors before output as structured HTTP errors", async () => {
+    const result = await execute(upstream([frame("service unavailable", 503)]));
+    expect(result.response.status).toBe(503);
+    expect(await result.response.json()).toMatchObject({ error: { message: "service unavailable" } });
   });
 
-  it("returns false for normal errors without billing markers", () => {
-    const msg = '{"code":"500","message":"Internal error"}';
-    expect(isBillingBlock(msg)).toBe(false);
+  it("recognizes a raw structured error event without fabricating answer text", async () => {
+    const raw = { error: { code: "10605", message: "Queue limit", retryAfterSeconds: "30" } };
+    const result = await execute(upstream([`data: ${JSON.stringify(raw)}\n\n`]));
+    expect(result.response.status).toBe(429);
+    expect(result.response.headers.get("retry-after")).toBe("30");
+    expect((await result.response.json()).error).toMatchObject(raw.error);
   });
 
-  it("returns false for empty or non-string input", () => {
-    expect(isBillingBlock("")).toBe(false);
-    expect(isBillingBlock(null)).toBe(false);
-    expect(isBillingBlock(undefined)).toBe(false);
+  it("emits late errors in-band without fabricated assistant content or another request", async () => {
+    const result = await execute(upstream([frame(answer), frame({ code: 10605, message: "Queue limit" }, 429), frame({ choices: [{ delta: { content: "must not leak" } }] })]));
+    expect(result.response.status).toBe(200);
+    const events = (await result.response.text()).split("\n\n").filter((event) => event.startsWith("data: ")).map((event) => event.slice(6));
+    expect(JSON.parse(events[0])).toEqual(answer);
+    expect(JSON.parse(events[1])).toMatchObject({ error: { message: "Queue limit", code: 10605 } });
+    expect(events[2]).toBe("[DONE]");
+    expect(events).toHaveLength(3);
+    expect(fetchUpstream).toHaveBeenCalledTimes(1);
   });
 });
 
-describe("wrapQoderSSE billing detection", () => {
-  const { wrapQoderSSE } = qoderExecutorInternals;
-
-  function makeResponse(lines, { status = 200 } = {}) {
-    const body = new ReadableStream({
-      start(controller) {
-        const encoder = new TextEncoder();
-        for (const line of lines) controller.enqueue(encoder.encode(line));
-        controller.close();
-      },
-    });
-    return new Response(body, { status });
-  }
-
-  it("returns 403 response when first frame is billing block (code 112)", async () => {
-    const billingEnv = JSON.stringify({
-      statusCodeValue: 403,
-      body: '{"code":"112","message":"Quota exhausted","pricingUrl":"https://qoder.sh/pricing"}',
-    });
-    const upstream = `data: ${billingEnv}\n\n`;
-
-    const wrapped = await wrapQoderSSE(makeResponse([upstream]), "qoder/ultimate");
-
-    expect(wrapped.status).toBe(403);
-    expect(wrapped.ok).toBe(false);
-    const json = await wrapped.json();
-    expect(json.error).toBeDefined();
-    expect(json.error.message).toContain("112");
+describe("Qoder SSE preheader inspection", () => {
+  it("advances comments and blank lines, assembles multiline frames, and preserves split UTF-8", async () => {
+    const envelope = JSON.stringify({ statusCodeValue: 200, body: JSON.stringify(answer) });
+    const comma = envelope.indexOf(",");
+    const bytes = encoder.encode(`: heartbeat\r\n\r\nevent: message\r\ndata: ${envelope.slice(0, comma + 1)}\r\ndata: ${envelope.slice(comma + 1)}\r\n\r\n`);
+    const emojiStart = bytes.findIndex((byte) => byte === 0xf0);
+    const cancel = vi.fn();
+    const result = await execute(upstream([bytes.slice(0, emojiStart + 1), bytes.slice(emojiStart + 1)], { keepOpen: true, cancel }));
+    const reader = result.response.body.getReader();
+    const first = await reader.read();
+    expect(new TextDecoder().decode(first.value)).toBe(`data: ${JSON.stringify(answer)}\n\n`);
+    await reader.cancel();
+    expect(cancel).toHaveBeenCalledTimes(1);
   });
 
-  it("returns 403 response when first frame is billing block (code 10605)", async () => {
-    const billingEnv = JSON.stringify({
-      statusCodeValue: 429,
-      body: '{"code":"10605","message":"Queue limit"}',
-    });
-    const upstream = `data: ${billingEnv}\n\n`;
-
-    const wrapped = await wrapQoderSSE(makeResponse([upstream]), "qoder/ultimate");
-
-    expect(wrapped.status).toBe(403);
-    expect(wrapped.ok).toBe(false);
+  it("hands off a silent pending read at the deadline without dropping its eventual answer", async () => {
+    vi.useFakeTimers();
+    let controller;
+    const pending = execute(upstream([": heartbeat\n\n"], { keepOpen: true, capture: (value) => { controller = value; } }));
+    await vi.advanceTimersByTimeAsync(QODER_SSE_PEEK_TIMEOUT_MS + 1);
+    const result = await pending;
+    controller.enqueue(encoder.encode(frame(answer)));
+    controller.close();
+    expect(await result.response.text()).toBe(`data: ${JSON.stringify(answer)}\n\ndata: [DONE]\n\n`);
   });
 
-  it("returns 403 response when first frame has pricingUrl", async () => {
-    const billingEnv = JSON.stringify({
-      statusCodeValue: 402,
-      body: '{"message":"Payment required","pricingUrl":"https://..."}',
-    });
-    const upstream = `data: ${billingEnv}\n\n`;
-
-    const wrapped = await wrapQoderSSE(makeResponse([upstream]), "qoder/ultimate");
-
-    expect(wrapped.status).toBe(403);
+  it("hands off a byte-limited unterminated comment and replays the entire prefix", async () => {
+    let controller;
+    const prefix = `:${"h".repeat(QODER_SSE_PEEK_MAX_BYTES)}`;
+    const result = await execute(upstream([prefix], { keepOpen: true, capture: (value) => { controller = value; } }));
+    controller.enqueue(encoder.encode(`\n\n${frame(answer)}`));
+    controller.close();
+    expect(await result.response.text()).toBe(`data: ${JSON.stringify(answer)}\n\ndata: [DONE]\n\n`);
   });
 
-  it("passes through normal errors (non-billing) as wrapped SSE", async () => {
-    const errorEnv = JSON.stringify({
-      statusCodeValue: 500,
-      body: "Internal server error",
-    });
-    const upstream = `data: ${errorEnv}\n\n`;
-
-    const wrapped = await wrapQoderSSE(makeResponse([upstream]), "qoder/ultimate");
-
-    // Normal error: still 200 response, error text in SSE body
-    expect(wrapped.status).toBe(200);
-    expect(wrapped.ok).toBe(true);
-
-    const reader = wrapped.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-    }
-    buf += decoder.decode();
-
-    expect(buf).toContain("[qoder error 500");
-    expect(buf).toContain("data: [DONE]");
+  it("cancels the upstream reader when the request aborts during a pending peek", async () => {
+    const abort = new AbortController();
+    const cancel = vi.fn();
+    const pending = execute(upstream([], { keepOpen: true, cancel }), abort.signal);
+    await vi.waitFor(() => expect(fetchUpstream).toHaveBeenCalledTimes(1));
+    abort.abort(new DOMException("cancelled", "AbortError"));
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+    expect(cancel).toHaveBeenCalledTimes(1);
   });
 
-  it("passes through successful responses unchanged", async () => {
-    const inner = JSON.stringify({ choices: [{ delta: { content: "hello" } }] });
-    const successEnv = JSON.stringify({ statusCodeValue: 200, body: inner });
-    const upstream = `data: ${successEnv}\n\n`;
-
-    const wrapped = await wrapQoderSSE(makeResponse([upstream]), "qoder/ultimate");
-
-    expect(wrapped.status).toBe(200);
-    expect(wrapped.ok).toBe(true);
-
-    const reader = wrapped.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-    }
-    buf += decoder.decode();
-
-    expect(buf).toContain(`data: ${inner}`);
-    expect(buf).toContain("data: [DONE]");
+  it("bypasses successful JSON responses without reading or rewriting their body", async () => {
+    const json = upstream([JSON.stringify(answer)], { contentType: "application/json" });
+    const result = await execute(json);
+    expect(result.response).toBe(json);
+    expect(await result.response.json()).toEqual(answer);
   });
 });

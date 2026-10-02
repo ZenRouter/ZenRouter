@@ -17,7 +17,7 @@ describe("Codex ChatGPT account model restriction and fallback (#4369)", () => {
     const executor = new CodexExecutor();
     const sseBody = [
       'event: response.created\ndata: {"id":"resp_1"}\n\n',
-      'event: response.failed\ndata: {"response":{"error":{"message":"The model is at capacity"}}}}\n\n',
+      'event: response.failed\ndata: {"response":{"error":{"message":"The model is at capacity"}}}\n\n',
     ].join("");
 
     const response = new Response(sseBody, {

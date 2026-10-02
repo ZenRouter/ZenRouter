@@ -146,3 +146,31 @@ describe("forced-SSE JSON path for a Responses-API client behind a chat upstream
     expect(json.choices[0].message.tool_calls[0].function.name).toBe("shell");
   });
 });
+
+describe("failed Responses streams are not completed JSON answers", () => {
+  it.each([FORMATS.OPENAI, FORMATS.CLAUDE, FORMATS.OPENAI_RESPONSES, FORMATS.GEMINI, FORMATS.ANTIGRAVITY])(
+    "returns the upstream failure to a nonstream %s client", async (sourceFormat) => {
+      const raw = [
+        'event: response.created\ndata: {"type":"response.created","response":{"id":"resp_failed","status":"in_progress"}}',
+        'event: response.output_item.done\ndata: {"type":"response.output_item.done","output_index":0,"item":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"partial answer"}]}}',
+        'event: response.failed\ndata: {"type":"response.failed","response":{"status":"failed","error":{"code":"10605","message":"Queue limit"}}}',
+        'data: [DONE]',
+        '',
+      ].join("\n\n");
+      const result = await handleForcedSSEToJson({
+        providerResponse: new Response(raw, { headers: { "content-type": "text/event-stream" } }),
+        sourceFormat, targetFormat: FORMATS.OPENAI_RESPONSES,
+        provider: "codex", model: "test-model", body: { messages: [] },
+        stream: false, requestStartTime: Date.now(),
+        trackDone: vi.fn(), appendLog: vi.fn(),
+      });
+      expect(result.success).toBe(false);
+      expect(result.response.status).toBe(502);
+      const json = await result.response.json();
+      expect(json.error.message).toBe("Queue limit");
+      expect(json.error.code).toBe("10605");
+      expect(json).not.toHaveProperty("choices");
+      expect(json).not.toHaveProperty("output");
+    },
+  );
+});
