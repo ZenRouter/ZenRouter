@@ -69,7 +69,7 @@ async function getCodexConnection(connectionId) {
     connectionProxyUrl: proxyConfig.connectionProxyUrl || "",
     connectionNoProxy: proxyConfig.connectionNoProxy || "",
     vercelRelayUrl: proxyConfig.vercelRelayUrl || "",
-    strictProxy: false,
+    strictProxy: proxyConfig.strictProxy === true,
   };
 
   return { connection, isOAuth, proxyOptions };

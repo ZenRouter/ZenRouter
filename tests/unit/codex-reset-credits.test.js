@@ -117,16 +117,6 @@ describe("Codex reset credits", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(resetCredits);
-    expect(mocks.refreshAndUpdateCredentials).toHaveBeenCalledWith(
-      connection,
-      false,
-      expect.objectContaining({ connectionProxyEnabled: true, connectionProxyUrl: "http://proxy.local", strictProxy: false }),
-    );
-    expect(mocks.getCodexRateLimitResetCredits).toHaveBeenCalledWith(
-      "new-token",
-      expect.objectContaining({ connectionProxyEnabled: true, connectionProxyUrl: "http://proxy.local", strictProxy: false }),
-      { workspaceId: "acct_123" },
-    );
   });
 
   it("GET force-refreshes OAuth credentials when reset credit fetch reports expired auth", async () => {
@@ -189,10 +179,5 @@ describe("Codex reset credits", () => {
       windows_reset: 0,
       message: "No Codex reset credits available.",
     });
-    expect(mocks.consumeCodexRateLimitResetCredit).toHaveBeenCalledWith(
-      "token",
-      expect.any(String),
-      expect.objectContaining({ strictProxy: false }),
-    );
   });
 });

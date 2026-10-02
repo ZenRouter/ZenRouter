@@ -1,6 +1,9 @@
-import { describe, it, expect, vi } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import * as models from "../../src/models/index.js";
 import { resolveConnectionProxyConfig } from "../../src/lib/network/connectionProxy.js";
+import { proxyAwareFetch } from "../../open-sse/utils/proxyFetch.js";
+
+afterEach(() => vi.restoreAllMocks());
 
 describe("Strict Proxy configuration and propagation", () => {
   it("resolves strictProxy: true from pool configuration", async () => {
@@ -35,24 +38,59 @@ describe("Strict Proxy configuration and propagation", () => {
     expect(proxyConfig.strictProxy).toBe(false);
   });
 
-  it("preserves strictProxy flag in proxyOptions constructed for executors and chatCore", () => {
-    const credentials = {
-      providerSpecificData: {
-        connectionProxyEnabled: true,
-        connectionProxyUrl: "http://127.0.0.1:8080",
-        connectionNoProxy: "",
-        strictProxy: true,
-      },
-    };
+  it.each([
+    { isActive: false, proxyUrl: "http://proxy.example.com:8080" },
+    { isActive: true, proxyUrl: "" },
+  ])("blocks direct traffic for an unusable strict pool: %j", async (pool) => {
+    vi.spyOn(models, "getProxyPoolById").mockResolvedValue({ ...pool, strictProxy: true });
+    const config = await resolveConnectionProxyConfig({ proxyPoolId: "strict-pool" });
+    expect(config.strictProxy).toBe(true);
+    await expect(proxyAwareFetch("https://api.openai.com/v1/models", {}, config))
+      .rejects.toThrow("strictProxy=true");
+  });
 
-    const proxyOptions = {
-      connectionProxyEnabled: credentials?.providerSpecificData?.connectionProxyEnabled === true,
-      connectionProxyUrl: credentials?.providerSpecificData?.connectionProxyUrl || "",
-      connectionNoProxy: credentials?.providerSpecificData?.connectionNoProxy || "",
-      vercelRelayUrl: credentials?.providerSpecificData?.vercelRelayUrl || "",
-      strictProxy: credentials?.providerSpecificData?.strictProxy === true,
-    };
+  it.each([undefined, "__none__", "missing-pool"])("preserves explicit strict intent without a pool: %s", async (proxyPoolId) => {
+    vi.spyOn(models, "getProxyPoolById").mockResolvedValue(null);
+    const config = await resolveConnectionProxyConfig({ proxyPoolId, strictProxy: true });
+    expect(config.strictProxy).toBe(true);
+    await expect(proxyAwareFetch("https://api.openai.com/v1/models", {}, config))
+      .rejects.toThrow("strictProxy=true");
+  });
 
-    expect(proxyOptions.strictProxy).toBe(true);
+  it("preserves strict policy when falling back to a legacy proxy", async () => {
+    vi.spyOn(models, "getProxyPoolById").mockResolvedValue({ isActive: false, strictProxy: true });
+    const config = await resolveConnectionProxyConfig({
+      proxyPoolId: "strict-pool", connectionProxyEnabled: true,
+      connectionProxyUrl: "http://legacy.example.com:8080",
+    });
+    expect(config).toMatchObject({ source: "legacy", strictProxy: true, connectionProxyEnabled: true });
+  });
+
+  it("keeps explicit strict legacy policy", async () => {
+    const config = await resolveConnectionProxyConfig({ strictProxy: true,
+      connectionProxyEnabled: true, connectionProxyUrl: "http://legacy.example.com:8080" });
+    expect(config).toMatchObject({ source: "legacy", strictProxy: true });
+  });
+
+  it("does not let a non-strict valid pool override explicit strict intent", async () => {
+    vi.spyOn(models, "getProxyPoolById").mockResolvedValue({ isActive: true,
+      proxyUrl: "http://proxy.example.com:8080", strictProxy: false });
+    expect(await resolveConnectionProxyConfig({ proxyPoolId: "pool", strictProxy: true }))
+      .toMatchObject({ source: "pool", strictProxy: true });
+  });
+
+  it("fails closed for explicit strict intent on a lookup error", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(models, "getProxyPoolById").mockRejectedValue(new Error("DB unavailable"));
+    const config = await resolveConnectionProxyConfig({ proxyPoolId: "pool", strictProxy: true });
+    expect(config).toMatchObject({ source: "error", strictProxy: true });
+    await expect(proxyAwareFetch("https://api.openai.com/v1/models", {}, config))
+      .rejects.toThrow("strictProxy=true");
+  });
+
+  it("leaves ordinary unconfigured traffic non-strict", async () => {
+    const config = await resolveConnectionProxyConfig({});
+    const response = await proxyAwareFetch("data:application/json,%7B%22ok%22%3Atrue%7D", {}, config);
+    expect(await response.json()).toEqual({ ok: true });
   });
 });

@@ -66,6 +66,7 @@ function normalizeLegacyProxy(providerSpecificData = {}) {
 export async function resolveConnectionProxyConfig(
   providerSpecificData = {}
 ) {
+  let strictProxy = providerSpecificData?.strictProxy === true;
   try {
     const proxyPoolIdRaw = normalizeString(
       providerSpecificData?.proxyPoolId
@@ -84,6 +85,8 @@ export async function resolveConnectionProxyConfig(
      */
     if (proxyPoolId) {
       const proxyPool = await getProxyPoolById(proxyPoolId);
+      // Policy survives unusable pools; fallback must never permit direct egress.
+      strictProxy = strictProxy || proxyPool?.strictProxy === true;
 
       const proxyUrl = normalizeString(proxyPool?.proxyUrl);
       const noProxy = normalizeString(proxyPool?.noProxy);
@@ -109,7 +112,7 @@ export async function resolveConnectionProxyConfig(
             connectionProxyUrl: "",
             connectionNoProxy: noProxy,
 
-            strictProxy: proxyPool.strictProxy === true,
+            strictProxy,
 
             vercelRelayUrl: proxyUrl, // Still mapped to vercelRelayUrl in the unified payload since they use the exact same header spec
           };
@@ -128,7 +131,7 @@ export async function resolveConnectionProxyConfig(
           connectionProxyUrl: proxyUrl,
           connectionNoProxy: noProxy,
 
-          strictProxy: proxyPool.strictProxy === true,
+          strictProxy,
         };
       }
     }
@@ -149,6 +152,7 @@ export async function resolveConnectionProxyConfig(
         proxyPool: null,
 
         ...legacy,
+        strictProxy,
       };
     }
 
@@ -164,6 +168,7 @@ export async function resolveConnectionProxyConfig(
       proxyPool: null,
 
       ...legacy,
+      strictProxy,
     };
   } catch (error) {
     console.error(
@@ -181,7 +186,7 @@ export async function resolveConnectionProxyConfig(
       connectionProxyUrl: "",
       connectionNoProxy: "",
 
-      strictProxy: false,
+      strictProxy,
     };
   }
 }

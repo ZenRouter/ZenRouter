@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getProviderNodeById } from "@/models";
 import { isOpenAICompatibleProvider, isAnthropicCompatibleProvider, isCustomEmbeddingProvider, AI_PROVIDERS } from "@/shared/constants/providers";
-import { getDefaultModel } from "open-sse/config/providerModels.js";
+import { getDefaultModel, getProviderModels } from "open-sse/config/providerModels.js";
 import { resolveOllamaLocalHost, resolveXiaomiTokenplanBaseUrl, PROVIDERS } from "open-sse/config/providers.js";
 import { openaiToCommandCodeRequest } from "open-sse/translator/request/openai-to-commandcode.js";
 import { resolveQoderCredentials, resolveQoderModels } from "open-sse/services/qoderModels.js";
@@ -157,7 +157,7 @@ export async function POST(request) {
         }
 
         const messagesUrl = `${normalizedBase}/v1/messages`;
-        const model = node.defaultModel || "claude-3-haiku-20240307";
+        const model = node.defaultModel || getProviderModels("anthropic").find((model) => model.id.startsWith("claude-haiku-")).id;
 
         const res = await fetch(messagesUrl, {
           method: "POST",
@@ -276,7 +276,7 @@ export async function POST(request) {
               "content-type": "application/json",
             },
             body: JSON.stringify({
-              model: "claude-3-haiku-20240307",
+              model: getProviderModels("anthropic").find((model) => model.id.startsWith("claude-haiku-")).id,
               max_tokens: 1,
               messages: [{ role: "user", content: "test" }],
             }),

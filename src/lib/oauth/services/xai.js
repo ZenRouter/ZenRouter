@@ -49,13 +49,16 @@ export function validateOAuthEndpoint(rawUrl, field) {
 /**
  * Discover authorization + token endpoints. Cached process-wide.
  */
-export async function discoverEndpoints() {
+export async function discoverEndpoints(proxyOptions = null) {
+  const fetchRequest = proxyOptions
+    ? (await import("open-sse/utils/proxyFetch.js")).proxyAwareFetch
+    : (url, options) => fetch(url, options);
   if (cachedDiscovery) return cachedDiscovery;
 
   try {
-    const res = await fetch(XAI_CONFIG.discoveryUrl, {
+    const res = await fetchRequest(XAI_CONFIG.discoveryUrl, {
       headers: { Accept: "application/json" },
-    });
+    }, proxyOptions);
     if (res.ok) {
       const data = await res.json();
       cachedDiscovery = {
@@ -152,9 +155,12 @@ export class XaiService extends OAuthService {
   /**
    * Refresh an access token using a refresh_token.
    */
-  async refreshAccessToken(refreshToken) {
-    const { tokenUrl } = await discoverEndpoints();
-    const res = await fetch(tokenUrl, {
+  async refreshAccessToken(refreshToken, proxyOptions = null) {
+    const { tokenUrl } = await discoverEndpoints(proxyOptions);
+    const fetchRequest = proxyOptions
+      ? (await import("open-sse/utils/proxyFetch.js")).proxyAwareFetch
+      : (url, options) => fetch(url, options);
+    const res = await fetchRequest(tokenUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -165,7 +171,7 @@ export class XaiService extends OAuthService {
         client_id: XAI_CONFIG.clientId,
         refresh_token: refreshToken,
       }),
-    });
+    }, proxyOptions);
     if (!res.ok) {
       const err = await res.text();
       throw new Error(`xAI token refresh failed: ${err}`);

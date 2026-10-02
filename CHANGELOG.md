@@ -6,6 +6,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- Retain strict-proxy policy across inactive/empty pools, legacy/no-proxy fallbacks, and lookup errors (`24664f2c`). Apply the configured policy to quota/reset-credit requests, credential probes, and delegated Codex/xAI token refresh; working relay refresh remains supported and TLS verification stays enabled.
+- Use active advertised Anthropic models for credential-validation probes instead of retired Claude 3 Haiku, preserving explicitly configured models across validation and retest paths (#4528).
 - Select Claude reasoning beta flags using the final outbound body, preserve client beta flags subject to the per-account rejection denylist, and forward OAuth session identity per request without leaking first-party headers to other providers (`90b06934`, `6aea3875`, `dc198dff`).
 - Isolate database-mutating regression tests in disposable SQLite directories, remove order-dependent fixtures/destructive writes to the operator database, and close adapters/remove only test-added shutdown listeners before Windows cleanup (#4407 / upstream `57c04f00`).
 - Attach server lifecycle listeners before the tray-mode early return so Windows startup can recover a crashed gateway or exit after a clean shutdown (#4509 / PR #4522). Add isolated launcher subprocess regressions.

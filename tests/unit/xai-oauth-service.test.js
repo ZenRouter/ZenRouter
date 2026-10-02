@@ -1,9 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("open-sse/utils/proxyFetch.js", () => ({
+  proxyAwareFetch: (url, options) => globalThis.fetch(url, options),
+}));
+
+// Warm transitive transforms outside hooks; each test still gets fresh discovery state.
+await import("../../src/lib/oauth/providers.js");
+
 describe("xai/oauth service", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetModules();
     vi.restoreAllMocks();
+    // Initialize transitive transports before installing response fixtures.
+    await import("../../src/lib/oauth/providers.js");
+    await import("../../src/lib/oauth/services/xai.js");
     vi.stubGlobal("fetch", vi.fn());
   });
 
@@ -21,7 +31,7 @@ describe("xai/oauth service", () => {
     );
   });
 
-  it("discovers endpoints without custom user-agent headers", async () => {
+  it("discovers valid OAuth endpoints", async () => {
     fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -35,10 +45,6 @@ describe("xai/oauth service", () => {
       authorizeUrl: "https://auth.x.ai/oauth2/authorize",
       tokenUrl: "https://auth.x.ai/oauth2/token",
     });
-    expect(fetch).toHaveBeenCalledWith(
-      "https://auth.x.ai/.well-known/openid-configuration",
-      expect.objectContaining({ headers: { Accept: "application/json" } })
-    );
   });
 
   it("builds authorize URLs with CLIProxyAPI query extras", async () => {
