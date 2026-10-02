@@ -18,6 +18,35 @@ export function filterToOpenAIFormat(body, opts = {}) {
     return keepCache && cache_control ? { ...rest, cache_control } : rest;
   }
 
+  // Chat tool content is text-only. Delay images until the entire consecutive
+  // tool-result run is complete so parallel calls stay paired with their answers.
+  const messages = [];
+  let toolImages = [];
+  const flushToolImages = () => {
+    if (toolImages.length) messages.push({ role: ROLE.USER, content: toolImages });
+    toolImages = [];
+  };
+  for (const msg of body.messages) {
+    if (msg.role !== ROLE.TOOL) {
+      flushToolImages();
+      messages.push(msg);
+      continue;
+    }
+    const { is_error, ...toolMsg } = msg;
+    if (Array.isArray(msg.content)) {
+      const text = [];
+      for (const block of msg.content) {
+        if (block.type === OPENAI_BLOCK.TEXT) text.push(block.text ?? "");
+        else if (block.type === OPENAI_BLOCK.IMAGE_URL) toolImages.push(stripBlock(block));
+        else if (block.type === OPENAI_BLOCK.FILE) text.push(JSON.stringify(block));
+      }
+      toolMsg.content = text.join("\n");
+    }
+    messages.push(toolMsg);
+  }
+  flushToolImages();
+  body.messages = messages;
+
   body.messages = body.messages.map(msg => {
     // Normalize developer role to system unless target provider supports developer (#4172)
     if (msg.role === ROLE.DEVELOPER && !keepDev) msg = { ...msg, role: ROLE.SYSTEM };

@@ -24,6 +24,28 @@ export function normalizeResponsesInput(input) {
   return null;
 }
 
+// Keep multimodal content structured across the Responses → Chat bridge.
+export function normalizeResponsesContent(content) {
+  if (!Array.isArray(content)) return content;
+  return content.map((part) => {
+    if (part.type === RESPONSES_ITEM.INPUT_TEXT || part.type === RESPONSES_ITEM.OUTPUT_TEXT) {
+      return { type: OPENAI_BLOCK.TEXT, text: part.text };
+    }
+    if (part.type === RESPONSES_ITEM.INPUT_IMAGE) {
+      const url = typeof part.image_url === "string" ? part.image_url : part.image_url?.url;
+      if (url) return { type: OPENAI_BLOCK.IMAGE_URL, image_url: { url, detail: part.detail || "auto" } };
+      if (part.file_id) return { type: OPENAI_BLOCK.TEXT, text: JSON.stringify(part) };
+    }
+    if (part.type === RESPONSES_ITEM.INPUT_FILE) {
+      if (typeof part.file_data === "string" && part.file_data) {
+        return { type: OPENAI_BLOCK.FILE, file: { file_data: part.file_data, ...(part.filename ? { filename: part.filename } : {}) } };
+      }
+      return { type: OPENAI_BLOCK.TEXT, text: JSON.stringify(part) };
+    }
+    return part;
+  });
+}
+
 /**
  * Convert OpenAI Responses API format to standard chat completions format
  * Responses API uses: { input: [...], instructions: "..." }
@@ -69,17 +91,7 @@ export function convertResponsesApiFormat(body) {
       }
 
       // Convert content: input_text → text, output_text → text, input_image → image_url
-      const content = Array.isArray(item.content)
-        ? item.content.map(c => {
-          if (c.type === RESPONSES_ITEM.INPUT_TEXT) return { type: OPENAI_BLOCK.TEXT, text: c.text };
-          if (c.type === RESPONSES_ITEM.OUTPUT_TEXT) return { type: OPENAI_BLOCK.TEXT, text: c.text };
-          if (c.type === RESPONSES_ITEM.INPUT_IMAGE) {
-            const url = c.image_url || c.file_id || "";
-            return { type: OPENAI_BLOCK.IMAGE_URL, image_url: { url, detail: c.detail || "auto" } };
-          }
-          return c;
-        })
-        : item.content;
+      const content = normalizeResponsesContent(item.content);
       result.messages.push({ role: item.role, content });
     }
     else if (itemType === RESPONSES_ITEM.FUNCTION_CALL) {
@@ -110,15 +122,19 @@ export function convertResponsesApiFormat(body) {
         result.messages.push(currentAssistantMsg);
         currentAssistantMsg = null;
       }
-      const outputContent = typeof item.output === "string" ? item.output : JSON.stringify(item.output);
+      const outputContent = Array.isArray(item.output)
+        ? normalizeResponsesContent(item.output)
+        : typeof item.output === "string" ? item.output : JSON.stringify(item.output);
       let outputCallId = typeof item.call_id === "string" && item.call_id ? item.call_id : "";
       if (outputCallId) {
         const queued = pendingToolCallIds.indexOf(outputCallId);
         if (queued >= 0) pendingToolCallIds.splice(queued, 1);
-        pendingToolResults.push({ role: ROLE.TOOL, tool_call_id: outputCallId, content: outputContent });
+        pendingToolResults.push({ role: ROLE.TOOL, tool_call_id: outputCallId, content: outputContent,
+          ...(typeof item.is_error === "boolean" ? { is_error: item.is_error } : {}) });
       } else {
         const repaired = pendingToolCallIds.shift();
-        if (repaired) pendingToolResults.push({ role: ROLE.TOOL, tool_call_id: repaired, content: outputContent });
+        if (repaired) pendingToolResults.push({ role: ROLE.TOOL, tool_call_id: repaired, content: outputContent,
+          ...(typeof item.is_error === "boolean" ? { is_error: item.is_error } : {}) });
       }
     }
     else if (itemType === RESPONSES_ITEM.REASONING) {

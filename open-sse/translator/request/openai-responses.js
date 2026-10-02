@@ -6,7 +6,7 @@
  */
 import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
-import { normalizeResponsesInput } from "../formats/responsesApi.js";
+import { normalizeResponsesInput, normalizeResponsesContent } from "../formats/responsesApi.js";
 import { ROLE, OPENAI_BLOCK, RESPONSES_ITEM } from "../schema/index.js";
 import { generateToolCallId } from "../concerns/toolCall.js";
 
@@ -81,18 +81,7 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
       }
 
       // Convert content: input_text → text, output_text → text, input_image → image_url
-      const content = Array.isArray(item.content)
-        ? item.content.map(c => {
-          if (c.type === RESPONSES_ITEM.INPUT_TEXT) return { type: OPENAI_BLOCK.TEXT, text: c.text };
-          if (c.type === RESPONSES_ITEM.OUTPUT_TEXT) return { type: OPENAI_BLOCK.TEXT, text: c.text };
-          if (c.type === RESPONSES_ITEM.INPUT_IMAGE) {
-            const url = typeof c.image_url === "string" ? c.image_url : (c.image_url?.url || "");
-            if (url) return { type: OPENAI_BLOCK.IMAGE_URL, image_url: { url, detail: c.detail || "auto" } };
-            return c;
-          }
-          return c;
-        })
-        : item.content;
+      const content = normalizeResponsesContent(item.content);
       const msg = { role: item.role, content };
       if (item.role === ROLE.TOOL && !item.tool_call_id) {
         const repairedToolId = pendingToolCallIds.shift();
@@ -153,7 +142,9 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
         }
         pendingToolResults = [];
       }
-      const outputContent = typeof item.output === "string" ? item.output : JSON.stringify(item.output);
+      const outputContent = Array.isArray(item.output)
+        ? normalizeResponsesContent(item.output)
+        : typeof item.output === "string" ? item.output : JSON.stringify(item.output);
       let outputCallId = typeof item.call_id === "string" && item.call_id ? item.call_id : "";
       if (outputCallId) {
         const queued = pendingToolCallIds.indexOf(outputCallId);
@@ -164,7 +155,8 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
       // True orphan outputs have no valid call to answer; drop them rather
       // than emit a role:tool message every strict upstream rejects.
       if (outputCallId) {
-        result.messages.push({ role: ROLE.TOOL, tool_call_id: outputCallId, content: outputContent });
+        result.messages.push({ role: ROLE.TOOL, tool_call_id: outputCallId, content: outputContent,
+          ...(typeof item.is_error === "boolean" ? { is_error: item.is_error } : {}) });
       }
     }
     else if (itemType === RESPONSES_ITEM.ADDITIONAL_TOOLS) {

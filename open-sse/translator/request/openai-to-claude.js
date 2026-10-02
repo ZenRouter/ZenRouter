@@ -239,6 +239,23 @@ Respond ONLY with the JSON object, no other text.`);
   return result;
 }
 
+// Native tool-result blocks (including documents, search results and tool
+// references) must survive; only OpenAI image/file blocks need conversion.
+function normalizeClaudeToolContent(content, toolNameMap) {
+  if (!Array.isArray(content)) return content;
+  const blocks = [];
+  for (const part of content) {
+    if (part.type === OPENAI_BLOCK.IMAGE_URL || part.type === OPENAI_BLOCK.FILE) {
+      const converted = getContentBlocksFromMessage({ role: ROLE.USER, content: [part] }, toolNameMap);
+      if (converted.length) blocks.push(...converted);
+      else blocks.push({ type: CLAUDE_BLOCK.TEXT, text: JSON.stringify(part) });
+    } else {
+      blocks.push(part);
+    }
+  }
+  return blocks;
+}
+
 // Get content blocks from single message
 function getContentBlocksFromMessage(msg, toolNameMap = new Map()) {
   const blocks = [];
@@ -252,7 +269,7 @@ function getContentBlocksFromMessage(msg, toolNameMap = new Map()) {
     blocks.push({
       type: CLAUDE_BLOCK.TOOL_RESULT,
       tool_use_id: msg.tool_call_id,
-      content: msg.content,
+      content: normalizeClaudeToolContent(msg.content, toolNameMap),
       is_error: msg.is_error === true
     });
   } else if (msg.role === ROLE.USER) {
@@ -268,18 +285,18 @@ function getContentBlocksFromMessage(msg, toolNameMap = new Map()) {
           blocks.push({
             type: CLAUDE_BLOCK.TOOL_RESULT,
             tool_use_id: part.tool_use_id,
-            content: part.content,
+            content: normalizeClaudeToolContent(part.content, toolNameMap),
             is_error: part.is_error === true
           });
         } else if (part.type === OPENAI_BLOCK.IMAGE_URL) {
-          const url = part.image_url.url;
+          const url = typeof part.image_url === "string" ? part.image_url : part.image_url?.url;
           const parsed = parseDataUri(url);
           if (parsed) {
             blocks.push({
               type: CLAUDE_BLOCK.IMAGE,
               source: { type: "base64", media_type: parsed.mimeType, data: parsed.base64 }
             });
-          } else if (url.startsWith("http://") || url.startsWith("https://")) {
+          } else if (typeof url === "string" && (url.startsWith("http://") || url.startsWith("https://"))) {
             blocks.push({
               type: CLAUDE_BLOCK.IMAGE,
               source: { type: "url", url }

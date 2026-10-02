@@ -36,6 +36,7 @@ export const RESPONSES_ITEM = {
   OUTPUT_TEXT: "output_text",
   INPUT_TEXT: "input_text",
   INPUT_IMAGE: "input_image",
+  INPUT_FILE: "input_file",
   SUMMARY_TEXT: "summary_text",
 };
 
