@@ -13,6 +13,8 @@ let deleteProviderConnection;
 let updateProviderConnection;
 
 beforeEach(async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-02T00:00:00.000Z"));
   previousDataDir = process.env.DATA_DIR;
   previousListeners = new Map(
     shutdownEvents.map((event) => [event, process.rawListeners(event)])
@@ -42,6 +44,7 @@ afterEach(async () => {
       }
     }
     delete global._dbAdapter;
+    vi.useRealTimers();
     vi.resetModules();
     if (previousDataDir === undefined) delete process.env.DATA_DIR;
     else process.env.DATA_DIR = previousDataDir;
@@ -88,6 +91,7 @@ describe("provider insertion ordering (#4311)", () => {
     const provider = "openai-compatible-update";
     await seed(provider, 4);
     const list = await getProviderConnections({ provider });
+    vi.setSystemTime(new Date("2026-10-02T00:00:01.000Z"));
     await updateProviderConnection(list[3].id, { priority: 1 });
     const after = await getProviderConnections({ provider });
     expect(after.map((c) => c.name)).toEqual(["seed-3", "seed-0", "seed-1", "seed-2"]);

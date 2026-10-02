@@ -6,6 +6,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- Control the clock in provider-priority regression tests so millisecond timestamp ties cannot make the move-to-front assertion driver-speed dependent.
 - Retain strict-proxy policy across inactive/empty pools, legacy/no-proxy fallbacks, and lookup errors (`24664f2c`). Apply the configured policy to quota/reset-credit requests, credential probes, and delegated Codex/xAI token refresh; working relay refresh remains supported and TLS verification stays enabled.
 - Use active advertised Anthropic models for credential-validation probes instead of retired Claude 3 Haiku, preserving explicitly configured models across validation and retest paths (#4528).
 - Select Claude reasoning beta flags using the final outbound body, preserve client beta flags subject to the per-account rejection denylist, and forward OAuth session identity per request without leaking first-party headers to other providers (`90b06934`, `6aea3875`, `dc198dff`).
