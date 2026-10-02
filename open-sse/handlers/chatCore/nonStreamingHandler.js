@@ -142,6 +142,7 @@ function openAICompletionToResponses(responseBody, customToolNames = null) {
   if (typeof reasoning === "string" && reasoning.length > 0) {
     output.push({
       type: RESPONSES_ITEM.REASONING,
+      status: "completed",
       summary: [{ type: RESPONSES_ITEM.SUMMARY_TEXT, text: reasoning }],
     });
   }
@@ -151,6 +152,7 @@ function openAICompletionToResponses(responseBody, customToolNames = null) {
   if (text.length > 0) {
     output.push({
       type: RESPONSES_ITEM.MESSAGE,
+      status: "completed",
       role: ROLE.ASSISTANT,
       content: [{ type: RESPONSES_ITEM.OUTPUT_TEXT, text, annotations: [] }],
     });
@@ -162,6 +164,7 @@ function openAICompletionToResponses(responseBody, customToolNames = null) {
     const custom = customToolNames?.has(fn.name);
     output.push({
       type: custom ? RESPONSES_ITEM.CUSTOM_TOOL_CALL : RESPONSES_ITEM.FUNCTION_CALL,
+      status: "completed",
       id: `${custom ? "ctc" : "fc"}_${tc.id || ""}`,
       call_id: tc.id || "",
       name: fn.name || "",
@@ -392,7 +395,10 @@ export function isTruncatedEmptyCompletion(responseBody) {
 
   // OpenAI Responses shape
   if (responseBody?.object === "response") {
-    if (responseBody.status === "incomplete") truncated = true;
+    if (responseBody.status === "incomplete" &&
+        (!responseBody.incomplete_details?.reason || responseBody.incomplete_details.reason === "max_output_tokens")) {
+      truncated = true;
+    }
     for (const item of responseBody.output || []) {
       if (item?.type === "function_call" || item?.type === "custom_tool_call") { usable = true; break; }
       for (const part of item?.content || []) {
@@ -455,18 +461,18 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
     return createErrorResult(HTTP_STATUS.BAD_GATEWAY, `Upstream provider error: ${nativeReason}`);
   }
 
-  // Truncated-into-nothing (9router #4254): upstream spent the whole budget
-  // on reasoning and reports truncation with zero usable content (e.g.
-  // Responses `status: "incomplete"` + empty output, or finish_reason
-  // "length" with empty content and no tool calls). Handing that out as a
-  // blank 200 makes clients loop; fail instead so account/combo fallback
-  // engages. Responses WITH partial text or tool calls stay successful.
+  // A request can spend its output budget on reasoning before producing text.
+  // This is not an account outage: repeating the same budget cannot repair it,
+  // and cooling down the credential would block unrelated healthy requests.
   if (isTruncatedEmptyCompletion(responseBody)) {
-    appendLog({ status: `FAILED ${HTTP_STATUS.SERVICE_UNAVAILABLE}` });
-    return createErrorResult(
-      HTTP_STATUS.SERVICE_UNAVAILABLE,
-      "Upstream truncated the response with no usable content (output budget spent before any text)"
-    );
+    const tokenParam = sourceFormat === FORMATS.OPENAI_RESPONSES
+      ? "max_output_tokens"
+      : body.max_completion_tokens !== undefined ? "max_completion_tokens" : "max_tokens";
+    const message = `Output budget exhausted before any text or tool calls; increase ${tokenParam} or reduce reasoning effort`;
+    appendLog({ status: `FAILED ${HTTP_STATUS.BAD_REQUEST}` });
+    return createErrorResult(HTTP_STATUS.BAD_REQUEST, message, undefined, {
+      type: "invalid_request_error", code: "output_budget_exhausted", param: tokenParam,
+    });
   }
 
   if (onRequestSuccess) {

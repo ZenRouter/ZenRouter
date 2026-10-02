@@ -95,6 +95,9 @@ export const ERROR_RULES = [
   // allow the combo to advance to the next model without cooling down the healthy account.
   { text: "function_declarations",      cooldownMs: 0 },
   { text: "unsupported schema",         cooldownMs: 0 },
+  // Request-scoped reasoning exhaustion: a different combo model may fit the
+  // budget, but the upstream account is healthy and must never be locked.
+  { text: "output budget exhausted before any text or tool calls", cooldownMs: 0 },
   // ChatGPT account model restriction on Codex (9router #4369)
   { text: "not supported when using codex with a chatgpt account", cooldownMs: 0 },
   { text: "chatgpt account",            cooldownMs: 0 },

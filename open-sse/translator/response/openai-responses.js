@@ -140,6 +140,8 @@ export function openaiToOpenAIResponsesResponse(chunk, state) {
 
   // Handle tool_calls (empty array is truthy; require a real call)
   if (delta.tool_calls && delta.tool_calls.length) {
+    closeReasoning(state, emit);
+    state.inThinking = false;
     closeMessage(state, emit, idx);
     for (const tc of delta.tool_calls) {
       emitToolCall(state, emit, tc);
@@ -179,7 +181,7 @@ function startReasoning(state, emit, idx) {
     emit("response.output_item.added", {
       type: "response.output_item.added",
       output_index: idx,
-      item: { id: state.reasoningId, type: RESPONSES_ITEM.REASONING, summary: [] }
+      item: { id: state.reasoningId, type: RESPONSES_ITEM.REASONING, status: "in_progress", summary: [] }
     });
 
     emit("response.reasoning_summary_part.added", {
@@ -228,6 +230,7 @@ function closeReasoning(state, emit) {
     const item = {
       id: state.reasoningId,
       type: RESPONSES_ITEM.REASONING,
+      status: "completed",
       summary: [{ type: RESPONSES_ITEM.SUMMARY_TEXT, text: state.reasoningBuf }]
     };
 
@@ -249,7 +252,7 @@ function emitTextContent(state, emit, idx, content) {
     emit("response.output_item.added", {
       type: "response.output_item.added",
       output_index: idx,
-      item: { id: msgId, type: RESPONSES_ITEM.MESSAGE, content: [], role: ROLE.ASSISTANT }
+      item: { id: msgId, type: RESPONSES_ITEM.MESSAGE, status: "in_progress", content: [], role: ROLE.ASSISTANT }
     });
   }
 
@@ -304,6 +307,7 @@ function closeMessage(state, emit, idx) {
     const item = {
       id: msgId,
       type: RESPONSES_ITEM.MESSAGE,
+      status: "completed",
       content: [{ type: RESPONSES_ITEM.OUTPUT_TEXT, annotations: [], logprobs: [], text: fullText }],
       role: ROLE.ASSISTANT
     };
@@ -353,6 +357,7 @@ function emitToolCall(state, emit, tc) {
       item: {
         id: `${custom ? "ctc" : "fc"}_${callId}`,
         type: custom ? RESPONSES_ITEM.CUSTOM_TOOL_CALL : RESPONSES_ITEM.FUNCTION_CALL,
+        status: "in_progress",
         ...(custom ? { input: "" } : { arguments: "" }),
         call_id: callId,
         name: state.funcNames[tcIdx] || ""
@@ -411,6 +416,7 @@ function closeToolCall(state, emit, idx) {
     const item = {
       id: `${custom ? "ctc" : "fc"}_${callId}`,
       type: custom ? RESPONSES_ITEM.CUSTOM_TOOL_CALL : RESPONSES_ITEM.FUNCTION_CALL,
+      status: "completed",
       ...(custom ? { input: extractCustomToolInput(args) } : { arguments: args }),
       call_id: callId,
       name: state.funcNames[idx] || ""

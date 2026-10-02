@@ -12,6 +12,12 @@ describe("isTruncatedEmptyCompletion", () => {
       usage: { output_tokens: 100 },
     })).toBe(true);
   });
+  it("does not label content filtering as output budget exhaustion", () => {
+    expect(isTruncatedEmptyCompletion({
+      object: "response", status: "incomplete", output: [],
+      incomplete_details: { reason: "content_filter" },
+    })).toBe(false);
+  });
 
   it("flags Chat finish_reason length with empty content and no tools", () => {
     expect(isTruncatedEmptyCompletion({

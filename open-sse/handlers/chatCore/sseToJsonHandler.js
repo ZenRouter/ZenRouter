@@ -121,6 +121,7 @@ function chatCompletionToResponses(responseBody, customToolNames = null) {
   if (typeof reasoning === "string" && reasoning.length > 0) {
     output.push({
       type: RESPONSES_ITEM.REASONING,
+      status: "completed",
       summary: [{ type: RESPONSES_ITEM.SUMMARY_TEXT, text: reasoning }],
     });
   }
@@ -129,6 +130,7 @@ function chatCompletionToResponses(responseBody, customToolNames = null) {
   if (text.length > 0) {
     output.push({
       type: RESPONSES_ITEM.MESSAGE,
+      status: "completed",
       role: ROLE.ASSISTANT,
       content: [{ type: RESPONSES_ITEM.OUTPUT_TEXT, text, annotations: [] }],
     });
@@ -139,6 +141,7 @@ function chatCompletionToResponses(responseBody, customToolNames = null) {
     const custom = customToolNames?.has(fn.name);
     output.push({
       type: custom ? RESPONSES_ITEM.CUSTOM_TOOL_CALL : RESPONSES_ITEM.FUNCTION_CALL,
+      status: "completed",
       id: `${custom ? "ctc" : "fc"}_${tc.id || ""}`,
       call_id: tc.id || "",
       name: fn.name || "",

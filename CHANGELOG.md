@@ -6,6 +6,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- Return a request-scoped `output_budget_exhausted` error when reasoning consumes the output budget before text/tool calls, instead of retrying identical payloads and locking healthy accounts for 30 seconds. Preserve structured diagnostics through account/combo exhaustion. Complete Responses output-item lifecycle statuses for validating clients (#4498 / PR #4499), including JSON and forced-SSE conversions.
 - Categorize xAI Grok Imagine Image, Image 2.0, and Image Quality under Text to Image, and Imagine Video 1.5 variants under Video. Keep media generators out of the chat model list.
 - Preserve model categories and output modalities from live provider catalogs. Correct the displayed category of registered media models previously saved as custom LLM models without changing stored data.
 - Expose OpenRouter's declared image models in Text to Image and connect TokenRouter's image generation configuration to its adapter.

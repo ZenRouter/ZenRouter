@@ -281,6 +281,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
   const retriedConnectionIds = new Set();
   let lastError = null;
   let lastStatus = null;
+  let lastResponse = null;
   let consecutiveSameErrors = 0;
   const MAX_CONSECUTIVE_SAME_ERRORS = 3;
 
@@ -306,7 +307,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
         return errorResponse(HTTP_STATUS.NOT_FOUND, `No active credentials for provider: ${provider}`);
       }
       log.warn("CHAT", "No more accounts available", { provider });
-      return errorResponse(lastStatus || HTTP_STATUS.SERVICE_UNAVAILABLE, lastError || "All accounts unavailable");
+      return lastResponse || errorResponse(lastStatus || HTTP_STATUS.SERVICE_UNAVAILABLE, lastError || "All accounts unavailable");
     }
 
     // Account selection shown in the unified "▶" line (acc:...)
@@ -427,6 +428,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       }
       lastError = result.error;
       lastStatus = result.status;
+      lastResponse = result.response;
 
       if (consecutiveSameErrors >= MAX_CONSECUTIVE_SAME_ERRORS) {
         log.warn("FALLBACK", `Circuit breaker: fast-failing ${provider}/${model} after ${consecutiveSameErrors} consecutive accounts failed with status ${result.status}`);
