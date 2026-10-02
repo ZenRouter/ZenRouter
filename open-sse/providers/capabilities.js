@@ -93,11 +93,13 @@ export const MODEL_CAPABILITIES = {
   "claude-opus-5-5-thinking": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 },
   "claude-opus-5-5-agentic": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 },
   "claude-opus-5-5-thinking-agentic": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 },
-  "claude-sonnet-5-5": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 },
-  "claude-sonnet-5.5": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 },
-  "claude-sonnet-5-5-thinking": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 },
-  "claude-sonnet-5-5-agentic": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 },
-  "claude-sonnet-5-5-thinking-agentic": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 },
+  // Sonnet 5.5 cannot fully disable thinking, but supports between-tools thinking;
+  // its Messages API also rejects forced any/tool choices.
+  "claude-sonnet-5-5": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, thinkingOffType: "between_tools", forcedToolChoice: false, contextWindow: 1000000, maxOutput: 128000 },
+  "claude-sonnet-5.5": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, thinkingOffType: "between_tools", forcedToolChoice: false, contextWindow: 1000000, maxOutput: 128000 },
+  "claude-sonnet-5-5-thinking": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, thinkingOffType: "between_tools", forcedToolChoice: false, contextWindow: 1000000, maxOutput: 128000 },
+  "claude-sonnet-5-5-agentic": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, thinkingOffType: "between_tools", forcedToolChoice: false, contextWindow: 1000000, maxOutput: 128000 },
+  "claude-sonnet-5-5-thinking-agentic": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, thinkingOffType: "between_tools", forcedToolChoice: false, contextWindow: 1000000, maxOutput: 128000 },
   "claude-opus-5":     { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", contextWindow: 1000000, maxOutput: 128000 },
   "claude-opus-5-thinking": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", contextWindow: 1000000, maxOutput: 128000 },
   "claude-opus-5-agentic": { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", contextWindow: 1000000, maxOutput: 128000 },
@@ -289,8 +291,8 @@ export const PATTERN_CAPABILITIES = [
   { pattern: "*muse*spark*",       caps: { vision: true, reasoning: true, thinkingFormat: "openai", contextWindow: 1048576, maxOutput: 131072 } },
 
   // ── Claude (4.6+ = adaptive thinking; older/haiku = budget) ──────
-  { pattern: "*claude*sonnet-5-5*", caps: { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 } },
-  { pattern: "*claude*sonnet-5.5*", caps: { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 } },
+  { pattern: "*claude*sonnet-5-5*", caps: { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, thinkingOffType: "between_tools", forcedToolChoice: false, contextWindow: 1000000, maxOutput: 128000 } },
+  { pattern: "*claude*sonnet-5.5*", caps: { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, thinkingOffType: "between_tools", forcedToolChoice: false, contextWindow: 1000000, maxOutput: 128000 } },
   { pattern: "*claude*opus-5-5*",   caps: { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 } },
   { pattern: "*claude*opus-5.5*",   caps: { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 128000 } },
   { pattern: "*claude*opus-5*",     caps: { vision: true, pdf: true, tools: true, reasoning: true, search: true, thinkingFormat: "claude-adaptive", contextWindow: 1000000, maxOutput: 128000 } },

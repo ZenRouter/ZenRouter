@@ -6,6 +6,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- Apply Sonnet 5.5 request restrictions across native, translated, and passthrough paths: reduced-thinking `between_tools`, supported effort limits, and non-forced tool selection (`49ba54b2`). Preserve explicitly requested summarized/omitted reasoning display on mandatory-adaptive Claude models.
 - Emit exactly one OpenAI `[DONE]` sentinel across translated and passthrough streams, including fragmented bytes and newline-free EOF (#4480/#4461/#4356). Close Responses reasoning items before text or tool items, retaining tool arguments, Unicode text, and late usage (`5d2cfbf3`).
 - Use the shared terminal-turn/function-call normalizer on production Gemini, Gemini CLI, and Vertex request paths (#4345). Remove the shadowing merge-only helper; preserve Antigravity's intentional native tool-result roles.
 - Preserve multimodal Responses tool outputs through both request bridges and Claude results (#4517 / PR #4518); lower final Chat tool content to text plus user image turns after parallel results. Retain native documents/search results, opaque file references, IDs/error flags, and image/PDF bytes without new fetches.

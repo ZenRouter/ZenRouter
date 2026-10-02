@@ -213,6 +213,27 @@ function buildThinkingPlaceholder(provider, unsigned = false) {
   return block;
 }
 
+// Apply model wire restrictions on both translated and native passthrough
+// bodies. Replacements are copy-on-write: account retries reuse nested fields.
+function applyClaudeModelRestrictions(body, model, provider = null) {
+  const caps = getCapabilitiesForModel(provider, model);
+  if (caps.thinkingOffType && body.thinking?.type === "disabled") {
+    body.thinking = { type: caps.thinkingOffType };
+  }
+  // between_tools accepts effort only up to high. An already-native request
+  // needs the same clamp as a request rewritten from disabled.
+  if (caps.thinkingOffType && body.thinking?.type === caps.thinkingOffType &&
+      (body.output_config?.effort === "xhigh" || body.output_config?.effort === "max")) {
+    body.output_config = { ...body.output_config, effort: "high" };
+  }
+  if (caps.forcedToolChoice === false &&
+      (body.tool_choice?.type === "any" || body.tool_choice?.type === "tool")) {
+    const { disable_parallel_tool_use } = body.tool_choice;
+    body.tool_choice = { type: "auto", ...(disable_parallel_tool_use !== undefined ? { disable_parallel_tool_use } : {}) };
+  }
+  return caps;
+}
+
 // Normalize a native Claude passthrough body to match Anthropic Messages API spec.
 // Newer Cowork/Claude Code clients emit beta-only shapes that OAuth endpoints reject:
 // 1. thinking.type "adaptive" → unsupported on Haiku
@@ -349,6 +370,7 @@ export function normalizeClaudePassthrough(body, model = "", rawHeaders = null) 
   }
 
   applyAssistantPrefillPolicy(body, rawHeaders);
+  applyClaudeModelRestrictions(body, model || body.model);
   return body;
 }
 
@@ -518,6 +540,7 @@ export function hoistToolResultImages(body) {
 // - Fix tool_use/tool_result ordering
 // - Apply cloaking (billing header + fake user ID) for OAuth tokens
 export function prepareClaudeRequest(body, provider = null, apiKey = null, connectionId = null, rawHeaders = null, sessionId = null) {
+  const modelCaps = applyClaudeModelRestrictions(body, body.model, provider);
   // quirk: MiniMax's Claude-compatible endpoint rejects Anthropic's output_config (400 invalid params)
   if (PROVIDERS[provider]?.quirks?.dropOutputConfig) {
     delete body.output_config;
@@ -528,7 +551,7 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
   // up to it, so max-effort thinking gets full budget; others fall back to the
   // conservative 64000 default.
   if (body.max_tokens) {
-    const ceiling = getCapabilitiesForModel(provider, body.model).maxOutput || DEFAULT_MAX_TOKENS;
+    const ceiling = modelCaps.maxOutput || DEFAULT_MAX_TOKENS;
     if (body.max_tokens > ceiling) body.max_tokens = ceiling;
 
     // Reconcile against thinking budget. applyThinking (thinkingUnified.js) runs

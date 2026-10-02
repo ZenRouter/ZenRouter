@@ -271,10 +271,13 @@ function applyFormat(fmt, body, cfg, caps, supportedLevels, display) {
       break;
     }
     case "claude-adaptive": {
+      // A mandatory-thinking model may expose a reduced-thinking wire mode
+      // without accepting disabled. Keep thinkingCanDisable semantics elsewhere.
+      if (none && caps.thinkingOffType) { body.thinking = { type: caps.thinkingOffType }; break; }
       if (none && canDisable) { body.thinking = { type: "disabled" }; break; }
-      // Models that can disable thinking need the explicit adaptive switch.
-      // Permanently adaptive models such as Fable 5.1 accept effort directly.
-      if (canDisable) body.thinking = { type: "adaptive", ...(display ? { display } : {}) };
+      // Permanently adaptive models accept effort directly, but an explicit
+      // display intent still needs the adaptive object to control returned text.
+      if (canDisable || display) body.thinking = { type: "adaptive", ...(display ? { display } : {}) };
       else delete body.thinking;
       const level = toLevel(eff);
       // xhigh is model-gated (Opus/Sonnet 4.6 reject it) — clamp when not advertised.
@@ -407,6 +410,18 @@ export function applyThinking(targetFormat, model, body, provider = null, intent
   if (!cfg) return body;
 
   const fmt = resolveFormat(targetFormat, cleanModel, provider);
+  // Native reduced-thinking requests carry an independent effort. Do not let
+  // effort capture turn disabled/between_tools into unrestricted adaptive
+  // thinking, or drop output_config's other fields. Explicit model suffixes
+  // still take precedence over the body's thinking mode.
+  if (!override && fmt === "claude-adaptive" && caps.thinkingOffType &&
+      (body.thinking?.type === "disabled" || body.thinking?.type === caps.thinkingOffType)) {
+    const outputConfig = body.output_config;
+    stripAll(body);
+    body.thinking = { type: caps.thinkingOffType };
+    if (outputConfig) body.output_config = outputConfig;
+    return body;
+  }
   const supportedLevels = getThinkingLevels(provider, cleanModel);
   // Anthropic's `display` (summarized | omitted) decides whether thinking text
   // comes back at all; keep what the client asked for instead of resetting it.
