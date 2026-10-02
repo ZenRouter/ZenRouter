@@ -18,6 +18,7 @@ function shortHash(str) {
 import {
   DEFAULT_SAFETY_SETTINGS,
   convertOpenAIContentToParts,
+  normalizeGeminiContents,
   extractTextContent,
   tryParseJSON,
   generateRequestId,
@@ -70,17 +71,6 @@ export function sanitizeAntigravitySystemPrompt(text) {
     "You are Hermes Agent, an intelligent AI assistant created by Nous Research.",
     "You are Hermes Agent. You are an intelligent AI assistant created by Nous Research."
   );
-}
-
-function normalizeGeminiContents(contents) {
-  const out = [];
-  for (const c of contents || []) {
-    if (!c?.role || !Array.isArray(c.parts) || c.parts.length === 0) continue;
-    const last = out.at(-1);
-    if (last?.role === c.role) last.parts.push(...c.parts);
-    else out.push({ ...c, parts: [...c.parts] });
-  }
-  return out;
 }
 
 // Core: Convert OpenAI request to Gemini format (base for all variants)
