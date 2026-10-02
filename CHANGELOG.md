@@ -5,6 +5,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+## [0.9.5] - 2026-10-02
 ### Fixed
 - Preserve ordered readable thinking across Claude/Gemini and hybrid Chat histories, streamed vendor reasoning details, native JSON, and forced-SSE JSON. Keep reasoning separate from answer text; retain every Responses summary segment and native Claude encrypted-block/signature replay without exposing opaque continuity on Chat bridges.
 - Add an encrypted development-only worker mesh with two-way-safe conflict handling, strict SSH host validation, secret/state exclusions, detached per-node jobs, private isolated test data, and resumable UTF-8-safe stdout/stderr. Measured bidirectional synchronization and disconnect recovery; initial reasoning regression gate passes 268 tests with zero failed tests/suites.
