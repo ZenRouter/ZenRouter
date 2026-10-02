@@ -53,6 +53,7 @@ docs/*
 !docs/ARCHITECTURE.md
 !docs/antigravity-location-error.md
 !docs/CHANGELOG_v0.9.5.md
+!docs/CHANGELOG_v0.9.6.md
 test/*
 open-sse/test/*
 RM.vn.md

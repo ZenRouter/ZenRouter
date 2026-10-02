@@ -5,6 +5,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+## [0.9.6] - 2026-10-02
+
+### Fixed
+- **fix(sse): short-circuit client abort without locking accounts or triggering fallback** (`src/sse/handlers/chat.js`): When a client disconnects or aborts (`client_aborted`, status 499, `request.signal.aborted`), return immediately without invoking `markAccountUnavailable`. Prevents healthy provider accounts from receiving erroneous 30-second `modelLock_*` locks and stops redundant account/combo failover when the client is no longer listening.
+- **fix(proxy): prevent client abort from tripping 15-minute MITM direct-IP bypass cooldown** (`open-sse/utils/proxyFetch.js`): Ignore `AbortError` and aborted signals in `proxyFetch` catch handlers, ensuring direct IP routing to upstream endpoints (`daily-cloudcode-pa.sandbox.googleapis.com`, `cloudcode-pa.googleapis.com`) remains active and is not suppressed for 15 minutes by client-side cancellations.
+- **fix(fallback): compound duration parsing and multi-status reset extraction** (`open-sse/services/accountFallback.js`): Added robust parsing for compound duration reset patterns (`1m 51s`, `4m22s`, `99h31m0s`, `41.67s`) and enabled reset extraction across 429, 403, and 503 statuses (e.g. gateway wrappers returning `HTTP 503 [403: reset after 1m 51s]`), accurately respecting upstream reset timing.
+- Added regression test suite in `tests/unit/client-abort-and-compound-reset.test.js` (3 cases, passing).
 ## [0.9.5] - 2026-10-02
 ### Fixed
 - Preserve ordered readable thinking across Claude/Gemini and hybrid Chat histories, streamed vendor reasoning details, native JSON, and forced-SSE JSON. Keep reasoning separate from answer text; retain every Responses summary segment and native Claude encrypted-block/signature replay without exposing opaque continuity on Chat bridges.
