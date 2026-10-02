@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { resolveProviderAlias } from "../../open-sse/services/model.js";
-import { PROVIDER_ID_TO_ALIAS, PROVIDER_MODELS } from "../../open-sse/config/providerModels.js";
+import { PROVIDER_ID_TO_ALIAS } from "../../open-sse/config/providerModels.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const snapPath = join(here, "alias-baseline.json");
@@ -32,7 +32,6 @@ const sortedIdToAlias = Object.fromEntries(
 const resolved = {
   aliasToId: Object.fromEntries(ALIAS_TOKENS.map(a => [a, resolveProviderAlias(a)])),
   idToAlias: sortedIdToAlias,
-  modelKeys: Object.keys(PROVIDER_MODELS).sort(),
 };
 const current = JSON.parse(JSON.stringify(resolved));
 
@@ -54,5 +53,4 @@ for (const a of ALIAS_TOKENS) {
   }
 }
 if (JSON.stringify(baseline.idToAlias) !== JSON.stringify(current.idToAlias)) console.error("~ idToAlias changed");
-if (JSON.stringify(baseline.modelKeys) !== JSON.stringify(current.modelKeys)) console.error("~ modelKeys changed");
 process.exit(1);

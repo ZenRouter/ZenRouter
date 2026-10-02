@@ -6,6 +6,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Fixed
+- Keep the alias regression gate focused on alias-to-provider and provider-to-alias behavior. Remove the unrelated model-catalog key snapshot that drifted when an existing provider gained catalog entries; provider and model behavior retain separate coverage.
 - Wait for native tray teardown before exiting after a clean server close, avoiding orphaned Windows tray processes. Use a private readiness port in launcher regressions so a running gateway cannot affect fixture behavior.
 - Control the clock in provider-priority regression tests so millisecond timestamp ties cannot make the move-to-front assertion driver-speed dependent.
 - Retain strict-proxy policy across inactive/empty pools, legacy/no-proxy fallbacks, and lookup errors (`24664f2c`). Apply the configured policy to quota/reset-credit requests, credential probes, and delegated Codex/xAI token refresh; working relay refresh remains supported and TLS verification stays enabled.
