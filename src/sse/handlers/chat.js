@@ -386,6 +386,12 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
 
     if (result.success) return result.response;
 
+    // Client abort: client disconnected / cancelled. Do not lock account or retry/fallback.
+    const isClientAborted = request?.signal?.aborted || result.error === "client_aborted" || Number(result.status) === 499;
+    if (isClientAborted) {
+      log.warn("CHAT", "Client aborted before upstream completion");
+      return result.response || createErrorResponse(499, "Client Closed Request");
+    }
     // Sporadic upstream 5xx (9router #4277): grant one immediate same-account
     // retry BEFORE locking/fallback. A single flaky 500 (identical request
     // succeeds seconds later) must not poison the account for 30s while fast

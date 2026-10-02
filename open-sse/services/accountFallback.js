@@ -33,14 +33,18 @@ export function extractResetsAtMs(response, message) {
     if (Number.isFinite(ms) && ms > Date.now()) return ms;
   }
 
-  // "retry in 300 seconds" / "resets in 5 minutes" / "try again in 1 hour"
-  const inTime = text.match(/(?:retry|try again|resets?)\s+(?:after|in)\s+(\d+(?:\.\d+)?)\s*(seconds?|minutes?|hours?)/i);
-  if (inTime) {
-    const n = Number(inTime[1]);
-    const unit = inTime[2][0].toLowerCase();
-    const mult = unit === "s" ? 1000 : unit === "m" ? 60000 : 3600000;
-    const ms = Date.now() + n * mult;
-    if (Number.isFinite(ms)) return ms;
+  // "retry in 300 seconds" / "resets in 5 minutes" / "reset after 1m 51s" / "resets in 4m22s"
+  const durMatch = text.match(/(?:retry|try again|resets?)\s+(?:after|in)\s+([0-9a-z\s\.]+?)(?:\.\s|\.[\"'\)\]]|\.$|[\,\)\"\']|$)/i);
+  if (durMatch) {
+    const str = durMatch[1].trim();
+    let totalSecs = 0;
+    const h = str.match(/(\d+)\s*(?:h(?:ours?)?)/i);
+    const m = str.match(/(\d+)\s*(?:m(?:in(?:utes?)?)?)/i);
+    const s = str.match(/(\d+(?:\.\d+)?)\s*(?:s(?:ec(?:onds?)?)?)/i);
+    if (h) totalSecs += parseInt(h[1], 10) * 3600;
+    if (m) totalSecs += parseInt(m[1], 10) * 60;
+    if (s) totalSecs += parseFloat(s[1]);
+    if (totalSecs > 0) return Date.now() + totalSecs * 1000;
   }
 
   // Retry-After header (seconds or HTTP-date) — PR #3612
@@ -117,14 +121,17 @@ export function checkFallbackError(status, errorText, backoffLevel = 0, response
     ? (typeof errorText === "string" ? errorText : JSON.stringify(errorText)).toLowerCase()
     : "";
 
-  // Provider-reported precise reset (429 + Retry-After or "reset at" pattern) — PR #3612
-  if (status === 429) {
-    const resetsAtMs = extractResetsAtMs(response, errorText);
-    if (resetsAtMs) {
-      const cooldownMs = Math.min(resetsAtMs - Date.now(), MAX_RATE_LIMIT_COOLDOWN_MS);
-      if (cooldownMs > 0) {
-        return { shouldFallback: true, cooldownMs, resetsAtMs };
-      }
+  // Client abort / cancellation: client disconnected, not an account fault
+  if (status === 499 || lowerError.includes("client_aborted") || lowerError.includes("aborted")) {
+    return { shouldFallback: false, cooldownMs: 0 };
+  }
+
+  // Provider-reported precise reset (429, 403, 503 + Retry-After or "reset at / in" pattern)
+  const resetsAtMs = extractResetsAtMs(response, errorText);
+  if (resetsAtMs) {
+    const cooldownMs = Math.min(resetsAtMs - Date.now(), MAX_RATE_LIMIT_COOLDOWN_MS);
+    if (cooldownMs > 0) {
+      return { shouldFallback: true, cooldownMs, resetsAtMs };
     }
   }
 

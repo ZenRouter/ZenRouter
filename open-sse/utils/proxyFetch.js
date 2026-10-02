@@ -513,6 +513,9 @@ export async function proxyAwareFetch(url, options = {}, proxyOptions = null) {
       // DNS itself failed → nothing to pin, cool down too
       markMitmBypassCooldown(bypassHost);
     } catch (error) {
+      if (options?.signal?.aborted || error?.name === "AbortError" || error?.message === "aborted" || error?.code === "ABORT_ERR") {
+        throw error;
+      }
       markMitmBypassCooldown(bypassHost);
       console.warn(`[ProxyFetch] MITM bypass failed (${error.message}) — skipping direct-IP attempts for ${Math.round(MITM_BYPASS_COOLDOWN_MS / 60000)}m on ${bypassHost}`);
     }
