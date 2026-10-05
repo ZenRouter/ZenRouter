@@ -10,15 +10,15 @@ import https from "node:https";
  * executor also calls `response.arrayBuffer()` directly.
  *
  * These tests drive `createBypassRequest` against a local HTTPS server with
- * a self-signed cert. NODE_TLS_REJECT_UNAUTHORIZED=0 keeps the test isolated
- * from the real public-CA-only MITM_BYPASS_HOSTS list.
+ * a self-signed cert. Each fixture request opts out of verification explicitly;
+ * public-CA verification remains enabled process-wide.
  */
 
 const HOST = "127.0.0.1";
 
 // Throwaway self-signed cert (CN=zenrouter-test-localhost) generated for this
-// fixture only. Accepted solely because the suite sets
-// NODE_TLS_REJECT_UNAUTHORIZED=0; never use these files anywhere else.
+// fixture only. Accepted solely by explicit per-request fixture options;
+// never use these files anywhere else.
 const TEST_TLS_KEY = `-----BEGIN PRIVATE KEY-----
 MIIEugIBADANBgkqhkiG9w0BAQEFAASCBKQwggSgAgEAAoIBAQCW0mdEKSJYE15a
 hC7wLYeCvP3M0Q2p5bQCbUeGqZfXdZTF7UrYG7K9MRWOAo0vXACWmzVD7ZRo5Y4n
@@ -72,7 +72,7 @@ E7QOq7UAgY3Pgcu/QoIPP3ccbN2MG9IjIVfXoyUjlQqlYx3/YhZ/
 function startServer(handler) {
   return new Promise((resolve) => {
     const sockets = new Set();
-    // Snakeoil cert — accepted only because NODE_TLS_REJECT_UNAUTHORIZED=0.
+    // Snakeoil cert — accepted only by this fixture request's TLS options.
     const server = https.createServer({ key: TEST_TLS_KEY, cert: TEST_TLS_CERT }, handler);
     server.on("connection", (sock) => {
       sockets.add(sock);
@@ -96,7 +96,6 @@ describe("proxyFetch MITM bypass — response shape (#3514)", () => {
   let server;
   let __testing;
   let prevEnv;
-  let prevTlsReject;
 
   beforeAll(async () => {
     prevEnv = {
@@ -105,8 +104,6 @@ describe("proxyFetch MITM bypass — response shape (#3514)", () => {
     };
     process.env.NODE_ENV = "test";
     process.env.JWT_SECRET ||= "test-jwt-secret-please-do-not-use-in-prod-0123456789";
-    prevTlsReject = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
     server = await startServer((req, res) => {
       let body = "";
@@ -128,12 +125,16 @@ describe("proxyFetch MITM bypass — response shape (#3514)", () => {
 
   afterAll(async () => {
     if (server) await server.close();
-    if (prevTlsReject === undefined) delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-    else process.env.NODE_TLS_REJECT_UNAUTHORIZED = prevTlsReject;
     for (const [k, v] of Object.entries(prevEnv)) {
       if (v === undefined) delete process.env[k];
       else process.env[k] = v;
     }
+  });
+
+  it("rejects the self-signed fixture unless explicitly opted out per request", async () => {
+    const url = new URL(`https://${HOST}:${server.port}/untrusted`);
+    await expect(__testing.createBypassRequest(url, HOST, { method: "POST" }))
+      .rejects.toThrow(/self-signed|certificate/i);
   });
 
   it("returns a real Headers instance usable with `new Response(...)`", async () => {
@@ -185,6 +186,7 @@ describe("proxyFetch MITM bypass — response shape (#3514)", () => {
         method: "POST",
         body: "x",
         signal: controller.signal,
+        rejectUnauthorized: false,
       })
     ).rejects.toThrow();
 

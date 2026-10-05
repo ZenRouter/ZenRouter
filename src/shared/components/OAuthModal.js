@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import PropTypes from "prop-types";
 import { Modal, Button, Input } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
+
+// Location is immutable for this modal session. The server snapshot is also
+// used for the hydration pass; React then reads the browser snapshot directly.
+const subscribeLocation = () => () => {};
+const getLocationSnapshot = () => window.location.origin;
+const getServerLocationSnapshot = () => "";
 
 // Providers using the dynamic-port local callback proxy.
 // Browser OAuth: popup → auto callback → auto exchange → poll-status.
@@ -65,20 +71,10 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
   const startOAuthFlowRef = useRef(null);
   const { copied, copy } = useCopyToClipboard();
 
-  // State for client-only values to avoid hydration mismatch
-  const [isLocalhost, setIsLocalhost] = useState(false);
-  const [placeholderUrl, setPlaceholderUrl] = useState("/callback?code=...");
+  const locationOrigin = useSyncExternalStore(subscribeLocation, getLocationSnapshot, getServerLocationSnapshot);
+  const isLocalhost = locationOrigin ? ["localhost", "127.0.0.1"].includes(new URL(locationOrigin).hostname) : false;
+  const placeholderUrl = `${locationOrigin}/callback?code=...`;
   const callbackProcessedRef = useRef(false);
-
-  // Detect if running on localhost (client-side only)
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setIsLocalhost(
-        window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      );
-      setPlaceholderUrl(`${window.location.origin}/callback?code=...`);
-    }
-  }, []);
 
   // Define all useCallback hooks BEFORE the useEffects that reference them
 

@@ -131,69 +131,70 @@ function renderHeadingWithEmoji(tag, children, props) {
 
 export function MarkdownRenderer({ content }) {
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeHighlight]}
-      className="markdown-content"
-      components={{
-        h1: ({ node, children, ...props }) => {
-          const text = children?.toString() || "";
-          const IconComponent = PAGE_ICONS[text];
-          const id = slugify(text);
-          
-          return (
-            <h1 id={id} {...props}>
-              {IconComponent && <IconComponent className="inline-block mr-3" />}
-              {children}
-            </h1>
-          );
-        },
-        h2: ({ node, children, ...props }) => renderHeadingWithEmoji("h2", children, props),
-        h3: ({ node, children, ...props }) => renderHeadingWithEmoji("h3", children, props),
-        li: ({ node, children, ...props }) => {
-          // Extract text from children (handle React elements)
-          const extractText = (child) => {
-            if (typeof child === 'string') return child;
-            if (Array.isArray(child)) return child.map(extractText).join('');
-            if (child?.props?.children) return extractText(child.props.children);
-            return '';
-          };
-          
-          const text = extractText(children);
-          const iconMatch = text.match(/^\[icon:([a-z-]+)\]\s*(.*)$/);
-          
-          if (iconMatch) {
-            const iconName = iconMatch[1];
-            const restText = iconMatch[2];
-            const IconComponent = ICON_MAP[iconName];
-            
-            return (
-              <li {...props}>
-                {IconComponent && <IconComponent className="inline-block mr-2 w-4 h-4 text-[#E68A6E]" />}
-                {restText}
-              </li>
-            );
-          }
+    <div className="markdown-content">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]}
+        components={{
+          h1: ({ node, children, ...props }) => {
+            const text = children?.toString() || "";
+            const IconComponent = PAGE_ICONS[text];
+            const id = slugify(text);
 
-          // Auto-convert leading emoji to lucide icon
-          const emojiMatch = text.match(EMOJI_REGEX);
-          if (emojiMatch) {
-            const { Icon, color } = EMOJI_ICON_MAP[emojiMatch[1]];
-            const restText = text.slice(emojiMatch[0].length);
             return (
-              <li {...props}>
-                <Icon className={`inline-block mr-2 w-4 h-4 ${color}`} />
-                {restText}
-              </li>
+              <h1 id={id} {...props}>
+                {IconComponent && <IconComponent className="inline-block mr-3" />}
+                {children}
+              </h1>
             );
-          }
-          
-          return <li {...props}>{children}</li>;
-        },
-      }}
-    >
-      {content}
-    </ReactMarkdown>
+          },
+          h2: ({ node, children, ...props }) => renderHeadingWithEmoji("h2", children, props),
+          h3: ({ node, children, ...props }) => renderHeadingWithEmoji("h3", children, props),
+          li: ({ node, children, ...props }) => {
+            // Extract text from children (handle React elements)
+            const extractText = (child) => {
+              if (typeof child === 'string') return child;
+              if (Array.isArray(child)) return child.map(extractText).join('');
+              if (child?.props?.children) return extractText(child.props.children);
+              return '';
+            };
+
+            const text = extractText(children);
+            const iconMatch = text.match(/^\[icon:([a-z-]+)\]\s*(.*)$/);
+
+            if (iconMatch) {
+              const iconName = iconMatch[1];
+              const restText = iconMatch[2];
+              const IconComponent = ICON_MAP[iconName];
+
+              return (
+                <li {...props}>
+                  {IconComponent && <IconComponent className="inline-block mr-2 w-4 h-4 text-[#E68A6E]" />}
+                  {restText}
+                </li>
+              );
+            }
+
+            // Auto-convert leading emoji to lucide icon
+            const emojiMatch = text.match(EMOJI_REGEX);
+            if (emojiMatch) {
+              const { Icon, color } = EMOJI_ICON_MAP[emojiMatch[1]];
+              const restText = text.slice(emojiMatch[0].length);
+              return (
+                <li {...props}>
+                  <Icon className={`inline-block mr-2 w-4 h-4 ${color}`} />
+                  {restText}
+                </li>
+              );
+            }
+
+            return <li {...props}>{children}</li>;
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
   );
 }
 

@@ -13,7 +13,7 @@ export function parseDataUri(url) {
 }
 
 import { lookup } from "node:dns/promises";
-import { Agent } from "undici";
+import { Agent, Dispatcher1Wrapper } from "undici";
 import { MAX_IMAGE_BYTES, FETCH_TIMEOUT_MS, IMAGE_SIGNATURES, BLOCKED_HOSTS } from "../../config/mediaConfig.js";
 
 // True if an IPv4/IPv6 address is private/reserved (SSRF target).
@@ -89,9 +89,10 @@ export async function fetchImageAsBase64(imageUrl, options = {}) {
   const fetchSignal = signal || controller.signal;
 
   // Pin connect to the validated IP so no second DNS resolution can rebind (TOCTOU fix).
-  const dispatcher = new Agent({
+  // Adapt Undici 8's dispatcher handlers for Node's built-in fetch.
+  const dispatcher = new Dispatcher1Wrapper(new Agent({
     connect: { lookup: (_h, _o, cb) => cb(null, [{ address: pinnedIps[0].address, family: pinnedIps[0].family }]) },
-  });
+  }));
 
   try {
     // redirect:"manual" prevents a public URL redirecting to a private one (SSRF bypass).

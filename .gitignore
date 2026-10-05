@@ -92,7 +92,6 @@ graphify-out/*
 
 # Local runtime data
 .data/
-gitbook/package-lock.json
 .zcode/
 .kiro/
 *.tgz

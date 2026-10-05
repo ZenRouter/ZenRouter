@@ -18,7 +18,7 @@ set -e
 #
 # Features (inspired by hermes-agent zero-config):
 #   - Auto-detects OS/arch, handles Linux/macOS/WSL/Termux
-#   - Auto-installs missing deps: git, curl, Node.js (>=18), build tools
+#   - Auto-installs missing deps: git, curl, Node.js (>=22.19.0), build tools
 #   - Managed Node fallback (downloads official tarball to ~/.zenrouter/node if system Node is too old)
 #   - Non-interactive safe (curl | bash), handles sudo gracefully
 #   - Idempotent: re-runs update existing installs
@@ -48,7 +48,14 @@ BRANCH="master"
 SKIP_BUILD=false
 SKIP_DEPS=false
 NODE_VERSION="22"
-MIN_NODE_MAJOR=18
+MIN_NODE_MAJOR=22
+MIN_NODE_MINOR=19
+MIN_NODE_PATCH=0
+RUNTIME=""
+NODE_CMD=""
+NPM_CMD=""
+BUN_CMD=""
+SOURCE_CLI_CMD=""
 
 if [ -n "${ZENROUTER_INSTALL_DIR:-}" ]; then
   INSTALL_DIR="$ZENROUTER_INSTALL_DIR"
@@ -238,9 +245,35 @@ check_git() {
 
 # Node helpers
 node_satisfies() {
-  local ver="${1#v}"; local major="${ver%%.*}"
-  case "$major" in ''|*[!0-9]*) return 1;; esac
-  [ "$major" -ge "$MIN_NODE_MAJOR" ]
+  local ver="${1#v}"
+  [[ "$ver" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || return 1
+  local major="${BASH_REMATCH[1]}" minor="${BASH_REMATCH[2]}" patch="${BASH_REMATCH[3]}"
+  if [ "$major" -gt "$MIN_NODE_MAJOR" ]; then return 0; fi
+  [ "$major" -eq "$MIN_NODE_MAJOR" ] || return 1
+  if [ "$minor" -gt "$MIN_NODE_MINOR" ]; then return 0; fi
+  [ "$minor" -eq "$MIN_NODE_MINOR" ] && [ "$patch" -ge "$MIN_NODE_PATCH" ]
+}
+
+select_node_runtime() {
+  local node_cmd="$1" npm_cmd="$2" ver
+  [ -n "$node_cmd" ] && [ -n "$npm_cmd" ] || return 1
+  ver=$("$node_cmd" --version 2>/dev/null) || return 1
+  node_satisfies "$ver" || return 1
+  PATH="${node_cmd%/*}:$PATH" "$npm_cmd" --version >/dev/null 2>&1 || return 1
+  RUNTIME="node"
+  NODE_CMD="$node_cmd"
+  NPM_CMD="$npm_cmd"
+  export PATH="${NODE_CMD%/*}:$PATH"
+}
+
+select_bun_runtime() {
+  local bun_cmd
+  bun_cmd=$(command -v bun) || return 1
+  "$bun_cmd" --version >/dev/null 2>&1 || return 1
+  RUNTIME="bun"
+  BUN_CMD="$bun_cmd"
+  NODE_CMD=""
+  NPM_CMD=""
 }
 
 configure_managed_npm_prefix() {
@@ -289,17 +322,17 @@ install_managed_node() {
 }
 
 check_node() {
-  log_step "Checking Node.js (>=${MIN_NODE_MAJOR}) / Bun"
+  log_step "Checking Node.js (>=${MIN_NODE_MAJOR}.${MIN_NODE_MINOR}.${MIN_NODE_PATCH}) / Bun"
   configure_managed_npm_prefix
 
   # Prefer existing system node if good
   if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
     local ver; ver=$(node --version 2>/dev/null || echo "v0")
-    if node_satisfies "$ver"; then
-      log_success "Node $ver found ($(command -v node)) — npm $(npm --version 2>/dev/null)"
+    if select_node_runtime "$(command -v node)" "$(command -v npm)"; then
+      log_success "Node $ver found ($NODE_CMD) — npm $("$NPM_CMD" --version 2>/dev/null)"
       return 0
     fi
-    log_warn "Node $ver too old (need >=${MIN_NODE_MAJOR})"
+    log_warn "Node $ver too old (need >=${MIN_NODE_MAJOR}.${MIN_NODE_MINOR}.${MIN_NODE_PATCH})"
   elif command -v node >/dev/null 2>&1 && ! command -v npm >/dev/null 2>&1; then
     log_warn "node found but npm missing — broken install"
   fi
@@ -307,9 +340,7 @@ check_node() {
   # Check managed node
   if [ -x "$ZENROUTER_HOME/node/bin/node" ] && [ -x "$ZENROUTER_HOME/node/bin/npm" ]; then
     local mver; mver=$("$ZENROUTER_HOME/node/bin/node" --version 2>/dev/null || echo "v0")
-    if node_satisfies "$mver"; then
-      export PATH="$ZENROUTER_HOME/node/bin:$PATH"
-      export PATH="$(get_link_dir):$PATH"
+    if select_node_runtime "$ZENROUTER_HOME/node/bin/node" "$ZENROUTER_HOME/node/bin/npm"; then
       log_success "Managed Node $mver found ($ZENROUTER_HOME/node) "
       return 0
     fi
@@ -322,7 +353,8 @@ check_node() {
   fi
 
   if [ "$SKIP_DEPS" = true ]; then
-    log_warn "Node not found and --skip-deps set — will try Bun fallback"
+    if select_bun_runtime; then log_info "Using Bun (--skip-deps)"; return 0; fi
+    log_warn "No supported Node/npm or working Bun found and --skip-deps set"
     return 1
   fi
 
@@ -334,7 +366,7 @@ check_node() {
   if command -v brew >/dev/null 2>&1; then
     log_info "Trying brew install node@${NODE_VERSION}..."
     if brew install node@${NODE_VERSION} >/dev/null 2>&1 || brew install node >/dev/null 2>&1; then
-      if command -v node >/dev/null 2>&1 && node_satisfies "$(node --version)"; then log_success "Node $(node --version) via brew"; return 0; fi
+      if select_node_runtime "$(command -v node || true)" "$(command -v npm || true)"; then log_success "Node $("$NODE_CMD" --version) via brew"; return 0; fi
     fi
   fi
 
@@ -345,29 +377,29 @@ check_node() {
         if [ -n "$sudo_cmd" ] || [ "$(id -u)" -eq 0 ]; then
           curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | $sudo_cmd -E bash - >/dev/null 2>&1 || true
           $sudo_cmd env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nodejs >/dev/null 2>&1 || true
-          if command -v node >/dev/null 2>&1 && node_satisfies "$(node --version 2>/dev/null || echo v0)"; then log_success "Node $(node --version) via apt"; return 0; fi
+          if select_node_runtime "$(command -v node || true)" "$(command -v npm || true)"; then log_success "Node $("$NODE_CMD" --version) via apt"; return 0; fi
         fi
       fi
       ;;
     fedora)
       if command -v dnf >/dev/null 2>&1; then
         $sudo_cmd dnf install -y nodejs npm >/dev/null 2>&1 || true
-        if command -v node >/dev/null 2>&1 && node_satisfies "$(node --version 2>/dev/null || echo v0)"; then log_success "Node $(node --version) via dnf"; return 0; fi
+        if select_node_runtime "$(command -v node || true)" "$(command -v npm || true)"; then log_success "Node $("$NODE_CMD" --version) via dnf"; return 0; fi
       fi
       ;;
     arch)
       if command -v pacman >/dev/null 2>&1; then
         $sudo_cmd pacman -S --noconfirm nodejs npm >/dev/null 2>&1 || true
-        if command -v node >/dev/null 2>&1 && node_satisfies "$(node --version 2>/dev/null || echo v0)"; then log_success "Node $(node --version) via pacman"; return 0; fi
+        if select_node_runtime "$(command -v node || true)" "$(command -v npm || true)"; then log_success "Node $("$NODE_CMD" --version) via pacman"; return 0; fi
       fi
       ;;
   esac
 
   # Fallback: managed tarball
-  if install_managed_node; then return 0; fi
+  if install_managed_node && select_node_runtime "$(command -v node || true)" "$(command -v npm || true)"; then return 0; fi
 
   # Ultimate fallback: Bun
-  if command -v bun >/dev/null 2>&1; then
+  if select_bun_runtime; then
     log_warn "Node install failed, but Bun is available — will use Bun"
     return 0
   fi
@@ -375,10 +407,10 @@ check_node() {
   if curl -fsSL https://bun.sh/install | bash >/dev/null 2>&1; then
     export BUN_INSTALL="$HOME/.bun"
     export PATH="$BUN_INSTALL/bin:$PATH"
-    if command -v bun >/dev/null 2>&1; then log_success "Bun $(bun --version) installed"; return 0; fi
+    if select_bun_runtime; then log_success "Bun $("$BUN_CMD" --version) installed"; return 0; fi
   fi
 
-  log_error "Failed to install Node.js or Bun. Install Node >=${MIN_NODE_MAJOR} manually: https://nodejs.org/"
+  log_error "Failed to install Node.js or Bun. Install Node >=${MIN_NODE_MAJOR}.${MIN_NODE_MINOR}.${MIN_NODE_PATCH} manually: https://nodejs.org/"
   return 1
 }
 
@@ -411,33 +443,30 @@ check_build_tools() {
 # Install zenrouter via npm
 install_via_npm() {
   log_step "Installing ZenRouter CLI via npm"
-  local npm_cmd="npm"
-  if command -v npm >/dev/null 2>&1; then npm_cmd="npm"
-  elif [ -x "$ZENROUTER_HOME/node/bin/npm" ]; then npm_cmd="$ZENROUTER_HOME/node/bin/npm"
-  elif command -v bun >/dev/null 2>&1; then
-    log_info "npm not found, trying bun..."
-    if bun add -g zenrouter >/dev/null 2>&1; then log_success "Installed via bun"; return 0; else log_warn "bun add -g failed"; return 1; fi
+  local npm_cmd="$NPM_CMD"
+  if [ "$RUNTIME" = "node" ]; then
+    export PATH="${NODE_CMD%/*}:$PATH"
+  elif [ "$RUNTIME" = "bun" ]; then
+    log_info "Using selected Bun runtime..."
+    if "$BUN_CMD" add -g @joyccn/zenrouter >/dev/null 2>&1; then log_success "Installed via bun"; return 0; else log_warn "bun add -g failed"; return 1; fi
   else
     log_warn "npm/bun not available"; return 1
   fi
 
-  log_info "Running: $npm_cmd install -g zenrouter"
-  if $npm_cmd install -g zenrouter --silent >/dev/null 2>&1; then
+  log_info "Running: $npm_cmd install -g @joyccn/zenrouter"
+  if "$npm_cmd" install -g @joyccn/zenrouter --silent >/dev/null 2>&1; then
     log_success "Installed zenrouter via npm"
     return 0
   fi
   log_warn "npm install without sudo failed (likely EACCES), retrying with sudo..."
 
-  local sudo_cmd=""
   if command -v sudo >/dev/null 2>&1; then
     # Check if sudo is available and we can prompt
     if [ "$IS_INTERACTIVE" = true ] || [ -r /dev/tty ]; then
-      if $sudo_cmd npm install -g zenrouter; then log_success "Installed via sudo npm"; return 0; fi
-      # Try with explicit sudo
-      if sudo "$npm_cmd" install -g zenrouter; then log_success "Installed via sudo"; return 0; fi
+      if sudo env "PATH=${NODE_CMD%/*}:$PATH" "$npm_cmd" install -g @joyccn/zenrouter; then log_success "Installed via sudo"; return 0; fi
     else
       # Non-interactive: try passwordless sudo
-      if sudo -n true 2>/dev/null && sudo "$npm_cmd" install -g zenrouter >/dev/null 2>&1; then log_success "Installed via sudo -n"; return 0; fi
+      if sudo -n true 2>/dev/null && sudo -n env "PATH=${NODE_CMD%/*}:$PATH" "$npm_cmd" install -g @joyccn/zenrouter >/dev/null 2>&1; then log_success "Installed via sudo -n"; return 0; fi
       log_warn "No terminal for sudo prompt and passwordless sudo not available"
     fi
   else
@@ -450,8 +479,8 @@ install_via_npm() {
   if "$npm_cmd" config set prefix "$HOME/.npm-global" >/dev/null 2>&1; then
     local link_dir; link_dir="$(get_link_dir)"; mkdir -p "$link_dir"
     # Ensure PATH includes npm-global/bin
-    export PATH="$HOME/.npm-global/bin:$PATH"
-    if "$npm_cmd" install -g zenrouter >/dev/null 2>&1; then
+    export PATH="${NODE_CMD%/*}:$HOME/.npm-global/bin:$PATH"
+    if "$npm_cmd" install -g @joyccn/zenrouter >/dev/null 2>&1; then
       # Ensure link exists in expected bin dir
       if [ -f "$HOME/.npm-global/bin/zenrouter" ] && [ ! -f "$link_dir/zenrouter" ]; then ln -sf "$HOME/.npm-global/bin/zenrouter" "$link_dir/zenrouter" || true; fi
       log_success "Installed via user-local prefix $HOME/.npm-global"
@@ -496,17 +525,16 @@ install_via_source() {
   cd "$INSTALL_DIR"
 
   # Choose package manager
-  local pm="npm"
-  if [ -x "$ZENROUTER_HOME/node/bin/npm" ]; then pm="$ZENROUTER_HOME/node/bin/npm"
-  elif command -v npm >/dev/null 2>&1; then pm="npm"
-  elif command -v bun >/dev/null 2>&1; then pm="bun"
+  local pm="$NPM_CMD"
+  if [ "$RUNTIME" = "node" ]; then export PATH="${NODE_CMD%/*}:$PATH"
+  elif [ "$RUNTIME" = "bun" ]; then pm="$BUN_CMD"
   else log_error "No npm/bun found for build"; return 1; fi
 
   log_info "Installing dependencies ($pm install)..."
-  if [ "$pm" = "bun" ]; then
-    if ! bun install --production >/dev/null 2>&1 && ! bun install >/dev/null 2>&1; then log_warn "bun install failed, trying npm..."; pm="npm"; fi
+  if [ "$RUNTIME" = "bun" ]; then
+    if ! "$pm" install --production >/dev/null 2>&1 && ! "$pm" install >/dev/null 2>&1; then log_error "bun install failed; no supported Node/npm fallback selected"; return 1; fi
   fi
-  if [ "$pm" = "npm" ]; then
+  if [ "$RUNTIME" = "node" ]; then
     # Use npm ci if lock exists, otherwise install
     if [ -f "package-lock.json" ]; then
       if ! "$pm" ci --silent >/dev/null 2>&1; then
@@ -519,8 +547,10 @@ install_via_source() {
   fi
 
   if [ "$SKIP_BUILD" = false ]; then
-    log_info "Building ZenRouter (npm run build)..."
-    if ! "$pm" run build --silent >/dev/null 2>&1; then
+    log_info "Building ZenRouter ($pm run build)..."
+    local build_args=(run build --silent)
+    if [ "$RUNTIME" = "bun" ]; then build_args=(--bun "${build_args[@]}"); fi
+    if ! "$pm" "${build_args[@]}" >/dev/null 2>&1; then
       log_warn "Build failed, but CLI may still work via dev mode"
       # Don't fail hard — dev mode can run without build
     else
@@ -533,6 +563,8 @@ install_via_source() {
   # Link binary
   local cli_src="$INSTALL_DIR/cli/cli.js"
   local cli_link="$link_dir/zenrouter"
+  # Pin source verification independently of the selected runtime's PATH.
+  SOURCE_CLI_CMD="$cli_link"
   if [ -f "$cli_src" ]; then
     ln -sf "$cli_src" "$cli_link"
     chmod +x "$cli_src" 2>/dev/null || true
@@ -559,30 +591,43 @@ ensure_path() {
   export PATH="$link_dir:$PATH"
 }
 
+zenrouter_version() {
+  local cli_cmd="$SOURCE_CLI_CMD"
+  if [ -z "$cli_cmd" ]; then cli_cmd=$(command -v zenrouter) || return 1; fi
+  if [ "$RUNTIME" = "bun" ]; then
+    "$BUN_CMD" "$cli_cmd" --version 2>/dev/null || "$BUN_CMD" "$cli_cmd" -v 2>/dev/null
+  else
+    "$cli_cmd" --version 2>/dev/null || "$cli_cmd" -v 2>/dev/null
+  fi
+}
+
 verify_install() {
   log_step "Verifying installation"
   local link_dir; link_dir="$(get_link_dir)"
   # Refresh PATH
   export PATH="$link_dir:$PATH"
-  export PATH="$ZENROUTER_HOME/node/bin:$PATH"
   export PATH="$HOME/.npm-global/bin:$PATH"
   export PATH="$HOME/.bun/bin:$PATH"
+  if [ "$RUNTIME" = "node" ]; then export PATH="${NODE_CMD%/*}:$PATH"; fi
 
-  if command -v zenrouter >/dev/null 2>&1; then
-    local ver; ver=$(zenrouter --version 2>/dev/null || zenrouter -v 2>/dev/null || echo "unknown")
-    log_success "ZenRouter found: $ver ($(command -v zenrouter))"
+  local cli_cmd="$SOURCE_CLI_CMD"
+  if [ -z "$cli_cmd" ]; then cli_cmd=$(command -v zenrouter || true); fi
+  if [ -n "$cli_cmd" ]; then
+    local ver
+    if ! ver=$(zenrouter_version); then log_error "zenrouter could not run with the selected $RUNTIME runtime"; return 1; fi
+    log_success "ZenRouter found: $ver ($cli_cmd)"
     return 0
   fi
   # Check link exists but not in PATH
   if [ -x "$link_dir/zenrouter" ]; then
     log_warn "zenrouter binary exists at $link_dir/zenrouter but not in PATH"
     ensure_path
-    if command -v zenrouter >/dev/null 2>&1; then log_success "Now found after PATH fix"; return 0; fi
+    if command -v zenrouter >/dev/null 2>&1 && zenrouter_version >/dev/null; then log_success "Now found after PATH fix"; return 0; fi
   fi
   if [ -x "$INSTALL_DIR/cli/cli.js" ]; then
     log_warn "CLI found at $INSTALL_DIR/cli/cli.js but not linked"
     ln -sf "$INSTALL_DIR/cli/cli.js" "$link_dir/zenrouter" 2>/dev/null || true
-    if command -v zenrouter >/dev/null 2>&1; then log_success "Linked and found"; return 0; fi
+    if command -v zenrouter >/dev/null 2>&1 && zenrouter_version >/dev/null; then log_success "Linked and found"; return 0; fi
   fi
   log_error "zenrouter command not found after install"
   log_info "Try: export PATH=\"\$HOME/.local/bin:\$PATH\" && zenrouter --help"
@@ -598,7 +643,10 @@ main() {
   ensure_curl
   check_network
   check_git || true
-  check_node || log_warn "Node check completed with warnings — will attempt install anyway"
+  if ! check_node; then
+    log_error "A working Node >=${MIN_NODE_MAJOR}.${MIN_NODE_MINOR}.${MIN_NODE_PATCH} with npm, or Bun, is required. No package installation attempted."
+    return 1
+  fi
   check_build_tools || true
 
   echo ""
@@ -617,14 +665,15 @@ main() {
     echo ""
     echo -e "${GREEN}${BOLD}✓ ZenRouter successfully installed!${RESET}"
     # Show version if possible
-    local ver; ver=$(zenrouter --version 2>/dev/null || echo "")
+    local ver; ver=$(zenrouter_version || echo "")
     if [ -n "$ver" ]; then echo -e "  ${GRAY}Version: $ver${RESET}"; fi
   else
     echo ""
-    echo -e "${YELLOW}${BOLD}⚠ ZenRouter installation completed with warnings${RESET}"
+    log_error "ZenRouter installation failed"
     echo -e "  ${GRAY}Check output above. Try manual steps:${RESET}"
-    echo -e "  ${GRAY}  npm install -g zenrouter  # or${RESET}"
+    echo -e "  ${GRAY}  npm install -g @joyccn/zenrouter  # or${RESET}"
     echo -e "  ${GRAY}  git clone $REPO_URL $INSTALL_DIR && cd $INSTALL_DIR && npm install && npm run build${RESET}"
+    return 1
   fi
 
   # Next steps

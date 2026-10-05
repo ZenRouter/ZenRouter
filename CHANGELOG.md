@@ -5,6 +5,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+### Changed
+- Upgrade the app, CLI, independent test suite, and documentation app dependency manifests and lockfiles to researched npm stable releases. Align React/React DOM/React Is to `19.3.0`; migrate to ESLint `10.12.0`, Vitest `5.0.3`, Vite `8.3.2`, and Undici `8.11.2` with compatible tooling and runtime changes.
+- Require Node.js `>=22.19.0` across all four packages and target Node 22 in the CLI MITM bundle. Update the SQL.js runtime-install pin to `1.14.2`; keep native SQLite optional and preserve the existing driver fallback order.
+- Use the installed test-package Vitest runner with repository-anchored discovery for both root and test-package commands. Remove unused `http-proxy-middleware`/`socks-proxy-agent` dependencies and stale overrides whose consumers are no longer present.
+
+### Fixed
+- Adapt Undici 8 dispatchers to Node 22 native fetch at the proxy, pinned web-fetch, and remote-image seams. Preserve CONNECT proxy tunneling, DNS pinning, cancellation, and strict-proxy no-direct-fallback behavior. Keep proxy diagnostics on CONNECT for plain-HTTP test targets as well, preventing false failures with CONNECT-only relays.
+- Align the official installer with Node `>=22.19.0` before package/build operations. Retain the validated Node/npm or Bun selection through provisioning, sudo, user-prefix/source fallback, and CLI verification; use the published `@joyccn/zenrouter` package and fail clearly when no supported runtime is available. Verify the newly linked source CLI explicitly so an older global CLI cannot shadow it or turn a fresh CLI failure into installation success.
+- Load the installed Monaco `0.57.0` ESM release with explicitly bundled same-origin JSON/editor workers instead of the wrapper's stale CDN default. Preserve the existing CSP and verify real editor input and worker message round trips.
+- Retain the docs markdown wrapper when migrating to react-markdown 10, and fix the language-switcher runtime crash so the exported docs render and the language modal opens/closes.
+- Resolve all nine existing React lint warnings in Codex/Claude CLI settings and OAuthModal without disabling lint rules. Preserve unsaved form drafts and placeholder-key fallback; use a hydration-safe browser-location snapshot for OAuth.
+- Declare narrow ESM package boundaries for `open-sse/`, `src/lib/oauth/utils/`, and `src/sse/` to eliminate ambiguous module-type warnings. Leave root, CLI, custom-server, MITM, updater, and MCP CommonJS scopes unchanged.
+
+### Security
+- Remove the MITM test fixture's process-wide `NODE_TLS_REJECT_UNAUTHORIZED=0` setting. Limit self-signed certificate opt-outs to explicit fixture requests, with a real HTTPS control confirming default rejection remains enabled.
+- Document unresolved upstream `node-forge` and `braces` audit advisories; the dependency refresh does not claim a vulnerability-free graph or apply forced downgrades.
+
+### Verification
+- On Node `22.23.2`, the full isolated Vitest suite passes across 444 files: 3,569 passed, 100 skipped, 1 todo, zero failed tests or suites. Full ESLint passes with zero errors/warnings and `--max-warnings=0`; deliberate rule-violation controls remain active. Installer runtime tests evaluate real Bash function bodies in mock-only harnesses without running the installer or host package operations.
+- App/CLI production builds, docs static export, native SQLite, h2c, Undici SSE/abort/strict-proxy transport, authenticated missing-model API checks, CLI packaging, and real browser form/hydration/editor checks pass without billable provider inference.
+- Node 22's genuine `node:sqlite` experimental-status warning remains visible when the suite exercises the fallback driver; no warning suppression or coverage removal is used to hide it.
+
 ## [0.9.6] - 2026-10-02
 
 ### Fixed

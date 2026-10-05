@@ -41,7 +41,7 @@ async function buildEntry(entry) {
       bundle: true,
       minify: BUILD_CONFIG.minify,
       platform: "node",
-      target: "node18",
+      target: "node22",
       external: EXTERNALS,
       plugins: [buildPlugin],
       outfile: output,

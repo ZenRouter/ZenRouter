@@ -2,7 +2,7 @@
 // Returns normalized shape across all providers
 
 import { lookup } from "node:dns/promises";
-import { Agent } from "undici";
+import { Agent, Dispatcher1Wrapper } from "undici";
 
 const DEFAULT_TIMEOUT_MS = 15000;
 const DEFAULT_FORMAT = "markdown";
@@ -37,11 +37,12 @@ async function resolveAndValidatePublicIps(hostname) {
 
 // Create undici Agent that pins to validated public IPs (TOCTOU fix)
 function createPinnedAgent(pinnedIps) {
-  return new Agent({
+  // Adapt Undici 8's dispatcher handlers for Node's built-in fetch.
+  return new Dispatcher1Wrapper(new Agent({
     connect: {
       lookup: (_h, _o, cb) => cb(null, pinnedIps.map((r) => ({ address: r.address, family: r.family })))
     }
-  });
+  }));
 }
 
 /**
