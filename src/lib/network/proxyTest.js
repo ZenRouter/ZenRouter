@@ -42,7 +42,7 @@ export async function testProxyUrl({ proxyUrl, testUrl, timeoutMs } = {}) {
 
   try {
     try {
-      dispatcher = new ProxyAgent({ uri: normalizedProxyUrl });
+      dispatcher = new ProxyAgent({ uri: normalizedProxyUrl, proxyTunnel: true });
     } catch (err) {
       return {
         ok: false,
