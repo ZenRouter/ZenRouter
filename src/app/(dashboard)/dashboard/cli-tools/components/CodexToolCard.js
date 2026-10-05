@@ -11,12 +11,17 @@ import { getCurrentCodexProviderSettings } from "./codexConfig";
 
 export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, apiKeys, activeProviders, cloudEnabled, initialStatus, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl }) {
   const [codexStatus, setCodexStatus] = useState(initialStatus || null);
-  const [checkingCodex, setCheckingCodex] = useState(false);
+  const [previousInitialStatus, setPreviousInitialStatus] = useState(initialStatus);
+  const [checkingCodexRequest, setCheckingCodex] = useState(false);
+  const checkingCodex = checkingCodexRequest || (isExpanded && !codexStatus);
   const [applying, setApplying] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [message, setMessage] = useState(null);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
-  const [selectedApiKey, setSelectedApiKey] = useState("");
+  const [apiKeyDraft, setSelectedApiKey] = useState("");
+  const selectedApiKey = apiKeyDraft && apiKeyDraft !== "sk_zenrouter" && apiKeyDraft !== "sk_9router"
+    ? apiKeyDraft
+    : (apiKeys?.[0]?.key || apiKeyDraft);
   const [selectedModel, setSelectedModel] = useState("");
   const [subagentModel, setSubagentModel] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -25,32 +30,57 @@ export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, api
   const [showManualConfigModal, setShowManualConfigModal] = useState(false);
   const [customBaseUrl, setCustomBaseUrl] = useState("");
 
-  useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey) {
-      setSelectedApiKey(apiKeys[0].key);
-    }
-  }, [apiKeys, selectedApiKey]);
+  const [previousConfig, setPreviousConfig] = useState(null);
 
-  useEffect(() => {
+  // Adjust only when the supplied status/config actually changes. Parent
+  // rerenders and key-list refreshes must not clobber unsaved form edits.
+  if (initialStatus !== previousInitialStatus) {
+    setPreviousInitialStatus(initialStatus);
     if (initialStatus) setCodexStatus(initialStatus);
-  }, [initialStatus]);
+  }
+  const config = codexStatus?.config;
+  if (config !== previousConfig) {
+    setPreviousConfig(config);
+    if (config) {
+      const saved = getCurrentCodexProviderSettings(config);
+      setCustomBaseUrl(saved.baseUrl);
+      setSelectedApiKey(saved.apiKey);
+      const modelMatch = config.match(/^model\s*=\s*"([^"]+)"/m);
+      if (modelMatch) setSelectedModel(modelMatch[1]);
+      const subagentMatch = config.match(/^default_subagent_model\s*=\s*"([^"]+)"/m);
+      if (subagentMatch) setSubagentModel(subagentMatch[1]);
+    }
+  }
 
   useEffect(() => {
-    if (isExpanded) {
-      if (!codexStatus) checkCodexStatus();
-      fetchModelAliases();
-    }
-  }, [isExpanded]);
+    if (!isExpanded || codexStatus) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/cli-tools/codex-settings", { cache: "no-store" });
+        const data = await res.json();
+        if (!cancelled) setCodexStatus(data);
+      } catch (error) {
+        if (!cancelled) setCodexStatus({ installed: false, error: error.message });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded, codexStatus]);
 
-  const fetchModelAliases = async () => {
-    try {
-      const res = await fetch("/api/models/alias");
-      const data = await res.json();
-      if (res.ok) setModelAliases(data.aliases || {});
-    } catch (error) {
-      console.log("Error fetching model aliases:", error);
-    }
-  };
+  useEffect(() => {
+    if (!isExpanded) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/models/alias");
+        const data = await res.json();
+        if (res.ok && !cancelled) setModelAliases(data.aliases || {});
+      } catch (error) {
+        console.log("Error fetching model aliases:", error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isExpanded]);
 
   const checkCodexStatus = async () => {
     setCheckingCodex(true);
@@ -64,28 +94,6 @@ export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, api
       setCheckingCodex(false);
     }
   };
-
-  // Sync only when config content changes so local form edits are retained.
-  useEffect(() => {
-    const config = codexStatus?.config;
-    if (config) {
-      const { baseUrl, apiKey } = getCurrentCodexProviderSettings(config);
-      setCustomBaseUrl(baseUrl);
-      if (apiKey && apiKey !== "sk_zenrouter" && apiKey !== "sk_9router") {
-        setSelectedApiKey(apiKey);
-      } else if (apiKeys?.length > 0) {
-        setSelectedApiKey(apiKeys[0].key);
-      } else {
-        setSelectedApiKey(apiKey);
-      }
-      const modelMatch = config.match(/^model\s*=\s*"([^"]+)"/m);
-      if (modelMatch) setSelectedModel(modelMatch[1]);
-
-      // Parse subagent settings
-      const subagentModelMatch = config.match(/^default_subagent_model\s*=\s*"([^"]+)"/m);
-      if (subagentModelMatch) setSubagentModel(subagentModelMatch[1]);
-    }
-  }, [codexStatus?.config]);
 
   const currentBaseUrl = getCurrentCodexProviderSettings(codexStatus?.config).baseUrl;
 

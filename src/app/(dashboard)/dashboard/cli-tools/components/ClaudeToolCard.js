@@ -58,8 +58,15 @@ export default function ClaudeToolCard({
   const [ccFilterNaming, setCcFilterNaming] = useState(false);
   const [exaMcpEnabled, setExaMcpEnabled] = useState(false);
   const [autoCompactWindow, setAutoCompactWindow] = useState("");
-  const [oneMContext, setOneMContext] = useState(false);
+  const [contextDraft, setContextDraft] = useState(null);
   const hasInitializedModels = useRef(false);
+  const contextEnv = claudeStatus?.settings?.env;
+  // Derive the saved setting until the user edits it. A new settings snapshot
+  // invalidates only this draft, without an effect-driven extra render.
+  const oneMContext = contextDraft?.env === contextEnv && contextDraft?.models === tool.defaultModels
+    ? contextDraft.value
+    : tool.defaultModels.some((model) => contextEnv?.[model.envKey]?.endsWith("[1m]"));
+  const setOneMContext = (value) => setContextDraft({ env: contextEnv, models: tool.defaultModels, value });
 
   // Claude Code only string-matches the marker against the model name, so it
   // applies to any id — the user decides which models are worth declaring as 1M.
@@ -149,12 +156,6 @@ export default function ClaudeToolCard({
     })();
     return () => { cancelled = true; };
   }, [claudeStatus?.settings?.env?.CLAUDE_CODE_AUTO_COMPACT_WINDOW]);
-
-  useEffect(() => {
-    const env = claudeStatus?.settings?.env;
-    if (!env) return;
-    setOneMContext(tool.defaultModels.some((model) => env[model.envKey]?.endsWith("[1m]")));
-  }, [claudeStatus?.settings?.env, tool.defaultModels]);
 
   useEffect(() => {
     if (!isExpanded) return;

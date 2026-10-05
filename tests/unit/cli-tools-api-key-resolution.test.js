@@ -8,7 +8,9 @@ const readSource = (relativePath) =>
 describe("CLI Tools API key resolution (#4399)", () => {
   it("CodexToolCard prefers real dashboard key over placeholder sk_zenrouter", async () => {
     const cardSource = await readSource("../../src/app/(dashboard)/dashboard/cli-tools/components/CodexToolCard.js");
-    expect(cardSource).toContain('apiKey !== "sk_zenrouter"');
+    // The stored draft and its effective selection are now separate; the
+    // render/event regression suite also exercises this placeholder fallback.
+    expect(cardSource).toContain('apiKeyDraft !== "sk_zenrouter"');
     expect(cardSource).toContain("apiKeys?.length > 0 ? apiKeys[0].key");
   });
 
