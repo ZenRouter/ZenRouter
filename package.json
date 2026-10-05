@@ -15,7 +15,7 @@
     "start:bun": "bun ./.next/standalone/custom-server.js",
     "cli:pack": "npm --prefix cli run pack:cli",
     "cli:publish": "npm --prefix cli run publish:cli",
-    "test": "npx vitest run --config tests/vitest.config.js",
+    "test": "node tests/node_modules/vitest/vitest.mjs run --config tests/vitest.config.js",
     "lint": "eslint .",
     "lint:policy": "node tests/node_modules/vitest/vitest.mjs run tests/unit/eslint-policy.test.js --config tests/vitest.config.js"
   },
@@ -47,7 +47,6 @@
     "react-is": "19.3.0",
     "recharts": "^3.10.1",
     "selfsigned": "^5.5.0",
-    "socks-proxy-agent": "^10.1.0",
     "sql.js": "^1.14.2",
     "undici": "^8.11.2",
     "uuid": "^14.0.2",
@@ -64,7 +63,7 @@
     "eslint-config-next": "^16.3.8",
     "eslint-plugin-react-hooks": "^7.1.1",
     "espree": "^11.2.0",
-    "postcss": "^8.5.28",
+    "postcss": "^8.5.29",
     "tailwindcss": "^4.3.3"
   },
   "overrides": {
@@ -73,7 +72,6 @@
     "dompurify": "^3.4.16",
     "qs": "^6.16.0",
     "sharp": "^0.35.5",
-    "ip-address": "^10.7.3",
     "eslint-plugin-react": {
       "eslint": "$eslint"
     },

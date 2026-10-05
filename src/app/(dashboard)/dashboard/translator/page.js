@@ -5,7 +5,26 @@ import { Card, Button } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import dynamic from "next/dynamic";
 
-const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
+const Editor = dynamic(async () => {
+  // Explicit module workers keep Webpack from emitting Monaco's worker entry
+  // as an unbundled asset. Only JSON/plaintext editors are used on this page.
+  self.MonacoEnvironment = {
+    getWorker(_moduleId, label) {
+      if (label === "json") {
+        return new Worker(new URL("monaco-editor/language/json/json.worker.js", import.meta.url), { type: "module" });
+      }
+      return new Worker(new URL("monaco-editor/editor/editor.worker.js", import.meta.url), { type: "module" });
+    },
+  };
+  const [{ default: MonacoEditor, loader }, monaco] = await Promise.all([
+    import("@monaco-editor/react"),
+    import("monaco-editor/index.js"),
+  ]);
+  // Use the installed ESM release and its bundled module workers. The wrapper's
+  // default loader otherwise downloads an older AMD release from a CDN.
+  loader.config({ monaco });
+  return MonacoEditor;
+}, { ssr: false });
 
 // 7 steps matching requestLogger files exactly
 const STEPS = [

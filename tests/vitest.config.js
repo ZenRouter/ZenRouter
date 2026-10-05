@@ -29,10 +29,13 @@ if (existsSync(envPath)) {
 }
 
 export default defineConfig({
+  // Resolve the suite from the repository even when npm --prefix tests runs
+  // the independent test package from tests/.
+  root: resolve(__dirname, ".."),
   test: {
     environment: "node",
     globals: true,
-    include: ["**/*.test.js"],
+    include: ["tests/**/*.test.js"],
     // Don't scan into git worktrees nested under .claude/ — they carry their
     // own copies of the test files but lack an installed node_modules (open-sse,
     // etc.), which makes provider imports fail during collection.
