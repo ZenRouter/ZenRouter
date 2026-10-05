@@ -1,8 +1,34 @@
 import { defineConfig, globalIgnores } from "eslint/config";
+import { fixupConfigRules, fixupPluginRules } from "@eslint/compat";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import reactHooks from "eslint-plugin-react-hooks";
+import * as espree from "espree";
 const eslintConfig = defineConfig([
-  ...nextVitals,
+  // Preserve Next/React/accessibility policy while adapting legacy rule APIs
+  // removed in ESLint 10. Peer overrides in package.json cover only these
+  // shimmed plugins; installation must not use force or legacy-peer-deps.
+  ...fixupConfigRules(nextVitals),
+  {
+    files: ["**/*.{js,jsx,mjs,cjs}"],
+    languageOptions: {
+      // This repo is plain JS/JSX. Next's bundled Babel scope manager still
+      // targets ESLint 9; Espree supplies the compatible ESLint 10 scope tree.
+      parser: espree,
+      parserOptions: {
+        ecmaVersion: "latest",
+        ecmaFeatures: { jsx: true, globalReturn: false },
+      },
+    },
+  },
+  {
+    // The CommonJS launcher intentionally returns early at top level. Keep
+    // that exception here, not across the ESM app and engine.
+    files: ["cli/cli.js"],
+    languageOptions: {
+      sourceType: "commonjs",
+      parserOptions: { sourceType: "script", ecmaFeatures: { globalReturn: true } },
+    },
+  },
   // Override default ignores of eslint-config-next.
   // Patterns are `**/`-prefixed so nested Next.js workspaces (e.g. gitbook/)
   // have their build output ignored too — a bare `.next/**` only matches the
@@ -26,7 +52,7 @@ const eslintConfig = defineConfig([
   },
   {
     plugins: {
-      "react-hooks": reactHooks,
+      "react-hooks": fixupPluginRules(reactHooks),
     },
     rules: {
       "react-hooks/set-state-in-effect": "warn",
