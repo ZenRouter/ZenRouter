@@ -25,6 +25,11 @@ export default {
     quirks: { preserveCacheControl: true },
   },
   models: [
+    { id: "auto", name: "Auto" },
+    { id: "deepseek-v4.1-flash", name: "DeepSeek v4.1 flash" },
+    { id: "deepseek-v4-pro-0813", name: "DeepSeek v4 pro 0813" },
+    { id: "deepseek-v4-flash-0731", name: "DeepSeek v4 flash 0731" },
+    { id: "glm-5.3", name: "GLM 5.3" },
     { id: "qwen3.8-max", name: "Qwen3.8 Max" },
     { id: "qwen3.8-flash", name: "Qwen3.8 Flash" },
     { id: "qwen3.7-max", name: "Qwen3.7 Max" },

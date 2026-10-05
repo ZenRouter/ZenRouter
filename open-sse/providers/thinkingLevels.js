@@ -1,6 +1,7 @@
 // Resolve valid thinking levels per model — drives UI level picker (suffix "model(level)").
 // Reuses capabilities.js (thinkingFormat/canDisable) so this file only maps format→levels (DRY).
 import { getCapabilitiesForModel } from "./capabilities.js";
+import { canonicalizeProviderId } from "./identity.js";
 import { matchPattern } from "./pricing.js";
 import { resolveKiroEffortPath } from "../config/kiroConstants.js";
 
@@ -68,9 +69,15 @@ const PATTERN_THINKING = [
 
 // Returns valid thinking levels for a model, or null when the model has no reasoning.
 export function getThinkingLevels(provider, model) {
+  provider = canonicalizeProviderId(provider);
   if (provider === "kiro" && resolveKiroEffortPath(model) === null) return null;
   const caps = getCapabilitiesForModel(provider, model);
   if (!caps.reasoning) return null;
+  if (Array.isArray(caps.thinkingEfforts) && caps.thinkingEfforts.length) {
+    return caps.thinkingCanDisable === false
+      ? caps.thinkingEfforts.filter(level => level !== "none")
+      : [...caps.thinkingEfforts];
+  }
   const hit = PATTERN_THINKING.find((entry) =>
     (!entry.provider || entry.provider === provider) && matchPattern(entry.pattern, model)
   );

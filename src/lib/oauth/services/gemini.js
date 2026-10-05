@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { GEMINI_AUTH_USER_AGENT, GEMINI_CLI_API_CLIENT } from "open-sse/config/clientVersions.js";
 import open from "open";
 import { GEMINI_CONFIG, getOAuthClientMetadata } from "../constants/oauth.js";
 import { getServerCredentials } from "../config/index.js";
@@ -69,8 +70,8 @@ export class GeminiCLIService {
         headers: {
           "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json",
-          "User-Agent": "google-api-nodejs-client/9.15.1",
-          "X-Goog-Api-Client": "google-cloud-sdk vscode_cloudshelleditor/0.1",
+          "User-Agent": GEMINI_AUTH_USER_AGENT,
+          "X-Goog-Api-Client": GEMINI_CLI_API_CLIENT,
           "Client-Metadata": JSON.stringify(getOAuthClientMetadata())
         },
         body: JSON.stringify({

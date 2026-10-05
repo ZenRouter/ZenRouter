@@ -126,7 +126,9 @@ describe("public Qoder PAT model catalog", () => {
     expect(response.status).toBe(200);
     const catalog = await response.json();
     expect(catalog.object).toBe("list");
-    expect(catalog.data).toEqual([expect.objectContaining({
+    // The public list also contains valid no-auth providers; scope the exact
+    // singleton assertion to Qoder without weakening hidden-model exclusion.
+    expect(catalog.data.filter((model) => model.owned_by === "qd")).toEqual([expect.objectContaining({
       id: "qd/pat-account-exclusive", object: "model", owned_by: "qd",
     })]);
   });

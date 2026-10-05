@@ -23,10 +23,10 @@ export default {
     validateUrl: "https://api.perplexity.ai/models",
   },
   models: [
-    { id: "sonar-pro", name: "Sonar Pro" },
-    { id: "sonar", name: "Sonar" },
-    { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro" },
-    { id: "sonar-deep-research", name: "Sonar Deep Research" },
+    { id: "sonar-pro", name: "Sonar Pro", deprecated: true, deprecationNotice: "Standalone Sonar ended September 27, 2026; synchronous and streaming calls are gradually reformulated as Agent API requests." },
+    { id: "sonar", name: "Sonar", deprecated: true, deprecationNotice: "Standalone Sonar ended September 27, 2026; synchronous and streaming calls are gradually reformulated as Agent API requests." },
+    { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro", deprecated: true, deprecationNotice: "Standalone Sonar ended September 27, 2026; synchronous and streaming calls are gradually reformulated as Agent API requests." },
+    { id: "sonar-deep-research", name: "Sonar Deep Research", deprecated: true, deprecationNotice: "Standalone Sonar ended September 27, 2026; synchronous and streaming calls are gradually reformulated as Agent API requests." },
   ],
   serviceKinds: ["llm","webSearch"],
   searchViaChat: {

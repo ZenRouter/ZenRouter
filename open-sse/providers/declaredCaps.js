@@ -7,32 +7,33 @@
 // whole scope in memory and only re-reads when the cache is invalidated or TTLs
 // out.
 //
-// Resolution is by model id, matching how the rest of the pipeline addresses
-// models: the route builds `{providerAlias}/{id}` and the request path arrives
-// with the bare model id, so lookups accept either form.
+// Match the request's provider and full native model ID. The same model name
+// on different gateways (or chat/STT rows) must not share operator overrides.
 
 import { getCustomModels } from "../../src/lib/db/repos/aliasRepo.js";
+import { canonicalizeProviderId } from "./identity.js";
 
 /** How long a resolved snapshot stays fresh, in ms. */
 const TTL_MS = 30_000;
 
-/** @type {Map<string, object>} modelId -> declared caps */
+/** @type {Map<string, object>} canonical provider/native model ID -> chat caps */
 let cache = new Map();
 let cacheAt = 0;
 let inflight = null;
 
-/** Build the lookup key for one record. */
-function keyFor(record) {
-  return String(record?.id ?? "").trim();
+function keyFor(provider, model) {
+  return JSON.stringify([canonicalizeProviderId(provider), model]);
 }
 
 async function load() {
   const models = await getCustomModels();
   const next = new Map();
   for (const record of models) {
-    const key = keyFor(record);
-    if (!key) continue;
-    if (record?.caps && typeof record.caps === "object") next.set(key, record.caps);
+    if (!record?.providerAlias || typeof record.id !== "string" || !record.id) continue;
+    const kind = record.kind || record.type || "llm";
+    if (kind !== "llm" && kind !== "imageToText") continue;
+    const key = keyFor(record.providerAlias, record.id);
+    if (record.caps && typeof record.caps === "object") next.set(key, record.caps);
   }
   cache = next;
   cacheAt = Date.now();
@@ -48,13 +49,12 @@ export function invalidateDeclaredModelCaps() {
 /**
  * Declared capabilities for one model, or undefined when the operator declared none.
  *
- * @param {string} provider - provider alias (accepted for symmetry; unused)
+ * @param {string} provider - canonical provider ID or accepted alias
  * @param {string} model - bare model id, or "alias/id"
  * @returns {Promise<object|undefined>} the declared caps block, if any
  */
 export async function getDeclaredModelCaps(provider, model) {
-  const id = typeof model === "string" ? (model.includes("/") ? model.split("/").pop() : model) : "";
-  if (!id) return undefined;
+  if (!provider || typeof model !== "string" || !model) return undefined;
 
   const fresh = Date.now() - cacheAt < TTL_MS;
   if (!fresh) {
@@ -69,5 +69,13 @@ export async function getDeclaredModelCaps(provider, model) {
     }
   }
 
-  return cache.get(id);
+  const exact = cache.get(keyFor(provider, model));
+  if (exact) return exact;
+  // Decorated routing inputs are a fallback only: "nvidia/nvidia/model"
+  // may wrap the native "nvidia/model", whose namespace must stay intact.
+  const slash = model.indexOf("/");
+  if (slash > 0 && canonicalizeProviderId(model.slice(0, slash)) === canonicalizeProviderId(provider)) {
+    return cache.get(keyFor(provider, model.slice(slash + 1)));
+  }
+  return undefined;
 }

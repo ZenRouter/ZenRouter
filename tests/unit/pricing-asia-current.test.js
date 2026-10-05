@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { MODEL_PRICING, getPricingForModel } from "../../open-sse/providers/pricing.js";
 import { getCapabilitiesForModel } from "../../open-sse/providers/capabilities.js";
+import { getReviewedModelMetadata } from "../../open-sse/providers/metadata/reviewed.js";
 import alicodeRegistry from "../../open-sse/providers/registry/alicode.js";
 import alitpRegistry from "../../open-sse/providers/registry/alitp-intl.js";
 import mimoRegistry from "../../open-sse/providers/registry/xiaomi-mimo.js";
@@ -9,11 +10,24 @@ import baiduRegistry from "../../open-sse/providers/registry/baidu.js";
 import tencentRegistry from "../../open-sse/providers/registry/tencent.js";
 
 describe("Qwen registries", () => {
-  it("replaced the discontinued kimi-k2.5 pin with k2.6 and added coder-flash", () => {
-    const ids = alicodeRegistry.models.map((m) => m.id);
-    expect(ids).not.toContain("kimi-k2.5");
-    expect(ids).toContain("kimi-k2.6");
-    expect(ids).toContain("qwen3-coder-flash");
+  it("retains Coding Plan's exact supported list and labels unsupported compatibility IDs", () => {
+    const supported = [
+      "qwen3.7-plus", "qwen3.6-plus", "kimi-k2.5", "glm-5", "MiniMax-M2.5",
+      "qwen3.5-plus", "qwen3-max-2026-01-23", "qwen3-coder-next", "qwen3-coder-plus", "glm-4.7",
+    ];
+    const compatibilityOnly = ["kimi-k2.6", "qwen3-coder-flash"];
+    expect(alicodeRegistry.models.map((m) => m.id).sort()).toEqual([...supported, ...compatibilityOnly].sort());
+    for (const id of [...supported, ...compatibilityOnly]) {
+      const metadata = getReviewedModelMetadata("alicode", id);
+      expect(metadata.sources).toContain("https://help.aliyun.com/zh/model-studio/coding-plan");
+      expect(metadata.billing).toMatchObject({ kind: "subscription", currency: "CNY", unit: "month" });
+      if (compatibilityOnly.includes(id)) {
+        expect(metadata.billing.note).toContain("Compatibility ID retained; absent from current exhaustive supported-model list.");
+      } else {
+        expect(metadata.billing.note).not.toContain("Compatibility ID retained");
+      }
+    }
+    expect(getReviewedModelMetadata("alicode", "kimi-k2.5").capabilities.vision).toBe(true);
   });
   it("token-plan lists the real 3.8/3.7/3.6/3.5 IDs, no phantom preview", () => {
     const ids = alitpRegistry.models.map((m) => m.id);

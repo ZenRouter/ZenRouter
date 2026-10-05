@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getDefaultPricing, formatCost } from "open-sse/providers/pricing.js";
+import { getDefaultPricing } from "open-sse/providers/pricing.js";
+import { getReviewedModelMetadata } from "open-sse/providers/metadata/reviewed.js";
 
 export default function PricingModal({ isOpen, onClose, onSave }) {
   const [pricingData, setPricingData] = useState({});
@@ -36,15 +37,17 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
   }, [isOpen]);
 
   const handlePricingChange = (provider, model, field, value) => {
-    const numValue = parseFloat(value);
-    if (isNaN(numValue) || numValue < 0) return;
+    const numValue = value === "" ? undefined : Number(value);
+    if (value !== "" && (!Number.isFinite(numValue) || numValue < 0)) return;
 
     setPricingData(prev => {
-      const newData = { ...prev };
-      if (!newData[provider]) newData[provider] = {};
-      if (!newData[provider][model]) newData[provider][model] = {};
-      newData[provider][model][field] = numValue;
-      return newData;
+      const modelPricing = { ...prev[provider]?.[model] };
+      if (value === "") delete modelPricing[field];
+      else modelPricing[field] = numValue;
+      return {
+        ...prev,
+        [provider]: { ...prev[provider], [model]: modelPricing }
+      };
     });
   };
 
@@ -115,10 +118,12 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
             <div className="space-y-6">
               {/* Instructions */}
               <div className="bg-bg-subtle border border-border rounded-lg p-3 text-sm">
-                <p className="font-medium mb-1">Pricing Rates Format</p>
-                <p className="text-text-muted">
-                  All rates are in <strong>dollars per million tokens</strong> ($/1M tokens).
-                  Example: Input rate of 2.50 means $2.50 per 1,000,000 input tokens.
+                <p className="font-medium mb-1">Token Cost Estimates</p>
+                <p id="pricing-rates-help" className="text-text-muted">
+                  Editable rates are <strong>USD per million tokens</strong> ($/1M tokens)
+                  for local cost estimates, not an upstream invoice.
+                  Subscriptions and media units are not equivalent to token tariffs; see each model’s billing scope.
+                  Not specified means unknown, not free. Blank fields are omitted from saves, not set to zero.
                 </p>
               </div>
 
@@ -143,23 +148,52 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
-                          {models.map(model => (
-                            <tr key={model} className="hover:bg-bg-subtle/50">
-                              <td className="px-3 py-2 font-medium">{model}</td>
-                              {pricingFields.map(field => (
-                                <td key={field} className="px-3 py-2">
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={pricingData[provider][model][field] || 0}
-                                    onChange={(e) => handlePricingChange(provider, model, field, e.target.value)}
-                                    className="w-20 px-2 py-1 text-right bg-bg-base border border-border rounded focus:outline-none focus:border-primary"
-                                  />
+                          {models.map(model => {
+                            const reviewed = getReviewedModelMetadata(provider, model);
+                            const billing = reviewed?.billing;
+                            return (
+                              <tr key={model} className="hover:bg-bg-subtle/50">
+                                <td className="px-3 py-2 font-medium">
+                                  {model}
+                                  <div className="text-xs font-normal text-text-muted mt-1 max-w-sm">
+                                    {billing ? (
+                                      <>
+                                        <p>Billing: {billing.kind?.replaceAll("_", " ") || "unverified"} · {billing.unit?.replaceAll("_", " ") || "unit unknown"}{billing.currency ? ` (${billing.currency})` : ""}</p>
+                                        {(billing.note || reviewed.sources?.length > 0) && (
+                                          <details className="mt-1">
+                                            <summary className="cursor-pointer">Billing scope &amp; sources</summary>
+                                            {billing.note && <p className="mt-1">{billing.note}</p>}
+                                            {reviewed.sources?.map((source, index) => (
+                                              <a key={source} href={source} target="_blank" rel="noopener noreferrer" className="block text-primary underline break-all">
+                                                Source {index + 1}
+                                              </a>
+                                            ))}
+                                          </details>
+                                        )}
+                                      </>
+                                    ) : <p>Local estimate · billing scope unverified</p>}
+                                  </div>
                                 </td>
-                              ))}
-                            </tr>
-                          ))}
+                                {pricingFields.map(field => (
+                                  <td key={field} className="px-3 py-2">
+                                    <label>
+                                      <span className="sr-only">{provider} {model} {field.replaceAll("_", " ")} (USD per million tokens)</span>
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={pricingData[provider][model][field] ?? ""}
+                                        placeholder="Not specified"
+                                        aria-describedby="pricing-rates-help"
+                                        onChange={(e) => handlePricingChange(provider, model, field, e.target.value)}
+                                        className="w-28 px-2 py-1 text-right bg-bg-base border border-border rounded focus:outline-none focus:border-primary"
+                                      />
+                                    </label>
+                                  </td>
+                                ))}
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>

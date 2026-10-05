@@ -25,5 +25,10 @@ export default {
     { id: "morph-minimax27-230b", name: "MiniMax M2.7 (Morph)", contextLength: 200704 },
     { id: "morph-qwen36-27b", name: "Qwen 3.6 27B (Morph)", contextLength: 262144 },
     { id: "morph-dsv4flash", name: "DeepSeek V4 Flash (Morph)", contextLength: 1048576 },
+    // Exact hosted IDs and Chat Completions routes verified in the provider docs.
+    { id: "morph-kimik3", name: "Kimi K3 (Morph)", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "morph-glm53-744b", name: "GLM-5.3 744B (Morph)", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "morph-glm53flash", name: "GLM-5.3 Flash (Morph)", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "morph-dsv41flash", name: "DeepSeek V4.1 Flash (Morph)", targetFormat: "openai", supportedFormats: ["openai"] },
   ],
 };

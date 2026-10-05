@@ -19,6 +19,9 @@ export default {
     quirks: { preserveCacheControl: true },
   },
   models: [
+    { id: "qwen3.7-plus", name: "Qwen3.7 plus" },
+    { id: "qwen3.6-plus", name: "Qwen3.6 plus" },
+    { id: "kimi-k2.5", name: "Kimi k2.5" },
     { id: "qwen3.5-plus", name: "Qwen3.5 Plus" },
     { id: "kimi-k2.6", name: "Kimi K2.6" },
     { id: "glm-5", name: "GLM 5" },

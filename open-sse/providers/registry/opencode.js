@@ -20,10 +20,16 @@ export default {
     noAuth: true,
   },
   models: [
-    // Only this model is served by /zen/v1/responses; the rest stay on
-    // /chat/completions, so the format is declared per-model, not per-provider.
+    // Muse models use /zen/v1/responses; the documented free additions below
+    // use /chat/completions, so format remains a per-model declaration.
     { id: "muse-spark-1.2-contributor-free", name: "Muse Spark 1.2 Contributor Free", targetFormat: "openai-responses" },
     { id: "muse-spark-1.3-contributor-free", name: "Muse Spark 1.3 Contributor Free", targetFormat: "openai-responses" },
+    // Exact hosted IDs and Chat Completions routes verified in the provider docs.
+    { id: "fledge-alpha-free", name: "Fledge Alpha Free", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "ling-3.1-flash-free", name: "Ling 3.1 Flash Free", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "longcat-2.5-preview-free", name: "LongCat 2.5 Preview Free", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "space-bunny-free", name: "Space Bunny Free", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "mimo-v2.6-flash-free", name: "MiMo-V2.6-Flash Free", targetFormat: "openai", supportedFormats: ["openai"] },
   ],
   modelsFetcher: { url: "https://opencode.ai/zen/v1/models", type: "opencode-free" },
   passthroughModels: true,

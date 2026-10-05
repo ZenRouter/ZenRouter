@@ -103,7 +103,13 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   // OpenAI clients should stay on /chat/completions; other clients can fall
   // back to its declared Claude target).
   const targetFormat = useTransport?.format || modelTargetFormat || getTargetFormat(provider, credentials);
-  if (useTransport && credentials) credentials.runtimeTransport = useTransport;
+  // A model-level translation target needs its matching endpoint as well.
+  // Provider-default targets already use the executor's default transport.
+  const targetTransport = useTransport || (modelTargetFormat ? resolveTransport(provider, targetFormat) : null);
+  if (credentials) {
+    if (targetTransport) credentials.runtimeTransport = targetTransport;
+    else delete credentials.runtimeTransport; // Reused credentials must not retain a prior request's endpoint.
+  }
   const stripList = getModelStrip(alias, model);
   const upstreamModel = getModelUpstreamId(alias, model);
 

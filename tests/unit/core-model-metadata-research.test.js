@@ -1,0 +1,79 @@
+import { describe, it, expect } from "vitest";
+import { existsSync } from "node:fs";
+
+const url = new URL("../../open-sse/providers/metadata/coreModels.js", import.meta.url);
+const core = existsSync(url) ? (await import(url.href)).default : {};
+
+describe("provider-scoped primary-evidence core metadata shard", () => {
+  it("separates OpenAI API limits from Codex configuration limits", () => {
+    expect(core.openai?.["gpt-6.1-sol"]?.capabilities).toMatchObject({
+      contextWindow: 1050000, maxInput: 922000, maxOutput: 128000, thinkingCanDisable: false,
+    });
+    expect(core.codex?.["gpt-6.1-sol"]?.capabilities.contextWindow).toBe(872000);
+    expect(core.codex?.["gpt-6.1-sol"]?.limits).toMatchObject({
+      cliDefaultContext: 272000, cliMaxContext: 872000, routeMaxOutput: null,
+      effectiveContextPercent: 95, autoCompactionFraction: 0.9,
+    });
+    expect(core.codex?.["gpt-5.6-sol"]?.capabilities.contextWindow).toBe(272000);
+    expect(core.codex?.["gpt-5.6-sol[1m]"]?.capabilities.contextWindow).toBe(872000);
+  });
+
+  it("keeps Sol generations' long-context cached input distinct", () => {
+    expect(core.openai?.["gpt-6-sol"]?.pricing.tier).toMatchObject({ threshold: 272000, inclusive: false, cached: 0.4 });
+    expect(core.openai?.["gpt-6.1-sol"]?.pricing.tier.cached).toBe(0.2);
+    expect(core.openai?.["gpt-6.1-sol"]?.limits.toolCallingRequiresResponses).toBe(true);
+  });
+
+  it("retains Claude cache TTL, batch output and CLI compaction separately", () => {
+    expect(core.anthropic?.["claude-opus-5-5"]?.pricing).toMatchObject({ input: 4, output: 20, cached: 0.2, cache_creation: 5 });
+    expect(core.anthropic?.["claude-opus-5-5"]?.billing.cacheWrite1h).toBe(8);
+    expect(core.anthropic?.["claude-opus-5-5"]?.limits.batchMaxOutput).toBe(300000);
+    expect(core.claude?.["claude-opus-5-5"]?.limits.cliCompactionApproxTokens).toBe(967000);
+  });
+
+  it("does not conflate Google input budgets with total context or cache storage", () => {
+    const flash = core.gemini?.["gemini-3.5-flash-lite"];
+    expect(flash?.capabilities).toMatchObject({ maxInput: 1048576, maxOutput: 65536 });
+    expect(flash?.capabilities).not.toHaveProperty("contextWindow");
+    expect(flash?.pricing).toMatchObject({ input: 0.3, output: 2.5, reasoning: 2.5, cached: 0.03 });
+    expect(flash?.pricing).not.toHaveProperty("cache_creation");
+    expect(flash?.billing.cacheStorage).toEqual({ currency: "USD", unit: "1M token-hours", price: 1 });
+    expect(core.gemini?.["gemini-3.8-flash"]?.billing.validThrough).toBe("2026-12-31");
+  });
+
+  it("records inclusive xAI tiers and unknown output maxima without fabricating caps", () => {
+    for (const id of ["grok-4.7", "grok-4.6", "grok-4.5", "grok-4.3", "grok-build-0.1"]) {
+      expect(core.xai?.[id]?.pricing.tier).toMatchObject({ threshold: 200000, inclusive: true });
+      expect(core.xai?.[id]?.capabilities).not.toHaveProperty("maxOutput");
+      expect(core.xai?.[id]?.limits.maxOutputStatus).toBeTruthy();
+      expect(core.xai?.[id]?.pricing).not.toHaveProperty("cache_creation");
+    }
+    expect(core["grok-cli"]?.["grok-build"]?.limits.routeContextWindow).toBeNull();
+    expect(core["grok-cli"]?.["grok-build"]?.pricing).toEqual({});
+  });
+
+  it("marks reference pricing and unverified compatibility IDs explicitly", () => {
+    expect(core.codex?.["gpt-6.1-sol"]?.billing.kind).toBe("api-reference");
+    expect(core["gemini-cli"]?.["gemini-3.5-flash-lite"]?.billing.kind).toBe("api-reference");
+    expect(core.claude?.["claude-opus-5-5-20260922"]?.limits.nativeIdVerified).toBe(false);
+    expect(core.gemini?.["gemini-4-argon"]).toBeUndefined();
+    expect(core.xai?.["grok-4.7-fast"]).toBeUndefined();
+    expect(core.antigravity).toBeUndefined();
+  });
+
+  it("is a standalone finite factual shard with primary sources on every record", () => {
+    expect(Object.keys(core).sort()).toEqual(["anthropic", "claude", "codex", "gemini", "gemini-cli", "grok-cli", "openai", "xai"]);
+    for (const records of Object.values(core)) {
+      for (const record of Object.values(records)) {
+        expect(record.sources.length).toBeGreaterThan(0);
+        expect(record.sources.some(s => s.includes("models.dev"))).toBe(false);
+        expect(record.billing).toHaveProperty("kind");
+        const check = value => {
+          if (typeof value === "number") expect(Number.isFinite(value)).toBe(true);
+          else if (value && typeof value === "object") Object.values(value).forEach(check);
+        };
+        check(record);
+      }
+    }
+  });
+});

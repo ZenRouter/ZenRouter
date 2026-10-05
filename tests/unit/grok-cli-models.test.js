@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GROK_CLI_VERSION } from "../../open-sse/config/clientVersions.js";
+import { getReviewedModelMetadata } from "../../open-sse/providers/metadata/reviewed.js";
 
 vi.mock("../../open-sse/services/oauthCredentialManager.js", () => ({
   refreshProviderCredentials: vi.fn(),
@@ -21,7 +22,7 @@ function jsonResponse(body, status = 200) {
 describe("Grok CLI live models", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("normalizes official model metadata", () => {
+  it("preserves explicitly supplied live model limits without treating fixtures as official caps", () => {
     expect(parseGrokCliModels({
       models: [{
         model_id: "grok-build",
@@ -59,13 +60,17 @@ describe("Grok CLI live models", () => {
       providerSpecificData: { email: "user@example.com" },
     }, { fetchFn, proxyOptions, onCredentialsRefreshed });
 
-    expect(result.models).toEqual([
-      expect.objectContaining({
-        id: "grok-build",
-        contextLength: 500000,
-        maxOutputTokens: 64000,
-      }),
-    ]);
+    // An ID-only live response does not establish any numeric route limits.
+    expect(result.models).toEqual([{ id: "grok-build", name: "grok-build" }]);
+    expect(result.models[0]).not.toHaveProperty("contextLength");
+    expect(result.models[0]).not.toHaveProperty("maxOutputTokens");
+    const metadata = getReviewedModelMetadata("grok-cli", "grok-build");
+    expect(metadata.sources).toEqual(["https://docs.x.ai/build/overview"]);
+    expect(metadata.limits).toMatchObject({
+      idKind: "cli-route-alias", authenticatedRouteVerified: false,
+      routeContextWindow: null, routeMaxOutput: null,
+      unverifiedCapabilityFields: ["contextWindow", "maxOutput"],
+    });
     expect(refreshProviderCredentials).toHaveBeenCalledWith(
       "grok-cli",
       expect.any(Object),

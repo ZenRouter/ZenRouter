@@ -13,7 +13,7 @@ export default {
     textIcon: "OC",
     website: "https://opencode.ai/auth",
     notice: {
-      text: "OpenCode Go subscription: $5/mo (then  0/mo). Access to Kimi, GLM, Qwen, MiMo, MiniMax models.",
+      text: "OpenCode Go: $10/month; Go Plus: $40/month. Model token reference rates measure subscription quota, not separate API charges.",
       apiKeyUrl: "https://opencode.ai/auth",
     },
   },
@@ -47,5 +47,18 @@ export default {
     { id: "qwen3.7-max", name: "Qwen 3.7 Max", supportedFormats: ["openai", "claude"] },
     { id: "qwen3.7-plus", name: "Qwen 3.7 Plus", supportedFormats: ["openai", "claude"] },
     { id: "qwen3.6-plus", name: "Qwen 3.6 Plus", supportedFormats: ["openai", "claude"] },
+    // These hosted models require their documented target endpoint, including
+    // when the incoming client needs translation from Chat Completions.
+    { id: "grok-4.7", name: "Grok 4.7", targetFormat: "openai-responses", supportedFormats: ["openai-responses"] },
+    { id: "gpt-6-luna", name: "GPT 6 Luna", targetFormat: "openai-responses", supportedFormats: ["openai-responses"] },
+    { id: "qwen3.8-max", name: "Qwen 3.8 Max", targetFormat: "claude", supportedFormats: ["claude"] },
+    { id: "qwen3.8-flash", name: "Qwen 3.8 Flash", targetFormat: "claude", supportedFormats: ["claude"] },
+    // Exact hosted IDs and Chat Completions routes verified in the provider docs.
+    { id: "mimo-v2.6-pro", name: "MiMo-V2.6-Pro", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "mimo-v2.6-flash", name: "MiMo-V2.6-Flash", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "longcat-2.5-preview-free", name: "LongCat 2.5 Preview Free", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "space-bunny-free", name: "Space Bunny Free", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "kimi-k3", name: "Kimi K3", targetFormat: "openai", supportedFormats: ["openai"] },
+    { id: "deepseek-v4.1-flash", name: "DeepSeek V4.1 Flash", targetFormat: "openai", supportedFormats: ["openai"] },
   ],
 };

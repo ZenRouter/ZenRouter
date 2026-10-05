@@ -20,9 +20,11 @@ import {
 import { buildClineHeaders } from "@/shared/utils/clineAuth";
 import {
   CODEX_USER_AGENT,
-  GEMINI_CLI_VERSION,
+  GEMINI_AUTH_USER_AGENT,
+  GEMINI_CLI_API_CLIENT,
   ANTIGRAVITY_IDE_USER_AGENT,
   KIMCHI_USER_AGENT,
+  KIRO_CLI_USER_AGENT,
   GROK_CLI_USER_AGENT,
   GROK_CLI_VERSION,
   GROK_CLI_CLIENT_IDENTIFIER,
@@ -205,7 +207,7 @@ function parseProviderErrorMessage(bodyText, fallback) {
 async function probeCloudCodeAssistAccess(connection, accessToken, effectiveProxy = null) {
   const userAgent = connection.provider === "antigravity"
     ? ANTIGRAVITY_IDE_USER_AGENT
-    : `google-api-nodejs-client/9.15.1 gemini-cli/${GEMINI_CLI_VERSION}`;
+    : GEMINI_AUTH_USER_AGENT;
 
   const res = await fetchWithConnectionProxy(CLOUD_CODE_ASSIST_TEST_URL, {
     method: "POST",
@@ -213,6 +215,7 @@ async function probeCloudCodeAssistAccess(connection, accessToken, effectiveProx
       "Authorization": `Bearer ${accessToken}`,
       "Content-Type": "application/json",
       "User-Agent": userAgent,
+      ...(connection.provider === "gemini-cli" ? { "X-Goog-Api-Client": GEMINI_CLI_API_CLIENT } : {}),
     },
     body: CLOUD_CODE_ASSIST_TEST_BODY,
   }, effectiveProxy);
@@ -295,7 +298,7 @@ async function refreshOAuthToken(connection, effectiveProxy = null) {
       }
       const response = await fetchWithConnectionProxy(KIRO_CONFIG.socialRefreshUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "User-Agent": "kiro-cli/1.0.0" },
+        headers: { "Content-Type": "application/json", "User-Agent": KIRO_CLI_USER_AGENT },
         body: JSON.stringify({ refreshToken }),
       }, effectiveProxy);
       if (!response.ok) return null;

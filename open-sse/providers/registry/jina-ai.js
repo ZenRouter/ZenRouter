@@ -14,6 +14,10 @@ export default {
   },
   category: "apikey",
   authType: "apikey",
+  models: [
+    { id: "jina-embeddings-v5-text-small", name: "Jina Embeddings v5 Text Small", kind: "embedding" },
+    { id: "jina-embeddings-v5-text-nano", name: "Jina Embeddings v5 Text Nano", kind: "embedding" },
+  ],
   serviceKinds: [
     "embedding"
   ],
@@ -22,6 +26,8 @@ export default {
     authType: "apikey",
     authHeader: "bearer",
     models: [
+      { id: "jina-embeddings-v5-text-small", name: "Jina Embeddings v5 Text Small" },
+      { id: "jina-embeddings-v5-text-nano", name: "Jina Embeddings v5 Text Nano" },
       {
         id: "jina-embeddings-v4",
         name: "Jina Embeddings v4 (Multimodal, non-commercial)",

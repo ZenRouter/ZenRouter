@@ -24,11 +24,11 @@ const LIMIT_TOLERANCE = 0.1;
 // while building rather than on every lookup. Providers absent here keep whatever
 // the local pattern table resolves; names that already match need no entry.
 export const PROVIDER_ALIASES = {
-  "glm": "zai",
-  "glm-cn": "zhipuai",
+  "glm": "zai-coding-plan",
+  "glm-cn": "zhipuai-coding-plan",
   "claude": "anthropic",
   "gemini": "google",
-  "kimi": "moonshotai",
+  "kimi": "kimi-code-plan-global",
   "kimi-cn": "moonshotai-cn",
   "qwen": "alibaba",
   "qwen-cn": "alibaba-cn",
@@ -45,10 +45,19 @@ export function getSyncState() {
   return { ...state, file: CATALOG_FILE, url: CATALOG_URL, intervalMs: SYNC_INTERVAL_MS };
 }
 
-// "zai-org/GLM-4.6V:free" -> "glm-4.6v"
-function baseId(modelId) {
-  const withoutVendor = modelId.includes("/") ? modelId.split("/").pop() : modelId;
-  return withoutVendor.toLowerCase().split(":")[0];
+// Preserve native namespaces and route qualifiers such as :free. A bare leaf
+// may be used only when exactly one upstream ID owns it within this provider.
+function indexModels(models) {
+  const indexed = new Map(Object.entries(models));
+  const leaves = new Map();
+  for (const id of Object.keys(models)) {
+    const leaf = id.slice(id.lastIndexOf("/") + 1);
+    leaves.set(leaf, leaves.has(leaf) ? null : id);
+  }
+  for (const [leaf, id] of leaves) {
+    if (id && !indexed.has(leaf)) indexed.set(leaf, models[id]);
+  }
+  return indexed;
 }
 
 function writeAtomic(file, contents) {
@@ -102,16 +111,8 @@ export function build(catalog, entries) {
   const models = {};
   for (const [providerId, provider] of Object.entries(catalog)) {
     const locals = localIds.get(providerId) || [providerId];
-    const modelsById = {};
-    const seen = new Set();
-    for (const [modelId, model] of Object.entries(provider?.models || {})) {
-      const id = baseId(modelId);
-      modelsById[id] = model;
-      // One entry per provider+model: several upstream ids can normalize to the
-      // same model (claude-opus-4-thinking:1024, :8192, :32768 …) and must not
-      // stack their modalities.
-      if (seen.has(id)) continue;
-      seen.add(id);
+    const modelsById = indexModels(provider?.models || {});
+    for (const [id, model] of modelsById) {
       const declared = {};
       for (const input of model?.modalities?.input || []) {
         const key = MODALITY_BY_INPUT[input];
@@ -135,7 +136,7 @@ export function build(catalog, entries) {
   for (const { provider, model, contextLength, current } of entries) {
     const alias = PROVIDER_ALIASES[provider];
     const upstream = catalog[provider] ? provider : (alias && catalog[alias] ? alias : null);
-    const entry = upstream && byProvider[upstream]?.[baseId(model)];
+    const entry = upstream && byProvider[upstream]?.get(model);
     if (!entry) continue;
 
     const delta = {};

@@ -1,6 +1,5 @@
 import {
   GROK_CLI_BASE_URL,
-  GROK_CLI_MODEL,
 } from "../config/grokCli.js";
 import {
   GROK_CLI_CLIENT_IDENTIFIER,
@@ -44,10 +43,6 @@ export function parseGrokCliModels(data) {
     if (Number.isFinite(contextLength) && contextLength > 0) model.contextLength = contextLength;
     if (Number.isFinite(maxOutputTokens) && maxOutputTokens > 0) {
       model.maxOutputTokens = maxOutputTokens;
-    }
-    if (id === GROK_CLI_MODEL) {
-      model.contextLength ||= 500000;
-      model.maxOutputTokens ||= 64000;
     }
     models.push(model);
   }

@@ -1,5 +1,6 @@
 import { OAuthService } from "./oauth.js";
 import { GITHUB_CONFIG } from "../constants/oauth.js";
+import { COPILOT_TOKEN_API_VERSION } from "open-sse/config/clientVersions.js";
 import { spinner as createSpinner } from "../utils/ui.js";
 
 /**
@@ -107,7 +108,7 @@ export class GitHubService extends OAuthService {
       headers: {
         Authorization: `Bearer ${accessToken}`, // GitHub API typically uses Bearer
         Accept: "application/json",
-        "X-GitHub-Api-Version": GITHUB_CONFIG.apiVersion,
+        "X-GitHub-Api-Version": COPILOT_TOKEN_API_VERSION,
         "User-Agent": GITHUB_CONFIG.userAgent,
       },
     });

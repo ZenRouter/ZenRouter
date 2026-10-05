@@ -8,14 +8,13 @@ import { U, parseResetTime } from "./shared.js";
 import {
   VSCODE_VERSION,
   COPILOT_CHAT_VERSION,
-  COPILOT_API_VERSION,
+  COPILOT_TOKEN_API_VERSION,
 } from "../../config/clientVersions.js";
 
-// GitHub API config — single source from registry oauth block. Editor-Version
-// and Editor-Plugin-Version come from clientVersions so a single bump there
-// flows to OAuth handshake, chat executor, usage handler, and probe.
+// Copilot user-info shares the token API version, not the generic GitHub
+// OAuth /user version. Editor identity stays paired with chat and OAuth.
 const GITHUB_CONFIG = {
-  apiVersion: PROVIDER_OAUTH.github?.apiVersion ?? COPILOT_API_VERSION,
+  apiVersion: COPILOT_TOKEN_API_VERSION,
   userAgent: PROVIDER_OAUTH.github?.userAgent,
   editorVersion: `vscode/${VSCODE_VERSION}`,
   editorPluginVersion: `copilot-chat/${COPILOT_CHAT_VERSION}`,

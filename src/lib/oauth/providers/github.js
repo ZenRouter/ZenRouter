@@ -1,4 +1,5 @@
 import { GITHUB_CONFIG } from "../constants/oauth.js";
+import { COPILOT_TOKEN_API_VERSION } from "open-sse/config/clientVersions.js";
 
 const github = {
   config: GITHUB_CONFIG,
@@ -58,7 +59,7 @@ const github = {
       headers: {
         Authorization: `Bearer ${tokens.access_token}`,
         Accept: "application/json",
-        "X-GitHub-Api-Version": GITHUB_CONFIG.apiVersion,
+        "X-GitHub-Api-Version": COPILOT_TOKEN_API_VERSION,
         "User-Agent": GITHUB_CONFIG.userAgent,
       },
     });

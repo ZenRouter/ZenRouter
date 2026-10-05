@@ -1,10 +1,13 @@
+import { getProviderIdentityTokens, getDeclaredUpstreamModelId } from "./identity.js";
+import { REVIEWED_MODEL_METADATA, getReviewedModelMetadata, getReviewedPricing } from "./metadata/reviewed.js";
+
 // Pricing rates for AI models — all rates in $/1M tokens
 //
 // Fallback order (first match wins):
-//   1. PROVIDER_PRICING[provider][model]  — provider-specific override
-//   2. FREE_MODEL_NAMESPACES               — upstream bills these at $0
-//   3. MODEL_PRICING[model]               — canonical model price (provider-agnostic)
-//   4. PATTERN_PRICING                    — glob pattern match (e.g. "codex-*")
+//   1. Literal provider override, then literal full-ID model tariff
+//   2. FREE_MODEL_NAMESPACES — upstream bills these at $0
+//   3. Unambiguous case-insensitive exact / declared upstream alias metadata
+//   4. Canonical leaf price, then PATTERN_PRICING (e.g. "codex-*")
 
 /**
  * Namespaces upstream meters at $0. A free model must never inherit a paid
@@ -286,8 +289,8 @@ export const PROVIDER_PRICING = {
     "qwen3-coder-plus":  { input: 0.574, output: 2.294, cached: 0.057, reasoning: 2.294, cache_creation: 0.574 },
     "qwen3-coder-flash": { input: 0.144, output: 0.574, cached: 0.014, reasoning: 0.574, cache_creation: 0.144 },
   },
-  // GitHub Copilot (gh) — explicit override, matches canonical gpt-5.3-codex rate
-  gh: {
+  // GitHub Copilot — canonical key; legacy gh resolves through provider identities.
+  github: {
     "gpt-5.3-codex": { input: 1.75, output: 14.00, cached: 0.175, reasoning: 14.00, cache_creation: 1.75 },
   },
   // TokenRouter — exact rates from https://api.tokenrouter.com/api/pricing ($1/1M tokens).
@@ -516,41 +519,70 @@ export function matchPattern(pattern, model) {
   return regex.test(model);
 }
 
-/**
- * Resolve pricing for a model using the 4-step fallback chain:
- *   1. PROVIDER_PRICING[provider][model]
- *   2. free namespace (upstream bills $0)
- *   3. MODEL_PRICING[model]
- *   4. PATTERN_PRICING (glob match)
- *
- * @param {string} provider
- * @param {string} model
- * @returns {object|null}
- */
+// Replace researched provider tariffs as complete quotes, not partial merges
+// with stale inferred cache-write fees or another route's context tiers.
+for (const [provider, models] of Object.entries(REVIEWED_MODEL_METADATA)) {
+  for (const model of Object.keys(models)) {
+    const pricing = getReviewedPricing(provider, model);
+    if (pricing) (PROVIDER_PRICING[provider] ||= {})[model] = pricing;
+  }
+}
+
+// Literal keys always win. Case folding is metadata fallback only; never choose
+// between multiple spellings, and never inherit Object.prototype entries.
+function exactPrice(table, model, allowCaseFold = false) {
+  if (!table) return null;
+  if (Object.hasOwn(table, model)) return table[model];
+  if (!allowCaseFold) return null;
+  const matches = Object.keys(table).filter(key => key.toLowerCase() === model.toLowerCase());
+  return matches.length === 1 ? table[matches[0]] : null;
+}
+
+/** Resolve metadata prices without changing the literal upstream request ID. */
 export function getPricingForModel(provider, model) {
   if (!model) return null;
+  const providerTables = getProviderIdentityTokens(provider)
+    .filter(token => Object.hasOwn(PROVIDER_PRICING, token))
+    .map(token => PROVIDER_PRICING[token]);
+  const seen = new Set();
 
-  // 1. Provider-specific override
-  if (provider && PROVIDER_PRICING[provider]?.[model]) {
-    return PROVIDER_PRICING[provider][model];
-  }
-
-  // 2. Free namespaces bill $0 regardless of the model name behind them.
-  if (isFreeModel(model)) return ZERO_PRICING;
-
-  // 3. Canonical model pricing (strip vendor prefix if needed: "deepseek/deepseek-chat" → "deepseek-chat")
-  const baseModel = model.includes("/") ? model.split("/").pop() : model;
-  if (MODEL_PRICING[baseModel]) return MODEL_PRICING[baseModel];
-  if (MODEL_PRICING[model]) return MODEL_PRICING[model];
-
-  // 4. Pattern match
-  for (const { pattern, pricing } of PATTERN_PRICING) {
-    if (matchPattern(pattern, baseModel) || matchPattern(pattern, model)) {
-      return pricing;
+  function resolve(id) {
+    if (seen.has(id)) return null;
+    seen.add(id);
+    // Explicit provider and full-ID tariffs beat free namespaces and aliases.
+    for (const table of providerTables) {
+      const price = exactPrice(table, id);
+      if (price) return price;
     }
-  }
+    const literal = exactPrice(MODEL_PRICING, id);
+    if (literal) return literal;
+    if (isFreeModel(id)) return ZERO_PRICING;
+    const reviewed = getReviewedModelMetadata(provider, id);
+    if (reviewed?.billing?.unverifiedPriceFields?.includes("input") &&
+        reviewed.billing.unverifiedPriceFields.includes("output")) return null;
 
-  return null;
+    for (const table of providerTables) {
+      const price = exactPrice(table, id, true);
+      if (price) return price;
+    }
+    const full = exactPrice(MODEL_PRICING, id, true);
+    if (full) return full;
+
+    // Only registry-declared aliases: no guessed review/thinking/date stripping.
+    const upstream = getDeclaredUpstreamModelId(provider, id);
+    if (upstream !== id) {
+      const price = resolve(upstream);
+      if (price) return price;
+    }
+    const base = id.includes("/") ? id.split("/").pop() : id;
+    const canonical = exactPrice(MODEL_PRICING, base, true);
+    if (canonical) return canonical;
+    for (const { pattern, pricing } of PATTERN_PRICING) {
+      if (matchPattern(pattern, base) || matchPattern(pattern, id)) return pricing;
+    }
+    return null;
+  }
+  return resolve(model);
 }
 
 /**
@@ -573,10 +605,16 @@ export function getDefaultPricing() {
 export function resolveEffectivePricing(pricing, inputTokens) {
   if (!pricing || !pricing.tier) return pricing;
   const threshold = Number(pricing.tier.threshold);
-  if (Number.isFinite(threshold) && threshold > 0 && inputTokens > threshold) {
+  const reached = pricing.tier.inclusive === true ? inputTokens >= threshold : inputTokens > threshold;
+  if (Number.isFinite(threshold) && threshold > 0 && reached) {
     return {
       ...pricing,
       ...pricing.tier,
+      // Output-billed reasoning follows the output tier. A genuinely distinct
+      // base reasoning tariff, or any explicit tier reasoning (even zero), wins.
+      ...(pricing.tier.reasoning === undefined && pricing.tier.output !== undefined &&
+          (pricing.reasoning === undefined || pricing.reasoning === pricing.output)
+        ? { reasoning: pricing.tier.output } : {}),
       tier: pricing.tier,
     };
   }
