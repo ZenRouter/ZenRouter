@@ -27,6 +27,9 @@ describe("OpenCode Go model catalog", () => {
       "mimo-v2.5", "mimo-v2.5-pro",
       "minimax-m3", "minimax-m2.7", "minimax-m2.5",
       "qwen3.7-max", "qwen3.7-plus", "qwen3.6-plus",
+      "grok-4.7", "gpt-6-luna", "qwen3.8-max", "qwen3.8-flash",
+      "mimo-v2.6-pro", "mimo-v2.6-flash", "longcat-2.5-preview-free",
+      "space-bunny-free", "kimi-k3", "deepseek-v4.1-flash",
     ]);
   });
 });

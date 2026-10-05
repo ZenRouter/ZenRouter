@@ -5,12 +5,22 @@ import { invalidateDeclaredModelCaps } from "open-sse/providers/declaredCaps.js"
 
 export const dynamic = "force-dynamic";
 
-// Whitelist capability keys to boolean values — ignore anything else
-function sanitizeCaps(caps) {
-  if (!caps || typeof caps !== "object") return null;
+// Capability booleans and token limits have distinct types. Preserve explicit
+// input ceilings separately from total context; never derive one from the other.
+function sanitizeCaps(caps, metadata) {
+  const source = caps && typeof caps === "object" ? caps : {};
   const clean = {};
   for (const key of Object.keys(CAPACITY_META)) {
-    if (typeof caps[key] === "boolean") clean[key] = caps[key];
+    if (typeof source[key] === "boolean") clean[key] = source[key];
+  }
+  const limitNames = {
+    contextWindow: "context_length",
+    maxInput: "max_input_tokens",
+    maxOutput: "max_completion_tokens",
+  };
+  for (const [key, alias] of Object.entries(limitNames)) {
+    const value = source[key] ?? metadata[key] ?? metadata[alias];
+    if (Number.isSafeInteger(value) && value > 0) clean[key] = value;
   }
   return Object.keys(clean).length ? clean : null;
 }
@@ -29,11 +39,12 @@ export async function GET() {
 // POST /api/models/custom - Add custom model
 export async function POST(request) {
   try {
-    const { providerAlias, id, type, name, caps } = await request.json();
+    const metadata = await request.json();
+    const { providerAlias, id, type, name, caps } = metadata;
     if (!providerAlias || !id) {
       return NextResponse.json({ error: "providerAlias and id required" }, { status: 400 });
     }
-    const cleanCaps = sanitizeCaps(caps);
+    const cleanCaps = sanitizeCaps(caps, metadata);
     const added = await addCustomModel({ providerAlias, id, type: type || "llm", name, ...(cleanCaps ? { caps: cleanCaps } : {}) });
     invalidateDeclaredModelCaps();
     return NextResponse.json({ success: true, added });

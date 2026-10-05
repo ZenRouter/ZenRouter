@@ -14,6 +14,10 @@ export default {
   },
   category: "apikey",
   authType: "apikey",
+  models: [
+    { id: "inworld-tts-2", name: "Inworld TTS 2", kind: "tts" },
+    { id: "inworld-tts-2-flash", name: "Inworld TTS 2 Flash", kind: "tts" },
+  ],
   serviceKinds: [
     "tts"
   ],
@@ -23,6 +27,8 @@ export default {
     authHeader: "basic",
     format: "inworld",
     models: [
+      { id: "inworld-tts-2", name: "Inworld TTS 2" },
+      { id: "inworld-tts-2-flash", name: "Inworld TTS 2 Flash" },
       {
         id: "inworld-tts-1.5-mini",
         name: "Inworld TTS 1.5 Mini ($0.01/min)"

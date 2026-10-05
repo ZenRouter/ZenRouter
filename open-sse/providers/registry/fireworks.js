@@ -22,6 +22,7 @@ export default {
     { id: "accounts/fireworks/models/deepseek-v3p1", name: "DeepSeek V3.1" },
     { id: "accounts/fireworks/models/llama-v3p3-70b-instruct", name: "Llama 3.3 70B" },
     { id: "accounts/fireworks/models/qwen3-235b-a22b", name: "Qwen3 235B" },
+    { id: "fireworks/qwen3-embedding-8b", name: "Qwen3 Embedding 8B", kind: "embedding" },
     { id: "nomic-ai/nomic-embed-text-v1.5", name: "Nomic Embed Text v1.5", kind: "embedding" },
   ],
   serviceKinds: ["llm", "embedding"],

@@ -79,12 +79,21 @@ export const TTS_MODELS_CONFIG = {
   },
   elevenlabs: {
     models: [
+      { id: "eleven_v4", name: "Eleven v4", type: "tts" },
+      { id: "eleven_v4_turbo", name: "Eleven v4 Turbo", type: "tts" },
       { id: "eleven_flash_v2_5",      name: "Flash v2.5 (Fastest)",      type: "tts" },
       { id: "eleven_turbo_v2_5",      name: "Turbo v2.5 (Fast)",         type: "tts" },
       { id: "eleven_multilingual_v2", name: "Multilingual v2 (Quality)",  type: "tts" },
       { id: "eleven_monolingual_v1",  name: "Monolingual v1 (English)",  type: "tts" },
     ],
     // voices come from API, not hardcoded
+  },
+  inworld: {
+    models: [
+      { id: "inworld-tts-2", name: "Inworld TTS 2", type: "tts" },
+      { id: "inworld-tts-2-flash", name: "Inworld TTS 2 Flash", type: "tts" },
+    ],
+    // Voice IDs are supplied explicitly; no new voice catalog was verified.
   },
   "edge-tts": {
     defaults: [
@@ -114,8 +123,12 @@ export const TTS_MODELS_CONFIG = {
       { id: "gemini-3.1-flash-tts-preview", name: "Gemini 3.1 Flash TTS", type: "tts" },
       { id: "gemini-2.5-flash-preview-tts", name: "Gemini 2.5 Flash TTS", type: "tts" },
       { id: "gemini-2.5-pro-preview-tts",   name: "Gemini 2.5 Pro TTS",   type: "tts" },
+      { id: "gemini-3.8-flash-tts", name: "Gemini 3.8 Flash TTS", type: "tts" },
+      { id: "gemini-3.8-flash-lite-tts", name: "Gemini 3.8 Flash Lite TTS", type: "tts" },
     ],
     voices: {
+      "gemini-3.8-flash-tts": GEMINI_VOICES,
+      "gemini-3.8-flash-lite-tts": GEMINI_VOICES,
       "gemini-3.1-flash-tts-preview": GEMINI_VOICES,
       "gemini-2.5-flash-preview-tts": GEMINI_VOICES,
       "gemini-2.5-pro-preview-tts":   GEMINI_VOICES,

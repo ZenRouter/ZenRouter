@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getCapabilitiesForModel } from "../../open-sse/providers/capabilities.js";
+import { getReviewedModelMetadata } from "../../open-sse/providers/metadata/reviewed.js";
 
 describe("getCapabilitiesForModel", () => {
   const claudeSonnet5Expected = {
@@ -81,18 +82,37 @@ describe("getCapabilitiesForModel", () => {
     expect(getCapabilitiesForModel("kiro", "gpt-5.6-sol-thinking-agentic")).toMatchObject(kiroGpt56Expected);
   });
 
-  it("reports GPT-6 Astra, Sol, and Luna with official 1.05M context / 128k output limits", () => {
-    const expected = {
-      contextWindow: 1050000,
-      maxOutput: 128000,
-      thinkingFormat: "openai",
-      reasoning: true,
-      vision: true,
-      search: true,
-    };
-    for (const model of ["gpt-6-astra", "openai/gpt-6-astra", "gpt-6-sol", "gpt-6-luna"]) {
-      expect(getCapabilitiesForModel("codex", model)).toMatchObject(expected);
+  it("separates GPT-6 API limits from Codex configuration maxima and unknown route output", () => {
+    for (const model of ["gpt-6-astra", "gpt-6-sol", "gpt-6-luna"]) {
+      expect(getCapabilitiesForModel("openai", model)).toMatchObject({
+        contextWindow: 1050000, maxInput: 922000, maxOutput: 128000,
+        thinkingFormat: "openai", reasoning: true, vision: true, search: true,
+      });
+      expect(getCapabilitiesForModel("codex", model)).toMatchObject({
+        contextWindow: 872000, maxInput: null, maxOutput: null,
+        thinkingFormat: "openai", reasoning: true, vision: true, search: true,
+      });
+      const metadata = getReviewedModelMetadata("codex", model);
+      expect(metadata.limits).toMatchObject({
+        scope: "cli-configuration-reference", authenticatedRouteVerified: false,
+        cliDefaultContext: 272000, cliMaxContext: 872000,
+        routeContextWindow: null, routeMaxOutput: null,
+        apiContextWindow: 1050000, apiMaxInput: 922000, apiMaxOutput: 128000,
+        unverifiedCapabilityFields: ["maxInput", "maxOutput"],
+      });
+      expect(metadata.sources).toContain(
+        "https://raw.githubusercontent.com/openai/codex/rust-v0.160.0/codex-rs/models-manager/models.json",
+      );
     }
+  });
+
+  it("does not claim reviewed Codex provenance for an undeclared namespaced model ID", () => {
+    // Legacy family fallback is not an exact, reviewed Codex route.
+    expect(getReviewedModelMetadata("codex", "openai/gpt-6-astra")).toBeNull();
+    expect(getCapabilitiesForModel("codex", "openai/gpt-6-astra")).toMatchObject({
+      contextWindow: 1050000, maxOutput: 128000,
+      thinkingFormat: "openai", reasoning: true, vision: true, search: true,
+    });
   });
 
   it("reports Qwen 3.8 Max and Flash with multimodal reasoning capabilities", () => {

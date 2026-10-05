@@ -97,12 +97,12 @@
       "Anthropic-Version": "2023-06-01",
       "Anthropic-Beta": "claude-code-20250219,oauth-2025-04-20,interleaved-thinking-2025-05-14,context-management-2025-06-27,prompt-caching-scope-2026-01-05,structured-outputs-2025-12-15,fast-mode-2026-02-01,redact-thinking-2026-02-12,tool-search-tool-2025-10-19,dangerous-tool-use-2026-09-03,inline-tools-2026-09-15,advanced-tool-use-2025-11-20,effort-2025-11-24",
       "Anthropic-Dangerous-Direct-Browser-Access": "true",
-      "User-Agent": "claude-cli/2.1.287 (external, sdk-cli)",
+      "User-Agent": "claude-cli/2.1.289 (external, sdk-cli)",
       "X-App": "cli",
       "X-Stainless-Helper-Method": "stream",
       "X-Stainless-Retry-Count": "0",
       "X-Stainless-Runtime-Version": "v24.14.0",
-      "X-Stainless-Package-Version": "0.127.0",
+      "X-Stainless-Package-Version": "0.128.0",
       "X-Stainless-Runtime": "node",
       "X-Stainless-Lang": "js",
       "X-Stainless-Arch": "x64",
@@ -175,7 +175,7 @@
     "forceStream": true,
     "thinkingFormat": "openai",
     "headers": {
-      "User-Agent": "CLI/2.161.1 CodeBuddy/2.161.1",
+      "User-Agent": "CLI/2.161.3 CodeBuddy/2.161.3",
       "X-Product": "SaaS",
       "X-IDE-Type": "CLI",
       "X-IDE-Name": "CLI",
@@ -222,7 +222,8 @@
     "format": "commandcode",
     "forceStream": true,
     "headers": {
-      "x-command-code-version": "0.25.7",
+      "x-command-code-version": "1.74.1",
+      "User-Agent": "cli",
       "x-cli-environment": "cli"
     }
   },
@@ -323,7 +324,7 @@
       "editor-plugin-version": "copilot-chat/0.68.0",
       "user-agent": "GitHubCopilotChat/0.68.0",
       "openai-intent": "conversation-panel",
-      "x-github-api-version": "2025-04-01",
+      "x-github-api-version": "2026-08-01",
       "x-vscode-user-agent-library-version": "electron-fetch",
       "X-Initiator": "user",
       "Accept": "application/json",
@@ -489,7 +490,7 @@
     "baseUrl": "https://llm.kimchi.dev/openai/v1/chat/completions",
     "format": "openai",
     "headers": {
-      "User-Agent": "kimchi/1.5.0"
+      "User-Agent": "kimchi/1.6.0"
     },
     "auth": {
       "combined": true,
@@ -725,7 +726,11 @@
     "quirks": {
       "preservePromptCacheKey": true
     },
-    "format": "openai"
+    "format": "openai",
+    "transports": [
+      { "format": "openai", "baseUrl": "https://api.openai.com/v1/chat/completions" },
+      { "format": "openai-responses", "baseUrl": "https://api.openai.com/v1/responses" }
+    ]
   },
   "opencode-go": {
     "baseUrl": "https://opencode.ai/zen/go/v1/chat/completions",

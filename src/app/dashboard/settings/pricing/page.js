@@ -106,8 +106,7 @@ export default function PricingSettingsPage() {
         <h2 className="text-xl font-semibold mb-4">How Pricing Works</h2>
         <div className="space-y-3 text-sm text-text-muted">
           <p>
-            <strong>Cost Calculation:</strong> Costs are calculated based on token usage and pricing rates.
-            Each request&apos;s cost is determined by: (input_tokens × input_rate) + (output_tokens × output_rate) + (cached_tokens × cached_rate)
+            <strong>Cost Estimates:</strong> Local estimates separate uncached input, cached input, cache creation, output and reasoning tokens without double-counting their subsets. Applicable long-context tiers are applied before calculation; these estimates are not an upstream invoice.
           </p>
           <p>
             <strong>Pricing Format:</strong> All rates are in <strong>dollars per million tokens</strong> ($/1M tokens).
@@ -119,13 +118,13 @@ export default function PricingSettingsPage() {
           <ul className="list-disc list-inside ml-4 space-y-1">
             <li><strong>Input:</strong> Standard prompt tokens</li>
             <li><strong>Output:</strong> Completion/response tokens</li>
-            <li><strong>Cached:</strong> Cached input tokens (typically 50% of input rate)</li>
+            <li><strong>Cached:</strong> Cached input tokens at the model-specific rate; there is no universal discount</li>
             <li><strong>Reasoning:</strong> Special reasoning/thinking tokens (fallback to output rate)</li>
             <li><strong>Cache Creation:</strong> Tokens used to create cache entries (fallback to input rate)</li>
           </ul>
           <p>
             <strong>Custom Pricing:</strong> You can override default pricing for specific models.
-            Reset to defaults anytime to restore standard rates.
+            Reset to defaults anytime to restore reference estimates. Missing rates are unknown, not free. Subscription quotas and media charges per image, duration, character or byte are not interchangeable with token prices.
           </p>
         </div>
       </Card>

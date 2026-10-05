@@ -12,10 +12,11 @@ const catalogFile = path.join(dataDir, "model-catalog.json");
 // One upstream record per gateway: the same short id means different things to
 // different vendors, which is what used to leak capabilities across providers.
 const upstream = {
-  zai: { models: { "glm-4.6v": { modalities: { input: ["text", "image"] } } } },
-  // two local ids alias this one upstream provider
+  "zai-coding-plan": { models: { "glm-4.6v": { modalities: { input: ["text", "image"] } } } },
+  // Direct API and coding-plan catalogs are distinct, even for the same weights.
+  "zhipuai-coding-plan": { models: { "glm-5-canary": { modalities: { input: ["text", "image", "pdf"] } } } },
   zhipuai: { models: { "glm-5-canary": { modalities: { input: ["text", "image", "pdf"] } } } },
-  moonshotai: { models: { "kimi-k3": { modalities: { input: ["text"] } } } },
+  "kimi-code-plan-global": { models: { "kimi-k3": { modalities: { input: ["text"] } } } },
   kilo: { models: { "kilo-auto/efficient": { modalities: { input: ["text", "image"] } } } },
 };
 // The registry snapshot the sync feeds build(): local ids, with the capabilities
@@ -35,7 +36,7 @@ beforeAll(async () => {
   // rather than skip every case below
   expect(typeof build).toBe("function");
   const { models, providers } = build(upstream, entries);
-  fs.writeFileSync(catalogFile, JSON.stringify({ v: 2, models, providers }));
+  fs.writeFileSync(catalogFile, JSON.stringify({ v: 3, models, providers }));
   ({ getCatalogModalities, invalidateCatalog } = await import("../../open-sse/providers/catalogOverride.js"));
   capabilities = await import("../../open-sse/providers/capabilities.js");
 });
@@ -51,7 +52,7 @@ describe("model catalog", () => {
     expect(models["glm:glm-4.6v"]).toEqual({ vision: true });
     // ...and under its upstream name, because a custom provider node can carry
     // that name without being in the registry snapshot
-    expect(models["zai:glm-4.6v"]).toEqual({ vision: true });
+    expect(models["zai-coding-plan:glm-4.6v"]).toEqual({ vision: true });
     expect(models["kilo:efficient"]).toEqual({ vision: true });
     // the vendor-stripped key is what used to be shared with every other gateway
     expect(models["glm-4.6v"]).toBeUndefined();
@@ -60,9 +61,9 @@ describe("model catalog", () => {
     expect(models["kimi:kimi-k3"]).toBeUndefined();
   });
 
-  it("files an upstream provider under every local id that aliases it", () => {
+  it("files direct API and coding-plan providers only under their correct local IDs", () => {
     const { models } = build(upstream, entries);
-    // glm-cn and zhipu are both zhipuai upstream; neither may be dropped
+    // glm-cn uses its plan catalog; zhipu uses the separate direct API catalog.
     expect(models["glm-cn:glm-5-canary"]).toEqual({ vision: true, pdf: true });
     expect(models["zhipu:glm-5-canary"]).toEqual({ vision: true, pdf: true });
     expect(models["zhipuai:glm-5-canary"]).toEqual({ vision: true, pdf: true });
@@ -79,7 +80,7 @@ describe("model catalog", () => {
 
   it("resolves a gateway the file was written for, and nobody else", () => {
     expect(getCatalogModalities("glm", "glm-4.6v")).toEqual({ vision: true });
-    expect(getCatalogModalities("zai", "glm-4.6v")).toEqual({ vision: true });
+    expect(getCatalogModalities("zai-coding-plan", "glm-4.6v")).toEqual({ vision: true });
     expect(getCatalogModalities("unrelated", "glm-4.6v")).toBeNull();
     expect(getCatalogModalities(undefined, "glm-4.6v")).toBeNull();
   });
@@ -169,7 +170,7 @@ describe("catalog schema", () => {
     }
     expect(sent[0]["if-none-match"]).toBeUndefined();
     const written = JSON.parse(fs.readFileSync(catalogFile, "utf8"));
-    expect(written.v).toBe(2);
+    expect(written.v).toBe(3);
     expect(written.models["glm:glm-4.6v"]).toEqual({ vision: true });
   });
 

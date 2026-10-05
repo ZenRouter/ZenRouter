@@ -13,6 +13,10 @@ export default {
   },
   category: "apikey",
   authType: "apikey",
+  models: [
+    { id: "eleven_v4", name: "Eleven v4", kind: "tts" },
+    { id: "eleven_v4_turbo", name: "Eleven v4 Turbo", kind: "tts" },
+  ],
   serviceKinds: [
     "tts"
   ],
@@ -22,6 +26,8 @@ export default {
     authHeader: "xi-api-key",
     format: "elevenlabs",
     models: [
+      { id: "eleven_v4", name: "Eleven v4" },
+      { id: "eleven_v4_turbo", name: "Eleven v4 Turbo" },
       {
         id: "eleven_v3",
         name: "Eleven v3 (Flagship)"

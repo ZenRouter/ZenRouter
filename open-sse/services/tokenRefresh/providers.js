@@ -481,7 +481,7 @@ export async function refreshCopilotToken(githubAccessToken, log, proxyOptions =
         "Editor-Version": `vscode/${GITHUB_COPILOT.VSCODE_VERSION}`,
         "Editor-Plugin-Version": `copilot-chat/${GITHUB_COPILOT.COPILOT_CHAT_VERSION}`,
         "Accept": "application/json",
-        "x-github-api-version": GITHUB_COPILOT.API_VERSION
+        "x-github-api-version": GITHUB_COPILOT.TOKEN_API_VERSION
       }
     }, proxyOptions);
 

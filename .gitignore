@@ -54,6 +54,8 @@ docs/*
 !docs/antigravity-location-error.md
 !docs/CHANGELOG_v0.9.5.md
 !docs/CHANGELOG_v0.9.6.md
+!docs/CLIENT-MODEL-RECONCILIATION.md
+!docs/model-catalog-coverage.json
 test/*
 open-sse/test/*
 RM.vn.md

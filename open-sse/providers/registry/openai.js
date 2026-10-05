@@ -28,13 +28,24 @@ export default {
     forceStream: true,
     quirks: { preservePromptCacheKey: true },
   },
+  // A model's targetFormat is the translation fallback; supportedFormats prevents
+  // Chat Completions passthrough for models whose tools require Responses.
+  transports: [
+    { format: "openai", baseUrl: "https://api.openai.com/v1/chat/completions" },
+    { format: "openai-responses", baseUrl: "https://api.openai.com/v1/responses" },
+  ],
   models: [
+    // https://developers.openai.com/api/docs/models/gpt-6.1-sol.md
+    { id: "gpt-6.1-sol", name: "GPT-6.1 Sol", targetFormat: "openai-responses", supportedFormats: ["openai-responses"] },
     { id: "gpt-6-astra", name: "GPT-6 Astra" },
     { id: "gpt-6-sol", name: "GPT-6 Sol" },
     { id: "gpt-6-luna", name: "GPT-6 Luna" },
     { id: "gpt-5.6-sol", name: "GPT-5.6 Sol" },
     { id: "gpt-5.6-terra", name: "GPT-5.6 Terra" },
     { id: "gpt-5.6-luna", name: "GPT-5.6 Luna" },
+    // Responses-only API models; API availability does not establish Codex entitlement.
+    { id: "gpt-5.6-cyber", name: "GPT-5.6 Cyber", targetFormat: "openai-responses", supportedFormats: ["openai-responses"] },
+    { id: "gpt-5.3-codex", name: "GPT-5.3 Codex", targetFormat: "openai-responses", supportedFormats: ["openai-responses"] },
     { id: "gpt-5.5", name: "GPT 5.5" },
     { id: "gpt-5.5-pro", name: "GPT 5.5 Pro" },
     { id: "gpt-5.4", name: "GPT-5.4" },
@@ -71,6 +82,8 @@ export default {
     { id: "gpt-4o-transcribe", name: "GPT-4o Transcribe", params: ["language","response_format","temperature","prompt"], kind: "stt" },
     { id: "gpt-4o-mini-transcribe", name: "GPT-4o Mini Transcribe", params: ["language","response_format","temperature","prompt"], kind: "stt" },
     { id: "gpt-transcribe", name: "GPT Transcribe", params: ["language","response_format","temperature","prompt"], kind: "stt" },
+    { id: "gpt-image-2.5-flare", name: "GPT Image 2.5 Flare", kind: "image" },
+    { id: "gpt-image-2.5-sunburst", name: "GPT Image 2.5 Sunburst", kind: "image" },
     { id: "gpt-image-1", name: "GPT Image 1", params: ["n","size","quality","response_format"], kind: "image" },
     { id: "gpt-image-2", name: "GPT Image 2", params: ["n","size","quality","response_format"], kind: "image" },
   ],

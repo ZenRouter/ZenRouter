@@ -1,0 +1,98 @@
+# Client and model catalog reconciliation
+
+Research date: 2026-10-06 (Asia/Jakarta). Source baseline: `ff469a0768a854ebe7d6d5936702c669c5cd91f5`.
+
+## Scope and evidence
+
+The baseline inventory contains 119 active provider definitions and 1,044 static provider/model rows. The resulting registry contains 1,164 rows: 120 additions (100 chat, 8 image, 6 embedding, 6 TTS), with no baseline rows removed. Reviewed factual metadata has 342 exact provider/model records across 36 providers. Some factual records describe compatibility variants rather than standalone registry rows.
+
+`model-catalog-coverage.json` enumerates every current static row and explicitly marks rows not individually reverified. Enumeration is exhaustive; internet verification of every historical value is **not** complete. The 827 preserved, individually unverified rows are not certified accurate. Separate media research enumerated 70 providers and 288 provider/kind/ID definitions, including voice/language surrogates rather than only independent models.
+
+The fetched models.dev catalog contains provider-scoped limits, modalities, costs and tier information. It is a comparison source, not proof that an IDE subscription or individual account can serve a model.[1]
+
+Official endpoint-specific documentation takes precedence over a generic family record. API context, maximum input, maximum output, client configuration ceilings and compaction thresholds remain separate. No production database, authenticated provider account, live inference or deployment was used.
+
+## Important context correction
+
+GPT-6.1 Sol's OpenAI API specification is **1,050,000 total context**, **922,000 maximum input**, and **128,000 maximum output**.[2]
+
+The official Codex `rust-v0.160.0` model catalog instead declares **272,000 default context** and **872,000 maximum configurable context** for this model. The protocol calls the latter the “Maximum context window allowed for config overrides”; it separately defines 95% effective context and a 90% automatic-compaction threshold.[3][4]
+
+Consequently, Zen does not relabel the API limit as an independently proven Codex backend limit. The selected Codex configuration value remains separate from API maxima in `metadata.limits`; unverified route input/output maxima are `null` and omitted from top-level numeric limit fields. Account-supplied live metadata and explicit operator declarations can override the static reference without crossing provider boundaries.
+
+## Client updates
+
+- Claude Code: latest-channel non-prerelease `2.1.289` and inspected Stainless SDK `0.128.0`. The explicit stable tag is `2.1.285`; next-only `2.1.290` is not selected. Existing runtime assumptions and beta entitlement flags were not broadened.[13]
+- Kiro CLI: `2.27.0`, including the previously stale connection-test User-Agent. The IDE version remains a separate identity.[15]
+- Kimchi: `1.6.0`.[16]
+- CodeBuddy CN CLI: `2.161.3`; the unverified INTL IDE-labelled wire profile remains separately pinned rather than pretending the CN CLI release verifies it.[14]
+- Gemini CLI remains `0.62.0`; its OAuth Code Assist header now follows the inspected auth-library branch rather than the API-key genai branch.[17]
+- Copilot chat/models API identity follows the bundled `copilot-api` versioned behavior; token/user-info retains its different API date.[18]
+- Antigravity IDE, CLI and Hub remain distinct release lines. Updating a CLI changelog reference does not change the IDE fingerprint or enable account-gated models.[20]
+
+Codex, Cursor, Kiro IDE, Grok stable, Zed, OpenCode and Qoder pins were researched and retained where unchanged. Trae, Windsurf and Devin source definitions remain inactive. Protocol-specific checksum/signing identities and unverified bundled runtime pins were not guessed from unrelated package releases.
+
+## Consistency repairs
+
+- Browser-safe generated provider identity metadata covers canonical IDs, storage/display aliases and declared upstream model aliases without importing server registries into browser resolvers.
+- Capabilities and pricing use consistent provider identity. Exact native namespaces and `:free` routes remain distinct; catalog schema v3 rejects old normalized cache files.
+- Daily catalog joins distinguish Kimi Code/Z.ai coding plans from direct API products. Reviewed provider-specific facts apply to exact resolution paths without replacing unrelated gateway protocol restrictions.
+- Public/dashboard discovery preserves native model IDs, live typed metadata, custom overrides, intentional chat/STT duplicate IDs and no-auth providers. Operator-declared runtime capabilities are scoped by provider and native model ID.
+- Numeric custom input/context/output values persist separately. Public chat listings expose `max_input_tokens` where known, rather than conflating it with `context_length`.
+- Long-context reasoning follows the relevant output tariff when appropriate; saved partial user tariffs merge consistently for display and billing. An inclusive threshold can be explicitly declared instead of forcing every provider into a strict-greater-than rule.
+- Per-model target transport now follows the translation target when no supported native source transport exists. Models declared Responses-only by the gateway dispatch to `/responses`; native compatible transports retain precedence and stale credential transport state is cleared. GPT-6.1 Sol uses this gateway policy to support tool calls consistently; its upstream Chat Completions endpoint also supports requests without tools.[2]
+
+## Pricing semantics
+
+xAI's documented long-context boundary is inclusive; Gemini pricing distinguishes output thinking, cached reads and time-based storage. These cannot be represented by a universal cache-write multiplier.[6][7]
+
+DeepSeek publishes peak and off-peak schedules. The recorded reference rates and schedule are preserved, but automatic time-of-day billing selection remains a limitation rather than a claim that one flat price is universally correct.[5]
+
+Subscription quotas, regional CNY tariffs, images, characters, duration and modality-specific token prices remain labelled in `metadata.billing`. Only compatible USD-per-million-token quotes enter the token calculator. Unknown tariffs are shown as “Not specified,” not as zero/free; numeric usage costs remain local estimates, not guaranteed upstream invoices.
+
+OpenAI image pricing separates text/image input and image output. Gemini Embedding 2's input allowance and embedding dimensions are not completion-token limits; Zen's existing adapter is text-only even though the native model supports more modalities.[10][11]
+
+## New-model safety and explicit deferrals
+
+OpenCode Go additions use documented model-specific Messages or Responses endpoints, not a blanket Chat Completions route.[9]
+
+Antigravity documentation advertises plan-gated Claude 5.5 models, but the exact internal IDs and account limits were not independently established; they were not fabricated from Anthropic API names.[8]
+
+Cohere output ceilings are corrected from its model reference, but additional Aya models remain deferred because the documented compatibility endpoint differs from the pre-existing registry transport.[12][19]
+
+Other explicit gaps are preserved in the coverage file and research handoff:
+
+- No claim of live serving, account entitlement or universal Command Code major-version protocol compatibility.
+- Incompatible realtime, managed-agent, WebSocket STT and missing media adapters were not added merely because a catalog lists them.
+- OpenRouter/MiniMax image protocol corrections, existing historical media table drift, Qoder Lite retirement handling, and some hosted provider tariffs remain separate follow-up work.
+- Existing unreviewed family estimates and dated compatibility IDs are retained for backward compatibility, not newly validated.
+- 9router issues were triaged against this fork. Unrelated namespace-tool translation, Cursor exec and nested Qoder queue defects were not silently bundled into the catalog change.
+
+## Verification
+
+All tests use isolated HOME/DATA_DIR, fresh test secrets and live-provider flags disabled. New behavior has ordinary RED/GREEN regression evidence. Verification includes full Vitest, zero-warning ESLint, production Next build, provider/alias/OAuth baselines, real built-server model/pricing API reads, SQLite custom-limit read-back, and a Chromium pricing form smoke with intercepted save. No provider inference is required for these checks.
+
+The exact final gate totals and reviewed source hashes are recorded in the external handoff, so later review corrections do not leave a stale count in this document.
+
+## Sources
+
+[1] https://models.dev/api.json — models.dev complete model metadata API
+[2] https://developers.openai.com/api/docs/models/gpt-6.1-sol.md
+[3] https://raw.githubusercontent.com/openai/codex/rust-v0.160.0/codex-rs/models-manager/models.json
+[4] https://raw.githubusercontent.com/openai/codex/rust-v0.160.0/codex-rs/protocol/src/openai_models.rs
+[5] https://api-docs.deepseek.com/quick_start/pricing
+[6] https://docs.x.ai/developers/pricing
+[7] https://ai.google.dev/gemini-api/docs/pricing
+[8] https://antigravity.google/docs/models.md
+[9] https://opencode.ai/docs/go
+[10] https://developers.openai.com/api/docs/models/gpt-image-2.5-flare.md
+[11] https://ai.google.dev/gemini-api/docs/models/gemini-embedding-2
+[12] https://docs.cohere.com/docs/models.md
+[13] https://registry.npmjs.org/@anthropic-ai/claude-code
+[14] https://registry.npmjs.org/@tencent-ai/codebuddy-code
+[15] https://kiro.dev/changelog/cli/2-27
+[16] https://github.com/getkimchi/kimchi/releases/tag/v1.6.0
+[17] https://raw.githubusercontent.com/google-gemini/gemini-cli/v0.62.0/packages/core/src/core/contentGenerator.ts
+[18] https://registry.npmjs.org/@vscode/copilot-api/-/copilot-api-0.5.2.tgz
+[19] https://docs.cohere.com/docs/compatibility-api.md
+[20] https://antigravity.google/docs/changelog.md

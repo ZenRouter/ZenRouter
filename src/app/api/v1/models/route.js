@@ -19,7 +19,9 @@ import { fetchProviderLiveModels } from "@/shared/utils/providerLiveModels";
 import { updateProviderCredentials } from "@/sse/services/tokenRefresh";
 import { resolveConnectionProxyConfig } from "@/lib/network/connectionProxy";
 import { capabilitiesFromServiceKind, getCapabilitiesForModel, withDeclaredCapabilities } from "open-sse/providers/capabilities.js";
-import { modelKind, inferModelKind } from "open-sse/providers/models/schema.js";
+import { canonicalizeProviderId as resolveProviderAlias } from "open-sse/providers/identity.js";
+import { applyReviewedCapabilities, getReviewedModelMetadata } from "open-sse/providers/metadata/reviewed.js";
+import { inferModelKind } from "open-sse/providers/models/schema.js";
 
 // Per-provider live model resolvers. Each receives a connection record and
 // returns { models: [{ id, name? }, ...] } | null on failure.
@@ -44,7 +46,7 @@ const LIVE_MODEL_RESOLVERS = {
     }, { proxyOptions });
     if (!result?.models?.length) return null;
     return {
-      models: result.models.map((m) => ({ id: m.id, name: m.name })),
+      models: result.models,
     };
   },
   kimchi: async (conn, proxyOptions) => {
@@ -113,9 +115,13 @@ const LIVE_MODEL_RESOLVERS = {
       models: result.models
         .filter((m) => !m.isDisabled)
         .map((m) => ({
-          id: m.id,
-          name: m.name,
-          capabilities: m.supportsTools ? { tools: true } : undefined,
+          ...m,
+          capabilities: {
+            ...(typeof m.supportsTools === "boolean" ? { tools: m.supportsTools } : {}),
+            ...(typeof m.supportsImages === "boolean" ? { vision: m.supportsImages } : {}),
+            ...(typeof m.supportsThinking === "boolean" ? { reasoning: m.supportsThinking } : {}),
+            ...m.capabilities,
+          },
         })),
     };
   },
@@ -147,6 +153,38 @@ function providerMatchesKinds(providerId, kindFilter) {
 function comboMatchesKinds(combo, kindFilter) {
   const kind = combo?.kind || LLM_KIND;
   return kindFilter.includes(kind);
+}
+
+// Known typed catalog fields only; absent values must not erase capability floors.
+function modelMetadata(row) {
+  if (!row) return {};
+  const caps = {};
+  const inputs = row.architecture?.input_modalities || row.input_modalities;
+  if (Array.isArray(inputs)) {
+    if (inputs.includes("image")) caps.vision = true;
+    if (inputs.includes("audio")) caps.audioInput = true;
+  }
+  for (const [key, value] of Object.entries({
+    contextWindow: row.contextWindow ?? row.contextLength ?? row.context_length,
+    maxInput: row.maxInput ?? row.maxInputTokens ?? row.max_input_tokens,
+    maxOutput: row.maxOutput ?? row.maxOutputTokens ?? row.max_completion_tokens,
+  })) {
+    if (Number.isFinite(value) && value > 0) caps[key] = value;
+  }
+  return { ...caps, ...row.capabilities, ...row.caps };
+}
+
+function indexModelRows(rows, staticRows = new Map()) {
+  const index = new Map();
+  for (const row of rows) {
+    if (!row?.id) continue;
+    if (!index.has(row.id)) index.set(row.id, new Map());
+    const knownKinds = staticRows.get(row.id);
+    const kind = row.kind || row.type || inferModelKind(row)
+      || (knownKinds?.size === 1 ? knownKinds.keys().next().value : LLM_KIND);
+    index.get(row.id).set(kind, row);
+  }
+  return index;
 }
 
 /**
@@ -213,13 +251,14 @@ export async function buildModelsList(kindFilter) {
     }
     // Aggregate token limits for LLM combos so compatible clients can size
     // context correctly instead of falling back to their own model catalog.
-    // The pool bottleneck is the smallest context window; output uses the
-    // largest member limit because fallback members may support more output.
+    // Both limits use the pool minimum, and require every member to be known.
     if (!combo.kind || combo.kind === LLM_KIND) {
       let minContext = Infinity;
       let minMaxOutput = Infinity;
       let hasContext = false;
       let hasMaxOutput = false;
+      let unknownContext = false;
+      let unknownMaxOutput = false;
 
       for (const rawModel of combo.models || []) {
         const memberId = typeof rawModel === "string" ? rawModel.trim() : String(rawModel?.model || rawModel?.id || "").trim();
@@ -233,297 +272,263 @@ export async function buildModelsList(kindFilter) {
         if (Number.isFinite(caps?.contextWindow) && caps.contextWindow > 0) {
           minContext = Math.min(minContext, caps.contextWindow);
           hasContext = true;
+        } else {
+          unknownContext = true;
         }
         if (Number.isFinite(caps?.maxOutput) && caps.maxOutput > 0) {
           minMaxOutput = Math.min(minMaxOutput, caps.maxOutput);
           hasMaxOutput = true;
+        } else {
+          unknownMaxOutput = true;
         }
       }
 
       if (Number.isFinite(Number(combo.contextWindow || combo.context_length))) {
         entry.context_length = Number(combo.contextWindow || combo.context_length);
-      } else if (hasContext) {
+      } else if (hasContext && !unknownContext) {
         entry.context_length = minContext;
       }
       if (Number.isFinite(Number(combo.maxOutput || combo.max_completion_tokens))) {
         entry.max_completion_tokens = Number(combo.maxOutput || combo.max_completion_tokens);
-      } else if (hasMaxOutput) {
+      } else if (hasMaxOutput && !unknownMaxOutput) {
         entry.max_completion_tokens = minMaxOutput;
       }
     }
     models.push(entry);
   }
 
+  // Static fallback and credential-free providers share the same overlays and filters.
   if (connections.length === 0) {
-    // DB unavailable -> return static models, filtered by per-model kind
-    const aliasToProviderId = Object.fromEntries(
-      Object.entries(PROVIDER_ID_TO_ALIAS).map(([id, alias]) => [alias, id])
-    );
-    for (const [alias, providerModels] of Object.entries(PROVIDER_MODELS)) {
-      const providerId = aliasToProviderId[alias] || alias;
-      if (!providerMatchesKinds(providerId, kindFilter)) continue;
-      for (const model of providerModels) {
-        if (!kindFilter.includes(modelKind(model))) continue;
-        if (isDisabled(alias, model.id)) continue;
-        const fallback = getCapabilitiesForModel(providerId, model.id);
-        const item = {
-          id: `${alias}/${model.id}`,
-          object: "model",
-          owned_by: alias,
-        };
-        if (Number.isFinite(fallback?.contextWindow)) item.context_length = fallback.contextWindow;
-        if (Number.isFinite(fallback?.maxOutput)) item.max_completion_tokens = fallback.maxOutput;
-        models.push(item);
+    for (const alias of Object.keys(PROVIDER_MODELS)) {
+      const providerId = resolveProviderAlias(alias);
+      activeConnectionByProvider.set(providerId, null);
+    }
+    for (const row of customModels) {
+      if (row?.providerAlias) activeConnectionByProvider.set(resolveProviderAlias(row.providerAlias), null);
+    }
+  }
+  for (const [providerId, provider] of Object.entries(AI_PROVIDERS)) {
+    if (provider.noAuth && !activeConnectionByProvider.has(providerId)) activeConnectionByProvider.set(providerId, null);
+  }
+  for (const [providerId, conn] of activeConnectionByProvider.entries()) {
+    if (!providerMatchesKinds(providerId, kindFilter) && !(kindFilter.includes("imageToText") && providerMatchesKinds(providerId, [LLM_KIND]))) continue;
+
+    const staticAlias = PROVIDER_ID_TO_ALIAS[providerId] || providerId;
+    const outputAlias = (
+      conn?.providerSpecificData?.prefix
+      || (connections.length === 0 ? staticAlias : getProviderAlias(providerId))
+      || staticAlias
+    ).trim();
+    const providerModels = [...(PROVIDER_MODELS[staticAlias] || [])];
+    if (AI_PROVIDERS[providerId]?.noAuth) {
+      for (const row of AI_PROVIDERS[providerId]?.ttsConfig?.models || []) {
+        if (!providerModels.some((m) => m.id === row.id)) providerModels.push({ ...row, kind: "tts" });
+      }
+    }
+    const enabledModels = conn?.providerSpecificData?.enabledModels;
+    const hasExplicitEnabledModels =
+      Array.isArray(enabledModels) && enabledModels.length > 0;
+    const isCompatibleProvider =
+      isOpenAICompatibleProvider(providerId) || isAnthropicCompatibleProvider(providerId);
+
+    const staticRows = indexModelRows(providerModels);
+    let liveRows = new Map();
+
+    let rawModelIds = isCompatibleProvider
+      ? []
+      : (hasExplicitEnabledModels
+          ? Array.from(
+              new Set(
+                enabledModels.filter(
+                  (modelId) => typeof modelId === "string" && modelId.trim() !== "",
+                ),
+              ),
+            )
+          : providerModels.map((model) => model.id));
+
+    // Config-driven live catalog override (e.g. Kiro returns dynamic
+    // -thinking/-agentic variants per account). On failure, fall back to
+    // whatever rawModelIds already holds.
+    const liveResolver = LIVE_MODEL_RESOLVERS[providerId];
+    const proxyOptions = conn && !hasExplicitEnabledModels && (liveResolver || (!isCompatibleProvider && conn?.apiKey))
+      ? await resolveConnectionProxyConfig(conn.providerSpecificData || {})
+      : null;
+    if (conn && liveResolver && !hasExplicitEnabledModels) {
+      try {
+        const live = await liveResolver(conn, proxyOptions);
+        if (live?.models?.length) {
+          rawModelIds = live.models.map((m) => m.id);
+          liveRows = indexModelRows(live.models, staticRows);
+        }
+      } catch (err) {
+        console.log(`Live model fetch failed for ${providerId}: ${err?.message || err}`);
       }
     }
 
-    for (const customModel of customModels) {
-      if (!customModel?.id) continue;
-      const kind = getModelKind(customModel, LLM_KIND);
-      if (!kindFilter.includes(kind) && !(kind === "imageToText" && kindFilter.includes(LLM_KIND))) continue;
-      const providerAlias = customModel.providerAlias;
-      if (!providerAlias) continue;
+    // Generic live catalog for built-in API-key providers (nvidia, openrouter,
+    // groq, ...): fetch the provider's /models endpoint and UNION it with the
+    // static list so newly released models appear immediately. Skipped when the
+    // user configured an explicit model whitelist (enabledModels), for
+    // compatible nodes (they have their own /models fetch above), or for
+    // providers with a dedicated live resolver.
+    if (
+      !liveResolver &&
+      !isCompatibleProvider &&
+      !hasExplicitEnabledModels &&
+      conn?.apiKey
+    ) {
+      try {
+        const live = await fetchProviderLiveModels(providerId, conn.apiKey, { proxyOptions });
+        if (live?.length) {
+          rawModelIds = Array.from(new Set([...live.map((m) => m.id), ...rawModelIds]));
+          liveRows = indexModelRows(live, staticRows);
+        }
+      } catch (err) {
+        console.log(`Generic live model fetch failed for ${providerId}: ${err?.message || err}`);
+      }
+    }
 
-      const modelId = String(customModel.id).trim();
-      if (!modelId) continue;
+    const modelIds = rawModelIds
+      .map((modelId) => {
+        // Registry/live rows are native wire IDs. Only configured whitelist
+        // values may carry a router prefix; an exact native match wins.
+        if (typeof modelId !== "string" || !hasExplicitEnabledModels || providerModels.some((m) => m.id === modelId)) return modelId;
+        if (modelId.startsWith(`${outputAlias}/`)) {
+          return modelId.slice(outputAlias.length + 1);
+        }
+        if (modelId.startsWith(`${staticAlias}/`)) {
+          return modelId.slice(staticAlias.length + 1);
+        }
+        if (modelId.startsWith(`${providerId}/`)) {
+          return modelId.slice(providerId.length + 1);
+        }
+        return modelId;
+      })
+      .filter((modelId) => typeof modelId === "string" && modelId.trim() !== "");
 
-      models.push({
-        id: `${providerAlias}/${modelId}`,
+    // Index ALL declarations before filtering; provider and service kind form identity.
+    const customRows = indexModelRows(customModels.filter((m) =>
+      m?.id && (m.providerAlias === outputAlias || resolveProviderAlias(m.providerAlias) === providerId)
+    ).map((m) => ({ ...m, kind: getModelKind(m) || LLM_KIND, id: String(m.id).trim() })));
+    const customModelIds = [...customRows.keys()];
+
+    const aliasModelIds = Object.values(modelAliases || {})
+      .filter((fullModel) => {
+        if (typeof fullModel !== "string" || !fullModel.includes("/")) return false;
+        return (
+          fullModel.startsWith(`${outputAlias}/`) ||
+          fullModel.startsWith(`${staticAlias}/`) ||
+          fullModel.startsWith(`${providerId}/`)
+        );
+      })
+      .map((fullModel) => {
+        if (fullModel.startsWith(`${outputAlias}/`)) {
+          return fullModel.slice(outputAlias.length + 1);
+        }
+        if (fullModel.startsWith(`${staticAlias}/`)) {
+          return fullModel.slice(staticAlias.length + 1);
+        }
+        if (fullModel.startsWith(`${providerId}/`)) {
+          return fullModel.slice(providerId.length + 1);
+        }
+        return fullModel;
+      })
+      .filter((modelId) => typeof modelId === "string" && modelId.trim() !== "");
+
+    const mergedModelIds = Array.from(new Set([...modelIds, ...customModelIds, ...aliasModelIds]));
+
+    for (const modelId of mergedModelIds) {
+      const kinds = new Set([
+        ...(staticRows.get(modelId)?.keys() || []),
+        ...(liveRows.get(modelId)?.keys() || []),
+        ...(customRows.get(modelId)?.keys() || []),
+      ]);
+      if (!kinds.size) kinds.add(inferKindFromUnknownModelId(modelId));
+      const kind = [...kinds].find((k) => kindFilter.includes(k)
+        || (k === "imageToText" && kindFilter.includes(LLM_KIND))
+        || (k === LLM_KIND && kindFilter.includes("imageToText")));
+      if (!kind) continue;
+      const allowAsLlm = kind === "imageToText" && kindFilter.includes(LLM_KIND);
+      if (isDisabled(outputAlias, modelId) || isDisabled(staticAlias, modelId) || isDisabled(providerId, modelId)) continue;
+
+      const model = {
+        id: `${outputAlias}/${modelId}`,
         object: "model",
-        owned_by: providerAlias,
+        owned_by: outputAlias,
+      };
+      // Live-catalog resolvers (kiro/qoder/github/clinepass) mostly only return
+      // { id, name } — no per-model capability data. Fall back to the same
+      // pattern-matched capabilities the dashboard uses (useModelCaps.js) so
+      // dynamically-discovered LLM models still surface vision/reasoning/search/tools.
+      const baseCaps = {
+        ...applyReviewedCapabilities({
+          ...(kind === LLM_KIND || kind === "imageToText"
+            ? getCapabilitiesForModel(providerId, modelId)
+            // Explicit unknowns also block chat defaults in the declaration overlay.
+            // Static, reviewed, live and operator numeric limits still take precedence.
+            : { tools: false, reasoning: false, search: false, contextWindow: null, maxInput: null, maxOutput: null }),
+          ...modelMetadata(staticRows.get(modelId)?.get(kind)),
+          ...capabilitiesFromServiceKind(kind),
+        }, providerId, modelId),
+        ...modelMetadata(liveRows.get(modelId)?.get(kind)),
+      };
+      const metadata = getReviewedModelMetadata(providerId, modelId);
+      if (metadata) model.metadata = metadata;
+      const customRow = customRows.get(modelId)?.get(kind)
+        || (kind === LLM_KIND ? customRows.get(modelId)?.get("imageToText") : null);
+      const declared = {
+        ...(customRow?.kind === "imageToText" ? capabilitiesFromServiceKind("imageToText") : {}),
+        ...modelMetadata(customRow),
+      };
+      const caps = withDeclaredCapabilities(baseCaps, declared);
+      if (Number.isFinite(declared.maxInput) && declared.maxInput > 0) caps.maxInput = declared.maxInput;
+      if (kindFilter.includes("imageToText") && !kindFilter.includes(LLM_KIND)
+        && (kind === LLM_KIND || kind === "imageToText") && !caps?.vision) continue;
+      if (caps) model.capabilities = caps;
+      // Token limits under the snake_case names the OpenAI/OpenRouter
+      // convention uses. `capabilities.contextWindow` is camelCase and nested,
+      // so clients matching context_length find nothing, fall back to guessing
+      // the window from the model name, and guess high — a 372k model read as
+      // 1.05M never reaches its compaction threshold and hard-fails upstream.
+      // Emitted at top level because not every client recurses into nested
+      // objects; the camelCase `capabilities` block stays for compatibility.
+      if (kind === LLM_KIND || allowAsLlm) {
+        let contextWindow = caps?.contextWindow;
+        let maxOutput = caps?.maxOutput;
+        // Live-catalog and service-kind capabilities are usually partial
+        // (often just { tools: true }), so fill the gaps from the static
+        // table rather than emitting null and leaving clients to guess.
+        if (!Number.isFinite(contextWindow) || !Number.isFinite(maxOutput)) {
+          const fallback = getCapabilitiesForModel(providerId, modelId);
+          if (!Number.isFinite(contextWindow)) contextWindow = fallback.contextWindow;
+          if (!Number.isFinite(maxOutput)) maxOutput = fallback.maxOutput;
+        }
+        if (Number.isFinite(contextWindow)) model.context_length = contextWindow;
+        if (Number.isFinite(caps?.maxInput) && caps.maxInput > 0) model.max_input_tokens = caps.maxInput;
+        if (Number.isFinite(maxOutput)) model.max_completion_tokens = maxOutput;
+      }
+      models.push(model);
+    }
+
+    // Web search/fetch — provider IS the model, expose as {alias}/search and/or {alias}/fetch with explicit kind
+    const providerInfo = AI_PROVIDERS[providerId];
+    if (kindFilter.includes("webSearch") && providerInfo?.searchConfig && !isDisabled(outputAlias, "search") && !isDisabled(staticAlias, "search") && !isDisabled(providerId, "search")) {
+      models.push({
+        id: `${outputAlias}/search`,
+        object: "model",
+        kind: "webSearch",
+        owned_by: outputAlias,
       });
     }
-  } else {
-    for (const [providerId, conn] of activeConnectionByProvider.entries()) {
-      if (!providerMatchesKinds(providerId, kindFilter)) continue;
-
-      const staticAlias = PROVIDER_ID_TO_ALIAS[providerId] || providerId;
-      const outputAlias = (
-        conn?.providerSpecificData?.prefix
-        || getProviderAlias(providerId)
-        || staticAlias
-      ).trim();
-      const providerModels = PROVIDER_MODELS[staticAlias] || [];
-      const enabledModels = conn?.providerSpecificData?.enabledModels;
-      const hasExplicitEnabledModels =
-        Array.isArray(enabledModels) && enabledModels.length > 0;
-      const isCompatibleProvider =
-        isOpenAICompatibleProvider(providerId) || isAnthropicCompatibleProvider(providerId);
-
-      // Build kind lookup for static models so we can filter even when only IDs are exposed
-      const staticModelKindById = new Map(
-        providerModels.map((m) => [m.id, modelKind(m)])
-      );
-      let liveModelKindById = new Map();
-      let liveCapabilitiesById = new Map();
-
-      let rawModelIds = isCompatibleProvider
-        ? []
-        : (hasExplicitEnabledModels
-            ? Array.from(
-                new Set(
-                  enabledModels.filter(
-                    (modelId) => typeof modelId === "string" && modelId.trim() !== "",
-                  ),
-                ),
-              )
-            : providerModels.map((model) => model.id));
-
-      // Config-driven live catalog override (e.g. Kiro returns dynamic
-      // -thinking/-agentic variants per account). On failure, fall back to
-      // whatever rawModelIds already holds.
-      const liveResolver = LIVE_MODEL_RESOLVERS[providerId];
-      const proxyOptions = !hasExplicitEnabledModels && (liveResolver || (!isCompatibleProvider && conn?.apiKey))
-        ? await resolveConnectionProxyConfig(conn.providerSpecificData || {})
-        : null;
-      if (liveResolver && !hasExplicitEnabledModels) {
-        try {
-          const live = await liveResolver(conn, proxyOptions);
-          if (live?.models?.length) {
-            rawModelIds = live.models.map((m) => m.id);
-            liveModelKindById = new Map(
-              live.models
-                .filter((m) => m?.id)
-                .map((m) => [m.id, modelKind(m)])
-            );
-            liveCapabilitiesById = new Map(
-              live.models
-                .filter((m) => m?.id && m.capabilities)
-                .map((m) => [m.id, m.capabilities])
-            );
-          }
-        } catch (err) {
-          console.log(`Live model fetch failed for ${providerId}: ${err?.message || err}`);
-        }
-      }
-
-      // Generic live catalog for built-in API-key providers (nvidia, openrouter,
-      // groq, ...): fetch the provider's /models endpoint and UNION it with the
-      // static list so newly released models appear immediately. Skipped when the
-      // user configured an explicit model whitelist (enabledModels), for
-      // compatible nodes (they have their own /models fetch above), or for
-      // providers with a dedicated live resolver.
-      if (
-        !liveResolver &&
-        !isCompatibleProvider &&
-        !hasExplicitEnabledModels &&
-        conn?.apiKey
-      ) {
-        try {
-          const live = await fetchProviderLiveModels(providerId, conn.apiKey, { proxyOptions });
-          if (live?.length) {
-            rawModelIds = Array.from(new Set([...live.map((m) => m.id), ...rawModelIds]));
-            liveModelKindById = new Map(
-              live.filter((m) => m?.id).map((m) => [m.id, modelKind(m)])
-            );
-            liveCapabilitiesById = new Map(
-              live.filter((m) => m?.id && m.capabilities).map((m) => [m.id, m.capabilities])
-            );
-          }
-        } catch (err) {
-          console.log(`Generic live model fetch failed for ${providerId}: ${err?.message || err}`);
-        }
-      }
-
-      const modelIds = rawModelIds
-        .map((modelId) => {
-          if (modelId.startsWith(`${outputAlias}/`)) {
-            return modelId.slice(outputAlias.length + 1);
-          }
-          if (modelId.startsWith(`${staticAlias}/`)) {
-            return modelId.slice(staticAlias.length + 1);
-          }
-          if (modelId.startsWith(`${providerId}/`)) {
-            return modelId.slice(providerId.length + 1);
-          }
-          return modelId;
-        })
-        .filter((modelId) => typeof modelId === "string" && modelId.trim() !== "");
-
-      const customModelKindById = new Map();
-      const customModelCapsById = new Map();
-      const customCapabilitiesById = new Map();
-      const customModelIds = customModels
-        .filter((m) => {
-          if (!m?.id) return false;
-          const kind = getModelKind(m) || LLM_KIND;
-          // imageToText custom models are vision-capable chat models: expose them
-          // both in the default LLM list and in /v1/models/image-to-text.
-          if (!kindFilter.includes(kind) && !(kind === "imageToText" && kindFilter.includes(LLM_KIND))) return false;
-          const alias = m.providerAlias;
-          return alias === staticAlias || alias === outputAlias || alias === providerId;
-        })
-        .map((m) => {
-          const modelId = String(m.id).trim();
-          if (modelId) {
-            customModelKindById.set(modelId, getModelKind(m) || LLM_KIND);
-            if (m.caps && typeof m.caps === "object") customModelCapsById.set(modelId, m.caps);
-            const cw = Number(m.contextWindow || m.context_length);
-            const mo = Number(m.maxOutput || m.max_completion_tokens);
-            if ((Number.isFinite(cw) && cw > 0) || (Number.isFinite(mo) && mo > 0)) {
-              customCapabilitiesById.set(modelId, {
-                ...(Number.isFinite(cw) && cw > 0 ? { contextWindow: cw } : {}),
-                ...(Number.isFinite(mo) && mo > 0 ? { maxOutput: mo } : {}),
-              });
-            }
-          }
-          return modelId;
-        })
-        .filter((modelId) => modelId !== "");
-
-      const aliasModelIds = Object.values(modelAliases || {})
-        .filter((fullModel) => {
-          if (typeof fullModel !== "string" || !fullModel.includes("/")) return false;
-          return (
-            fullModel.startsWith(`${outputAlias}/`) ||
-            fullModel.startsWith(`${staticAlias}/`) ||
-            fullModel.startsWith(`${providerId}/`)
-          );
-        })
-        .map((fullModel) => {
-          if (fullModel.startsWith(`${outputAlias}/`)) {
-            return fullModel.slice(outputAlias.length + 1);
-          }
-          if (fullModel.startsWith(`${staticAlias}/`)) {
-            return fullModel.slice(staticAlias.length + 1);
-          }
-          if (fullModel.startsWith(`${providerId}/`)) {
-            return fullModel.slice(providerId.length + 1);
-          }
-          return fullModel;
-        })
-        .filter((modelId) => typeof modelId === "string" && modelId.trim() !== "");
-
-      const mergedModelIds = Array.from(new Set([...modelIds, ...customModelIds, ...aliasModelIds]));
-
-      for (const modelId of mergedModelIds) {
-        // Resolve kind: prefer custom/live metadata, then static, then ID heuristics.
-        const customKind = customModelKindById.get(modelId);
-        const liveKind = liveModelKindById.get(modelId);
-        const kind = customKind || liveKind || staticModelKindById.get(modelId) || inferKindFromUnknownModelId(modelId);
-        // imageToText custom models stay in the LLM list (vision-capable chat models)
-        const allowAsLlm = kind === "imageToText" && kindFilter.includes(LLM_KIND);
-        if (!kindFilter.includes(kind) && !allowAsLlm) continue;
-        if (isDisabled(outputAlias, modelId) || isDisabled(staticAlias, modelId)) continue;
-
-        const model = {
-          id: `${outputAlias}/${modelId}`,
-          object: "model",
-          owned_by: outputAlias,
-        };
-        // Live-catalog resolvers (kiro/qoder/github/clinepass) mostly only return
-        // { id, name } — no per-model capability data. Fall back to the same
-        // pattern-matched capabilities the dashboard uses (useModelCaps.js) so
-        // dynamically-discovered LLM models still surface vision/reasoning/search/tools.
-        const baseCaps = liveCapabilitiesById.get(modelId)
-          || customCapabilitiesById.get(modelId)
-          || capabilitiesFromServiceKind(customKind || liveKind)
-          || (kind === LLM_KIND ? getCapabilitiesForModel(providerId, modelId) : null);
-        const caps = withDeclaredCapabilities(baseCaps, customModelCapsById.get(modelId));
-        if (caps) model.capabilities = caps;
-        // Token limits under the snake_case names the OpenAI/OpenRouter
-        // convention uses. `capabilities.contextWindow` is camelCase and nested,
-        // so clients matching context_length find nothing, fall back to guessing
-        // the window from the model name, and guess high — a 372k model read as
-        // 1.05M never reaches its compaction threshold and hard-fails upstream.
-        // Emitted at top level because not every client recurses into nested
-        // objects; the camelCase `capabilities` block stays for compatibility.
-        if (kind === LLM_KIND || allowAsLlm) {
-          let contextWindow = caps?.contextWindow;
-          let maxOutput = caps?.maxOutput;
-          // Live-catalog and service-kind capabilities are usually partial
-          // (often just { tools: true }), so fill the gaps from the static
-          // table rather than emitting null and leaving clients to guess.
-          if (!Number.isFinite(contextWindow) || !Number.isFinite(maxOutput)) {
-            const fallback = getCapabilitiesForModel(providerId, modelId);
-            if (!Number.isFinite(contextWindow)) contextWindow = fallback.contextWindow;
-            if (!Number.isFinite(maxOutput)) maxOutput = fallback.maxOutput;
-          }
-          if (Number.isFinite(contextWindow)) model.context_length = contextWindow;
-          if (Number.isFinite(maxOutput)) model.max_completion_tokens = maxOutput;
-        }
-        models.push(model);
-      }
-
-      // Web search/fetch — provider IS the model, expose as {alias}/search and/or {alias}/fetch with explicit kind
-      const providerInfo = AI_PROVIDERS[providerId];
-      if (kindFilter.includes("webSearch") && providerInfo?.searchConfig) {
-        models.push({
-          id: `${outputAlias}/search`,
-          object: "model",
-          kind: "webSearch",
-          owned_by: outputAlias,
-        });
-      }
-      if (kindFilter.includes("webFetch") && providerInfo?.fetchConfig) {
-        models.push({
-          id: `${outputAlias}/fetch`,
-          object: "model",
-          kind: "webFetch",
-          owned_by: outputAlias,
-        });
-      }
+    if (kindFilter.includes("webFetch") && providerInfo?.fetchConfig && !isDisabled(outputAlias, "fetch") && !isDisabled(staticAlias, "fetch") && !isDisabled(providerId, "fetch")) {
+      models.push({
+        id: `${outputAlias}/fetch`,
+        object: "model",
+        kind: "webFetch",
+        owned_by: outputAlias,
+      });
     }
+
   }
 
   const dedupedModels = [];

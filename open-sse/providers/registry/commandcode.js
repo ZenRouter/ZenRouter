@@ -1,3 +1,5 @@
+import { COMMAND_CODE_VERSION, COMMAND_CODE_USER_AGENT } from "../../config/clientVersions.js";
+
 export default {
   id: "commandcode",
   priority: 100,
@@ -23,7 +25,8 @@ export default {
     format: "commandcode",
     forceStream: true,
     headers: {
-      "x-command-code-version": "0.25.7",
+      "x-command-code-version": COMMAND_CODE_VERSION,
+      "User-Agent": COMMAND_CODE_USER_AGENT,
       "x-cli-environment": "cli",
     },
   },

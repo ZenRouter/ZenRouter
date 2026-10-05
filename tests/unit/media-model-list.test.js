@@ -29,9 +29,13 @@ describe("media model lists", () => {
 
   it("keeps correct categories for connected accounts with an explicit model whitelist", async () => {
     mocks.getProviderConnections.mockResolvedValue([{ provider: "xai", isActive: true, providerSpecificData: { enabledModels: ["grok-imagine-image-2.0", "grok-imagine-video", "grok-4.7"] } }]);
-    expect((await buildModelsList(["image"])).map((m) => m.id)).toEqual(["xai/grok-imagine-image-2.0"]);
-    expect((await buildModelsList(["llm"])).map((m) => m.id)).toEqual(["xai/grok-4.7"]);
-    expect((await buildModelsList(["video"])).map((m) => m.id)).toEqual(["xai/grok-imagine-video"]);
+    // Unrelated no-auth providers remain discoverable; the whitelist scopes
+    // this account, not the complete public catalog.
+    const ownIds = async (kind) => (await buildModelsList([kind]))
+      .filter((m) => m.owned_by === "xai").map((m) => m.id);
+    expect(await ownIds("image")).toEqual(["xai/grok-imagine-image-2.0"]);
+    expect(await ownIds("llm")).toEqual(["xai/grok-4.7"]);
+    expect(await ownIds("video")).toEqual(["xai/grok-imagine-video"]);
   });
 
   it("corrects incorrectly saved custom generator rows without modifying storage", async () => {

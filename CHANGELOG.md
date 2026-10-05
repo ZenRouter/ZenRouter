@@ -6,11 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Changed
+- Research and reconcile upstream client identities and model metadata. Update Claude Code, Kiro CLI, Kimchi, CodeBuddy CN, and Command Code pins; preserve distinct IDE/CLI and regional profiles. Correct Gemini OAuth and Copilot endpoint-specific API headers without adding beta entitlements.
+- Add 120 documented provider/model entries across chat, image, embedding and TTS routes. Attach provider-scoped factual metadata, source URLs, API-versus-CLI limits and billing-unit caveats; preserve compatibility IDs and mark documented retirements. See `docs/CLIENT-MODEL-RECONCILIATION.md` and `docs/model-catalog-coverage.json` for explicit unverified/deferred coverage.
 - Upgrade the app, CLI, independent test suite, and documentation app dependency manifests and lockfiles to researched npm stable releases. Align React/React DOM/React Is to `19.3.0`; migrate to ESLint `10.12.0`, Vitest `5.0.3`, Vite `8.3.2`, and Undici `8.11.2` with compatible tooling and runtime changes.
 - Require Node.js `>=22.19.0` across all four packages and target Node 22 in the CLI MITM bundle. Update the SQL.js runtime-install pin to `1.14.2`; keep native SQLite optional and preserve the existing driver fallback order.
 - Use the installed test-package Vitest runner with repository-anchored discovery for both root and test-package commands. Remove unused `http-proxy-middleware`/`socks-proxy-agent` dependencies and stale overrides whose consumers are no longer present.
 
 ### Fixed
+- Unify provider aliases and declared upstream pricing aliases; preserve native model namespaces and paid/free catalog identities. Keep coding-plan catalog joins separate from direct API products, and invalidate old normalized model-catalog caches.
+- Preserve live and operator-declared capabilities, separate input/context/output limits, intentional cross-kind IDs and no-auth discoverability across dashboard and public listings. Scope runtime custom capabilities to the provider instead of a global model-name cache.
+- Correct long-context reasoning rates, inclusive provider thresholds, partial custom pricing merges and unknown-price display. Keep non-token billing units out of the token-rate fields; unsupported or undocumented maxima remain explicitly unknown.
+- Select the matching upstream transport for per-model translation targets, including Responses-only API models, while retaining native-format precedence and clearing stale per-request transport state.
 - Adapt Undici 8 dispatchers to Node 22 native fetch at the proxy, pinned web-fetch, and remote-image seams. Preserve CONNECT proxy tunneling, DNS pinning, cancellation, and strict-proxy no-direct-fallback behavior. Keep proxy diagnostics on CONNECT for plain-HTTP test targets as well, preventing false failures with CONNECT-only relays.
 - Align the official installer with Node `>=22.19.0` before package/build operations. Retain the validated Node/npm or Bun selection through provisioning, sudo, user-prefix/source fallback, and CLI verification; use the published `@joyccn/zenrouter` package and fail clearly when no supported runtime is available. Verify the newly linked source CLI explicitly so an older global CLI cannot shadow it or turn a fresh CLI failure into installation success.
 - Load the installed Monaco `0.57.0` ESM release with explicitly bundled same-origin JSON/editor workers instead of the wrapper's stale CDN default. Preserve the existing CSP and verify real editor input and worker message round trips.
@@ -23,7 +29,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 - Document unresolved upstream `node-forge` and `braces` audit advisories; the dependency refresh does not claim a vulnerability-free graph or apply forced downgrades.
 
 ### Verification
-- On Node `22.23.2`, the full isolated Vitest suite passes across 444 files: 3,569 passed, 100 skipped, 1 todo, zero failed tests or suites. Full ESLint passes with zero errors/warnings and `--max-warnings=0`; deliberate rule-violation controls remain active. Installer runtime tests evaluate real Bash function bodies in mock-only harnesses without running the installer or host package operations.
+- On Node `22.23.2`, the full isolated Vitest suite passes across 474 files: 3,800 passed, 100 skipped, 1 todo, zero failed tests or suites. Full ESLint passes with zero errors/warnings and `--max-warnings=0`; deliberate rule-violation controls remain active. Installer runtime tests evaluate real Bash function bodies in mock-only harnesses without running the installer or host package operations.
 - App/CLI production builds, docs static export, native SQLite, h2c, Undici SSE/abort/strict-proxy transport, authenticated missing-model API checks, CLI packaging, and real browser form/hydration/editor checks pass without billable provider inference.
 - Node 22's genuine `node:sqlite` experimental-status warning remains visible when the suite exercises the fallback driver; no warning suppression or coverage removal is used to hide it.
 

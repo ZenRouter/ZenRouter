@@ -1,3 +1,5 @@
+import { canonicalizeProviderId } from "./identity.js";
+
 // Model capabilities — what each model can read/do beyond plain text.
 //
 // Fallback order (first match wins), result merged over DEFAULT_CAPABILITIES:
@@ -33,6 +35,7 @@
 // 2.0+, Grok, Perplexity). Verify with: curl -s https://models.dev/api.json
 
 import { matchPattern } from "./pricing.js";
+import { applyReviewedCapabilities } from "./metadata/reviewed.js";
 import { normalizeModelId } from "./models/schema.js";
 import { looksLikeVisionModel } from "./visionPatterns.js";
 
@@ -61,6 +64,7 @@ export const DEFAULT_CAPABILITIES = {
   thinkingEffortSupported: false, // zai format only: model accepts a reasoning_effort level (GLM-5.2+; older GLM ignores it)
   // limits (tokens)
   contextWindow: 200000,
+  maxInput: null,       // unknown unless the provider documents a separate input ceiling
   maxOutput: 64000,
 };
 
@@ -575,8 +579,10 @@ export function aggregateComboCapabilities(comboModels, comboLookup = null, reso
     thinkingFormat:     first.thinkingFormat,
     thinkingCanDisable: first.thinkingCanDisable,
     thinkingRange:      first.thinkingRange,
-    contextWindow: Math.min(...allCaps.map((c) => c.contextWindow)),
-    maxOutput:     Math.max(...allCaps.map((c) => c.maxOutput)),
+    contextWindow: allCaps.every((c) => Number.isFinite(c.contextWindow) && c.contextWindow > 0)
+      ? Math.min(...allCaps.map((c) => c.contextWindow)) : null,
+    maxOutput: allCaps.every((c) => Number.isFinite(c.maxOutput) && c.maxOutput > 0)
+      ? Math.max(...allCaps.map((c) => c.maxOutput)) : null,
   };
 }
 
@@ -661,7 +667,13 @@ function refine(base, provider, model) {
 }
 
 export function getCapabilitiesForModel(provider, model) {
+  const baseline = resolveBaselineCapabilities(provider, model);
+  return applyReviewedCapabilities(baseline, provider, model);
+}
+
+function resolveBaselineCapabilities(provider, model) {
   if (!model) return { ...DEFAULT_CAPABILITIES };
+  provider = canonicalizeProviderId(provider);
 
   // Canonical exact lookup strips vendor prefix: "anthropic/claude-opus-4.7" -> "claude-opus-4.7".
   const baseModel = model.includes("/") ? model.split("/").pop() : model;

@@ -13,21 +13,13 @@ export const CATALOG_FILE = path.join(DATA_DIR, "model-catalog.json");
 // Trimmed upstream catalog, read by the add-models skill (not by the router).
 export const CATALOG_RAW_FILE = path.join(DATA_DIR, "model-catalog-raw.json");
 
-// Schema of the file this module reads. The writer stamps it; a file carrying an
-// older value predates provider-scoped modality keys, and its flat keys are not
-// looked up here, so the sync rebuilds it instead of asking upstream for a 304.
-export const CATALOG_VERSION = 2;
+// v3 preserves full native model IDs, including namespaces and :free routes.
+// Older files collapsed these identities and must be rebuilt, not reused.
+export const CATALOG_VERSION = 3;
 
 const EMPTY = { models: {}, providers: {} };
 let cache = EMPTY;
 let cachedMtime = -1;
-
-// "zai-org/GLM-4.6V:free" -> "glm-4.6v"
-function baseId(model) {
-  if (!model) return "";
-  const withoutVendor = model.includes("/") ? model.split("/").pop() : model;
-  return withoutVendor.toLowerCase().split(":")[0];
-}
 
 function load() {
   let mtime;
@@ -43,7 +35,9 @@ function load() {
   cachedMtime = mtime;
   try {
     const parsed = JSON.parse(fs.readFileSync(CATALOG_FILE, "utf8"));
-    cache = { models: parsed?.models || {}, providers: parsed?.providers || {} };
+    cache = parsed?.v === CATALOG_VERSION
+      ? { models: parsed.models || {}, providers: parsed.providers || {} }
+      : EMPTY;
   } catch {
     cache = EMPTY;
   }
@@ -58,7 +52,7 @@ function load() {
 // request to the router mode inherited a stranger's vision.
 export function getCatalogModalities(provider, model) {
   if (!provider) return null;
-  return load().models[`${provider}:${baseId(model)}`] || null;
+  return load().models[`${provider}:${model}`] || null;
 }
 
 // Context and output limits are a property of the gateway too: each one
@@ -66,7 +60,7 @@ export function getCatalogModalities(provider, model) {
 export function getCatalogLimits(provider, model) {
   const byProvider = provider && load().providers[provider];
   if (!byProvider) return null;
-  return byProvider[model] || byProvider[baseId(model)] || null;
+  return byProvider[model] || null;
 }
 
 // Force a re-read on the next lookup (called right after a sync writes the file).

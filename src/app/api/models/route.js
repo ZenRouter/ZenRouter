@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { applyReviewedCapabilities, getReviewedModelMetadata } from "open-sse/providers/metadata/reviewed.js";
 import { getModelAliases, setModelAlias, getCustomModels } from "@/models";
 import { getDisabledModels } from "@/lib/disabledModelsDb";
 import { AI_MODELS } from "@/shared/constants/config";
 import { getProviderAlias } from "@/shared/constants/providers";
-import { getModelKind } from "@/shared/constants/models";
-import { getCapabilitiesForModel } from "open-sse/providers/capabilities.js";
+import { getModelKind, PROVIDER_MODELS, PROVIDER_ID_TO_ALIAS } from "@/shared/constants/models";
+import { canonicalizeProviderId } from "open-sse/providers/identity.js";
+import { getCapabilitiesForModel, withDeclaredCapabilities } from "open-sse/providers/capabilities.js";
 
 // GET /api/models - Get models with aliases
 export async function GET() {
@@ -12,56 +14,47 @@ export async function GET() {
     const modelAliases = await getModelAliases();
     const disabled = await getDisabledModels();
 
-    const models = AI_MODELS
-      .filter((m) => {
-        const alias = getProviderAlias(m.provider) || m.provider;
-        const list = disabled[alias] || disabled[m.provider] || [];
-        return !list.includes(m.model);
-      })
-      .map((m) => {
-        const fullModel = `${m.provider}/${m.model}`;
-        const providerAlias = getProviderAlias(m.provider) || m.provider;
-        const routedModel = `${providerAlias}/${m.model}`;
-        const c = getCapabilitiesForModel(m.provider, m.model);
-        return {
-          ...m,
-          fullModel,
-          routedModel,
-          alias: modelAliases[fullModel] || m.model,
-          caps: {
-            vision: c.vision,
-            search: c.search,
-            reasoning: c.reasoning,
-            contextWindow: c.contextWindow,
-            maxOutput: c.maxOutput,
-          },
-        };
-      });
-
-    // Custom models ride along; their stored caps override the name heuristic
-    const seenFull = new Set(models.map((m) => m.fullModel));
-    const customModels = (await getCustomModels()).filter((m) => {
-      if (!m?.id || getModelKind(m, "llm") !== "llm") return false;
-      return !seenFull.has(`${m.providerAlias}/${m.id}`);
-    });
-    for (const m of customModels) {
-      const fullModel = `${m.providerAlias}/${m.id}`;
-      const c = getCapabilitiesForModel(m.providerAlias, m.id);
+    const canonicalKey = (provider, model) => `${canonicalizeProviderId(provider)}/${model}`;
+    const aliasesByModel = new Map(Object.entries(modelAliases).filter(([, target]) => typeof target === "string" && target.includes("/"))
+      .map(([alias, target]) => {
+        const slash = target.indexOf("/");
+        return [canonicalKey(target.slice(0, slash), target.slice(slash + 1)), alias];
+      }));
+    const customByModel = new Map((await getCustomModels())
+      .filter((m) => m?.id && getModelKind(m, "llm") === "llm")
+      .map((m) => [canonicalKey(m.providerAlias, m.id), m]));
+    const isDisabled = (provider, model) => Object.entries(disabled).some(([token, ids]) =>
+      canonicalizeProviderId(token) === canonicalizeProviderId(provider) && Array.isArray(ids) && ids.includes(model));
+    const models = [];
+    const seen = new Set();
+    const rows = [...AI_MODELS, ...[...customByModel.values()].map((m) => ({ provider: m.providerAlias, model: m.id, name: m.name || m.id }))];
+    for (const m of rows) {
+      const key = canonicalKey(m.provider, m.model);
+      if (seen.has(key) || isDisabled(m.provider, m.model)) continue;
+      seen.add(key);
+      const providerId = canonicalizeProviderId(m.provider);
+      const providerAlias = getProviderAlias(providerId) || m.provider;
+      const staticAlias = PROVIDER_ID_TO_ALIAS[providerId] || providerId;
+      const declared = PROVIDER_MODELS[staticAlias]?.find((row) => row.id === m.model && getModelKind(row, "llm") === "llm");
+      const custom = customByModel.get(key);
+      const reviewedBase = applyReviewedCapabilities({
+        ...getCapabilitiesForModel(providerId, m.model),
+        ...(declared?.contextLength ? { contextWindow: declared.contextLength } : {}),
+        ...(declared?.maxOutputTokens ? { maxOutput: declared.maxOutputTokens } : {}),
+      }, providerId, m.model);
+      const c = withDeclaredCapabilities({
+        ...reviewedBase,
+        ...(custom?.contextWindow ? { contextWindow: custom.contextWindow } : {}),
+        ...(custom?.maxOutput ? { maxOutput: custom.maxOutput } : {}),
+      }, custom?.caps);
+      const metadata = getReviewedModelMetadata(providerId, m.model);
       models.push({
-        provider: m.providerAlias,
-        model: m.id,
-        name: m.name || m.id,
-        fullModel,
-        routedModel: fullModel,
-        alias: modelAliases[fullModel] || m.id,
-        caps: {
-          vision: c.vision,
-          search: c.search,
-          reasoning: c.reasoning,
-          contextWindow: c.contextWindow,
-          maxOutput: c.maxOutput,
-          ...(m.caps || {}),
-        },
+        ...m,
+        fullModel: `${m.provider}/${m.model}`,
+        routedModel: `${providerAlias}/${m.model}`,
+        alias: aliasesByModel.get(key) || m.model,
+        caps: c,
+        ...(metadata ? { metadata } : {}),
       });
     }
 
@@ -85,16 +78,14 @@ export async function PUT(request) {
     const modelAliases = await getModelAliases();
 
     // Check if alias already exists for different model
-    const existingModel = Object.entries(modelAliases).find(
-      ([key, val]) => val === alias && key !== model
-    );
+    const existingModel = modelAliases[alias] && modelAliases[alias] !== model;
 
     if (existingModel) {
       return NextResponse.json({ error: "Alias already in use" }, { status: 400 });
     }
 
     // Update alias
-    await setModelAlias(model, alias);
+    await setModelAlias(alias, model);
 
     return NextResponse.json({ success: true, model, alias });
   } catch (error) {

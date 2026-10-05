@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   getCapabilitiesForModel,
   PROVIDER_CAPABILITIES,
-  PATTERN_CAPABILITIES,
 } from "../../open-sse/providers/capabilities.js";
+import { getReviewedModelMetadata } from "../../open-sse/providers/metadata/reviewed.js";
 
 describe("Model Capabilities Matrix", () => {
   describe("o3-mini text-only vs o3 multimodal", () => {
@@ -150,7 +150,7 @@ describe("Model Capabilities Matrix", () => {
       for (const model of ceilingModels) {
         const caps = getCapabilitiesForModel("codex", model);
         expect(caps.contextWindow).toBe(872000);
-        expect(caps.maxOutput).toBe(128000);
+        expect(caps.maxOutput).toBeNull();
         expect(caps.vision).toBe(true);
         expect(caps.reasoning).toBe(true);
         expect(caps.search).toBe(true);
@@ -161,22 +161,39 @@ describe("Model Capabilities Matrix", () => {
       for (const model of ceilingModels) {
         const caps = getCapabilitiesForModel("cx", model);
         expect(caps.contextWindow).toBe(872000);
-        expect(caps.maxOutput).toBe(128000);
+        expect(caps.maxOutput).toBeNull();
         expect(caps.vision).toBe(true);
         expect(caps.reasoning).toBe(true);
         expect(caps.search).toBe(true);
       }
     });
 
-    it("preserves unextended GPT-6 and GPT-5.6 windows", () => {
-      expect(getCapabilitiesForModel("codex", "gpt-6-astra").contextWindow).toBe(1050000);
-      expect(getCapabilitiesForModel("cx", "gpt-6-astra").contextWindow).toBe(1050000);
-      expect(getCapabilitiesForModel("codex", "gpt-5.6-sol").contextWindow).toBe(372000);
-      expect(getCapabilitiesForModel("cx", "gpt-5.6-sol").contextWindow).toBe(372000);
-      expect(getCapabilitiesForModel("codex", "gpt-5.6-terra").contextWindow).toBe(272000);
-      expect(getCapabilitiesForModel("cx", "gpt-5.6-terra").contextWindow).toBe(272000);
-      expect(getCapabilitiesForModel("codex", "gpt-5.6-luna").contextWindow).toBe(272000);
-      expect(getCapabilitiesForModel("cx", "gpt-5.6-luna").contextWindow).toBe(272000);
+    it("keeps selected context separate from official CLI defaults, maxima, and API limits", () => {
+      for (const provider of ["codex", "cx"]) {
+        for (const [model, selectedContext] of [
+          ["gpt-6-astra", 872000], ["gpt-5.6-sol", 272000],
+          ["gpt-5.6-terra", 272000], ["gpt-5.6-luna", 272000],
+        ]) {
+          expect(getCapabilitiesForModel(provider, model)).toMatchObject({
+            contextWindow: selectedContext, maxInput: null, maxOutput: null,
+          });
+          const metadata = getReviewedModelMetadata(provider, model);
+          expect(metadata.limits).toMatchObject({
+            cliDefaultContext: 272000, cliMaxContext: 872000,
+            apiContextWindow: 1050000, apiMaxInput: 922000, apiMaxOutput: 128000,
+            routeContextWindow: null, routeMaxOutput: null, authenticatedRouteVerified: false,
+          });
+          expect(metadata.sources).toContain(
+            "https://raw.githubusercontent.com/openai/codex/rust-v0.160.0/codex-rs/models-manager/models.json",
+          );
+        }
+        for (const model of ceilingModels) {
+          expect(getReviewedModelMetadata(provider, model).limits).toMatchObject({
+            cliDefaultContext: 272000, cliMaxContext: 872000,
+            routeMaxOutput: null, unverifiedCapabilityFields: ["maxInput", "maxOutput"],
+          });
+        }
+      }
     });
   });
 });

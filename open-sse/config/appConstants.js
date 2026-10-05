@@ -2,6 +2,7 @@ import { platform, arch, hostname } from "os";
 import { PROVIDERS, PROVIDER_OAUTH } from "./providers.js";
 import { ANTIGRAVITY_IDE_USER_AGENT } from "../providers/shared.js";
 import { createRequire } from "module";
+import { GEMINI_AUTH_USER_AGENT, COPILOT_TOKEN_API_VERSION } from "./clientVersions.js";
 
 // === Gemini CLI === derive từ registry gemini-cli.transport
 export const GEMINI_CLI_VERSION = PROVIDERS["gemini-cli"]?.cliVersion;
@@ -15,7 +16,7 @@ function geminiCLIArch() {
 }
 
 export function geminiCLIUserAgent(model = "unknown") {
-  return `GeminiCLI/${GEMINI_CLI_VERSION}/${model || "unknown"} (${platform()}; ${geminiCLIArch()}; terminal)`;
+  return `GeminiCLI/${GEMINI_CLI_VERSION}/${model || "unknown"} (${platform()}; ${geminiCLIArch()}; terminal) ${GEMINI_AUTH_USER_AGENT}`;
 }
 
 // === GitHub Copilot ===
@@ -26,6 +27,7 @@ export const GITHUB_COPILOT = {
   COPILOT_CHAT_VERSION: _ghCopilot.chatVersion,
   USER_AGENT: _ghCopilot.userAgent,
   API_VERSION: _ghCopilot.apiVersion,
+  TOKEN_API_VERSION: COPILOT_TOKEN_API_VERSION,
 };
 
 // === Antigravity enums ===
@@ -151,8 +153,8 @@ export const CLOUD_CODE_API = {
 
 export const LOAD_CODE_ASSIST_HEADERS = {
   "Content-Type": "application/json",
-  "User-Agent": "google-api-nodejs-client/9.15.1",
-  "X-Goog-Api-Client": "google-cloud-sdk vscode_cloudshelleditor/0.1",
+  "User-Agent": GEMINI_AUTH_USER_AGENT,
+  "X-Goog-Api-Client": GEMINI_CLI_API_CLIENT,
   "Client-Metadata": JSON.stringify({ ideType: IDE_TYPE.ANTIGRAVITY, platform: getPlatformEnum(), pluginType: PLUGIN_TYPE.GEMINI }),
 };
 

@@ -2,18 +2,28 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { getCapabilitiesForModel } from "open-sse/providers/capabilities.js";
+import { canonicalizeProviderId } from "open-sse/providers/identity.js";
 
 // Module cache: one /api/models fetch shared by every useModelCaps instance.
 let cache = null; // { byFull, byId } | null
 let inflight = null;
+
+function canonicalKey(key) {
+  const slash = key.indexOf("/");
+  return slash < 0 ? key : `${canonicalizeProviderId(key.slice(0, slash))}/${key.slice(slash + 1)}`;
+}
 
 function buildMaps(models) {
   const byFull = {};
   const byId = {};
   for (const m of models || []) {
     if (!m.caps) continue;
-    if (m.fullModel) byFull[m.fullModel] = m.caps;
-    if (m.routedModel) byFull[m.routedModel] = m.caps;
+    for (const key of [m.fullModel, m.routedModel]) {
+      if (key) {
+        byFull[key] = m.caps;
+        byFull[canonicalKey(key)] = m.caps;
+      }
+    }
     if (m.model) byId[m.model] = m.caps;
   }
   return { byFull, byId };
@@ -42,7 +52,9 @@ function resolveCaps(byFull, byId, key) {
   if (!key) return null;
   if (byFull[key]) return byFull[key];
   const bare = key.includes("/") ? key.slice(key.indexOf("/") + 1) : key;
-  if (byId[bare]) return byId[bare];
+  if (key.includes("/")) {
+    if (byFull[canonicalKey(key)]) return byFull[canonicalKey(key)];
+  } else if (byId[bare]) return byId[bare];
   const provider = key.includes("/") ? key.slice(0, key.indexOf("/")) : null;
   const c = getCapabilitiesForModel(provider, bare);
   return {
@@ -51,6 +63,7 @@ function resolveCaps(byFull, byId, key) {
     reasoning: c.reasoning,
     contextWindow: c.contextWindow,
     maxOutput: c.maxOutput,
+    ...(c.maxInput != null ? { maxInput: c.maxInput } : {}),
   };
 }
 

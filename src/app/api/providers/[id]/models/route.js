@@ -24,7 +24,9 @@ import {
   VSCODE_VERSION,
   COPILOT_CHAT_VERSION,
   COPILOT_USER_AGENT,
-  GEMINI_CLI_VERSION,
+  COPILOT_API_VERSION,
+  GEMINI_AUTH_USER_AGENT,
+  GEMINI_CLI_API_CLIENT,
 } from "open-sse/config/clientVersions.js";
 
 const GEMINI_CLI_MODELS_URL = "https://cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels";
@@ -192,7 +194,8 @@ const PROVIDER_MODELS_CONFIG = {
       "Copilot-Integration-Id": "vscode-chat",
       "editor-version": `vscode/${VSCODE_VERSION}`,
       "editor-plugin-version": `copilot-chat/${COPILOT_CHAT_VERSION}`,
-      "user-agent": COPILOT_USER_AGENT
+      "user-agent": COPILOT_USER_AGENT,
+      "x-github-api-version": COPILOT_API_VERSION
     },
     authHeader: "Authorization",
     authPrefix: "Bearer ",
@@ -420,8 +423,8 @@ const PROVIDER_MODELS_CONFIG = {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
-            "User-Agent": "google-api-nodejs-client/9.15.1",
-            "X-Goog-Api-Client": "google-cloud-sdk vscode_cloudshelleditor/0.1"
+            "User-Agent": GEMINI_AUTH_USER_AGENT,
+            "X-Goog-Api-Client": GEMINI_CLI_API_CLIENT
           },
           body: JSON.stringify(body)
         }, proxyOptions);

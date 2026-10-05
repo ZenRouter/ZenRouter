@@ -23,6 +23,7 @@ export default {
     { id: "voyage-3-large", name: "Voyage 3 Large (Legacy)", kind: "embedding" },
     { id: "voyage-3.5", name: "Voyage 3.5 (Legacy)", kind: "embedding" },
     { id: "voyage-3.5-lite", name: "Voyage 3.5 Lite (Legacy)", kind: "embedding" },
+    { id: "voyage-code-4", name: "Voyage Code 4", kind: "embedding" },
     { id: "voyage-code-3", name: "Voyage Code 3 (Legacy)", kind: "embedding" },
     { id: "voyage-finance-2", name: "Voyage Finance 2", kind: "embedding" },
     { id: "voyage-law-2", name: "Voyage Law 2", kind: "embedding" },
