@@ -10,13 +10,14 @@ let defaultUndiciAgent = null;
 export async function getDefaultAgent() {
   if (!defaultUndiciAgent) {
     try {
-      const { Agent } = await import("undici");
-      defaultUndiciAgent = new Agent({
+      const { Agent, Dispatcher1Wrapper } = await import("undici");
+      // Node's built-in fetch still uses Undici's legacy dispatcher handlers.
+      defaultUndiciAgent = new Dispatcher1Wrapper(new Agent({
         keepAliveTimeout: 30000,
         keepAliveMaxTimeout: 60000,
         pipelining: 1,
         connections: 50,
-      });
+      }));
     } catch {
       defaultUndiciAgent = null;
     }
@@ -288,12 +289,14 @@ async function getDispatcher(proxyUrl) {
       try { oldest?.destroy?.(); oldest?.close?.(); } catch {}
       proxyDispatchers.delete(oldestKey);
     }
-    const { ProxyAgent } = await import("undici");
-    proxyDispatchers.set(normalized, new ProxyAgent({
+    const { ProxyAgent, Dispatcher1Wrapper } = await import("undici");
+    proxyDispatchers.set(normalized, new Dispatcher1Wrapper(new ProxyAgent({
       uri: normalized,
+      // Preserve the pre-v8 CONNECT behavior for both HTTP and HTTPS targets.
+      proxyTunnel: true,
       keepAliveTimeout: 30_000,
       keepAliveMaxTimeout: 60_000,
-    }));
+    })));
   }
 
   return proxyDispatchers.get(normalized);
