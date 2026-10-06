@@ -11,8 +11,9 @@ import { handleSearchCore } from "open-sse/handlers/search/index.js";
 import { errorResponse, unavailableResponse } from "open-sse/utils/error.js";
 import { HTTP_STATUS } from "open-sse/config/runtimeConfig.js";
 import * as log from "../utils/logger.js";
-import { updateProviderCredentials, checkAndRefreshToken } from "../services/tokenRefresh.js";
+import { checkAndRefreshToken } from "../services/tokenRefresh.js";
 import { handleComboChat, getComboModelsFromData } from "open-sse/services/combo.js";
+const MAX_RESOURCE_FALLBACK_ATTEMPTS = 3;
 
 /**
  * Handle web search request for the SSE/Next.js server.
@@ -92,17 +93,34 @@ export async function handleSearch(request) {
 
 async function handleSingleProviderSearch(body, providerInput, request, apiKey, settings) {
   const query = body.query;
+  if (typeof providerInput !== "string" || !providerInput.trim()) {
+    return errorResponse(HTTP_STATUS.BAD_REQUEST, "Invalid search provider/model selector");
+  }
 
   // Support "provider/model" format (e.g. "ag/gemini-3.8-flash" or "gemini/gemini-2.5-flash")
-  let requestedProvider = body.provider || providerInput;
-  let requestedModel = body.model;
+  let requestedProvider = providerInput;
+  // A bare model is the provider selector. Only a separate provider field or
+  // the provider/model syntax makes it an explicit upstream grounding model.
+  // Combo members own their provider/model; the original combo body must not
+  // override the member selected by the fallback strategy.
+  let requestedModel = body.provider === providerInput ? body.model : undefined;
   if (providerInput && providerInput.includes("/")) {
     const slashIdx = providerInput.indexOf("/");
     requestedProvider = providerInput.slice(0, slashIdx);
     requestedModel = providerInput.slice(slashIdx + 1);
+    // `/v1/models/web` advertises provider/search as a service ID, not an
+    // upstream model literally named "search".
+    if (requestedModel === "search") requestedModel = undefined;
+  }
+
+  if (requestedModel != null && (typeof requestedModel !== "string" || !requestedModel.trim())) {
+    return errorResponse(HTTP_STATUS.BAD_REQUEST, "Invalid upstream search model");
   }
 
   const providerId = resolveProviderId(requestedProvider);
+  // Some clients send both fields with the same provider selector. That does
+  // not select an upstream model named after the provider.
+  if (requestedModel && resolveProviderId(requestedModel) === providerId) requestedModel = undefined;
   const resolvedProvider = AI_PROVIDERS[providerId];
 
   if (!resolvedProvider) {
@@ -158,6 +176,7 @@ async function handleSingleProviderSearch(body, providerInput, request, apiKey, 
   const excludeConnectionIds = new Set();
   let lastError = null;
   let lastStatus = null;
+  let resourceFailures = 0;
 
   // Credential fallback: some search providers reuse the API key of a related
   // chat provider (e.g. ollama-search reuses the `ollama` chat key, zai-search
@@ -211,21 +230,23 @@ async function handleSingleProviderSearch(body, providerInput, request, apiKey, 
       provider: resolvedProvider,
       providerConfig,
       credentials: refreshedCredentials,
-      log,
-      onCredentialsRefreshed: async (newCreds) => {
-        await updateProviderCredentials(credentials.connectionId, {
-          accessToken: newCreds.accessToken,
-          refreshToken: newCreds.refreshToken,
-          providerSpecificData: newCreds.providerSpecificData,
-          testStatus: "active"
-        });
-      },
-      onRequestSuccess: async () => {
-        await clearAccountError(credentials.connectionId, credentials);
-      }
+      log
     });
 
-    if (result.success) return result.response;
+    if (result.success) {
+      await clearAccountError(credentials.connectionId, credentials, searchLockKey);
+      return result.response;
+    }
+
+    if (result.errorScope === "request") return result.response;
+    if (result.errorScope === "resource") {
+      resourceFailures++;
+      if (resourceFailures >= MAX_RESOURCE_FALLBACK_ATTEMPTS) return result.response;
+      excludeConnectionIds.add(credentials.connectionId);
+      lastError = result.error;
+      lastStatus = result.status;
+      continue;
+    }
 
     const { shouldFallback } = await markAccountUnavailable(credentials.connectionId, result.status, result.error, credentialProviderId, searchLockKey);
 

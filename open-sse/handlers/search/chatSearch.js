@@ -5,6 +5,11 @@
  */
 import { PROVIDER_MEDIA } from "../../providers/index.js";
 import { ANTIGRAVITY_IDE_USER_AGENT } from "../../providers/shared.js";
+import { getModelUpstreamId } from "../../config/providerModels.js";
+import { applyThinking, stripThinkingSuffix } from "../../translator/concerns/thinkingUnified.js";
+import { randomUUID } from "node:crypto";
+import { resolveSessionId } from "../../utils/sessionManager.js";
+import { proxyAwareFetch } from "../../utils/proxyFetch.js";
 
 // Default search model + endpoint derive from registry searchViaChat (single source)
 const searchModel = (id) => PROVIDER_MEDIA[id]?.searchViaChat?.defaultModel;
@@ -89,7 +94,7 @@ const CHAT_SEARCH_CONFIG = {
     extractAnswer: (data) => {
       const candidate = data?.candidates?.[0];
       const parts = candidate?.content?.parts || [];
-      const text = parts.map((p) => p?.text || "").filter(Boolean).join("");
+      const text = parts.filter((p) => p?.thought !== true).map((p) => p?.text || "").filter(Boolean).join("");
       const chunks = candidate?.groundingMetadata?.groundingChunks || [];
       const citations = chunks
         .map((ch) => ch?.web)
@@ -106,17 +111,24 @@ const CHAT_SEARCH_CONFIG = {
     // Upstream 403s on a missing or fabricated project — surface the real cause
     requireCredentials: (credentials) =>
       credentials?.projectId ? null : "Antigravity account has no projectId — reconnect the account",
-    buildBody: (query, model, credentials) => ({
-      project: credentials.projectId,
-      model,
-      userAgent: AG_CLIENT_NAME,
-      requestType: "search",
-      request: {
-        contents: [{ role: "user", parts: [{ text: query }] }],
-        tools: [{ googleSearch: {} }],
-        generationConfig: AG_SEARCH_GENERATION_CONFIG
-      }
-    }),
+    buildBody: (query, model, credentials) => {
+      const upstreamModel = getModelUpstreamId("ag", model);
+      const body = {
+        project: credentials.projectId,
+        model: stripThinkingSuffix(upstreamModel),
+        userAgent: AG_CLIENT_NAME,
+        requestId: `agent/${randomUUID()}/${Date.now()}/${randomUUID()}/1`,
+        request: {
+          sessionId: resolveSessionId({ connectionId: credentials.connectionId, scope: "antigravity" }),
+          contents: [{ role: "user", parts: [{ text: query }] }],
+          tools: [{ googleSearch: {} }],
+          generationConfig: { ...AG_SEARCH_GENERATION_CONFIG }
+        }
+      };
+      // Resolve the same model aliases and effort presets as chat, but retain
+      // googleSearch: the chat executor's function-tool normalization drops it.
+      return applyThinking("antigravity", upstreamModel, body, "antigravity");
+    },
     buildHeaders: (token) => ({
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -127,7 +139,7 @@ const CHAT_SEARCH_CONFIG = {
       const response = data?.response || data;
       const candidate = response?.candidates?.[0];
       const parts = candidate?.content?.parts || [];
-      const text = parts.map((p) => p?.text || "").filter(Boolean).join("");
+      const text = parts.filter((p) => p?.thought !== true).map((p) => p?.text || "").filter(Boolean).join("");
       const grounding = candidate?.groundingMetadata || {};
       const chunks = grounding.groundingChunks || [];
       const supports = grounding.groundingSupports || [];
@@ -479,19 +491,26 @@ export async function handleChatSearch({
   let upstreamStart = Date.now();
   let resp;
   try {
-    resp = await fetch(url, {
+    const accountPolicy = credentials?.providerSpecificData;
+    resp = await proxyAwareFetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
       signal: controller.signal
+    }, {
+      connectionProxyEnabled: accountPolicy?.connectionProxyEnabled === true,
+      connectionProxyUrl: accountPolicy?.connectionProxyUrl || "",
+      connectionNoProxy: accountPolicy?.connectionNoProxy || "",
+      vercelRelayUrl: accountPolicy?.vercelRelayUrl || "",
+      strictProxy: accountPolicy?.strictProxy === true,
     });
   } catch (err) {
     clearTimeout(timer);
     if (err?.name === "AbortError") {
-      log?.warn?.(`[chatSearch] timeout provider=${provider}`);
+      log?.warn?.("SEARCH", `[chatSearch] timeout provider=${provider}`);
       return { success: false, status: 504, error: "Upstream timeout" };
     }
-    log?.error?.(`[chatSearch] network error provider=${provider}: ${err?.message}`);
+    log?.error?.("SEARCH", `[chatSearch] network error provider=${provider}: ${err?.message}`);
     return {
       success: false,
       status: 502,
@@ -518,11 +537,21 @@ export async function handleChatSearch({
       data?.error ||
       data?.message ||
       `Upstream HTTP ${resp.status}`;
-    log?.warn?.(`[chatSearch] upstream error provider=${provider} status=${resp.status}`);
+    log?.warn?.("SEARCH", `[chatSearch] upstream error provider=${provider} status=${resp.status}`);
     return {
       success: false,
       status: resp.status,
-      error: typeof errMsg === "string" ? errMsg : JSON.stringify(errMsg)
+      error: typeof errMsg === "string" ? errMsg : JSON.stringify(errMsg),
+      // Gemini's missing model is request-scoped, not a credential failure.
+      // Another account cannot repair the same invalid model identifier.
+      ...(provider === "gemini" && resp.status === 404 &&
+        typeof errMsg === "string" && /models\/\S+ is not found for API version/i.test(errMsg)
+        ? { errorScope: "request" } : {}),
+      // Antigravity's generic resource 404 can be model OR project-scoped.
+      // Permit a bounded account probe without marking credentials unhealthy.
+      ...(provider === "antigravity" && resp.status === 404 &&
+        typeof errMsg === "string" && errMsg.trim() === "Requested entity was not found."
+        ? { errorScope: "resource" } : {}),
     };
   }
 

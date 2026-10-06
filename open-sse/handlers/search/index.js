@@ -44,11 +44,12 @@ function jsonResponse(payload, status = 200) {
 }
 
 /** Wrap an error result with a Response object so the auth wrapper can return it directly. */
-function errorResult(status, error) {
+function errorResult(status, error, errorScope) {
   return {
     success: false,
     status,
     error,
+    ...(errorScope ? { errorScope } : {}),
     response: jsonResponse({ error: { message: error, code: status } }, status)
   };
 }
@@ -215,5 +216,5 @@ export async function handleSearchCore({ body, provider, providerConfig, credent
     if (fallback.success) return successResult(fallback.data);
   }
 
-  return errorResult(result.status || 502, result.error || "Search failed");
+  return errorResult(result.status || 502, result.error || "Search failed", result.errorScope);
 }

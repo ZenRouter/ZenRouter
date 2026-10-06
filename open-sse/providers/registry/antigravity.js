@@ -95,7 +95,9 @@ export default {
   },
   searchViaChat: {
     defaultModel: "gemini-2.5-flash",
-    endpoint: `${ANTIGRAVITY_IDE_BASE_URL}/v1internal:generateContent`,
+    // Dedicated grounding uses the public search client's sandbox endpoint;
+    // it is independent of the IDE chat catalog and its primary host.
+    endpoint: "https://daily-cloudcode-pa.sandbox.googleapis.com/v1internal:generateContent",
     freeTier: "Free — Google Search grounding through an Antigravity OAuth account.",
   },
   features: {
