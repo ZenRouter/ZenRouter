@@ -666,9 +666,29 @@ function refine(base, provider, model) {
   return result;
 }
 
+// Native generateContent controls, not reseller/OAuth guarantees. Sources:
+// ai.google.dev/gemini-api/docs/generate-content/thinking and
+// cloud.google.com/vertex-ai/generative-ai/docs/thinking (2.5 budget ranges).
+// Exact IDs avoid accidentally applying text-model controls to audio/image IDs.
+const NATIVE_GEMINI_BUDGETS = {
+  "gemini-2.5-pro": { thinkingRange: { min: 128, max: 32768 }, thinkingCanDisable: false },
+  "gemini-2.5-flash-lite": { thinkingRange: { min: 512, max: 24576 }, thinkingCanDisable: true },
+};
+const NATIVE_GEMINI_LEVELS = {
+  "gemini-3.1-pro-preview": ["low", "medium", "high"],
+  "gemini-3.1-pro-preview-customtools": ["low", "medium", "high"],
+  "gemini-3.7-flash": ["low", "medium", "high"],
+  "gemini-3.8-flash": ["low", "medium", "high"],
+};
+
 export function getCapabilitiesForModel(provider, model) {
   const baseline = resolveBaselineCapabilities(provider, model);
-  return applyReviewedCapabilities(baseline, provider, model);
+  const caps = applyReviewedCapabilities(baseline, provider, model);
+  const nativeProvider = canonicalizeProviderId(provider);
+  if (nativeProvider !== "gemini" && nativeProvider !== "vertex") return caps;
+  const budget = NATIVE_GEMINI_BUDGETS[model];
+  const efforts = nativeProvider === "gemini" ? NATIVE_GEMINI_LEVELS[model] : undefined;
+  return { ...caps, ...budget, ...(efforts ? { thinkingEfforts: efforts } : {}) };
 }
 
 function resolveBaselineCapabilities(provider, model) {

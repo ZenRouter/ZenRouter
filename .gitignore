@@ -56,6 +56,7 @@ docs/*
 !docs/CHANGELOG_v0.9.6.md
 !docs/CLIENT-MODEL-RECONCILIATION.md
 !docs/model-catalog-coverage.json
+!docs/REASONING-BUDGETS.md
 test/*
 open-sse/test/*
 RM.vn.md

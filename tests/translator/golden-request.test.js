@@ -56,7 +56,7 @@ describe("GOLDEN request: OpenAI → Gemini", () => {
     expect(clean(out)).toMatchSnapshot();
   });
 
-  it("Gemini CLI tool requests include validated toolConfig and enough output for high thinking", () => {
+  it("Gemini CLI tool requests preserve the caller cap with validated toolConfig and high thinking", () => {
     const body = {
       messages: [{ role: "user", content: "Call add with 7 and 35." }],
       tools: [
@@ -92,7 +92,7 @@ describe("GOLDEN request: OpenAI → Gemini", () => {
     expect(out.request.toolConfig).toEqual({ functionCallingConfig: { mode: "VALIDATED" } });
     expect(out.request.safetySettings).toBeDefined();
     expect(out.request.generationConfig.thinkingConfig).toEqual({ thinkingLevel: "high", includeThoughts: true });
-    expect(out.request.generationConfig.maxOutputTokens).toBe(65535);
+    expect(out.request.generationConfig.maxOutputTokens).toBe(128);
   });
 });
 

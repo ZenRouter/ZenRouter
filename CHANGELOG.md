@@ -6,6 +6,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ## [Unreleased]
 
 ### Changed
+- Preserve explicit output caps across the repaired reasoning/tool request paths instead of silently raising them to a universal floor. Keep nullable OpenAI aliases, native provider thinking modes and unsupported OAuth cap semantics distinct; document the contract in `docs/REASONING-BUDGETS.md`.
 - Research and reconcile upstream client identities and model metadata. Update Claude Code, Kiro CLI, Kimchi, CodeBuddy CN, and Command Code pins; preserve distinct IDE/CLI and regional profiles. Correct Gemini OAuth and Copilot endpoint-specific API headers without adding beta entitlements.
 - Add 120 documented provider/model entries across chat, image, embedding and TTS routes. Attach provider-scoped factual metadata, source URLs, API-versus-CLI limits and billing-unit caveats; preserve compatibility IDs and mark documented retirements. See `docs/CLIENT-MODEL-RECONCILIATION.md` and `docs/model-catalog-coverage.json` for explicit unverified/deferred coverage.
 - Upgrade the app, CLI, independent test suite, and documentation app dependency manifests and lockfiles to researched npm stable releases. Align React/React DOM/React Is to `19.3.0`; migrate to ESLint `10.12.0`, Vitest `5.0.3`, Vite `8.3.2`, and Undici `8.11.2` with compatible tooling and runtime changes.
@@ -13,6 +14,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 - Use the installed test-package Vitest runner with repository-anchored discovery for both root and test-package commands. Remove unused `http-proxy-middleware`/`socks-proxy-agent` dependencies and stale overrides whose consumers are no longer present.
 
 ### Fixed
+- Retain modern output caps through Gemini/Kiro/Ollama/CommandCode translation and final GitHub/Antigravity serialization. Preserve Responses-native reasoning fields and client reasoning intent before provider defaults; reconcile Claude manual thinking against effective outbound interleaving support, including rejected-beta retries.
+- Persist actual usage for exhausted attempts and Gemini reasoning tokens without double counting. Preserve incomplete Responses terminals, partial output and refusals; remove context-reserve inflation from actual usage and prevent terminal-then-cancel callbacks from recording the same attempt twice.
+- Keep combo stream-content detection consistent so paid reasoning or valid terminal events are not replayed as empty transports.
 - Unify provider aliases and declared upstream pricing aliases; preserve native model namespaces and paid/free catalog identities. Keep coding-plan catalog joins separate from direct API products, and invalidate old normalized model-catalog caches.
 - Preserve live and operator-declared capabilities, separate input/context/output limits, intentional cross-kind IDs and no-auth discoverability across dashboard and public listings. Scope runtime custom capabilities to the provider instead of a global model-name cache.
 - Correct long-context reasoning rates, inclusive provider thresholds, partial custom pricing merges and unknown-price display. Keep non-token billing units out of the token-rate fields; unsupported or undocumented maxima remain explicitly unknown.
@@ -29,7 +33,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 - Document unresolved upstream `node-forge` and `braces` audit advisories; the dependency refresh does not claim a vulnerability-free graph or apply forced downgrades.
 
 ### Verification
-- On Node `22.23.2`, the full isolated Vitest suite passes across 474 files: 3,800 passed, 100 skipped, 1 todo, zero failed tests or suites. Full ESLint passes with zero errors/warnings and `--max-warnings=0`; deliberate rule-violation controls remain active. Installer runtime tests evaluate real Bash function bodies in mock-only harnesses without running the installer or host package operations.
+- Reasoning-budget acceptance additionally checks real loopback HTTP payloads and the production standalone SQLite usage table: explicit/nullable caps, reasoning-only exhaustion, and terminal-then-cancel each preserve actual usage exactly once. No live provider inference or automatic spending retry is used.
+- On Node `22.23.2`, the full isolated Vitest suite passes across 485 files: 4,008 passed, 100 skipped, 1 todo, zero failed tests or suites. Full ESLint passes with zero errors/warnings and `--max-warnings=0`; deliberate rule-violation controls remain active. Installer runtime tests evaluate real Bash function bodies in mock-only harnesses without running the installer or host package operations.
 - App/CLI production builds, docs static export, native SQLite, h2c, Undici SSE/abort/strict-proxy transport, authenticated missing-model API checks, CLI packaging, and real browser form/hydration/editor checks pass without billable provider inference.
 - Node 22's genuine `node:sqlite` experimental-status warning remains visible when the suite exercises the fallback driver; no warning suppression or coverage removal is used to hide it.
 

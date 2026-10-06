@@ -151,13 +151,13 @@ describe("OpenAI → Claude context mapping", () => {
       expect(out.thinking.type).toBe("adaptive");
     });
 
-    it("keeps Claude-to-OpenAI tool minimum behavior unchanged", () => {
+    it("keeps an explicit Claude-to-OpenAI cap even when tools are present", () => {
       const out = translateRequest(FORMATS.CLAUDE, FORMATS.OPENAI, "gpt-4o", {
         messages: [{ role: "user", content: "q" }],
         tools: [{ name: "f", input_schema: { type: "object", properties: {} } }],
         max_tokens: 4096,
       }, false, null, "openai");
-      expect(out.max_tokens).toBe(32000);
+      expect(out.max_tokens).toBe(4096);
     });
   });
 

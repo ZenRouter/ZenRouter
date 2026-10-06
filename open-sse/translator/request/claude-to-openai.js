@@ -19,9 +19,9 @@ export function claudeToOpenAIRequest(model, body, stream) {
   };
 
   // Max tokens (gpt-5/o-series Chat Completions only accept max_completion_tokens)
-  if (body.max_tokens) {
+  if (body.max_tokens !== undefined || body.max_completion_tokens !== undefined) {
     const tokenParam = requiresMaxCompletionTokens(model) ? "max_completion_tokens" : "max_tokens";
-    result[tokenParam] = adjustMaxTokens(body);
+    result[tokenParam] = adjustMaxTokens(body, null, { sourceFormat: "claude" });
   }
 
   // Temperature

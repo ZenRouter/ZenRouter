@@ -6,10 +6,12 @@ import { openaiToOpenAIResponsesRequest } from "../translator/request/openai-res
 import { openaiResponsesToOpenAIResponse } from "../translator/response/openai-responses.js";
 import { initState, translateRequest, translateResponse } from "../translator/index.js";
 import { FORMATS } from "../translator/formats.js";
+import { readOutputTokenCap, requiresMaxCompletionTokens } from "../translator/formats/maxTokens.js";
 import { parseSSELine, formatSSE } from "../utils/streamHelpers.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { SSE_DONE } from "../utils/sseConstants.js";
 import { ANTHROPIC_API_VERSION } from "../providers/shared.js";
+import { reconcileClaudeThinkingBudget } from "../translator/concerns/thinking.js";
 import crypto from "crypto";
 
 export class GithubExecutor extends BaseExecutor {
@@ -91,13 +93,14 @@ export class GithubExecutor extends BaseExecutor {
 
   // Newer OpenAI models (gpt-5+, o1, o3, o4) require max_completion_tokens instead of max_tokens
   requiresMaxCompletionTokens(model) {
-    return /gpt-5|o[134]-/i.test(model);
+    return requiresMaxCompletionTokens(model);
   }
 
   transformRequest(model, body, stream, credentials) {
     const transformed = { ...body };
-    if (this.requiresMaxCompletionTokens(model) && transformed.max_tokens !== undefined) {
-      transformed.max_completion_tokens = transformed.max_tokens;
+    const outputCap = readOutputTokenCap(body);
+    if (outputCap !== undefined && (this.requiresMaxCompletionTokens(model) || body.max_completion_tokens !== undefined)) {
+      transformed.max_completion_tokens = outputCap;
       delete transformed.max_tokens;
     }
     // "none" means no thinking — strip it so models that don't support "none" don't 400
@@ -259,6 +262,8 @@ export class GithubExecutor extends BaseExecutor {
     // normally strips it before dispatch and threads it into the response state to
     // restore original tool names; we must do the same here, or Anthropic's strict
     // schema rejects the extra field with a 400.
+    // Copilot does not forward the interleaved-thinking beta.
+    reconcileClaudeThinkingBudget(transformedBody);
     const toolNameMap = transformedBody._toolNameMap;
     delete transformedBody._toolNameMap;
 

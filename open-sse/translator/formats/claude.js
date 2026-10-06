@@ -10,6 +10,7 @@ import { getCapabilitiesForModel } from "../../providers/capabilities.js";
 import { isDeepSeekModel } from "../../providers/models/helpers.js";
 import { DEFAULT_MAX_TOKENS } from "../../config/runtimeConfig.js";
 import { applyAssistantPrefillPolicy } from "../concerns/assistantPrefillPolicy.js";
+import { reconcileClaudeThinkingBudget, supportsClaudeManualInterleaving } from "../concerns/thinking.js";
 
 const CACHE_CONTROL_5M = { type: "ephemeral" };
 const CACHE_CONTROL_1H = { type: "ephemeral", ttl: "1h" };
@@ -244,8 +245,10 @@ export function normalizeClaudePassthrough(body, model = "", rawHeaders = null) 
 
   // 1. Downgrade adaptive thinking for models that don't support it
   if (body.thinking?.type === "adaptive" && ADAPTIVE_THINKING_UNSUPPORTED.test(model)) {
-    body.thinking = { type: "enabled", budget_tokens: 10000 };
+    body.thinking = { ...body.thinking, type: "enabled", budget_tokens: 10000 };
   }
+
+  reconcileClaudeThinkingBudget(body, supportsClaudeManualInterleaving(body, model || body.model));
 
   // 2. Strip effort param for models that don't support it (keep other output_config fields)
   if (ADAPTIVE_THINKING_UNSUPPORTED.test(model) && body.output_config?.effort != null) {
@@ -555,22 +558,9 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
   if (body.max_tokens) {
     const ceiling = modelCaps.maxOutput || DEFAULT_MAX_TOKENS;
     if (body.max_tokens > ceiling) body.max_tokens = ceiling;
-
-    // Reconcile against thinking budget. applyThinking (thinkingUnified.js) runs
-    // AFTER adjustMaxTokens capped max_tokens, and the claude-budget format maps
-    // max effort → budget_tokens 128000 — larger than the clamped max_tokens.
-    // Anthropic requires max_tokens strictly greater than budget_tokens (else 400).
-    // Preserve the chosen output cap (including explicit native max_tokens).
-    // Reduce thinking instead; a cap that cannot fit the minimum budget plus
-    // any answer tokens is invalid, not permission to spend more tokens.
-    if (body.thinking?.type === "enabled" && body.thinking.budget_tokens && body.thinking.budget_tokens >= body.max_tokens) {
-      if (body.max_tokens <= 1024) {
-        const error = new RangeError("max_tokens must exceed 1024 when enabled thinking requires a budget; increase the output cap or disable thinking");
-        error.code = "invalid_thinking_budget";
-        throw error;
-      }
-      body.thinking = { ...body.thinking, budget_tokens: Math.max(1024, body.max_tokens - 1024) };
-    }
+  }
+  if (provider === "claude" || modelCaps.thinkingFormat === "claude-budget" || modelCaps.thinkingFormat === "claude-adaptive") {
+    reconcileClaudeThinkingBudget(body, supportsClaudeManualInterleaving(body, body.model));
   }
 
   // 1. System: remove all cache_control, add only to last block with ttl 1h

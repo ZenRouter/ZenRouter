@@ -63,6 +63,13 @@ export function stripContinuityFields(body) {
   return body;
 }
 
+function requestBudgetError(error) {
+  if (error?.code !== "invalid_thinking_budget" && error?.code !== "invalid_output_budget") return null;
+  return createErrorResult(HTTP_STATUS.BAD_REQUEST, error.message, undefined, {
+    type: "invalid_request_error", code: error.code, param: error.param,
+  });
+}
+
 export async function handleChatCore({ body, modelInfo, credentials, log, onCredentialsRefreshed, onRequestSuccess, onDisconnect, clientRawRequest, connectionId, userAgent, apiKey, ccFilterNaming, rtkEnabled, headroomEnabled, headroomUrl, headroomCompressUserMessages, headroomTimeoutMs, cavemanEnabled, cavemanLevel, ponytailEnabled, ponytailLevel, pxpipeEnabled, pxpipeMinChars, pxpipeTimeoutMs, pxpipeTransform, onPxpipeEvent, sourceFormatOverride, providerThinking, clientSignal }) {
   const { provider, model } = modelInfo;
   const requestStartTime = Date.now();
@@ -115,7 +122,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
 
   // Inject provider-level thinking config override (only if client hasn't set)
   // on/off → extended type (body.thinking), none/low/medium/high → effort type (body.reasoning_effort)
-  if (providerThinking?.mode && providerThinking.mode !== "auto") {
+  if (providerThinking?.mode && providerThinking.mode !== "auto" && !extractThinking(body)) {
     const mode = providerThinking.mode;
     if (mode === "on" && !body.thinking) {
       console.log("Injecting provider-level thinking config override: on");
@@ -192,25 +199,33 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     if (provider === "codex") {
       const suffixThinking = {};
       applyThinking(sourceFormat, upstreamModel, suffixThinking, provider);
-      if (suffixThinking.reasoning_effort) {
+      const suffixEffort = suffixThinking.reasoning?.effort ?? suffixThinking.reasoning_effort;
+      if (suffixEffort) {
         const reasoning = translatedBody.reasoning;
         translatedBody.reasoning = {
           ...(reasoning && typeof reasoning === "object" && !Array.isArray(reasoning) ? reasoning : {}),
-          effort: suffixThinking.reasoning_effort,
+          effort: suffixEffort,
         };
         delete translatedBody.reasoning_effort;
       }
     }
     // Normalize newer Cowork/CC beta shapes (adaptive thinking, mid-conversation system) the API rejects
     if (clientTool === "claude") {
-      normalizeClaudePassthrough(translatedBody, translatedBody.model, clientRawRequest?.headers || null);
+      try {
+        normalizeClaudePassthrough(translatedBody, translatedBody.model, clientRawRequest?.headers || null);
+      } catch (error) {
+        const invalidBudget = requestBudgetError(error);
+        if (invalidBudget) return invalidBudget;
+        throw error;
+      }
     }
   } else {
     try {
       translatedBody = translateRequest(sourceFormat, targetFormat, upstreamModel, body, stream, credentials, provider, reqLogger, stripList, connectionId, clientTool);
     } catch (error) {
-      if (error?.code !== "invalid_thinking_budget") throw error;
-      return createErrorResult(HTTP_STATUS.BAD_REQUEST, error.message);
+      const invalidBudget = requestBudgetError(error);
+      if (invalidBudget) return invalidBudget;
+      throw error;
     }
     if (!translatedBody) {
       trackPendingRequest(model, provider, connectionId, false, true);
@@ -408,15 +423,17 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     providerResponseFormat = result.responseFormat || targetFormat;
     reqLogger.logTargetRequest(providerUrl, providerHeaders, finalBody);
   } catch (error) {
+    const invalidBudget = requestBudgetError(error);
+    const status = error.name === "AbortError" ? 499 : invalidBudget ? HTTP_STATUS.BAD_REQUEST : HTTP_STATUS.BAD_GATEWAY;
     trackPendingRequest(model, provider, connectionId, false, true);
-    appendRequestLog({ model, provider, connectionId, status: `FAILED ${error.name === "AbortError" ? 499 : HTTP_STATUS.BAD_GATEWAY}` }).catch(() => { });
+    appendRequestLog({ model, provider, connectionId, status: `FAILED ${status}` }).catch(() => { });
     saveRequestDetail(buildRequestDetail({
       provider, model, connectionId,
       latency: { ttft: 0, total: Date.now() - requestStartTime },
       tokens: { prompt_tokens: 0, completion_tokens: 0 },
       request: extractRequestConfig(body, stream),
       providerRequest: translatedBody || null,
-      response: { error: error.message || String(error), status: error.name === "AbortError" ? 499 : 502, thinking: null },
+      response: { error: error.message || String(error), status, thinking: null },
       pxpipe: pxpipeSummary,
       status: "error"
     })).catch(() => { });
@@ -425,6 +442,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
       streamController.handleError(error);
       return createErrorResult(499, "Request aborted");
     }
+    if (invalidBudget) return invalidBudget;
     const errMsg = formatProviderError(error, provider, model, HTTP_STATUS.BAD_GATEWAY);
     if (log?.errorLine) {
       log.errorLine(reqTag, "✗", `ERROR 502 · ${provider}/${model} · ${Date.now() - requestStartTime}ms\n    ${errMsg}${error.stack ? `\n    ${error.stack}` : ""}`);

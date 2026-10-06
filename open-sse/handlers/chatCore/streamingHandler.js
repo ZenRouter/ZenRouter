@@ -167,8 +167,12 @@ export async function handleStreamingResponse({ providerResponse, provider, mode
  */
 export function buildOnStreamComplete({ provider, model, connectionId, apiKey, requestStartTime, body, stream, finalBody, translatedBody, clientRawRequest, pxpipe, reqTag, log }) {
   const streamDetailId = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+  // Terminal accounting may precede transport EOF; completion and abort share one claim.
+  let persistenceClaimed = false;
 
   const onStreamComplete = (contentObj, usage, ttftAt, streamMeta) => {
+    if (persistenceClaimed) return;
+    persistenceClaimed = true;
     const latency = {
       ttft: ttftAt ? ttftAt - requestStartTime : Date.now() - requestStartTime,
       total: Date.now() - requestStartTime
@@ -207,6 +211,8 @@ export function buildOnStreamComplete({ provider, model, connectionId, apiKey, r
   };
 
   const onStreamAborted = (snapshot, reason) => {
+    if (persistenceClaimed) return;
+    persistenceClaimed = true;
     const latency = {
       ttft: snapshot?.ttftAt ? snapshot.ttftAt - requestStartTime : Date.now() - requestStartTime,
       total: Date.now() - requestStartTime

@@ -8,6 +8,7 @@ import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { injectReasoningContent } from "../utils/reasoningContentInjector.js";
 import { HTTP_STATUS } from "../config/runtimeConfig.js";
 import { KIRO_CLI_USER_AGENT } from "../config/clientVersions.js";
+import { allowsClaudeManualInterleaving, reconcileClaudeThinkingBudget } from "../translator/concerns/thinking.js";
 
 // Per-connection set of `anthropic-beta` flags the upstream rejected for that
 // account. Process-local by design: getProviderCredentials() rebuilds
@@ -98,7 +99,9 @@ export class DefaultExecutor extends BaseExecutor {
   }
 
   transformRequest(model, body) {
-    const transformed = this.applyJsonSchemaFallback(body);
+    // Final thinking reconciliation is request-local; retries/accounts reuse body.
+    const requestBody = /^claude-/.test(model || "") && body?.thinking?.type === "enabled" ? { ...body } : body;
+    const transformed = this.applyJsonSchemaFallback(requestBody);
 
     if (transformed && typeof transformed === "object") {
       // quirk: some openai-compatible providers reject Anthropic's client_metadata field
@@ -258,6 +261,15 @@ export class DefaultExecutor extends BaseExecutor {
       }
     }
 
+    // Final wire reconciliation must follow header selection, including the
+    // per-account rejected-beta denylist on retries. A reseller beta header is
+    // not evidence that it implements Anthropic's manual-interleaving contract.
+    if ((rt?.format || this.config.format) === "claude" || this.provider?.startsWith?.("anthropic-compatible-")) {
+      const interleaved = this.provider === "claude" && isOfficialAnthropic &&
+        allowsClaudeManualInterleaving(body, model, headers);
+      // Other Claude-format vendors (e.g. DeepSeek) have unrelated thinking modes.
+      if (/^claude-/.test(model || "")) reconcileClaudeThinkingBudget(body, interleaved);
+    }
     if (stream) headers["Accept"] = "text/event-stream";
     return headers;
   }

@@ -1,17 +1,18 @@
+import { outputBudgetError, openAICompletionToResponses } from "./jsonCompletionOutcome.js";
 import { convertResponsesStreamToJson } from "../../transformer/streamToJsonConverter.js";
 import { createErrorResult } from "../../utils/error.js";
 import { HTTP_STATUS } from "../../config/runtimeConfig.js";
 import { FORMATS } from "../../translator/formats.js";
 import { fromOpenAIFinish } from "../../translator/concerns/finishReason.js";
 import { PROVIDERS } from "../../config/providers.js";
-import { buildRequestDetail, extractRequestConfig, saveUsageStats, formatDoneLine } from "./requestDetail.js";
-import { ROLE, RESPONSES_ITEM } from "../../translator/schema/index.js";
+import { buildRequestDetail, extractRequestConfig, extractUsageFromResponse, saveUsageStats, formatDoneLine } from "./requestDetail.js";
+import { RESPONSES_ITEM } from "../../translator/schema/index.js";
 import { extractReasoningText } from "../../translator/concerns/reasoning.js";
 import { normalizeTypedContent } from "../../translator/concerns/typedContent.js";
 
 // Responses-API providers (e.g. codex) may emit SSE without content-type + use Responses output shape
 const isResponsesProvider = (p) => PROVIDERS[p]?.format === FORMATS.OPENAI_RESPONSES;
-import { saveRequestDetail, appendRequestLog } from "@/lib/usageDb.js";
+import { saveRequestDetail } from "@/lib/usageDb.js";
 
 function textFromResponsesMessageItem(item) {
   if (!item?.content || !Array.isArray(item.content)) return "";
@@ -89,6 +90,9 @@ function responsesJsonToClaudeMessage(response) {
     } else if (item?.type === "message") {
       const text = textFromResponsesMessageItem(item);
       if (text) content.push({ type: "text", text });
+      for (const part of item.content || []) {
+        if (typeof part.refusal === "string" && part.refusal) content.push({ type: "text", text: part.refusal });
+      }
     } else if (item?.type === "function_call" || item?.type === "custom_tool_call") {
       let input = {};
       try { input = item.arguments ? JSON.parse(item.arguments) : (item.input || {}); } catch { /* preserve an empty valid input */ }
@@ -102,82 +106,10 @@ function responsesJsonToClaudeMessage(response) {
     role: "assistant",
     model: response.model || "unknown",
     content,
-    stop_reason: content.some((item) => item.type === "tool_use") ? "tool_use" : "end_turn",
+    stop_reason: response.status === "incomplete" && response.incomplete_details?.reason === "max_output_tokens"
+      ? "max_tokens" : content.some((item) => item.type === "tool_use") ? "tool_use" : "end_turn",
     stop_sequence: null,
     usage: { input_tokens: response.usage?.input_tokens || 0, output_tokens: response.usage?.output_tokens || 0 },
-  };
-}
-
-/**
- * Convert an OpenAI Chat Completions JSON body into the Responses API shape.
- * Inlined here (not imported from nonStreamingHandler.js) to avoid a circular
- * import. Mirrors openAICompletionToResponses in nonStreamingHandler.js.
- */
-function extractCustomToolInput(argumentsValue) {
-  const argumentsText = typeof argumentsValue === "string" ? argumentsValue : JSON.stringify(argumentsValue || {});
-  try {
-    const parsed = JSON.parse(argumentsText);
-    if (parsed && typeof parsed === "object" && typeof parsed.input === "string") return parsed.input;
-  } catch { /* raw freeform input */ }
-  return argumentsText;
-}
-
-function chatCompletionToResponses(responseBody, customToolNames = null) {
-  const choice = responseBody?.choices?.[0];
-  if (!choice) return responseBody;
-
-  const message = choice.message || {};
-  const output = [];
-
-  const reasoning = extractReasoningText(message);
-  if (typeof reasoning === "string" && reasoning.length > 0) {
-    output.push({
-      type: RESPONSES_ITEM.REASONING,
-      status: "completed",
-      summary: [{ type: RESPONSES_ITEM.SUMMARY_TEXT, text: reasoning }],
-    });
-  }
-
-  const text = typeof message.content === "string" ? message.content : "";
-  if (text.length > 0) {
-    output.push({
-      type: RESPONSES_ITEM.MESSAGE,
-      status: "completed",
-      role: ROLE.ASSISTANT,
-      content: [{ type: RESPONSES_ITEM.OUTPUT_TEXT, text, annotations: [] }],
-    });
-  }
-
-  for (const tc of message.tool_calls || []) {
-    const fn = tc.function || {};
-    const custom = customToolNames?.has(fn.name);
-    output.push({
-      type: custom ? RESPONSES_ITEM.CUSTOM_TOOL_CALL : RESPONSES_ITEM.FUNCTION_CALL,
-      status: "completed",
-      id: `${custom ? "ctc" : "fc"}_${tc.id || ""}`,
-      call_id: tc.id || "",
-      name: fn.name || "",
-      ...(custom
-        ? { input: extractCustomToolInput(fn.arguments) }
-        : { arguments: typeof fn.arguments === "string" ? fn.arguments : JSON.stringify(fn.arguments || {}) }),
-    });
-  }
-
-  const usage = responseBody.usage || {};
-  return {
-    id: `resp_${responseBody.id || ""}`.replace(/^resp_chatcmpl-/, "resp_"),
-    object: "response",
-    created_at: responseBody.created || Math.floor(Date.now() / 1000),
-    model: responseBody.model || "unknown",
-    status: "completed",
-    background: false,
-    error: null,
-    output,
-    usage: {
-      input_tokens: usage.prompt_tokens || usage.input_tokens || 0,
-      output_tokens: usage.completion_tokens || usage.output_tokens || 0,
-      total_tokens: usage.total_tokens || (usage.prompt_tokens || 0) + (usage.completion_tokens || 0),
-    },
   };
 }
 
@@ -207,6 +139,7 @@ export function parseSSEToOpenAIResponse(rawSSE, fallbackModel) {
   const first = chunks[0];
   const contentParts = [];
   const reasoningParts = [];
+  const refusalParts = [];
   const toolCallMap = new Map(); // index -> { id, type, function: { name, arguments } }
   let finishReason = "stop";
   let usage = null;
@@ -216,6 +149,7 @@ export function parseSSEToOpenAIResponse(rawSSE, fallbackModel) {
     const delta = choice?.delta || {};
     normalizeTypedContent(delta);
     if (typeof delta.content === "string" && delta.content.length > 0) contentParts.push(delta.content);
+    if (typeof delta.refusal === "string") refusalParts.push(delta.refusal);
     const reasoningDelta = extractReasoningText(delta);
     if (typeof reasoningDelta === "string" && reasoningDelta.length > 0) reasoningParts.push(reasoningDelta);
     if (choice?.finish_reason) finishReason = choice.finish_reason;
@@ -237,6 +171,7 @@ export function parseSSEToOpenAIResponse(rawSSE, fallbackModel) {
   }
 
   const message = { role: "assistant", content: contentParts.join("") || (toolCallMap.size > 0 ? null : "") };
+  if (refusalParts.length > 0) message.refusal = refusalParts.join("");
   if (reasoningParts.length > 0) message.reasoning_content = reasoningParts.join("");
   if (toolCallMap.size > 0) {
     message.tool_calls = [...toolCallMap.entries()].sort((a, b) => a[0] - b[0]).map(([, tc]) => tc);
@@ -278,33 +213,36 @@ export async function handleForcedSSEToJson({ providerResponse, sourceFormat, ta
   if (isCodexResponsesApi) {
     try {
       const jsonResponse = await convertResponsesStreamToJson(providerResponse.body);
-      if (jsonResponse.status === "failed" || jsonResponse.error) {
-        return createErrorResult(
+      const usage = jsonResponse.usage || {};
+      const recordedUsage = extractUsageFromResponse(jsonResponse);
+      saveUsageStats({ provider, model, tokens: recordedUsage, connectionId, apiKey, endpoint: clientRawRequest?.endpoint, silent: true });
+      const failure = outputBudgetError(jsonResponse, sourceFormat, body)
+        || ((jsonResponse.status === "failed" || jsonResponse.error) ? createErrorResult(
           HTTP_STATUS.BAD_GATEWAY,
           jsonResponse.error?.message || "Upstream Responses stream failed",
-          null,
-          jsonResponse.error || {},
-        );
+          null, jsonResponse.error || {}
+        ) : null);
+      if (failure) {
+        appendLog({ tokens: recordedUsage, status: `FAILED ${failure.response.status}` });
+        const totalLatency = Date.now() - requestStartTime;
+        saveRequestDetail(buildRequestDetail({
+          ...ctx, latency: { ttft: totalLatency, total: totalLatency },
+          tokens: recordedUsage, providerResponse: jsonResponse,
+          response: { error: failure.error }, status: "failed"
+        }, { endpoint: clientRawRequest?.endpoint || null })).catch(() => {});
+        return failure;
       }
       if (onRequestSuccess) await onRequestSuccess();
-
-      const usage = jsonResponse.usage || {};
-      appendLog({ tokens: usage, status: "200 OK" });
-      saveUsageStats({ provider, model, tokens: usage, connectionId, apiKey, endpoint: clientRawRequest?.endpoint, silent: true });
+      appendLog({ tokens: recordedUsage, status: "200 OK" });
       if (log?.line) log.line(reqTag, "📊", formatDoneLine({ usage, latency: { total: Date.now() - requestStartTime } }));
 
-      // Same cache-inclusive total for the recorded detail, so the DB and the
-      // client-facing usage can never disagree.
-      const inTokensForLog = (usage.input_tokens || 0)
-        + (usage.cache_read_input_tokens || usage.cached_tokens || 0)
-        + (usage.cache_creation_input_tokens || 0);
-      const { msgItem, textContent } = pickAssistantMessageForChatCompletion(jsonResponse.output);
+      const { textContent } = pickAssistantMessageForChatCompletion(jsonResponse.output);
       const totalLatency = Date.now() - requestStartTime;
 
       saveRequestDetail(buildRequestDetail({
         ...ctx,
         latency: { ttft: totalLatency, total: totalLatency },
-        tokens: { prompt_tokens: inTokensForLog, completion_tokens: usage.output_tokens || 0 },
+        tokens: recordedUsage,
         response: { content: textContent, thinking: null, finish_reason: jsonResponse.status || "unknown" },
         status: "success"
       }, { endpoint: clientRawRequest?.endpoint || null })).catch(() => {});
@@ -358,6 +296,10 @@ export async function handleForcedSSEToJson({ providerResponse, sourceFormat, ta
         };
       } else {
         const message = { role: "assistant", content: textContent || (hasToolCalls ? null : "") };
+        const refusal = (jsonResponse.output || []).flatMap(item => item.content || [])
+          .filter(part => part.type === "refusal" && typeof part.refusal === "string")
+          .map(part => part.refusal).join("");
+        if (refusal) message.refusal = refusal;
         const reasoningParts = [];
         for (const item of jsonResponse.output || []) {
           if (item?.type === RESPONSES_ITEM.REASONING) {
@@ -368,14 +310,16 @@ export async function handleForcedSSEToJson({ providerResponse, sourceFormat, ta
         if (reasoningParts.length > 0) message.reasoning_content = reasoningParts.join("");
         if (hasToolCalls) message.tool_calls = toolCalls;
         const responseDone = jsonResponse.status === "completed" || jsonResponse.status === "done";
-        const finishReason = hasToolCalls ? "tool_calls" : (responseDone ? "stop" : (jsonResponse.status || "stop"));
+        const finishReason = jsonResponse.status === "incomplete" && jsonResponse.incomplete_details?.reason === "max_output_tokens"
+          ? "length" : hasToolCalls ? "tool_calls" : (responseDone ? "stop" : (jsonResponse.status || "stop"));
         finalResp = {
           id: jsonResponse.id || `chatcmpl-${Date.now()}`,
           object: "chat.completion",
           created: jsonResponse.created_at || Math.floor(Date.now() / 1000),
           model: jsonResponse.model || model,
           choices: [{ index: 0, message, finish_reason: finishReason }],
-          usage: { prompt_tokens: inTokens, completion_tokens: outTokens, total_tokens: inTokens + outTokens, ...cacheDetails }
+          usage: { prompt_tokens: inTokens, completion_tokens: outTokens, total_tokens: inTokens + outTokens, ...cacheDetails,
+            ...(usage.output_tokens_details ? { completion_tokens_details: usage.output_tokens_details } : {}) }
         };
       }
 
@@ -398,11 +342,22 @@ export async function handleForcedSSEToJson({ providerResponse, sourceFormat, ta
       );
     }
 
-    if (onRequestSuccess) await onRequestSuccess();
-
     const usage = parsed.usage || {};
-    appendLog({ tokens: usage, status: "200 OK" });
     saveUsageStats({ provider, model, tokens: usage, connectionId, apiKey, endpoint: clientRawRequest?.endpoint, silent: true });
+    const budgetError = outputBudgetError(parsed, sourceFormat, body);
+    if (budgetError) {
+      appendLog({ tokens: usage, status: `FAILED ${HTTP_STATUS.BAD_REQUEST}` });
+      const totalLatency = Date.now() - requestStartTime;
+      saveRequestDetail(buildRequestDetail({
+        ...ctx, latency: { ttft: totalLatency, total: totalLatency },
+        tokens: usage, providerResponse: parsed,
+        response: { error: { code: "output_budget_exhausted", message: budgetError.error } },
+        status: "failed"
+      }, { endpoint: clientRawRequest?.endpoint || null })).catch(() => {});
+      return budgetError;
+    }
+    if (onRequestSuccess) await onRequestSuccess();
+    appendLog({ tokens: usage, status: "200 OK" });
     if (log?.line) log.line(reqTag, "📊", formatDoneLine({ usage, latency: { total: Date.now() - requestStartTime } }));
 
     const totalLatency = Date.now() - requestStartTime;
@@ -429,12 +384,9 @@ export async function handleForcedSSEToJson({ providerResponse, sourceFormat, ta
 
     // A Responses-format client (e.g. Codex) forced this provider to stream,
     // but wants JSON back. parseSSEToOpenAIResponse yields a Chat Completions
-    // body; convert it to the Responses `output` shape so tool_calls are not
-    // lost on the non-streaming return path. Inlined (not imported from
-    // nonStreamingHandler.js) to avoid a circular import: nonStreamingHandler
-    // already imports parseSSEToOpenAIResponse from this module.
+    // body; share the native JSON conversion so terminal semantics agree.
     const finalBody = sourceFormat === FORMATS.OPENAI_RESPONSES
-      ? chatCompletionToResponses(parsed, customToolNames)
+      ? openAICompletionToResponses(parsed, customToolNames)
       : sourceFormat === FORMATS.CLAUDE
         ? openAICompletionToClaudeMessage(parsed)
       : parsed;

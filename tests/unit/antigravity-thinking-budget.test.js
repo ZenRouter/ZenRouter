@@ -4,7 +4,7 @@ import { AntigravityExecutor } from "../../open-sse/executors/antigravity.js";
 describe("Antigravity thinkingConfig and maxOutputTokens adjustment (#3979)", () => {
   const executor = new AntigravityExecutor();
 
-  it("ensures maxOutputTokens exceeds thinkingBudget when thinking is active", () => {
+  it("fits thinking inside an explicit maxOutputTokens without increasing output", () => {
     const body = {
       thinking: { budget_tokens: 4096 },
       request: {
@@ -19,15 +19,15 @@ describe("Antigravity thinkingConfig and maxOutputTokens adjustment (#3979)", ()
     const genConfig = transformed.request.generationConfig;
 
     expect(genConfig.thinkingConfig).toEqual({
-      thinkingBudget: 4096,
+      thinkingBudget: 2047,
       includeThoughts: true,
     });
-    // maxOutputTokens must be strictly greater than thinkingBudget
-    expect(genConfig.maxOutputTokens).toBeGreaterThan(4096);
-    expect(genConfig.maxOutputTokens).toBe(4096 + 8192);
+    // The explicit cap is a ceiling; shrink numeric thinking rather than spend more.
+    expect(genConfig.maxOutputTokens).toBeGreaterThan(genConfig.thinkingConfig.thinkingBudget);
+    expect(genConfig.maxOutputTokens).toBe(2048);
   });
 
-  it("handles reasoning_effort with appropriate budget and floor", () => {
+  it("bounds compatibility effort inside an explicit cap", () => {
     const body = {
       reasoning_effort: "high",
       request: {
@@ -42,9 +42,9 @@ describe("Antigravity thinkingConfig and maxOutputTokens adjustment (#3979)", ()
     const genConfig = transformed.request.generationConfig;
 
     expect(genConfig.thinkingConfig).toEqual({
-      thinkingBudget: 4096,
+      thinkingBudget: 999,
       includeThoughts: true,
     });
-    expect(genConfig.maxOutputTokens).toBeGreaterThan(4096);
+    expect(genConfig.maxOutputTokens).toBe(1000);
   });
 });

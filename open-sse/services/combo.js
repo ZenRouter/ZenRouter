@@ -6,6 +6,8 @@ import { checkFallbackError, formatRetryAfter } from "./accountFallback.js";
 import { unavailableResponse } from "../utils/error.js";
 import { getCapabilitiesForModel } from "../providers/capabilities.js";
 import { extractTextContent } from "../translator/formats/gemini.js";
+import { isOpenAIResponsesTerminalEvent } from "../utils/responsesStreamHelpers.js";
+import { extractReasoningText } from "../translator/concerns/reasoning.js";
 
 // Hard capabilities = input modalities; missing one drops request data (e.g. image
 // stripped). Must be prioritized. Soft (e.g. search) only degrades a feature.
@@ -16,23 +18,7 @@ const TOOL_CALL_PREFIX = "[Called tools: ";
 const TOOL_RESULT_PREFIX = "[Tool result: ";
 
 function hasMeaningfulSseData(text) {
-  for (const line of String(text || "").split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed.startsWith("data:") || trimmed.slice(5).trim() === "[DONE]") continue;
-    const payload = trimmed.slice(5).trim();
-    try {
-      const value = JSON.parse(payload);
-      if (value?.error) return true;
-      if (value?.choices?.some((choice) => choice?.delta?.content || choice?.delta?.tool_calls || choice?.text)) return true;
-      if (value?.type === "content_block_delta" || value?.type === "content_block_start") return true;
-      if (value?.response?.candidates?.some((candidate) => candidate?.content?.parts?.length)) return true;
-      if (value?.type?.includes?.("output_text") || value?.type?.includes?.("function_call")) return true;
-    } catch {
-      // A non-JSON data frame is still client-visible content.
-      if (payload) return true;
-    }
-  }
-  return false;
+  return String(text || "").split("\n").some(line => frameCarriesContent(line.trim()));
 }
 
 async function rejectFastEmptyStream(response, timeoutMs = 150) {
@@ -443,11 +429,13 @@ function frameCarriesContent(line) {
     return false;
   }
 
-  if (hasOutputTokens(parsed.usage) || hasOutputTokens(parsed.response?.usage)) return true;
+  if (parsed.error || isOpenAIResponsesTerminalEvent(null, parsed)) return true;
+  if (hasIncurredUsage(parsed.usage) || hasIncurredUsage(parsed.response?.usage) ||
+      hasIncurredUsage(parsed.usageMetadata) || hasIncurredUsage(parsed.response?.usageMetadata)) return true;
 
   const delta = parsed.choices?.[0]?.delta;
   if (nonEmptyString(delta?.content)) return true;
-  if (nonEmptyString(delta?.reasoning_content) || nonEmptyString(delta?.reasoning)) return true;
+  if (extractReasoningText(delta) || nonEmptyString(delta?.refusal)) return true;
   if (delta?.tool_calls?.length || delta?.function_call) return true;
 
   if (parsed.type === "content_block_delta") {
@@ -458,7 +446,7 @@ function frameCarriesContent(line) {
 
   if (typeof parsed.type === "string" && parsed.type.endsWith(".delta") && nonEmptyString(parsed.delta)) return true;
 
-  const parts = parsed.candidates?.[0]?.content?.parts;
+  const parts = (parsed.candidates || parsed.response?.candidates)?.[0]?.content?.parts;
   if (Array.isArray(parts) && parts.some(p => nonEmptyString(p?.text) || p?.functionCall || p?.inlineData)) return true;
 
   if (nonEmptyString(parsed.message?.content) || nonEmptyString(parsed.response)) return true;
@@ -471,12 +459,11 @@ function nonEmptyString(v) {
   return typeof v === "string" && v.length > 0;
 }
 
-function hasOutputTokens(usage) {
+function hasIncurredUsage(usage) {
   if (!usage || typeof usage !== "object") return false;
-  const n = Number(
-    usage.completion_tokens ?? usage.output_tokens ?? usage.candidatesTokenCount ?? 0
-  );
-  return Number.isFinite(n) && n > 0;
+  return ["prompt_tokens", "input_tokens", "completion_tokens", "output_tokens", "total_tokens",
+    "promptTokenCount", "candidatesTokenCount", "thoughtsTokenCount", "totalTokenCount"]
+    .some(key => Number.isFinite(Number(usage[key])) && Number(usage[key]) > 0);
 }
 
 export async function peekStreamForContent(response, timeoutMs = 45000) {
