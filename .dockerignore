@@ -8,11 +8,18 @@
 
 # Dependencies and build output
 node_modules
+**/node_modules
 .next
+**/.next
+.next-cli-build
+cli/app
+cli/.build-home
+**/out
 out
 build
 dist
 coverage
+*.tgz
 
 # Runtime data and logs
 data

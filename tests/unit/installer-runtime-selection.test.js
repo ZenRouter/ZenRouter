@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 const installer = readFileSync(new URL("../../install.sh", import.meta.url), "utf8");
+const currentVersion = JSON.parse(readFileSync(new URL("../../cli/package.json", import.meta.url), "utf8")).version;
 const configuration = installer.slice(installer.indexOf("# Configuration"), installer.indexOf("# Helpers"));
 const functions = [...installer.matchAll(/^\w+\(\) \{[\s\S]*?^\}/gm)].map(([body]) => body).join("\n");
 const bash = spawnSync("bash", ["--noprofile", "--norc", "-c", "command -v bash"], { encoding: "utf8" });
@@ -131,7 +132,7 @@ function /mock/home/.bun/bin/bun() {
     printf '%s\\n' "$BUN_VERSION"; return 0
   fi
   record "bun $*"
-  if [ "$1" = /mock/links/zenrouter ]; then [ "$CLI_WORKS" = true ] || return 1; printf '0.9.6\\n'; return 0; fi
+  if [ "$1" = /mock/links/zenrouter ]; then [ "$CLI_WORKS" = true ] || return 1; printf '${currentVersion}\\n'; return 0; fi
   case "$1" in
     /mock/system/bin/zenrouter|/mock/home/.zenrouter/node/bin/zenrouter|/mock/home/.bun/bin/zenrouter)
       mock_stale_cli "$@"; return ;;
@@ -149,7 +150,7 @@ function /mock/home/.bun/bin/zenrouter() { mock_stale_cli /mock/home/.bun/bin/ze
 function /mock/links/zenrouter() {
   record "zenrouter node:$(command -v node || true) $*"
   [ "$CLI_WORKS" = true ] || return 1
-  printf '0.9.6\\n'
+  printf '${currentVersion}\\n'
 }
 node() { local executable; executable=$(command -v node) || return 127; "$executable" "$@"; }
 npm() { local executable; executable=$(command -v npm) || return 127; "$executable" "$@"; }
@@ -310,7 +311,7 @@ describe.skipIf(!bashPath)("installer runtime selection (mock-only)", () => {
     });
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("0.8.0");
-    expect(result.stdout).toContain("0.9.6");
+    expect(result.stdout).toContain(currentVersion);
     expect(result.calls).toEqual([
       "CALL stale-zenrouter /mock/system/bin/zenrouter --version",
       "CALL zenrouter node:/mock/system/bin/node --version",
@@ -341,8 +342,8 @@ describe.skipIf(!bashPath)("installer runtime selection (mock-only)", () => {
       `CALL zenrouter node:${staleCliDir}/node --version`,
     ]);
     expect(result.calls.some((call) => call.startsWith("CALL stale-zenrouter"))).toBe(false);
-    expect(result.stdout).toContain("ZenRouter found: 0.9.6 (/mock/links/zenrouter)");
-    expect(result.stdout).toContain("Version: 0.9.6");
+    expect(result.stdout).toContain(`ZenRouter found: ${currentVersion} (/mock/links/zenrouter)`);
+    expect(result.stdout).toContain(`Version: ${currentVersion}`);
     expect(result.stdout).not.toContain("0.8.0");
   });
 

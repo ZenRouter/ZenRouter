@@ -7,13 +7,13 @@ FROM base AS builder
 
 RUN apk --no-cache upgrade && apk --no-cache add python3 make g++ linux-headers
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
-  npm install
+  npm ci
 
 COPY . ./
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
+RUN NEXT_PHASE=phase-production-build DISABLE_BACKGROUND_TOKEN_REFRESH=1 npm run build
 
 FROM ${NODE_IMAGE} AS runner
 WORKDIR /app

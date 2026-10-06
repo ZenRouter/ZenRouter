@@ -2,6 +2,15 @@ name: Build and Push Docker Image
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Stable release tag (must match all package versions)"
+        required: true
+        default: "v0.9.7"
+
+concurrency:
+  group: docker-release
+  cancel-in-progress: false
 
 env:
   GHCR_IMAGE: ghcr.io/zenrouter/zenrouter
@@ -16,6 +25,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Validate release tag and source
+        id: version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          node scripts/check-release-version.mjs "$RELEASE_TAG"
+          git show-ref --verify "refs/tags/$RELEASE_TAG"
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")"
+          printf 'version=%s\n' "${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
+          printf 'revision=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v4
 
@@ -32,6 +59,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Check current registry latest versions before promotion
+        id: latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: node scripts/release-publication-helpers.mjs docker-latest "$RELEASE_VERSION" "$GHCR_IMAGE" "$DOCKERHUB_IMAGE"
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v6
@@ -40,14 +74,17 @@ jobs:
             ${{ env.GHCR_IMAGE }}
             ${{ env.DOCKERHUB_IMAGE }}
           tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=latest,enable=${{ steps.latest.outputs.promote }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.revision=${{ steps.version.outputs.revision }}
 
-      - name: Build and push
+      - name: Build and push verified release source
         uses: docker/build-push-action@v7
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=ghcr.io/zenrouter/zenrouter:buildcache
@@ -57,7 +94,6 @@ jobs:
           sbom: false
 
       - name: Update Docker Hub Description
-        if: github.event_name != 'pull_request'
         uses: peter-evans/dockerhub-description@v5
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

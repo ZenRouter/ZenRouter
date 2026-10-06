@@ -5,7 +5,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 
 ## [Unreleased]
 
+## [0.9.7] - 2026-10-06
+
+[GitHub release](https://github.com/ZenRouter/ZenRouter/releases/tag/v0.9.7) · [Technical changelog](docs/CHANGELOG_v0.9.7.md) · [Release notes](releases/RELEASE_NOTES_v0.9.7.md)
+
 ### Changed
+- Bind manual npm/Docker publication to real stable tag refs and bind npm provenance to the dispatch SHA. Preserve the original tarball for integrity-checked release recovery; serialize publication across versions and prevent historical retries from replacing newer `latest` targets.
 - Preserve explicit output caps across the repaired reasoning/tool request paths instead of silently raising them to a universal floor. Keep nullable OpenAI aliases, native provider thinking modes and unsupported OAuth cap semantics distinct; document the contract in `docs/REASONING-BUDGETS.md`.
 - Research and reconcile upstream client identities and model metadata. Update Claude Code, Kiro CLI, Kimchi, CodeBuddy CN, and Command Code pins; preserve distinct IDE/CLI and regional profiles. Correct Gemini OAuth and Copilot endpoint-specific API headers without adding beta entitlements.
 - Add 120 documented provider/model entries across chat, image, embedding and TTS routes. Attach provider-scoped factual metadata, source URLs, API-versus-CLI limits and billing-unit caveats; preserve compatibility IDs and mark documented retirements. See `docs/CLIENT-MODEL-RECONCILIATION.md` and `docs/model-catalog-coverage.json` for explicit unverified/deferred coverage.
@@ -38,7 +43,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/) and Conventional
 ### Verification
 - Web-search acceptance exercises real loopback relay/CONNECT transport and the production standalone server with 16 disposable SQLite connections: correct defaults/model aliases, grounding/citation extraction, hidden thought-part exclusion, search-only health clearing, one-attempt Gemini model 404 and at-most-three Antigravity resource 404 attempts without locking the 15-account pool. No production account or live Google inference is used; upstream availability and account entitlement remain unverified.
 - Reasoning-budget acceptance additionally checks real loopback HTTP payloads and the production standalone SQLite usage table: explicit/nullable caps, reasoning-only exhaustion, and terminal-then-cancel each preserve actual usage exactly once. No live provider inference or automatic spending retry is used.
-- On Node `22.23.2`, the full isolated Vitest suite passes across 489 files: 4,030 passed, 100 skipped, 1 todo, zero failed tests or suites. Full ESLint passes with zero errors/warnings and `--max-warnings=0`; deliberate rule-violation controls remain active. Installer runtime tests evaluate real Bash function bodies in mock-only harnesses without running the installer or host package operations.
+- Final 0.9.7 release verification on Node `22.23.2`: the full isolated Vitest suite passes across 494 files with 4,091 passed, 100 skipped, 1 todo, zero failed tests or suites. Release guards cover consistent package/lock versions, literal stable tags, publication inputs and all five localized changelogs. Full ESLint passes with zero errors/warnings and `--max-warnings=0`; deliberate rule-violation controls remain active. Installer runtime tests evaluate real Bash function bodies in mock-only harnesses without running the installer or host package operations.
 - App/CLI production builds, docs static export, native SQLite, h2c, Undici SSE/abort/strict-proxy transport, authenticated missing-model API checks, CLI packaging, and real browser form/hydration/editor checks pass without billable provider inference.
 - Node 22's genuine `node:sqlite` experimental-status warning remains visible when the suite exercises the fallback driver; no warning suppression or coverage removal is used to hide it.
 

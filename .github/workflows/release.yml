@@ -4,24 +4,40 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release Tag (e.g. v0.7.0)"
+        description: "Stable release tag (must match all package versions)"
         required: true
-        default: "v0.7.0"
+        default: "v0.9.7"
 
 permissions:
   contents: write
-  packages: write
   id-token: write
+  actions: read
+
+concurrency:
+  group: npm-release
+  cancel-in-progress: false
 
 jobs:
   release:
-    # Only run on tags or manual dispatch; branch pushes just validate workflow visibility
-    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      RUN_REAL: "0"
+      RUN_E2E: "0"
+      RUN_LIVE_TESTS: "0"
+      MODEL_CATALOG_SYNC: "off"
+      ZENROUTER_DISABLE_MITM: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+      JWT_SECRET: test-jwt-secret-at-least-32-chars-long-for-ci-simulation
+      ZENROUTER_PEER_TOKEN: test-peer-token-for-ci-1234567890abcdef
     steps:
-      - name: Checkout Code
+      - name: Set isolated release data directory
+        run: printf 'DATA_DIR=%s/zenrouter-release-data\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+
+      - name: Checkout exact release tag
         uses: actions/checkout@v7
         with:
+          ref: refs/tags/${{ inputs.tag }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -29,62 +45,99 @@ jobs:
         with:
           node-version: 22
           registry-url: "https://registry.npmjs.org"
-          cache: "npm"
+          cache: npm
           cache-dependency-path: |
             package-lock.json
             tests/package-lock.json
+            cli/package-lock.json
+            gitbook/package-lock.json
 
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Install tests deps
-        run: cd tests && npm ci
-
-      - name: Install CLI deps
-        run: npm --prefix cli ci || npm --prefix cli install
-
-      - name: Run Test Suite
-        run: npm test
+      - name: Validate release source and required credentials
         env:
-          JWT_SECRET: test-jwt-secret-at-least-32-chars-long-for-ci-simulation
-          ZENROUTER_PEER_TOKEN: test-peer-token-for-ci-1234567890abcdef
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          test -n "$NPM_TOKEN" || { printf '%s\n' 'NPM_TOKEN is required; refusing a release without npm publication.'; exit 1; }
+          node scripts/check-release-version.mjs "$RELEASE_TAG"
+          test -f "releases/RELEASE_NOTES_${RELEASE_TAG}.md"
+          test "$GITHUB_REF" = "refs/tags/$RELEASE_TAG"
+          test "$GITHUB_SHA" = "$(git rev-parse HEAD)"
+          git show-ref --verify "refs/tags/$RELEASE_TAG"
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")"
+
+      - name: Install locked dependencies
+        run: |
+          npm ci
+          npm --prefix tests ci
+          npm --prefix cli ci
+          npm --prefix gitbook ci
+
+      - name: Run tests and lint
+        run: |
+          npm test -- --maxWorkers=2
+          npm run lint -- --max-warnings=0
+          npm --prefix gitbook test
+        env:
           NODE_ENV: test
 
-      - name: Build Next.js & Standalone Assets
-        run: npm run build
+      - name: Build documentation export
+        run: npm --prefix gitbook run build
+
+      - name: Recover original tarball or plan a fresh build
+        id: tarball
         env:
-          JWT_SECRET: test-jwt-secret-at-least-32-chars-long-for-ci-simulation
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: node scripts/release-publication-helpers.mjs prepare "${RELEASE_TAG#v}"
+
+      - name: Build and pack CLI package
+        if: steps.tarball.outputs.build == 'true'
+        env:
+          TARBALL_FILE: ${{ steps.tarball.outputs.file }}
           NEXT_PHASE: phase-production-build
+          DISABLE_BACKGROUND_TOKEN_REFRESH: "1"
+          NODE_ENV: production
+        run: |
+          npm run cli:pack
+          node scripts/check-release-version.mjs "$RELEASE_TAG"
+          mv "joyccn-zenrouter-${RELEASE_TAG#v}.tgz" "$TARBALL_FILE"
 
-      - name: Build and Pack CLI Package
-        run: npm run cli:pack
+      - name: Persist original tarball before immutable npm publication
+        if: steps.tarball.outputs.build == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.tarball.outputs.name }}
+          path: ${{ steps.tarball.outputs.file }}
+          if-no-files-found: error
+          retention-days: 90
+          archive: true
+          overwrite: false
 
-      - name: Create GitHub Release
+      - name: Publish exact CLI tarball to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TARBALL_FILE: ${{ steps.tarball.outputs.file }}
+        run: node scripts/release-publication-helpers.mjs publish "${RELEASE_TAG#v}" "$TARBALL_FILE"
+
+      - name: Advance latest without rolling back a newer release
+        id: latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: node scripts/release-publication-helpers.mjs latest "${RELEASE_TAG#v}"
+
+      - name: Create GitHub Release and upload assets
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          name: "🌿 ZenRouter ${{ github.event.inputs.tag || github.ref_name }}"
+          tag_name: ${{ inputs.tag }}
+          name: "🌿 ZenRouter ${{ inputs.tag }}"
           draft: false
           prerelease: false
-          body_path: releases/RELEASE_NOTES_${{ github.event.inputs.tag || github.ref_name }}.md
+          make_latest: ${{ steps.latest.outputs.github }}
+          fail_on_unmatched_files: true
+          body_path: releases/RELEASE_NOTES_${{ inputs.tag }}.md
           files: |
-            zenrouter-*.tgz
+            joyccn-zenrouter-*.tgz
             install.sh
             docker-compose.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish CLI to npm
-        if: env.NPM_TOKEN != ''
-        run: |
-          cd cli
-          CURRENT_VER=$(node -p "require('./package.json').version")
-          NPM_VER=$(npm view @joyccn/zenrouter version 2>/dev/null || echo "0.0.0")
-          if [ "$CURRENT_VER" = "$NPM_VER" ]; then
-            echo "Version $CURRENT_VER is already published to npm. Skipping npm publish."
-          else
-            npm publish --access public --provenance
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

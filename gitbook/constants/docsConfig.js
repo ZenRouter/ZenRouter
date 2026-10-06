@@ -49,7 +49,8 @@ const NAV_STRUCTURE = [
     key: "help",
     items: [
       { key: "troubleshooting", slug: "troubleshooting" },
-      { key: "faq", slug: "faq" }
+      { key: "faq", slug: "faq" },
+      { key: "changelog", slug: "changelog" }
     ]
   }
 ];
@@ -81,6 +82,7 @@ const TRANSLATIONS = {
     localhost: "Localhost",
     cloud: "Cloud (VPS/Docker)",
     help: "Help",
+    changelog: "Changelog",
     troubleshooting: "Troubleshooting",
     faq: "FAQ",
     goToApp: "Go to App",
@@ -112,6 +114,7 @@ const TRANSLATIONS = {
     localhost: "Localhost",
     cloud: "Cloud (VPS/Docker)",
     help: "Trợ giúp",
+    changelog: "Nhật ký thay đổi",
     troubleshooting: "Khắc phục sự cố",
     faq: "Câu hỏi thường gặp",
     goToApp: "Vào ứng dụng",
@@ -143,6 +146,7 @@ const TRANSLATIONS = {
     localhost: "本地",
     cloud: "云端 (VPS/Docker)",
     help: "帮助",
+    changelog: "更新日志",
     troubleshooting: "故障排查",
     faq: "常见问题",
     goToApp: "前往应用",
@@ -174,6 +178,7 @@ const TRANSLATIONS = {
     localhost: "Localhost",
     cloud: "Nube (VPS/Docker)",
     help: "Ayuda",
+    changelog: "Registro de cambios",
     troubleshooting: "Solución de problemas",
     faq: "Preguntas frecuentes",
     goToApp: "Ir a la app",
@@ -205,6 +210,7 @@ const TRANSLATIONS = {
     localhost: "ローカル",
     cloud: "クラウド (VPS/Docker)",
     help: "ヘルプ",
+    changelog: "変更履歴",
     troubleshooting: "トラブルシューティング",
     faq: "よくある質問",
     goToApp: "アプリへ",
