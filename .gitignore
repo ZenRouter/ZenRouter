@@ -57,6 +57,7 @@ docs/*
 !docs/CLIENT-MODEL-RECONCILIATION.md
 !docs/model-catalog-coverage.json
 !docs/REASONING-BUDGETS.md
+!docs/WEB-SEARCH.md
 test/*
 open-sse/test/*
 RM.vn.md
