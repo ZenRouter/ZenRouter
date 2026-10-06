@@ -107,9 +107,11 @@ export function extractThinking(body) {
 // OpenAI has no equivalent for, so the intent cannot survive translation on its own.
 export function captureThinking(body) {
   const cfg = extractThinking(body);
-  if (!cfg || cfg.mode === "none") return cfg;
-  const display = openAIThinkingDisplay(body);
-  return display ? { ...cfg, display } : cfg;
+  if (!cfg) return cfg;
+  const display = cfg.mode === "none" ? undefined : openAIThinkingDisplay(body);
+  const responsesReasoning = body.reasoning && typeof body.reasoning === "object"
+    ? { ...body.reasoning } : undefined;
+  return { ...cfg, ...(display ? { display } : {}), ...(responsesReasoning ? { responsesReasoning } : {}) };
 }
 
 function openAIThinkingDisplay(body) {
@@ -174,9 +176,15 @@ function normalizeOpenAILevel(level, supportedLevels) {
   return "xhigh";
 }
 
-function toGeminiThinkingLevel(cfg) {
+function toGeminiThinkingLevel(cfg, supportedLevels) {
   const raw = cfg.mode === "auto" ? "high" : (toLevel(cfg) || "high");
-  return effortToThinkingLevel(raw);
+  const level = effortToThinkingLevel(raw);
+  const ordered = ["minimal", "low", "medium", "high"];
+  const allowed = ordered.filter(value => !supportedLevels || supportedLevels.includes(value));
+  if (allowed.includes(level)) return level;
+  // Use the nearest supported level; never forward an unknown Gemini enum.
+  const rank = ordered.indexOf(level);
+  return allowed.find(value => ordered.indexOf(value) >= rank) || allowed.at(-1) || "high";
 }
 
 function toKimiReasoningEffort(cfg) {
@@ -229,12 +237,14 @@ function setGeminiThinking(body, tc) {
 }
 
 function ensureGeminiOutputFloor(body, floor, caps) {
-  const cap = Number.isFinite(caps?.maxOutput) ? caps.maxOutput : floor;
-  const target = Math.min(floor, cap);
+  const cap = Number.isFinite(caps?.maxOutput) && caps.maxOutput > 0 ? caps.maxOutput : undefined;
   const gc = getGeminiGenerationConfig(body);
-  const current = Number(gc.maxOutputTokens);
-  if (!Number.isFinite(current) || current < target) {
-    gc.maxOutputTokens = target;
+  // These are gateway defaults, not required model minima. Never spend beyond
+  // an explicit caller cap (including zero/null: leave validation to the caller).
+  if (gc.maxOutputTokens === undefined) {
+    gc.maxOutputTokens = cap === undefined ? floor : Math.min(floor, cap);
+  } else if (Number.isFinite(gc.maxOutputTokens) && cap !== undefined && gc.maxOutputTokens > cap) {
+    gc.maxOutputTokens = cap;
   }
 }
 
@@ -252,7 +262,7 @@ function stripAll(body) {
 }
 
 // Apply unified thinking config to body in the resolved provider-native format.
-function applyFormat(fmt, body, cfg, caps, supportedLevels, display) {
+function applyFormat(fmt, body, cfg, caps, supportedLevels, display, provider) {
   const none = cfg.mode === "none";
   const canDisable = caps.thinkingCanDisable !== false;
   // Model cannot disable thinking → clamp "none" to minimal effort instead.
@@ -287,11 +297,11 @@ function applyFormat(fmt, body, cfg, caps, supportedLevels, display) {
     case "claude-budget": {
       if (none && canDisable) { body.thinking = { type: "disabled" }; break; }
       const budget = toBudget(eff, caps.thinkingRange);
-      body.thinking = budget === -1 ? { type: "enabled", ...(display ? { display } : {}) } : { type: "enabled", budget_tokens: budget || 8192, ...(display ? { display } : {}) };
+      body.thinking = { type: "enabled", budget_tokens: Number.isFinite(budget) && budget > 0 ? Math.max(1024, Math.floor(budget)) : 8192, ...(display ? { display } : {}) };
       break;
     }
     case "gemini-level": {
-      const level = none ? "minimal" : toGeminiThinkingLevel(eff);
+      const level = toGeminiThinkingLevel(none ? { mode: "level", level: "minimal" } : eff, supportedLevels);
       setGeminiThinking(body, { thinkingLevel: level, includeThoughts: level !== "minimal" });
       ensureGeminiOutputFloor(body, geminiLevelOutputFloor(level), caps);
       break;
@@ -335,7 +345,11 @@ function applyFormat(fmt, body, cfg, caps, supportedLevels, display) {
       // on opencode-go, probed live) 400 on "max" — clamp to high when the declared
       // levels exclude it.
       const level = toLevel(eff);
-      const want = level === "xhigh" || level === "max" ? "max" : "high";
+      // Native API mapping differs from MiMo and reseller deepseek-format
+      // contracts. Do not change those routes based on DeepSeek's own docs.
+      const want = provider === "deepseek"
+        ? (["minimal", "low"].includes(level) ? "low" : ["max", "ultra"].includes(level) ? "max" : "high")
+        : level === "xhigh" || level === "max" ? "max" : "high";
       body.reasoning_effort = want === "max" && supportedLevels && !supportedLevels.includes("max") ? "high" : want;
       break;
     }
@@ -421,12 +435,27 @@ export function applyThinking(targetFormat, model, body, provider = null, intent
     if (outputConfig) body.output_config = outputConfig;
     return body;
   }
+  // 4.6 still accepts explicit manual mode even though adaptive is preferred.
+  // Preserve its numeric budget for final preparation, which knows beta headers.
+  // Do not force this legacy mode onto 4.7+ or unknown reseller specifications.
+  if (!override && targetFormat === "claude" && provider === "claude" && body.thinking?.type === "enabled" &&
+      /^claude-(?:sonnet|opus)-4[.-]6(?:-\d{8})?$/.test(cleanModel)) return body;
   const supportedLevels = getThinkingLevels(provider, cleanModel);
   // Anthropic's `display` (summarized | omitted) decides whether thinking text
   // comes back at all; keep what the client asked for instead of resetting it.
   // An OpenAI-shaped client's ask arrives via the captured intent instead.
   const display = typeof body.thinking?.display === "string" ? body.thinking.display : intent?.display;
+  const isResponses = targetFormat === "openai-responses" || targetFormat === "openai-response";
+  const responsesReasoning = isResponses
+    ? { ...body.reasoning, ...intent?.responsesReasoning } : null;
   stripAll(body);
-  applyFormat(fmt, body, cfg, caps, supportedLevels, display);
+  applyFormat(fmt, body, cfg, caps, supportedLevels, display, provider);
+  if (isResponses) {
+    const effort = body.reasoning_effort;
+    delete body.reasoning_effort;
+    delete responsesReasoning.effort;
+    if (effort !== undefined) responsesReasoning.effort = effort;
+    if (Object.keys(responsesReasoning).length) body.reasoning = responsesReasoning;
+  }
   return body;
 }

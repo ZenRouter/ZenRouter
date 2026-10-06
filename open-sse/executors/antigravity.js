@@ -10,6 +10,7 @@ import {
   ANTIGRAVITY_TELEMETRY_KEYS,
 } from "../config/appConstants.js";
 import { HTTP_STATUS } from "../config/runtimeConfig.js";
+import { readOutputTokenCap } from "../translator/formats/maxTokens.js";
 import { resolveSessionId } from "../utils/sessionManager.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { cleanJSONSchemaForAntigravity } from "../translator/formats/gemini.js";
@@ -265,7 +266,7 @@ export class AntigravityExecutor extends BaseExecutor {
           temperature: 1.0,
           topP: 0.95,
           topK: 40,
-          maxOutputTokens: 8192,
+          maxOutputTokens: Math.min(readOutputTokenCap(body.request?.generationConfig || body.generationConfig, ["maxOutputTokens"]) ?? 8192, MAX_ANTIGRAVITY_OUTPUT_TOKENS),
           responseModalities: ["TEXT", "IMAGE"],
           imageConfig,
         },
@@ -412,31 +413,41 @@ export class AntigravityExecutor extends BaseExecutor {
     }
 
     const generationConfig = { ...(requestWithoutTools.generationConfig || {}) };
-    if (generationConfig.maxOutputTokens > MAX_ANTIGRAVITY_OUTPUT_TOKENS) {
-      generationConfig.maxOutputTokens = MAX_ANTIGRAVITY_OUTPUT_TOKENS;
+    const outputCap = readOutputTokenCap(generationConfig, ["maxOutputTokens"]);
+    if (outputCap !== undefined) {
+      generationConfig.maxOutputTokens = Math.min(outputCap, MAX_ANTIGRAVITY_OUTPUT_TOKENS);
     }
 
-    // Ensure thinkingConfig is forwarded to Antigravity upstream
-    // and maxOutputTokens strictly exceeds thinkingBudget to prevent 400 INVALID_ARGUMENT (#3979)
-    const thinkingBudget =
-      body?.thinking?.budget_tokens ||
-      body?.thinking_budget ||
-      requestWithoutTools?.generationConfig?.thinkingConfig?.thinkingBudget ||
-      (body?.reasoning_effort === "low" ? 1024 : body?.reasoning_effort === "medium" ? 2048 : body?.reasoning_effort === "high" ? 4096 : null);
+    // A normalized native config wins over compatibility effort fields. Levels
+    // are qualitative; dynamic (-1) and disabled (0) are not positive budgets.
+    const thinkingConfig = generationConfig.thinkingConfig;
+    let thinkingBudget = thinkingConfig?.thinkingBudget ??
+      body?.thinking?.budget_tokens ?? body?.thinking_budget ??
+      (body?.reasoning_effort === "low" ? 1024 : body?.reasoning_effort === "medium" ? 2048 : body?.reasoning_effort === "high" ? 4096 : undefined);
 
-    const isThinkingModel =
-      model?.includes("thinking") ||
-      Boolean(body?.thinking) ||
-      Boolean(body?.reasoning_effort) ||
-      Boolean(requestWithoutTools?.generationConfig?.thinkingConfig);
-
-    if (isThinkingModel && thinkingBudget) {
-      if (!generationConfig.maxOutputTokens || generationConfig.maxOutputTokens <= thinkingBudget) {
-        generationConfig.maxOutputTokens = Math.min(MAX_ANTIGRAVITY_OUTPUT_TOKENS, thinkingBudget + 8192);
+    if (thinkingConfig?.thinkingLevel === undefined && thinkingBudget !== undefined) {
+      if (!Number.isSafeInteger(thinkingBudget) || thinkingBudget < -1) {
+        const error = new Error("thinkingBudget must be an integer at least -1");
+        error.code = "invalid_thinking_budget";
+        throw error;
+      }
+      if (thinkingBudget > 0) {
+        // Headroom is an omitted-cap default, never permission to raise a cap.
+        if (outputCap === undefined) {
+          generationConfig.maxOutputTokens = Math.min(MAX_ANTIGRAVITY_OUTPUT_TOKENS, thinkingBudget + 8192);
+        }
+        thinkingBudget = Math.min(thinkingBudget, generationConfig.maxOutputTokens - 1);
+        const minimumBudget = /(^|\/)claude/.test(cleanModel) ? 1024 : 1;
+        if (thinkingBudget < minimumBudget) {
+          const error = new Error("Thinking budget cannot fit inside maxOutputTokens");
+          error.code = "invalid_thinking_budget";
+          throw error;
+        }
       }
       generationConfig.thinkingConfig = {
+        ...thinkingConfig,
         thinkingBudget,
-        includeThoughts: true,
+        includeThoughts: thinkingConfig?.includeThoughts ?? true,
       };
     }
 

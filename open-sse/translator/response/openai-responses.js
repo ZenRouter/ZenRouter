@@ -14,14 +14,14 @@ import { ROLE, OPENAI_BLOCK, RESPONSES_ITEM, OPENAI_FINISH, MODEL_FALLBACK } fro
  * Translate OpenAI chunk to Responses API events
  * @returns {Array} Array of events with { event, data } structure
  */
-function toResponsesUsage(usage) {
+function toResponsesUsage(usage, allowZero = false) {
   if (!usage || typeof usage !== "object") return null;
 
   const inputTokens = [usage.input_tokens, usage.prompt_tokens].find(Number.isInteger);
   const outputTokens = [usage.output_tokens, usage.completion_tokens].find(Number.isInteger);
   // Some upstreams attach zeroed placeholders to every chunk. Wait for real counts
   // so response.completed cannot freeze the placeholder before the usage trailer.
-  if (inputTokens === undefined || outputTokens === undefined || inputTokens + outputTokens <= 0) {
+  if (inputTokens === undefined || outputTokens === undefined || (!allowZero && inputTokens + outputTokens <= 0)) {
     return null;
   }
   const responseUsage = {
@@ -60,8 +60,9 @@ export function openaiToOpenAIResponsesResponse(chunk, state = {}) {
 
   // Capture usage before the choices guard: OpenAI may send it in a trailer
   // whose choices array is empty.
-  const responseUsage = toResponsesUsage(chunk.usage);
-  if (responseUsage) state.responsesUsage = responseUsage;
+  const responseUsage = toResponsesUsage(chunk.usage, Array.isArray(chunk.choices) && chunk.choices.length === 0);
+  const latestUsage = toResponsesUsage(chunk.usage, true);
+  if (latestUsage) state.responsesUsage = latestUsage;
 
   if (!chunk.choices?.length) {
     return state.completionPending && state.responsesUsage ? flushEvents(state) : [];
@@ -166,6 +167,7 @@ export function openaiToOpenAIResponsesResponse(chunk, state = {}) {
 
   // Handle finish_reason
   if (choice.finish_reason) {
+    state.responsesFinishReason = choice.finish_reason;
     for (const i in state.msgItemAdded) closeMessage(state, emit, i);
     closeReasoning(state, emit);
     for (const i in state.funcCallIds) closeToolCall(state, emit, i);
@@ -181,7 +183,7 @@ export function openaiToOpenAIResponsesResponse(chunk, state = {}) {
     // it, leaving nothing to iterate — so flushEvents() is never called and deferring
     // would swallow the terminal event entirely. Keep the old behaviour there.
     const flushReachesUs = state.targetFormat === FORMATS.OPENAI;
-    if (state.responsesUsage || !flushReachesUs) sendCompleted(state, emit);
+    if (responseUsage || !flushReachesUs) sendCompleted(state, emit);
     else state.completionPending = true;
   }
 
@@ -497,13 +499,16 @@ function collectCompletedOutputItems(state) {
 function sendCompleted(state, emit) {
   if (!state.completedSent) {
     state.completedSent = true;
-    emit("response.completed", {
-      type: "response.completed",
+    const incomplete = state.responsesFinishReason === OPENAI_FINISH.LENGTH;
+    const event = incomplete ? "response.incomplete" : "response.completed";
+    emit(event, {
+      type: event,
       response: {
         id: state.responseId,
         object: "response",
         created_at: state.created,
-        status: "completed",
+        status: incomplete ? "incomplete" : "completed",
+        ...(incomplete ? { incomplete_details: { reason: "max_output_tokens" } } : {}),
         background: false,
         error: null,
         output: collectCompletedOutputItems(state),
@@ -631,7 +636,7 @@ export function openaiResponsesToOpenAIResponse(chunk, state) {
   }
 
   // Response completed
-  if (eventType === "response.completed" || eventType === "response.done") {
+  if (["response.completed", "response.done", "response.incomplete"].includes(eventType)) {
     // Extract usage from response.completed event
     const responseUsage = data.response?.usage;
     if (responseUsage && typeof responseUsage === "object") {
@@ -646,7 +651,8 @@ export function openaiResponsesToOpenAIResponse(chunk, state) {
     }
     
     if (!state.finishReasonSent) {
-      const finishReason = computeFinishReason(state);
+      const finishReason = eventType === "response.incomplete" && data.response?.incomplete_details?.reason === "max_output_tokens"
+        ? OPENAI_FINISH.LENGTH : computeFinishReason(state);
 
       state.finishReasonSent = true;
       state.finishReason = finishReason; // Mark for usage injection in stream.js
@@ -755,14 +761,17 @@ export function openaiResponsesObjectToCompletion(body) {
     choices: [{
       index: 0,
       message,
-      finish_reason: toolCalls.length > 0 ? "tool_calls" : "stop",
+      finish_reason: body.status === "incomplete" && body.incomplete_details?.reason === "max_output_tokens"
+        ? "length" : toolCalls.length > 0 ? "tool_calls" : "stop",
     }],
   };
   if (usageIn != null || usageOut != null) {
     completion.usage = {
       prompt_tokens: usageIn || 0,
       completion_tokens: usageOut || 0,
-      total_tokens: body.usage?.total_tokens || (usageIn || 0) + (usageOut || 0),
+      total_tokens: body.usage?.total_tokens ?? (usageIn || 0) + (usageOut || 0),
+      ...(body.usage?.input_tokens_details ? { prompt_tokens_details: body.usage.input_tokens_details } : {}),
+      ...(body.usage?.output_tokens_details ? { completion_tokens_details: body.usage.output_tokens_details } : {}),
     };
   }
   return completion;

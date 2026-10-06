@@ -17,6 +17,7 @@
  */
 import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
+import { readOutputTokenCap } from "../formats/maxTokens.js";
 import { applyKiroSessionReplay } from "../../utils/kiroSessionReplay.js";
 import { resolveContinuationId, resolveSessionIdentity } from "../../utils/sessionManager.js";
 import {
@@ -221,7 +222,7 @@ function extractClaudeSystemText(system) {
 export function claudeToKiroRequest(model, body, stream, credentials) {
   const messages = Array.isArray(body.messages) ? body.messages : [];
   const tools = Array.isArray(body.tools) ? body.tools : [];
-  const maxTokens = body.max_tokens || 32000;
+  const maxTokens = readOutputTokenCap(body, ["max_tokens"], { sourceFormat: "claude" }) ?? 32000;
   const temperature = body.temperature;
   const topP = body.top_p;
 

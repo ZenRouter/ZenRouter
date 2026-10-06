@@ -1,10 +1,12 @@
-import { saveRequestUsage, appendRequestLog, saveRequestDetail } from "@/lib/usageDb.js";
+import { saveRequestUsage } from "@/lib/usageDb.js";
 import { COLORS } from "../../utils/stream.js";
 import { canonicalizeUsage } from "../../utils/usageTracking.js";
+import { toOpenAIUsage } from "../../translator/concerns/usage.js";
 
 const OPTIONAL_PARAMS = [
   "temperature", "top_p", "top_k",
-  "max_tokens", "max_completion_tokens",
+  "max_tokens", "max_completion_tokens", "max_output_tokens",
+  "reasoning_effort", "generationConfig",
   "thinking", "reasoning", "enable_thinking",
   "presence_penalty", "frequency_penalty",
   "seed", "stop", "tools", "tool_choice",
@@ -87,12 +89,7 @@ export function extractUsageFromResponse(responseBody) {
   // Gemini format. Antigravity / gemini-cli wrap the payload in { response: {...} }.
   const usageMetadata = responseBody.usageMetadata || responseBody.response?.usageMetadata;
   if (usageMetadata) {
-    return {
-      prompt_tokens: usageMetadata.promptTokenCount || 0,
-      completion_tokens: usageMetadata.candidatesTokenCount || 0,
-      cached_tokens: usageMetadata.cachedContentTokenCount || 0,
-      reasoning_tokens: usageMetadata.thoughtsTokenCount || 0
-    };
+    return canonicalizeUsage(toOpenAIUsage(usageMetadata, "gemini"));
   }
 
   return null;

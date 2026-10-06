@@ -11,6 +11,7 @@
  */
 import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
+import { readOutputTokenCap } from "../formats/maxTokens.js";
 import { randomUUID } from "crypto";
 import { ROLE, OPENAI_BLOCK } from "../schema/index.js";
 import { DEFAULT_MAX_TOKENS } from "../../config/runtimeConfig.js";
@@ -166,7 +167,7 @@ export function openaiToCommandCodeRequest(model, body, stream /* , credentials 
     model,
     messages,
     stream: stream !== false,
-    max_tokens: body.max_tokens ?? body.max_output_tokens ?? DEFAULT_MAX_TOKENS,
+    max_tokens: readOutputTokenCap(body, ["max_completion_tokens", "max_tokens", "max_output_tokens"]) ?? DEFAULT_MAX_TOKENS,
     temperature: body.temperature ?? 0.3,
   };
 

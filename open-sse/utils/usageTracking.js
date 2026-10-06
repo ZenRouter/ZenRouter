@@ -3,6 +3,7 @@
  */
 
 import { FORMATS } from "../translator/formats.js";
+import { toOpenAIUsage } from "../translator/concerns/usage.js";
 
 // Legacy per-chunk usage console line; off by default (superseded by "📊 done")
 const DEBUG_USAGE = process.env.LOG_USAGE_VERBOSE === "1";
@@ -83,7 +84,7 @@ export function filterUsageForFormat(usage, targetFormat) {
       'estimated'
     ],
     [FORMATS.OPENAI_RESPONSES]: [
-      'input_tokens', 'output_tokens',
+      'input_tokens', 'output_tokens', 'total_tokens',
       'input_tokens_details', 'output_tokens_details',
       'estimated'
     ],
@@ -282,24 +283,16 @@ export function extractUsage(chunk) {
   // Claude format (message_delta event)
   if (chunk.type === "message_delta" && chunk.usage && typeof chunk.usage === "object") {
     return normalizeUsage({
-      prompt_tokens: chunk.usage.input_tokens || 0,
-      completion_tokens: chunk.usage.output_tokens || 0,
+      prompt_tokens: chunk.usage.input_tokens,
+      completion_tokens: chunk.usage.output_tokens,
       cache_read_input_tokens: chunk.usage.cache_read_input_tokens,
       cache_creation_input_tokens: chunk.usage.cache_creation_input_tokens
     });
   }
 
-  // OpenAI Responses API format (response.completed or response.done)
-  if ((chunk.type === "response.completed" || chunk.type === "response.done") && chunk.response?.usage && typeof chunk.response.usage === "object") {
-    const usage = chunk.response.usage;
-    const cachedTokens = usage.input_tokens_details?.cached_tokens;
-    return normalizeUsage({
-      prompt_tokens: usage.input_tokens || usage.prompt_tokens || 0,
-      completion_tokens: usage.output_tokens || usage.completion_tokens || 0,
-      cached_tokens: cachedTokens,
-      reasoning_tokens: usage.output_tokens_details?.reasoning_tokens,
-      prompt_tokens_details: cachedTokens ? { cached_tokens: cachedTokens } : undefined
-    });
+  // Usage belongs to the attempt, including incomplete and failed terminals.
+  if (chunk.response?.usage && typeof chunk.response.usage === "object") {
+    return normalizeUsage(chunk.response.usage);
   }
 
   // OpenAI format (also covers DeepSeek which uses prompt_cache_hit_tokens)
@@ -327,13 +320,7 @@ export function extractUsage(chunk) {
   // Antigravity wraps usageMetadata inside response: { response: { usageMetadata: {...} } }
   const usageMeta = chunk.usageMetadata || chunk.response?.usageMetadata;
   if (usageMeta && typeof usageMeta === "object") {
-    return normalizeUsage({
-      prompt_tokens: usageMeta.promptTokenCount || 0,
-      completion_tokens: usageMeta.candidatesTokenCount || 0,
-      total_tokens: usageMeta.totalTokenCount,
-      cached_tokens: usageMeta.cachedContentTokenCount,
-      reasoning_tokens: usageMeta.thoughtsTokenCount
-    });
+    return normalizeUsage(toOpenAIUsage(usageMeta, "gemini"));
   }
 
   // Ollama NDJSON format (raw from provider, before translation)

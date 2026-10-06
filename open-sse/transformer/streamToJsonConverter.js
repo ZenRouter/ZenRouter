@@ -12,31 +12,35 @@ function processSSEMessage(msg, state) {
 
   const eventMatch = msg.match(/^event:\s*(.+)$/m);
   const dataMatch = msg.match(/^data:\s*(.+)$/m);
-  if (!eventMatch || !dataMatch) return;
+  if (!dataMatch) return;
 
-  const eventType = eventMatch[1].trim();
+  let eventType = eventMatch?.[1].trim();
   const dataStr = dataMatch[1].trim();
   if (dataStr === "[DONE]") return;
 
   let parsed;
   try { parsed = JSON.parse(dataStr); }
   catch { return; }
+  eventType ||= parsed.type;
+  if (["response.completed", "response.done", "response.incomplete", "response.failed"].includes(eventType)) {
+    const response = parsed.response || {};
+    state.responseId = response.id ?? state.responseId;
+    state.created = response.created_at ?? state.created;
+    state.model = response.model ?? state.model;
+    state.incomplete_details = response.incomplete_details;
+    if (response.usage) state.usage = { ...response.usage };
+    if (Array.isArray(response.output)) {
+      state.items = new Map(response.output.map((item, index) => [index, item]));
+    }
+  }
 
   if (eventType === "response.created") {
     state.responseId = parsed.response?.id || state.responseId;
     state.created = parsed.response?.created_at || state.created;
   } else if (eventType === "response.output_item.done") {
     state.items.set(parsed.output_index ?? 0, parsed.item);
-  } else if ((eventType === "response.completed" || eventType === "response.done") && state.status !== "failed") {
-    state.status = "completed";
-    if (parsed.response?.usage) {
-      const u = parsed.response.usage;
-      state.usage.input_tokens = u.input_tokens || 0;
-      state.usage.output_tokens = u.output_tokens || 0;
-      state.usage.total_tokens = u.total_tokens || 0;
-      if (u.input_tokens_details) state.usage.input_tokens_details = u.input_tokens_details;
-      if (u.output_tokens_details) state.usage.output_tokens_details = u.output_tokens_details;
-    }
+  } else if (["response.completed", "response.done", "response.incomplete"].includes(eventType) && state.status !== "failed") {
+    state.status = eventType === "response.incomplete" ? "incomplete" : "completed";
   } else if (eventType === "response.failed" || eventType === "error") {
     state.status = "failed";
     state.error = parsed.response?.error || parsed.error || { message: parsed.message || "Upstream Responses stream failed" };
@@ -102,6 +106,8 @@ export async function convertResponsesStreamToJson(stream) {
     created_at: state.created,
     status: state.status || "completed",
     ...(state.error ? { error: state.error } : {}),
+    ...(state.model !== undefined ? { model: state.model } : {}),
+    ...(state.incomplete_details ? { incomplete_details: state.incomplete_details } : {}),
     output,
     usage: state.usage
   };

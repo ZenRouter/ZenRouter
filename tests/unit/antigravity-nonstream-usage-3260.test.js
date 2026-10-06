@@ -17,8 +17,10 @@ const USAGE_METADATA = {
 
 const EXPECTED = {
   prompt_tokens: 1234,
-  completion_tokens: 56,
+  completion_tokens: 146, // 56 answer + 90 thoughts, inclusive once
+  total_tokens: 1380,
   cached_tokens: 78,
+  cache_creation_input_tokens: 0,
   reasoning_tokens: 90,
 };
 

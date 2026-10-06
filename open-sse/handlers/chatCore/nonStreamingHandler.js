@@ -1,19 +1,20 @@
+import { outputBudgetError, openAICompletionToResponses } from "./jsonCompletionOutcome.js";
+export { isTruncatedEmptyCompletion } from "./jsonCompletionOutcome.js";
 import { FORMATS } from "../../translator/formats.js";
 import { needsTranslation } from "../../translator/index.js";
 import { fromOpenAIFinish } from "../../translator/concerns/finishReason.js";
 import { ollamaBodyToOpenAI } from "../../translator/response/ollama-to-openai.js";
 import { toOpenAIUsage } from "../../translator/concerns/usage.js";
-import { addBufferToUsage, filterUsageForFormat } from "../../utils/usageTracking.js";
+import { filterUsageForFormat } from "../../utils/usageTracking.js";
 import { createErrorResult } from "../../utils/error.js";
 import { HTTP_STATUS } from "../../config/runtimeConfig.js";
 import { parseSSEToOpenAIResponse } from "./sseToJsonHandler.js";
 import { convertResponsesStreamToJson } from "../../transformer/streamToJsonConverter.js";
 import { openaiResponsesObjectToCompletion } from "../../translator/response/openai-responses.js";
 import { buildRequestDetail, extractRequestConfig, extractUsageFromResponse, saveUsageStats, formatDoneLine } from "./requestDetail.js";
-import { appendRequestLog, saveRequestDetail } from "@/lib/usageDb.js";
+import { saveRequestDetail } from "@/lib/usageDb.js";
 import { decloakToolNames } from "../../utils/claudeCloaking.js";
 import { decloakOpenAIChunk } from "../../utils/toolCompressor.js";
-import { ROLE, RESPONSES_ITEM } from "../../translator/schema/index.js";
 import { buildToolCallId, cacheSignature } from "../../translator/concerns/thoughtSignature.js";
 import { extractReasoningText } from "../../translator/concerns/reasoning.js";
 import { normalizeTypedContent } from "../../translator/concerns/typedContent.js";
@@ -113,86 +114,6 @@ function openAICompletionToClaudeMessage(responseBody) {
     usage: {
       input_tokens: usage.prompt_tokens || usage.input_tokens || 0,
       output_tokens: usage.completion_tokens || usage.output_tokens || 0,
-    },
-  };
-}
-
-/**
- * Convert an OpenAI Chat Completions non-streaming response body into the
- * OpenAI Responses API shape. Used when a Responses-format client (e.g. Codex)
- * is routed to a Chat Completions upstream and `stream:false` — the streaming
- * path already emits Responses events, but the JSON path returned a raw
- * `chat.completion` body, so tool_calls were invisible to Responses clients.
- */
-function extractCustomToolInput(argumentsValue) {
-  const argumentsText = typeof argumentsValue === "string" ? argumentsValue : JSON.stringify(argumentsValue || {});
-  try {
-    const parsed = JSON.parse(argumentsText);
-    if (parsed && typeof parsed === "object" && typeof parsed.input === "string") return parsed.input;
-  } catch { /* raw freeform input */ }
-  return argumentsText;
-}
-
-function openAICompletionToResponses(responseBody, customToolNames = null) {
-  const choice = responseBody?.choices?.[0];
-  if (!choice) return responseBody;
-
-  const message = choice.message || {};
-  const output = [];
-
-  // Reasoning → a reasoning item (summary text), mirroring the streaming path.
-  const reasoning = extractReasoningText(message);
-  if (typeof reasoning === "string" && reasoning.length > 0) {
-    output.push({
-      type: RESPONSES_ITEM.REASONING,
-      status: "completed",
-      summary: [{ type: RESPONSES_ITEM.SUMMARY_TEXT, text: reasoning }],
-    });
-  }
-
-  // Assistant text → a message item with output_text content.
-  const text = typeof message.content === "string" ? message.content : "";
-  if (text.length > 0) {
-    output.push({
-      type: RESPONSES_ITEM.MESSAGE,
-      status: "completed",
-      role: ROLE.ASSISTANT,
-      content: [{ type: RESPONSES_ITEM.OUTPUT_TEXT, text, annotations: [] }],
-    });
-  }
-
-  // tool_calls → function_call/custom_tool_call items (Responses-native tool shape).
-  for (const tc of message.tool_calls || []) {
-    const fn = tc.function || {};
-    const custom = customToolNames?.has(fn.name);
-    output.push({
-      type: custom ? RESPONSES_ITEM.CUSTOM_TOOL_CALL : RESPONSES_ITEM.FUNCTION_CALL,
-      status: "completed",
-      id: `${custom ? "ctc" : "fc"}_${tc.id || ""}`,
-      call_id: tc.id || "",
-      name: fn.name || "",
-      ...(custom
-        ? { input: extractCustomToolInput(fn.arguments) }
-        : { arguments: typeof fn.arguments === "string" ? fn.arguments : JSON.stringify(fn.arguments || {}) }),
-    });
-  }
-
-  const usage = responseBody.usage || {};
-  const status = choice.finish_reason === "tool_calls" ? "completed" : (choice.finish_reason === "stop" ? "completed" : (choice.finish_reason || "completed"));
-
-  return {
-    id: `resp_${responseBody.id || ""}`.replace(/^resp_chatcmpl-/, "resp_"),
-    object: "response",
-    created_at: responseBody.created || Math.floor(Date.now() / 1000),
-    model: responseBody.model || "unknown",
-    status,
-    background: false,
-    error: null,
-    output,
-    usage: {
-      input_tokens: usage.prompt_tokens || usage.input_tokens || 0,
-      output_tokens: usage.completion_tokens || usage.output_tokens || 0,
-      total_tokens: usage.total_tokens || (usage.prompt_tokens || 0) + (usage.completion_tokens || 0),
     },
   };
 }
@@ -362,58 +283,6 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
   return responseBody;
 }
 
-/**
- * Handle non-streaming response from provider.
- */
-/**
- * True when the upstream explicitly reports truncation AND the body carries
- * zero usable content (no text, no tool calls, no refusal). Partial text or
- * tool calls count as usable even when truncated. (9router #4254)
- * @param {object} responseBody - Raw upstream JSON body
- * @returns {boolean}
- */
-export function isTruncatedEmptyCompletion(responseBody) {
-  if (!responseBody || typeof responseBody !== "object") return false;
-
-  let truncated = false;
-  let usable = false;
-
-  // OpenAI Chat shape
-  const choice = responseBody?.choices?.[0];
-  if (choice) {
-    if (choice.finish_reason === "length") truncated = true;
-    const msg = choice.message || {};
-    if (typeof msg.content === "string" && msg.content.length > 0) usable = true;
-    if (Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0) usable = true;
-    if (typeof msg.refusal === "string" && msg.refusal.length > 0) usable = true;
-  }
-
-  // OpenAI Responses shape
-  if (responseBody?.object === "response") {
-    if (responseBody.status === "incomplete" &&
-        (!responseBody.incomplete_details?.reason || responseBody.incomplete_details.reason === "max_output_tokens")) {
-      truncated = true;
-    }
-    for (const item of responseBody.output || []) {
-      if (item?.type === "function_call" || item?.type === "custom_tool_call") { usable = true; break; }
-      for (const part of item?.content || []) {
-        if ((part?.type === "output_text" || part?.type === "refusal") && typeof part?.text === "string" && part.text.length > 0) { usable = true; break; }
-      }
-      if (usable) break;
-    }
-  }
-
-  // Claude Messages shape
-  if (responseBody?.type === "message" && Array.isArray(responseBody?.content)) {
-    if (responseBody.stop_reason === "max_tokens") truncated = true;
-    for (const block of responseBody.content) {
-      if ((block?.type === "text" && block?.text) || block?.type === "tool_use") { usable = true; break; }
-    }
-  }
-
-  return truncated && !usable;
-}
-
 export async function handleNonStreamingResponse({ providerResponse, provider, model, sourceFormat, targetFormat, body, stream, translatedBody, finalBody, requestStartTime, connectionId, apiKey, clientRawRequest, onRequestSuccess, reqLogger, toolNameMap, customToolNames, trackDone, appendLog, pxpipe, reqTag, log }) {  trackDone();
   const contentType = providerResponse.headers.get("content-type") || "";
   let responseBody;
@@ -447,6 +316,9 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
   }
 
   reqLogger.logProviderResponse(providerResponse.status, providerResponse.statusText, providerResponse.headers, responseBody);
+  // Record incurred tokens before any terminal classification or fallback.
+  const usage = extractUsageFromResponse(responseBody);
+  saveUsageStats({ provider, model, tokens: usage, connectionId, apiKey, endpoint: clientRawRequest?.endpoint, silent: true });
   // Detect upstream gateway errors masked as HTTP 200 (e.g. OpenRouter
   // sending choices[0].native_finish_reason:"network_error" with empty content).
   const rawChoice = responseBody?.choices?.[0];
@@ -462,15 +334,21 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
   // A request can spend its output budget on reasoning before producing text.
   // This is not an account outage: repeating the same budget cannot repair it,
   // and cooling down the credential would block unrelated healthy requests.
-  if (isTruncatedEmptyCompletion(responseBody)) {
-    const tokenParam = sourceFormat === FORMATS.OPENAI_RESPONSES
-      ? "max_output_tokens"
-      : body.max_completion_tokens !== undefined ? "max_completion_tokens" : "max_tokens";
-    const message = `Output budget exhausted before any text or tool calls; increase ${tokenParam} or reduce reasoning effort`;
-    appendLog({ status: `FAILED ${HTTP_STATUS.BAD_REQUEST}` });
-    return createErrorResult(HTTP_STATUS.BAD_REQUEST, message, undefined, {
-      type: "invalid_request_error", code: "output_budget_exhausted", param: tokenParam,
-    });
+  const budgetError = outputBudgetError(responseBody, sourceFormat, body);
+  if (budgetError) {
+    appendLog({ tokens: usage, status: `FAILED ${HTTP_STATUS.BAD_REQUEST}` });
+    const totalLatency = Date.now() - requestStartTime;
+    saveRequestDetail(buildRequestDetail({
+      provider, model, connectionId,
+      latency: { ttft: totalLatency, total: totalLatency },
+      tokens: usage,
+      request: extractRequestConfig(body, stream),
+      providerRequest: finalBody || translatedBody || null,
+      providerResponse: responseBody,
+      response: { error: { code: "output_budget_exhausted", message: budgetError.error } },
+      pxpipe, status: "failed"
+    }, { endpoint: clientRawRequest?.endpoint || null })).catch(() => {});
+    return budgetError;
   }
 
   if (onRequestSuccess) {
@@ -489,9 +367,7 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
     if (reasoning) choice.message.reasoning_content = reasoning;
   }
 
-  const usage = extractUsageFromResponse(responseBody);
   appendLog({ tokens: usage, status: "200 OK" });
-  saveUsageStats({ provider, model, tokens: usage, connectionId, apiKey, endpoint: clientRawRequest?.endpoint, silent: true });
   if (log?.line) log.line(reqTag, "📊", formatDoneLine({ usage, latency: { total: Date.now() - requestStartTime } }));
 
   const translatedResponse = needsTranslation(targetFormat, sourceFormat)
@@ -526,8 +402,8 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
     }
   }
 
-  if (translatedResponse?.usage) {
-    translatedResponse.usage = filterUsageForFormat(addBufferToUsage(translatedResponse.usage), sourceFormat);
+  if (translatedResponse?.usage && !isResponsesResponse) {
+    translatedResponse.usage = filterUsageForFormat(translatedResponse.usage, sourceFormat);
   }
 
   if (toolNameMap?.size > 0 && translatedResponse) {

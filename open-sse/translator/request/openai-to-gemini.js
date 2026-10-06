@@ -1,5 +1,6 @@
 import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
+import { readOutputTokenCap } from "../formats/maxTokens.js";
 import { DEFAULT_THINKING_AG_SIGNATURE, DEFAULT_THINKING_GEMINI_CLI_SIGNATURE } from "../../config/defaultThinkingSignature.js";
 import { openaiToClaudeRequestForAntigravity } from "./openai-to-claude.js";
 function generateUUID() {
@@ -147,8 +148,9 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
   if (body.top_k !== undefined) {
     result.generationConfig.topK = body.top_k;
   }
-  if (body.max_tokens !== undefined) {
-    result.generationConfig.maxOutputTokens = body.max_tokens;
+  const outputCap = readOutputTokenCap(body);
+  if (outputCap !== undefined) {
+    result.generationConfig.maxOutputTokens = outputCap;
   }
 
   const messages = Array.isArray(body.messages) ? body.messages : [];
@@ -537,6 +539,8 @@ function isClaudeModel(model) {
 // OpenAI -> Antigravity (Sandbox Cloud Code with wrapper)
 export function openaiToAntigravityRequest(model, body, stream, credentials = null) {
   if (isClaudeModel(model)) {
+    // Validate before the Claude bridge can coerce an invalid cap or replace zero.
+    readOutputTokenCap(body);
     const claudeRequest = openaiToClaudeRequestForAntigravity(model, body, stream);
     return wrapInCloudCodeEnvelopeForClaude(model, claudeRequest, credentials);
   }

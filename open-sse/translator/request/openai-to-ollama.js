@@ -1,5 +1,6 @@
 import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
+import { readOutputTokenCap } from "../formats/maxTokens.js";
 import { parseDataUri } from "../concerns/image.js";
 import { safeParseJSON } from "../concerns/json.js";
 import { ROLE, OPENAI_BLOCK } from "../schema/index.js";
@@ -32,9 +33,10 @@ export function openaiToOllamaRequest(model, body, stream) {
   }
 
   // Max tokens (Ollama uses num_predict)
-  if (body.max_tokens !== undefined) {
+  const outputCap = readOutputTokenCap(body);
+  if (outputCap !== undefined) {
     result.options = result.options || {};
-    result.options.num_predict = body.max_tokens;
+    result.options.num_predict = outputCap;
   }
 
   // Top_p

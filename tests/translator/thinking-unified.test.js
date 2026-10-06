@@ -115,26 +115,26 @@ describe("applyThinking per provider format", () => {
     const out = apply("gemini", "gemini-3-pro", { reasoning_effort: "auto" }, "gemini");
     expect(out.generationConfig.thinkingConfig.thinkingLevel).toBe("high");
   });
-  it("gemini-3 high thinking raises too-small maxOutputTokens", () => {
+  it("gemini-3 high thinking preserves explicit maxOutputTokens", () => {
     const out = apply("gemini-cli", "gemini-3.1-pro-preview", {
       request: { generationConfig: { maxOutputTokens: 128 } },
       reasoning_effort: "high",
     }, "gemini-cli");
     expect(out.request.generationConfig.thinkingConfig).toEqual({ thinkingLevel: "high", includeThoughts: true });
-    expect(out.request.generationConfig.maxOutputTokens).toBe(65535);
+    expect(out.request.generationConfig.maxOutputTokens).toBe(128);
   });
   it("gemini-2.5 → thinkingBudget", () => {
     const out = apply("gemini", "gemini-2.5-flash", { reasoning_effort: "high" }, "gemini");
     expect(out.generationConfig.thinkingConfig.thinkingBudget).toBe(24576);
     expect(out.generationConfig.thinkingConfig.thinkingLevel).toBeUndefined();
   });
-  it("gemini-2.5 budget thinking keeps enough room for answer tokens", () => {
+  it("gemini-2.5 budget thinking preserves the explicit output allowance", () => {
     const out = apply("gemini-cli", "gemini-2.5-pro", {
       request: { generationConfig: { maxOutputTokens: 1024 } },
       reasoning_effort: "high",
     }, "gemini-cli");
     expect(out.request.generationConfig.thinkingConfig).toEqual({ thinkingBudget: 24576, includeThoughts: true });
-    expect(out.request.generationConfig.maxOutputTokens).toBe(32768);
+    expect(out.request.generationConfig.maxOutputTokens).toBe(1024);
   });
   it("GLM off → enable_thinking:false (not thinking.disabled)", () => {
     const out = apply("openai", "glm-4.6", { reasoning_effort: "none" }, "glm");
@@ -171,10 +171,10 @@ describe("applyThinking per provider format", () => {
     const out = apply("openai", "qwq-32b", { reasoning_effort: "none" }, "qwen");
     expect(out.enable_thinking).toBe(true);
   });
-  it("DeepSeek → enabled + reasoning_effort high (low→high)", () => {
+  it("native DeepSeek → enabled + reasoning_effort low", () => {
     const out = apply("openai", "deepseek-v4-pro", { reasoning_effort: "low" }, "deepseek");
     expect(out.thinking).toEqual({ type: "enabled" });
-    expect(out.reasoning_effort).toBe("high");
+    expect(out.reasoning_effort).toBe("low");
   });
   it("Kimi on → reasoning_effort", () => {
     const out = apply("openai", "kimi-k2.6", { reasoning_effort: "high" }, "kimi");
@@ -220,11 +220,13 @@ describe("applyThinking per provider format", () => {
     ["gpt-5.6-luna", "ultra", "max"],
   ])("normalizes Codex %s effort %s to %s", (model, effort, expected) => {
     const out = apply("openai-responses", model, { reasoning: { effort } }, "codex");
-    expect(out.reasoning_effort).toBe(expected);
+    expect(out.reasoning.effort).toBe(expected);
+    expect(out.reasoning_effort).toBeUndefined();
   });
   it("applies a supported Codex Ultra suffix", () => {
     const out = apply("openai-responses", "gpt-5.6-sol(ultra)", {}, "codex");
-    expect(out.reasoning_effort).toBe("ultra");
+    expect(out.reasoning.effort).toBe("ultra");
+    expect(out.reasoning_effort).toBeUndefined();
   });
   it("keeps Codex-only GPT-5.6 levels out of Kiro translation", () => {
     const out = apply("openai", "gpt-5.6-sol", { reasoning_effort: "max" }, "kiro");

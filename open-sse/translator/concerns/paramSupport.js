@@ -91,7 +91,7 @@ export function stripUnsupportedParams(provider, model, body) {
       }
     }
     if (rule.translateMaxTokens && body.max_tokens !== undefined) {
-      if (body.max_completion_tokens === undefined) {
+      if (body.max_completion_tokens == null) {
         body.max_completion_tokens = body.max_tokens;
       }
       delete body.max_tokens;

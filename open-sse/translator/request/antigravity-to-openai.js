@@ -19,10 +19,10 @@ export function antigravityToOpenAIRequest(model, body, stream) {
   // Generation config
   if (req.generationConfig) {
     const config = req.generationConfig;
-    if (config.maxOutputTokens) {
+    if (config.maxOutputTokens !== undefined) {
       const tempBody = { max_tokens: config.maxOutputTokens, tools: req.tools };
       const tokenParam = requiresMaxCompletionTokens(model) ? "max_completion_tokens" : "max_tokens";
-      result[tokenParam] = adjustMaxTokens(tempBody);
+      result[tokenParam] = adjustMaxTokens(tempBody, null, { sourceFormat: "gemini" });
     }
     if (config.temperature !== undefined) {
       result.temperature = config.temperature;

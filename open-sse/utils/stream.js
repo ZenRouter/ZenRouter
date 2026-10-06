@@ -1,7 +1,7 @@
 import { translateResponse, initState } from "../translator/index.js";
 import { FORMATS } from "../translator/formats.js";
 import { trackPendingRequest, appendRequestLog } from "@/lib/usageDb.js";
-import { extractUsage, mergeUsage, hasValidUsage, estimateUsage, logUsage, addBufferToUsage, filterUsageForFormat, COLORS } from "./usageTracking.js";
+import { extractUsage, mergeUsage, hasValidUsage, estimateUsage, logUsage, COLORS } from "./usageTracking.js";
 import { parseSSELine, hasValuableContent, fixInvalidId, formatSSE } from "./streamHelpers.js";
 import { getOpenAIResponsesEventName, isOpenAIResponsesTerminalEvent, formatIncompleteOpenAIResponsesStreamFailure } from "./responsesStreamHelpers.js";
 import { dbg, isDebugEnabled } from "./debugLog.js";
@@ -126,6 +126,21 @@ export function createSSEStream(options = {}) {
 
   let buffer = "";
   let usage = null;
+  // Keep raw accounting separate from translator state (which may be normalized
+  // for a client). Complete provider snapshots replace older counters, even zero;
+  // Anthropic's split/cumulative events still merge field by field.
+  const captureUsage = (chunk) => {
+    const extracted = extractUsage(chunk);
+    if (!extracted) return;
+    const raw = chunk?.response?.usage || chunk?.usage;
+    const complete = chunk?.usageMetadata || chunk?.response?.usageMetadata ||
+      (raw && (raw.prompt_tokens !== undefined || raw.input_tokens !== undefined) &&
+        (raw.completion_tokens !== undefined || raw.output_tokens !== undefined));
+    usage = complete ? extracted
+      : chunk?.type === "message_delta" && chunk.delta?.stop_reason
+        ? { ...usage, ...extracted }
+        : mergeUsage(usage, extracted);
+  };
 
   // Per-stream decoder with stream:true to correctly handle multi-byte chars split across chunks
   const decoder = new TextDecoder("utf-8", { fatal: false });
@@ -233,9 +248,9 @@ export function createSSEStream(options = {}) {
     finalized = true;
 
     const isPassthrough = mode === STREAM_MODE.PASSTHROUGH;
-    let finalUsage = isPassthrough ? usage : state?.usage;
+    let finalUsage = usage || state?.usage;
 
-    if (!hasValidUsage(finalUsage) && totalContentLength > 0) {
+    if (!finalUsage && totalContentLength > 0) {
       finalUsage = estimateUsage(body, totalContentLength, isPassthrough ? FORMATS.OPENAI : sourceFormat);
       if (isPassthrough) usage = finalUsage; else state.usage = finalUsage;
     }
@@ -271,8 +286,8 @@ export function createSSEStream(options = {}) {
 
   // Snapshot partial output even when cancellation prevents TransformStream.flush.
   const getStreamSnapshot = () => {
-    const seenUsage = mode === STREAM_MODE.PASSTHROUGH ? usage : state?.usage;
-    const resolvedUsage = hasValidUsage(seenUsage)
+    const seenUsage = usage || state?.usage;
+    const resolvedUsage = seenUsage
       ? seenUsage
       : (totalContentLength > 0
           ? estimateUsage(body, totalContentLength, mode === STREAM_MODE.PASSTHROUGH ? FORMATS.OPENAI : sourceFormat)
@@ -401,10 +416,7 @@ export function createSSEStream(options = {}) {
 
               accumulateToolCalls(toolCallStore, parsed);
 
-              const extracted = extractUsage(parsed);
-              if (extracted) {
-                usage = mergeUsage(usage, extracted);
-              }
+              captureUsage(parsed);
 
               responsesTerminal = isOpenAIResponsesTerminalEvent(currentOpenAIResponsesEvent, parsed);
 
@@ -423,18 +435,9 @@ export function createSSEStream(options = {}) {
                 continue;
               }
               if (isFinishChunk) passthroughFinishSeen = true;
-              if (isFinishChunk && !hasValidUsage(parsed.usage)) {
-                const estimated = estimateUsage(body, totalContentLength, FORMATS.OPENAI);
-                parsed.usage = filterUsageForFormat(estimated, FORMATS.OPENAI);
-                output = `data: ${JSON.stringify(parsed)}\n`;
-                usage = estimated;
-                injectedUsage = true;
-              } else if (isFinishChunk && usage) {
-                const buffered = addBufferToUsage(usage);
-                parsed.usage = filterUsageForFormat(buffered, FORMATS.OPENAI);
-                output = `data: ${JSON.stringify(parsed)}\n`;
-                injectedUsage = true;
-              } else if (idFixed || fieldsInjected) {
+              // A usage-only trailer can follow finish_reason. Do not publish or
+              // persist a guessed counter before the upstream has drained.
+              if (idFixed || fieldsInjected) {
                 output = `data: ${JSON.stringify(parsed)}\n`;
                 injectedUsage = true;
               }
@@ -552,8 +555,9 @@ export function createSSEStream(options = {}) {
         accumulateToolCalls(toolCallStore, parsed);
 
         // Extract usage
+        captureUsage(parsed);
         const extracted = extractUsage(parsed);
-        if (extracted) state.usage = mergeUsage(state.usage, extracted); // Keep original usage for logging
+        if (extracted) state.usage = mergeUsage(state.usage, extracted);
 
         // Responses same-format passthrough: re-emit with original event framing
         if (keepsOpenAIResponsesFormat && openAIResponsesEventName) {
@@ -592,17 +596,10 @@ export function createSSEStream(options = {}) {
               clientTerminalSeen = true;
             }
 
-            // Inject estimated usage if finish chunk has no valid usage
-            const isFinishChunk = item.type === "message_delta" || item.choices?.[0]?.finish_reason;
-            if (state.finishReason && isFinishChunk && !hasValidUsage(item.usage) && totalContentLength > 0) {
-              const estimated = estimateUsage(body, totalContentLength, sourceFormat);
-              item.usage = filterUsageForFormat(estimated, sourceFormat); // Filter + already has buffer
-              state.usage = estimated;
-            } else if (state.finishReason && isFinishChunk && state.usage) {
-              // Add buffer and filter usage for client (but keep original in state.usage for logging)
-              const buffered = addBufferToUsage(state.usage);
-              item.usage = filterUsageForFormat(buffered, sourceFormat);
-            }
+            // Responses clients close on the terminal event, not transport EOF.
+            // The terminal now includes the drained trailer: persist before enqueue.
+            if (sourceFormat === FORMATS.OPENAI_RESPONSES &&
+                isOpenAIResponsesTerminalEvent(item.event, item.data || item)) finalizeStream();
 
             const output = formatSSE(item, sourceFormat);
             reqLogger?.appendConvertedChunk?.(output);
@@ -638,6 +635,10 @@ export function createSSEStream(options = {}) {
           if (emitUpstreamError(tail, controller)) return;
           accumulateOpenAIContent(tail);
           accumulateToolCalls(toolCallStore, tail);
+          captureUsage(tail);
+          if (isOpenAIResponsesTerminalEvent(currentOpenAIResponsesEvent, tail)) {
+            openAIResponsesTerminalSeen = true;
+          }
         }
 
         if (mode === STREAM_MODE.PASSTHROUGH) {
@@ -702,10 +703,13 @@ export function createSSEStream(options = {}) {
           if (parsed && !isDoneSentinel) {
             // Same accumulation the transform loop does, so finalizeStream() can
             // log a tail chunk's tokens instead of falling back to null.
+            captureUsage(parsed);
             const extracted = extractUsage(parsed);
             if (extracted) state.usage = mergeUsage(state.usage, extracted);
 
-            const translated = translateResponse(targetFormat, sourceFormat, parsed, state);
+            const translated = targetFormat === FORMATS.OPENAI_RESPONSES && sourceFormat === FORMATS.OPENAI_RESPONSES
+              ? [{ event: getOpenAIResponsesEventName(currentOpenAIResponsesEvent, parsed), data: parsed }]
+              : translateResponse(targetFormat, sourceFormat, parsed, state);
 
             if (translated?._openaiIntermediate) {
               for (const item of translated._openaiIntermediate) {
