@@ -93,6 +93,16 @@ export const ERROR_RULES = [
   // Model/schema incompatibility failures (9router #4447): specific upstream schema
   // rejections (e.g. Gemini INVALID_ARGUMENT on unsupported schema forms) that should
   // allow the combo to advance to the next model without cooling down the healthy account.
+  // 404 "Requested entity was not found." (Antigravity/Cloud Code) is a
+  // resource/model-scoped miss, not a credential fault: the project or the
+  // requested model does not exist for this call. Cooling the account down
+  // removes a healthy connection from rotation and, with a paged provider,
+  // locks the whole pool at once for the same unavailable model. Route around
+  // it instead, like the 410 retired-model rule below.
+  {
+    text: "requested entity was not found",
+    cooldownMs: 0,
+  },
   { text: "function_declarations",      cooldownMs: 0 },
   { text: "unsupported schema",         cooldownMs: 0 },
   // Request-scoped reasoning exhaustion: a different combo model may fit the

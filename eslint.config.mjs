@@ -51,6 +51,41 @@ const eslintConfig = defineConfig([
     rules: { "import/no-anonymous-default-export": "off" },
   },
   {
+    // eslint-config-next does not enable core `no-undef`, so a referenced-but-
+    // undefined identifier ships as a runtime ReferenceError past a clean lint
+    // run (e.g. `testingModelId`, `aggregateComboCapabilities`). Enable it for
+    // app and engine sources, both of which are plain ESM/JSX with explicit
+    // imports. Node globals are declared so config/script files stay valid.
+    files: ["src/**/*.{js,jsx}", "open-sse/**/*.js"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        Buffer: "readonly",
+        URL: "readonly",
+        URLSearchParams: "readonly",
+        TextEncoder: "readonly",
+        TextDecoder: "readonly",
+        AbortController: "readonly",
+        AbortSignal: "readonly",
+        Response: "readonly",
+        Request: "readonly",
+        Headers: "readonly",
+        fetch: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
+        setImmediate: "readonly",
+        queueMicrotask: "readonly",
+        structuredClone: "readonly",
+        crypto: "readonly",
+        globalThis: "readonly",
+      },
+    },
+    rules: { "no-undef": "error" },
+  },
+  {
     plugins: {
       "react-hooks": fixupPluginRules(reactHooks),
     },

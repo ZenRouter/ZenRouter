@@ -85,9 +85,17 @@ export async function handleImageGenerationCore({
         }),
       };
     } catch (error) {
-      const errMsg = formatProviderError(error, provider, model, HTTP_STATUS.BAD_GATEWAY);
+      // Preserve the real upstream status when the adapter captured one.
+      // A 404 NOT_FOUND means the requested model/project does not exist —
+      // flattening it to 502 tells accountFallback this was a transient
+      // provider fault and cools down every healthy pooled account.
+      const upstreamStatus = Number(error?.upstreamStatus ?? error?.status);
+      const status = Number.isInteger(upstreamStatus) && upstreamStatus >= 400 && upstreamStatus < 600
+        ? upstreamStatus
+        : HTTP_STATUS.BAD_GATEWAY;
+      const errMsg = formatProviderError(error, provider, model, status);
       log?.debug?.("IMAGE", `Executor error: ${errMsg}`);
-      return createErrorResult(HTTP_STATUS.BAD_GATEWAY, errMsg);
+      return createErrorResult(status, errMsg);
     }
   }
 

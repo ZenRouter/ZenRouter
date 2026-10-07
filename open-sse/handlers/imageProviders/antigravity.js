@@ -123,6 +123,10 @@ export default {
       const text = await result.response.text();
       const error = new Error(text || `HTTP ${result.response.status}`);
       error.status = result.response.status;
+      // Explicit upstream marker: imageGenerationCore uses this to preserve the
+      // real status (e.g. 404 for an unavailable model) instead of reporting a
+      // generic 502 that would cool down healthy pooled accounts.
+      error.upstreamStatus = result.response.status;
       error.resetsAtMs = parseQuotaResetAt(text);
       throw error;
     }

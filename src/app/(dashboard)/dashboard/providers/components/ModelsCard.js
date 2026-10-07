@@ -263,7 +263,7 @@ export default function ModelsCard({ providerId, kindFilter, providerAliasOverri
               onDeleteAlias={() => handleDeleteCustomModel(model.id)}
               testStatus={modelTestResults[model.id]}
               onTest={() => handleTestModel(model.id)}
-              isTesting={testingModelId === model.id}
+              isTesting={testingModelIds.has(model.id)}
               isCustom
             />
           ))}

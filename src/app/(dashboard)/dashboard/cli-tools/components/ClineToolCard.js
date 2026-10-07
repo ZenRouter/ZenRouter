@@ -177,7 +177,7 @@ export default function ClineToolCard({ tool, isExpanded, onToggle, baseUrl, api
     const keyToUse = (selectedApiKey && selectedApiKey.trim() && selectedApiKey !== "sk_zenrouter" && selectedApiKey !== "sk_9router")
       ? selectedApiKey
       : (apiKeys?.length > 0 ? apiKeys[0].key : (!cloudEnabled ? "sk_zenrouter" : "<API_KEY_FROM_DASHBOARD>"));
-    const baseWithoutV1 = effectiveUrl.endsWith("/v1") ? effectiveUrl.slice(0, -3) : effectiveUrl;
+    const baseWithoutV1 = getEffectiveBaseUrl().endsWith("/v1") ? getEffectiveBaseUrl().slice(0, -3) : getEffectiveBaseUrl();
 
     return [
       {
